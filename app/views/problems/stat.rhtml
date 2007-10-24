@@ -1,0 +1,23 @@
+<h1>Problem stat: <%= @problem.name %></h1>
+
+<div class="usermenu">
+<%= link_to 'Main', :controller => 'main', :action => 'list' %>
+</div>
+
+<i>This is just a hack.  Really not efficient.</i><br/><br/>
+
+<% if @submissions!=nil %>
+  <table border="1">
+  <tr><td>user_id</td><td>submitted_at</td><td>points</td><td>comment</td></tr>
+  <% @submissions.each do |sub| %>
+    <tr>
+    <td><%= sub.user_id %></td>
+    <td><%= sub.submitted_at.to_s %></td>
+    <td><%= sub.points %></td>
+    <td><div style="font-family: monospace"><%= sub.grader_comment %></div></td>
+    </tr>
+  <% end %>
+  </table>
+<% else %>
+No submission
+<% end %>

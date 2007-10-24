@@ -1,0 +1,20 @@
+
+div.problist-each { margin-top: 2px; margin-bottom: 2px}
+
+div.usermenu { 
+  border-top: thin solid grey;
+  border-bottom: thin solid grey;
+  text-align: right
+}
+
+div.probname { 
+  background-color: #66cccc; 
+  font-weight: bold 
+}
+
+div.subinfo { 
+  margin-left: 20px; 
+  margin-top: 2px;
+  border-bottom: thin solid grey;
+  border-left: thin solid grey
+}

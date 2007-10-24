@@ -1,0 +1,19 @@
+<h1>Login</h1>
+
+<% if flash[:notice] %>
+<hr>
+<b><%= flash[:notice] %></b>
+<hr>
+<% end %>
+
+<% form_tag :controller => 'login', :action => 'login' do %>
+<table>
+<tr>
+<td align="right">User name:</td><td><%= text_field_tag 'login' %></td>
+</tr>
+<tr>
+<td align="right">Password:</td><td><%= password_field_tag %></td>
+</tr>
+</table>
+  <%= submit_tag 'Login' %>
+<% end %>

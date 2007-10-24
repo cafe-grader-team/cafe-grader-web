@@ -1,0 +1,26 @@
+<h1>User stat</h1>
+
+<div class="usermenu">
+<%= link_to 'List', :action => 'list' %>
+<%= link_to 'Main', :controller => 'main', :action => 'list' %>
+</div>
+
+
+<table border="1">
+<tr><td>User</td>
+<% @problems.each do |p| %>
+  <td><%= p.name %></td>
+<% end %>
+<td>Total</td>
+</tr>
+<% @scorearray.each do |sc| %>
+  <tr>
+    <% total = 0 %>
+    <% sc.each do |i| %>
+      <td><%= i %></td>
+      <% total += i.to_i %>
+    <% end %>
+    <td><%= total %></td>
+  </tr>
+<% end %>
+</table>
