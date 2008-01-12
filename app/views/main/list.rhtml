@@ -28,6 +28,7 @@
 <hr />
 <br />
 
+<div class="submitbox">
 <% form_tag({:action => 'submit'}, :multipart => true) do %>
 Problem: <%= select 'submission', 'problem_id', 
              	[['Specified in header','-1']] + 
@@ -36,3 +37,5 @@ Problem: <%= select 'submission', 'problem_id',
 File: <%= file_field_tag 'file' %>
 <%= submit_tag 'Submit' %>
 <% end %>
+</div>
+

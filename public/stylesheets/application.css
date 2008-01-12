@@ -8,8 +8,10 @@ div.usermenu {
 }
 
 div.probname { 
-  background-color: #66cccc; 
-  font-weight: bold 
+  background-color: #66aaaa; 
+  font-weight: bold;
+  color: white;
+  padding: 2px;
 }
 
 div.subinfo { 
@@ -18,3 +20,15 @@ div.subinfo {
   border-bottom: thin solid grey;
   border-left: thin solid grey
 }
+
+div.compilermsgbody {
+  font-family: monospace;
+}
+
+div.submitbox {
+  border: thin solid black;
+  padding: 5px;
+  color: white;
+  background-color: #777777;
+}
+
