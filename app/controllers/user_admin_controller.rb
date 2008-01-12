@@ -12,7 +12,7 @@ class UserAdminController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @user_pages, @users = paginate :users, :per_page => 50
+    @users = User.find(:all)
   end
 
   def show

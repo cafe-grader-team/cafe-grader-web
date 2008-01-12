@@ -2,6 +2,7 @@ class Submission < ActiveRecord::Base
 
   belongs_to :language
   belongs_to :problem
+  belongs_to :user
 
   def self.find_by_user_and_problem(user_id, problem_id)
     subcount = count(:conditions => "user_id = #{user_id} AND problem_id = #{problem_id}")

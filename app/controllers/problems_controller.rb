@@ -12,9 +12,7 @@ class ProblemsController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @problem_pages, @problems = paginate(:problems, 
-                                         :per_page => 10,
-                                         :order => 'date_added DESC')
+    @problems = Problem.find(:all, :order => 'date_added DESC')
   end
 
   def show
