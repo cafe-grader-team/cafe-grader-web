@@ -6,6 +6,7 @@ class MainController < ApplicationController
          :redirect_to => { :action => :index }
 
   def index
+    redirect_to :action => 'login'
   end
 
   def login

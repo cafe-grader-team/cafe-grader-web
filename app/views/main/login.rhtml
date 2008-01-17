@@ -1,4 +1,7 @@
-<h1>Login</h1>
+<h1>Grader</h1>
+
+<b>Welcome back!</b><br/>
+Please login to see the problem list.<br/><br/>
 
 <% if flash[:notice] %>
 <hr>
@@ -6,6 +9,7 @@
 <hr>
 <% end %>
 
+<div style="border: solid 1px gray; padding: 2px; background: #f0f0f0;">
 <% form_tag :controller => 'login', :action => 'login' do %>
 <table>
 <tr>
@@ -17,3 +21,5 @@
 </table>
   <%= submit_tag 'Login' %>
 <% end %>
+</div>
+
