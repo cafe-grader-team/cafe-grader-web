@@ -4,10 +4,6 @@
 <%= user_options %>
 </div>
 
-<hr>
-
-<p style="color: red"><%= flash[:notice] %></p>
-
 <div class="submitbox">
 <% form_tag({:action => 'submit'}, :multipart => true) do %>
 Problem: <%= select 'submission', 'problem_id', 
@@ -18,6 +14,10 @@ File: <%= file_field_tag 'file' %>
 <%= submit_tag 'Submit' %>
 <% end %>
 </div>
+
+<hr/>
+
+<p style="color: red"><%= flash[:notice] %></p>
 
 <div class="problist">
 <% i = 0 %>

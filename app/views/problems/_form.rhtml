@@ -14,6 +14,6 @@
 <%= date_select 'problem', 'date_added'  %></p>
 
 <p><label for="problem_available">Available</label><br/>
-<select id="problem_available" name="problem[available]"><option value="false">False</option><option value="true">True</option></select></p>
+<%= select("problem","available",[['True',true],['False',false]]) %></p>
 <!--[eoform:problem]-->
 
