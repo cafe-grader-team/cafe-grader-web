@@ -1,34 +1,61 @@
+p {
+    font-size: 12px;
+}
 
-div.problist-each { margin-top: 2px; margin-bottom: 2px}
+div.problist-each { 
+    margin-top: 2px; 
+    margin-bottom: 2px
+}
 
 div.usermenu { 
-  border-top: thin solid grey;
-  border-bottom: thin solid grey;
-  text-align: right
+    border-top: thin solid grey;
+    border-bottom: thin solid grey;
+    text-align: right
 }
 
 div.probname { 
-  background-color: #66aaaa; 
-  font-weight: bold;
-  color: white;
-  padding: 2px;
+    background-color: #66aaaa; 
+    font-weight: bold;
+    color: white;
+    padding: 2px;
 }
 
 div.subinfo { 
-  margin-left: 20px; 
-  margin-top: 2px;
-  border-bottom: thin solid grey;
-  border-left: thin solid grey
+    margin-left: 20px; 
+    margin-top: 2px;
+    border-bottom: thin solid grey;
+    border-left: thin solid grey
 }
 
 div.compilermsgbody {
-  font-family: monospace;
+    font-family: monospace;
 }
 
 div.submitbox {
-  border: thin solid black;
-  padding: 5px;
-  color: white;
-  background-color: #777777;
+    border: thin solid black;
+    padding: 5px;
+    color: white;
+    background-color: #777777;
 }
 
+
+table.uinfo {
+    border-collapse: collapse;
+    border: 1px solid black;
+    font-size: 13px;
+}
+
+
+td.uinfo {
+    vertical-align: top;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+th.uinfo {
+    background: lightgreen;
+    vertical-align: top;
+    text-align: right;
+    border: 1px solid black;
+    padding: 5px;
+}

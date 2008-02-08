@@ -1,0 +1,32 @@
+
+%h1 Your account settings
+
+%p
+  You can edit your full name and alias.  Just click on the text and edit it.
+
+
+%table.uinfo
+  %tr
+    %th.uinfo Login
+    %td.uinfo= @user.login
+  %tr
+    %th.uinfo Full name
+    %td.uinfo= in_place_editor_field :user, 'full_name', {}, :rows => 1
+  %tr
+    %th.uinfo Alias
+    %td.uinfo= in_place_editor_field :user, 'alias', {}, :rows => 1
+  %tr
+    %th.uinfo Password
+    %td.uinfo
+      - form_tag :action => 'chg_passwd', :method => 'post' do
+        %table
+          %tr
+            %td= password_field_tag 'passwd'
+            %td (new)
+          %tr
+            %td= password_field_tag 'passwd_verify'
+            %td (verify)
+          %tr
+            %td{:colspan => "2"}
+              = submit_tag 'change password'
+
