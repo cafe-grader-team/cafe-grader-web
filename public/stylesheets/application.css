@@ -14,10 +14,10 @@ div.usermenu {
 }
 
 div.probname { 
-    background-color: #66aaaa; 
+    background-color: #eeeeee; 
     font-weight: bold;
-    color: white;
     padding: 2px;
+    border: 1px solid black;
 }
 
 div.subinfo { 
