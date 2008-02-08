@@ -5,6 +5,8 @@ class MainController < ApplicationController
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
+  layout 'application'
+
   def index
     redirect_to :action => 'login'
   end
