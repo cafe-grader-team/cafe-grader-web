@@ -1,10 +1,6 @@
 <h1>Hello <%=h @user.full_name %></h1>
 (<%= Time.new %>)
 
-<div class="usermenu">
-<%= user_options %>
-</div>
-
 <div class="submitbox">
 <% form_tag({:action => 'submit'}, :multipart => true) do %>
 Problem: <%= select 'submission', 'problem_id', 

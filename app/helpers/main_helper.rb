@@ -1,21 +1,5 @@
 module MainHelper
 
-  def user_options
-    options = ''
-    user = User.find(session[:user_id])
-    if user.admin? 
-      options = options + ' ' +
-	link_to('[Problem admin]', 
-		{:controller => 'problems', :action => 'index'})
-      options = options + ' ' +
-	link_to('[User admin]',
-		{:controller => 'user_admin', :action => 'index'})
-    end
-    options = options + ' ' +
-      link_to('[Log out]', {:controller => 'main', :action => 'login'})
-    options
-  end
-
   def format_short_time(time)
     now = Time.now
     st = ''

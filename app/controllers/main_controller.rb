@@ -10,6 +10,7 @@ class MainController < ApplicationController
   end
 
   def login
+    MainController.layout 'login'
     reset_session
   end
 
