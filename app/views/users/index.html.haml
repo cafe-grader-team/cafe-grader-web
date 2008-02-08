@@ -11,7 +11,7 @@
     %td.uinfo= @user.login
   %tr
     %th.uinfo Full name
-    %td.uinfo= in_place_editor_field :user, 'full_name', {}, :rows => 1
+    %td.uinfo= @user.full_name
   %tr
     %th.uinfo Alias
     %td.uinfo= in_place_editor_field :user, 'alias_for_editing', {}, :rows => 1

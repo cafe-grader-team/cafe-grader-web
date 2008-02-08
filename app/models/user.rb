@@ -6,6 +6,7 @@ class User < ActiveRecord::Base
 
   validates_presence_of :login
   validates_presence_of :full_name
+  validates_length_of :full_name, :minimum => 1
   
   validates_presence_of :password, :if => :password_required?
   validates_length_of :password, :within => 4..20, :if => :password_required?
@@ -29,10 +30,12 @@ class User < ActiveRecord::Base
   end
 
   def email_for_editing
-    if self.email!=nil
-      self.email
+    if self.email==nil
+      "(unknown)"
+    elsif self.email==''
+      "(blank)"
     else
-      "unknown"
+      self.email
     end
   end
 
@@ -41,10 +44,12 @@ class User < ActiveRecord::Base
   end
 
   def alias_for_editing
-    if self.alias!=nil
-      self.alias
+    if self.alias==nil
+      "(unknown)"
+    elsif self.alias==''
+      "(blank)"
     else
-      "unknown"
+      self.alias
     end
   end
 
