@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 12) do
+ActiveRecord::Schema.define(:version => 13) do
 
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(:version => 12) do
     t.integer "full_score"
     t.date    "date_added"
     t.boolean "available"
+    t.string  "url"
   end
 
   create_table "rights", :force => true do |t|

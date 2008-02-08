@@ -1,0 +1,69 @@
+Steps
+=====
+
+1. Set up mongrel_cluster
+
+follow: http://mongrel.rubyforge.org/docs/mongrel_cluster.html
+
+run it with user ioi:ioi
+
+
+2. Set up Apache
+
+in general follow: 
+http://mongrel.rubyforge.org/docs/apache.html
+
+2.1 enable mods
+
+run:
+sudo a2enmod rewrite
+sudo a2enmod proxy
+sudo a2enmod proxy_balancer
+sudo a2enmod proxy_http
+sudo a2enmod deflate
+sudo a2enmod headers
+
+2.2 edit virtual host at /etc/apache2/site-(available|enabled)
+
+added:
+===========================================
+<directory "/home/ioi/web_grader/public/">
+  Options FollowSymLinks
+  AllowOverride None
+  Order allow,deny
+  Allow from all
+</directory>
+
+<proxy balancer://mongrel_cluster>
+  BalancerMember http://127.0.0.1:8000
+  BalancerMember http://127.0.0.1:8001
+  BalancerMember http://127.0.0.1:8002
+  BalancerMember http://127.0.0.1:8003
+  BalancerMember http://127.0.0.1:8004
+  Allow from localhost
+</proxy>
+
+# can't use proxypass because we want access to balancer-manager
+#ProxyPass / balancer://mongrel_cluster/
+#ProxyPassReverse / balancer://mongrel_cluster/
+
+<Location /balancer-manager>
+  SetHandler balancer-manager
+</Location>
+
+RewriteEngine On
+
+# Uncomment for rewrite debugging
+RewriteLog "/var/log/apache2/ioi_rewrite.log"
+RewriteLogLevel 9
+
+# Rewrite to check for Rails cached page
+RewriteRule ^([^.]+)$ $1.html [QSA]
+
+# Redirect all non-static requests to cluster
+RewriteCond %{REQUEST_URI} !^/balancer-manager/(.*)$
+RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_FILENAME} !-f
+RewriteRule ^/(.*)$ balancer://mongrel_cluster%{REQUEST_URI} [P,QSA,L]
+===========================================
+
+

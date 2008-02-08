@@ -13,6 +13,9 @@
 <p><label for="problem_date_added">Date added</label><br/>
 <%= date_select 'problem', 'date_added'  %></p>
 
+<p><label for="problem_url">URL</label><br/>
+<%= text_field 'problem', 'url'  %></p>
+
 <p><label for="problem_available">Available</label><br/>
 <%= select("problem","available",[['True',true],['False',false]]) %></p>
 <!--[eoform:problem]-->
