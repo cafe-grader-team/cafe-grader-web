@@ -5,7 +5,6 @@ class MainController < ApplicationController
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
-  layout 'application'
 
   def index
     redirect_to :action => 'login'
@@ -17,6 +16,7 @@ class MainController < ApplicationController
   end
 
   def list
+    MainController.layout 'application'
     @problems = Problem.find_available_problems
     @prob_submissions = Array.new
     @user = User.find(session[:user_id])
