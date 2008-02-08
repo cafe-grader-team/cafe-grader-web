@@ -2,6 +2,10 @@ class ProblemsController < ApplicationController
 
   before_filter :authenticate, :authorization
 
+  in_place_edit_for :problem, :name
+  in_place_edit_for :problem, :full_name
+  in_place_edit_for :problem, :full_score
+
   def index
     list
     render :action => 'list'

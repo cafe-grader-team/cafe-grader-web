@@ -5,7 +5,7 @@ module MainHelper
     st = ''
     if (time.yday != now.yday) or
 	(time.year != now.year)
-      st = time.strftime("%x")
+      st = time.strftime("%x ")
     end
     st + time.strftime("%X")
   end
@@ -26,13 +26,13 @@ cmpmsg
   end
 
   def format_submission(sub, count)
-    msg = "#{count} submission(s)<br />"
+    msg = "#{count} submission(s)."
     if count>0
       msg = msg + "Last on " +
 	format_short_time(sub.submitted_at) + ' ' +
-	link_to('[source]',{:action => 'get_source', :id => sub.id}) +
-	"<br />"
+	link_to('[source]',{:action => 'get_source', :id => sub.id})
     end
+    msg += "<br/>"
     if sub!=nil and sub.graded_at!=nil
       msg = msg + 'Graded at ' + format_short_time(sub.graded_at) + ', score: '+ 
         sub.points.to_s + 

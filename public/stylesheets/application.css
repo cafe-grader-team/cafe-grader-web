@@ -2,6 +2,13 @@ p {
     font-size: 12px;
 }
 
+div.title {
+    font-size: 20px;
+    font-weight: bold;
+    background: lightgreen;
+    padding: 2px;
+}
+
 div.problist-each { 
     margin-top: 2px; 
     margin-bottom: 2px
@@ -10,7 +17,8 @@ div.problist-each {
 div.usermenu { 
     border-top: thin solid grey;
     border-bottom: thin solid grey;
-    text-align: right
+    text-align: right;
+    font-size: 12px;
 }
 
 div.probname { 
@@ -24,7 +32,8 @@ div.subinfo {
     margin-left: 20px; 
     margin-top: 2px;
     border-bottom: thin solid grey;
-    border-left: thin solid grey
+    border-left: thin solid grey;
+    font-size: 12px;
 }
 
 div.compilermsgbody {
@@ -36,6 +45,7 @@ div.submitbox {
     padding: 5px;
     color: white;
     background-color: #777777;
+    font-weight: bold;
 }
 
 

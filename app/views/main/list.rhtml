@@ -1,5 +1,5 @@
-<h1>Hello <%=h @user.full_name %></h1>
-(<%= Time.new %>)
+<div class="title">Hello <%=h @user.full_name %></div>
+Current time is <%= format_short_time(Time.new) %>.
 
 <div class="submitbox">
 <% form_tag({:action => 'submit'}, :multipart => true) do %>
@@ -22,7 +22,7 @@ File: <%= file_field_tag 'file' %>
   <div class="problist-each">
   <div class="probname">
     <%= "#{i+1}: #{p.full_name} (#{p.name})" %>
-    <%= link_to '[task description]', p.url if p.url!=nil %>
+    <%= link_to '[task description]', p.url if (p.url!=nil) and (p.url!='') %>
   </div>
   <div class="subinfo">
     <%= format_submission(@prob_submissions[i][1],
@@ -33,18 +33,5 @@ File: <%= file_field_tag 'file' %>
 <% end %>
 </div>
 
-<br />
 <hr />
-<br />
-
-<div class="submitbox">
-<% form_tag({:action => 'submit'}, :multipart => true) do %>
-Problem: <%= select 'submission', 'problem_id', 
-             	[['Specified in header','-1']] + 
-		@problems.collect {|p| [p.full_name, p.id]},
-		:selected => '-1' %>
-File: <%= file_field_tag 'file' %>
-<%= submit_tag 'Submit' %>
-<% end %>
-</div>
 

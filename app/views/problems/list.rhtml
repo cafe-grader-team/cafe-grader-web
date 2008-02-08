@@ -6,16 +6,22 @@
 
 <table>
   <tr>
-  <% for column in Problem.content_columns %>
-    <th><%= column.human_name %></th>
-  <% end %>
+    <th>Name</th>
+    <th>Full name</th>
+    <th>Full score</th>
+    <th>Date added</th>
+    <th>Available</th>
   </tr>
   
 <% for problem in @problems %>
   <tr>
-  <% for column in Problem.content_columns %>
-    <td><%=h problem.send(column.name) %></td>
-  <% end %>
+    <% @problem=problem %>
+    <td><%= in_place_editor_field :problem, :name, {}, :rows=>1 %>
+    <td><%= in_place_editor_field :problem, :full_name, {}, :rows=>1 %>
+    <td><%= in_place_editor_field :problem, :full_score, {}, :rows=>1 %>
+    <td><%= problem.date_added %>
+    <td><%= problem.available %>
+
     <td><%= link_to '[Toggle]', :action => 'toggle_avail', :id => problem.id %></td>
     <td><%= link_to '[Stat]', :action => 'stat', :id => problem.id %></td>
     <td><%= link_to '[Show]', :action => 'show', :id => problem %></td>
