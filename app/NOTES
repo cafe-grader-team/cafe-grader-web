@@ -1,0 +1,8 @@
+(2/8)
+  layout problem, fixed in a bad way.
+  when login redirect_to main.list, the layout used is "login", but 
+    should be "application".
+    so I added it manually, but it should be "convention".
+    HAVE TO CHECK
+  
+
