@@ -28,7 +28,31 @@ class User < ActiveRecord::Base
     self.roles.detect {|r| r.name == 'admin' }
   end
 
-#  protected
+  def email_for_editing
+    if self.email!=nil
+      self.email
+    else
+      "unknown"
+    end
+  end
+
+  def email_for_editing=(e)
+    self.email=e
+  end
+
+  def alias_for_editing
+    if self.alias!=nil
+      self.alias
+    else
+      "unknown"
+    end
+  end
+
+  def alias_for_editing=(e)
+    self.alias=e
+  end
+
+  protected
     def encrypt_new_password
       return if password.blank?
       self.salt = (10+rand(90)).to_s

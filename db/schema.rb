@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 11) do
+ActiveRecord::Schema.define(:version => 12) do
 
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
@@ -85,6 +85,7 @@ ActiveRecord::Schema.define(:version => 11) do
     t.string "hashed_password"
     t.string "salt",            :limit => 5
     t.string "alias"
+    t.string "email"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

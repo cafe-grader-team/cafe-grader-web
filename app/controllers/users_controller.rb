@@ -6,7 +6,8 @@ class UsersController < ApplicationController
          :redirect_to => { :action => :index }
 
   in_place_edit_for :user, :full_name
-  in_place_edit_for :user, :alias
+  in_place_edit_for :user, :alias_for_editing
+  in_place_edit_for :user, :email_for_editing
 
   def index
     @user = User.find(session[:user_id])
