@@ -1,9 +1,8 @@
-<h1>Listing users</h1>
+<% content_for :head do %>
+  <%= stylesheet_link_tag 'scaffold' %>
+<% end %>
 
-<div class="usermenu">
-<%= link_to 'Stat', :action => 'user_stat' %>
-<%= link_to 'Main', :controller => 'main', :action => 'list' %>
-</div>
+<h1>Listing users</h1>
 
 <div style="border: solid 1px; margin: 2px">
 <b>Quick add</b>

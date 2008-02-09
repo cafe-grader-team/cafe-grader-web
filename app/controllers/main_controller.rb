@@ -11,12 +11,11 @@ class MainController < ApplicationController
   end
 
   def login
-    MainController.layout 'login'
+    MainController.layout 'empty'
     reset_session
   end
 
   def list
-    MainController.layout 'application'
     @problems = Problem.find_available_problems
     @prob_submissions = Array.new
     @user = User.find(session[:user_id])
