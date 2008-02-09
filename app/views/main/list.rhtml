@@ -22,7 +22,7 @@ File: <%= file_field_tag 'file' %>
   <div class="problist-each">
   <div class="probname">
     <%= "#{i+1}: #{p.full_name} (#{p.name})" %>
-    <%= link_to '[task description]', p.url if (p.url!=nil) and (p.url!='') %>
+    <%= link_to '[task description]', p.url, :popup => true if (p.url!=nil) and (p.url!='') %>
   </div>
   <div class="subinfo">
     <%= format_submission(@prob_submissions[i][1],
