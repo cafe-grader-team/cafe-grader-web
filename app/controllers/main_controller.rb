@@ -2,8 +2,6 @@ class MainController < ApplicationController
 
   before_filter :authenticate, :except => [:index, :login]
 
-  layout 'application'
-
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
@@ -13,8 +11,8 @@ class MainController < ApplicationController
   end
 
   def login
-    MainController.layout 'empty'
     reset_session
+    render :action => 'login', :layout => 'empty'
   end
 
   def list

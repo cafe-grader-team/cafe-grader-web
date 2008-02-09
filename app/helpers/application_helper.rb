@@ -11,7 +11,7 @@ module ApplicationHelper
     options += ' '
 
     # admin menu
-    if user.admin? 
+    if (user!=nil) and (user.admin?) 
       options +=
 	(link_to_unless_current '[Problem admin]', 
            :controller => 'problems', :action => 'index') + ' '
