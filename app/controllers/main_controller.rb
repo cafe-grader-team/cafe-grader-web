@@ -2,6 +2,8 @@ class MainController < ApplicationController
 
   before_filter :authenticate, :except => [:index, :login]
 
+  layout 'application'
+
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
