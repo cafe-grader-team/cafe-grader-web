@@ -9,7 +9,18 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 13) do
+ActiveRecord::Schema.define(:version => 14) do
+
+  create_table "grader_processes", :force => true do |t|
+    t.string   "ip",         :limit => 20
+    t.integer  "pid"
+    t.string   "mode"
+    t.boolean  "active"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "grader_processes", ["ip", "pid"], :name => "index_grader_processes_on_ip_and_pid"
 
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
