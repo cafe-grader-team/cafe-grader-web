@@ -2,6 +2,9 @@
 Current time is <%= format_short_time(Time.new) %>.
 
 <div class="submitbox">
+
+<%= error_messages_for 'submission' %>
+
 <% form_tag({:action => 'submit'}, :multipart => true) do %>
 Problem: <%= select 'submission', 'problem_id', 
              	[['Specified in header','-1']] + 

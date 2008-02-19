@@ -4,6 +4,12 @@ class Submission < ActiveRecord::Base
   belongs_to :problem
   belongs_to :user
 
+  validates_presence_of :source
+  validates_length_of :source, :maximum => 100_000, :allow_blank => true, :message => 'too long'
+  validates_length_of :source, :minimum => 1, :allow_blank => true, :message => 'too short'
+  validate :must_specify_language
+  validate :must_have_valid_problem
+
   def self.find_by_user_and_problem(user_id, problem_id)
     subcount = count(:conditions => "user_id = #{user_id} AND problem_id = #{problem_id}")
     if subcount != 0
@@ -28,6 +34,9 @@ class Submission < ActiveRecord::Base
   end
 
   def self.find_option_in_source(option, source)
+    if source==nil
+      return nil
+    end
     i = 0
     source.each_line do |s|
       if s =~ option
@@ -59,6 +68,27 @@ class Submission < ActiveRecord::Base
       return problem
     else
       return nil
+    end
+  end
+
+  # validation codes
+  def must_specify_language
+    return if self.source==nil
+    self.language = Submission.find_language_in_source(self.source)
+    errors.add_to_base("must specify programming language") unless self.language!=nil
+  end
+
+  def must_have_valid_problem
+    return if self.source==nil
+    if self.problem_id!=-1
+      problem = Problem.find(self.problem_id)
+    else
+      problem = Submission.find_problem_in_source(self.source)
+    end
+    if problem==nil
+      errors.add_to_base("must specify problem")
+    elsif !problem.available
+      errors.add_to_base("must specify valid problem")
     end
   end
 
