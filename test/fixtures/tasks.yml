@@ -1,5 +1,31 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-one:
+
+sub1:
   id: 1
-two:
+  submission_id: 1
+  status: <%= Task::STATUS_COMPLETE %>
+  created_at: <%= Time.local(2000,1,1,10,10) %>
+
+sub2:
   id: 2
+  submission_id: 2
+  status: <%= Task::STATUS_GRADING %>
+  created_at: <%= Time.local(2000,1,1,10,20) %>
+
+sub3:
+  id: 3
+  submission_id: 3
+  status: <%= Task::STATUS_INQUEUE %>
+  created_at: <%= Time.local(2000,1,1,10,30) %>
+
+sub4:
+  id: 4
+  submission_id: 4
+  status: <%= Task::STATUS_INQUEUE %>
+  created_at: <%= Time.local(2000,1,1,10,40) %>
+
+sub5:
+  id: 5
+  submission_id: 5
+  status: <%= Task::STATUS_INQUEUE %>
+  created_at: <%= Time.local(2000,1,1,10,50) %>

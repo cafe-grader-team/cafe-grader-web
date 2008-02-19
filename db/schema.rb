@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 14) do
+ActiveRecord::Schema.define(:version => 15) do
 
   create_table "grader_processes", :force => true do |t|
     t.string   "ip",         :limit => 20
@@ -89,6 +89,8 @@ ActiveRecord::Schema.define(:version => 14) do
   create_table "tasks", :force => true do |t|
     t.integer  "submission_id"
     t.datetime "created_at"
+    t.integer  "status"
+    t.datetime "updated_at"
   end
 
   create_table "users", :force => true do |t|
