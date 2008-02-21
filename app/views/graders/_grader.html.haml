@@ -1,0 +1,9 @@
+
+%td= grader.ip
+%td= grader.pid
+%td= grader.updated_at.strftime("%H:%M:%S") if grader.updated_at!=nil
+%td
+  - if grader.task_id==nil
+    \-
+  - else
+    = grader.task_id

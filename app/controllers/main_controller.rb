@@ -32,10 +32,11 @@ class MainController < ApplicationController
                         :status => Task::STATUS_INQUEUE) == false
 	flash[:notice] = 'Error adding your submission to task queue'
       end
+    else
+      prepare_list_information
+      render :action => 'list' and return
     end
-
-    prepare_list_information
-    render :action => 'list'
+    redirect_to :action => 'list'
   end
 
   def get_source

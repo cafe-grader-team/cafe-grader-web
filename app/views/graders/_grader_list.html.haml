@@ -1,0 +1,16 @@
+
+%table.graders
+  %tr
+    %th ip
+    %th pid
+    %th last updated
+    %th task
+  - grader_list.each do |grader|
+    - if grader.active
+      - c = 'active'
+    - else
+      - c = 'inactive'
+    %tr{:class => c}        
+      = render :partial => 'grader', :locals => {:grader => grader}
+      %td= link_to 'clear', {:action => 'clear', :id => grader}
+
