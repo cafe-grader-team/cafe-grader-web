@@ -58,7 +58,7 @@ class MainController < ApplicationController
     @user = User.find(session[:user_id])
     @problems.each do |p|
       c, sub = Submission.find_by_user_and_problem(@user.id,p.id)
-      @prob_submissions << [c,sub]
+      @prob_submissions << { :count => c, :submission => sub }
     end
   end
 

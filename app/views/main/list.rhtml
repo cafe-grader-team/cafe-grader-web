@@ -2,17 +2,8 @@
 Current time is <%= format_short_time(Time.new) %>.
 
 <div class="submitbox">
-
-<%= error_messages_for 'submission' %>
-
-<% form_tag({:action => 'submit'}, :multipart => true) do %>
-Problem: <%= select 'submission', 'problem_id', 
-             	[['Specified in header','-1']] + 
-		@problems.collect {|p| [p.full_name, p.id]},
-		:selected => '-1' %>
-File: <%= file_field_tag 'file' %>
-<%= submit_tag 'Submit' %>
-<% end %>
+  <%= error_messages_for 'submission' %>
+  <%= render :partial => 'submission_box' %>
 </div>
 
 <hr/>
@@ -20,21 +11,12 @@ File: <%= file_field_tag 'file' %>
 <p style="color: red"><%= flash[:notice] %></p>
 
 <div class="problist">
-<% i = 0 %>
-<% @problems.each do |p| %>
-  <div class="problist-each">
-  <div class="probname">
-    <%= "#{i+1}: #{p.full_name} (#{p.name})" %>
-    <%= link_to '[task description]', p.url, :popup => true if (p.url!=nil) and (p.url!='') %>
-  </div>
-  <div class="subinfo">
-    <%= format_submission(@prob_submissions[i][1],
-		@prob_submissions[i][0]) %>
-  </div>
-  </div>
-  <% i = i+1 %>
-<% end %>
+  <%= render :partial => 'problem', :collection => @problems %>
 </div>
 
 <hr />
+
+<div class="submitbox">
+  <%= render :partial => 'submission_box' %>
+</div>
 

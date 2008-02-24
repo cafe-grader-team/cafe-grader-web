@@ -1,0 +1,10 @@
+<div><div><a href="#" onClick="n = this.parentNode.parentNode.lastChild;
+if(n.style.display == 'none') { n.style.display = 'block'; }
+else {n.style.display ='none'; } return false;">
+    Compiler message</a> (click to see)
+  </div>
+  <div style="display: none">
+    <div class="compilermsgbody" style="border: thin solid grey; margin: 2px">
+      <%=h(compiler_message).gsub(/\n/,'<br/>') %>
+    </div>
+</div></div>

@@ -1,0 +1,11 @@
+<div class="problist-each">
+  <div class="probname">
+    <%= "#{problem_counter + 1}: #{problem.full_name} (#{problem.name})" %>
+    <%= link_to '[task description]', problem.url, :popup => true if (problem.url!=nil) and (problem.url!='') %>
+  </div>
+  <div class="subinfo">
+    <%= render :partial => 'submission', 
+               :locals => { :submission => @prob_submissions[problem_counter][:submission],
+                            :count => @prob_submissions[problem_counter][:count] } %>
+  </div>
+</div>

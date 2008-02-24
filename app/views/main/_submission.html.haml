@@ -1,0 +1,16 @@
+
+- if count==0
+  0 submission
+- else
+  = count
+  submission(s).
+  Last on
+  = format_short_time(submission.submitted_at)
+  = link_to('[source]',{:action => 'get_source', :id => submission.id})
+  %br/
+  - if submission!=nil and submission.graded_at!=nil
+    = "Graded at #{format_short_time(submission.graded_at)}, " 
+    = "score: #{submission.points} "
+    = " [" + submission.grader_comment + "]"
+    %br/
+    = render :partial => 'compiler_message', :locals => {:compiler_message => submission.compiler_message }
