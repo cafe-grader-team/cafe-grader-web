@@ -8,12 +8,27 @@ class Task < ActiveRecord::Base
     self.status = Task::STATUS_INQUEUE
   end
 
+  def status_inqueue!
+    status_inqueue
+    self.save
+  end
+
   def status_grading
     self.status = Task::STATUS_GRADING
   end
 
+  def status_grading!
+    status_grading
+    self.save
+  end
+
   def status_complete
     self.status = Task::STATUS_COMPLETE
+  end
+
+  def status_complete!
+    status_complete
+    self.save
   end
 
   def self.get_inqueue_and_change_status(status)

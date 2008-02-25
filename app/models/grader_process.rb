@@ -2,23 +2,23 @@ class GraderProcess < ActiveRecord::Base
   
   belongs_to :task
 
-  def self.find_by_ip_and_pid(ip,pid)
+  def self.find_by_host_and_pid(host,pid)
     return GraderProcess.find(:first, 
                               :conditions => { 
-                                :ip => ip, 
+                                :host => host, 
                                 :pid => pid
                               })
   end
-
-  def self.register(ip,pid,mode)
-    grader = GraderProcess.find_by_ip_and_pid(ip,pid)
+  
+  def self.register(host,pid,mode)
+    grader = GraderProcess.find_by_host_and_pid(host,pid)
     if grader
       grader.mode = mode
       grader.active = nil
       grader.task_id = nil
       grader.save
     else
-      grader = GraderProcess.create(:ip => ip, 
+      grader = GraderProcess.create(:host => host, 
                                     :pid => pid, 
                                     :mode => mode)
     end
