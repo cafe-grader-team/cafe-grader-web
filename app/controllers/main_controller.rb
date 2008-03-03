@@ -57,8 +57,12 @@ class MainController < ApplicationController
     @prob_submissions = Array.new
     @user = User.find(session[:user_id])
     @problems.each do |p|
-      c, sub = Submission.find_by_user_and_problem(@user.id,p.id)
-      @prob_submissions << { :count => c, :submission => sub }
+      sub = Submission.find_last_by_user_and_problem(@user.id,p.id)
+      if sub!=nil
+        @prob_submissions << { :count => sub.number, :submission => sub }
+      else
+        @prob_submissions << { :count => 0, :submission => nil }
+      end
     end
   end
 

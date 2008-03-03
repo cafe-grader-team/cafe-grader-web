@@ -65,6 +65,6 @@ class ProblemsController < ApplicationController
 
   def stat
     @problem = Problem.find(params[:id])
-    @submissions = Submission.find_last_by_problem(params[:id])
+    @submissions = Submission.find_all_last_by_problem(params[:id])
   end
 end

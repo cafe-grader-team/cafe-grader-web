@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 17) do
+ActiveRecord::Schema.define(:version => 18) do
 
   create_table "grader_processes", :force => true do |t|
     t.string   "host",       :limit => 20
@@ -83,8 +83,10 @@ ActiveRecord::Schema.define(:version => 17) do
     t.datetime "graded_at"
     t.integer  "points"
     t.text     "grader_comment"
+    t.integer  "number"
   end
 
+  add_index "submissions", ["user_id", "problem_id", "number"], :name => "index_submissions_on_user_id_and_problem_id_and_number", :unique => true
   add_index "submissions", ["user_id", "problem_id"], :name => "index_submissions_on_user_id_and_problem_id"
 
   create_table "tasks", :force => true do |t|

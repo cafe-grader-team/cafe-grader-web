@@ -77,8 +77,8 @@ class UserAdminController < ApplicationController
       ustat = Array.new
       ustat[0] = u.login
       @problems.each do |p|
-	c, sub = Submission.find_by_user_and_problem(u.id,p.id)
-	if (c!=0) and (sub.points!=nil) 
+	sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+	if (sub!=nil) and (sub.points!=nil) 
 	  ustat << [sub.points, (sub.points>=p.full_score)]
 	else
 	  ustat << [0,false]

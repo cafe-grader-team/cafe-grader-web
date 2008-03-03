@@ -10,20 +10,17 @@ class Submission < ActiveRecord::Base
   validate :must_specify_language
   validate :must_have_valid_problem
 
-  def self.find_by_user_and_problem(user_id, problem_id)
-    subcount = count(:conditions => "user_id = #{user_id} AND problem_id = #{problem_id}")
-    if subcount != 0
-      last_sub = find(:first, 
-		      :conditions => {:user_id => user_id,
-			:problem_id => problem_id},
-		      :order => 'submitted_at DESC')
-    else
-      last_sub = nil
-    end
-    return subcount, last_sub
+  before_save :assign_latest_number
+
+  def self.find_last_by_user_and_problem(user_id, problem_id)
+    last_sub = find(:first, 
+                    :conditions => {:user_id => user_id,
+                      :problem_id => problem_id},
+                    :order => 'submitted_at DESC')
+    return last_sub
   end
 
-  def self.find_last_by_problem(problem_id)
+  def self.find_all_last_by_problem(problem_id)
     # need to put in SQL command, maybe there's a better way
     Submission.find_by_sql("SELECT * FROM submissions " +
 			   "WHERE id = " +
@@ -32,6 +29,8 @@ class Submission < ActiveRecord::Base
                            "problem_id = " + problem_id.to_s + " " +
 			   "GROUP BY user_id)")
   end
+
+  protected
 
   def self.find_option_in_source(option, source)
     if source==nil
@@ -90,6 +89,12 @@ class Submission < ActiveRecord::Base
     elsif !problem.available
       errors.add_to_base("must specify valid problem")
     end
+  end
+
+  # callbacks
+  def assign_latest_number
+    latest = Submission.find_last_by_user_and_problem(self.user_id, self.problem_id)
+    self.number = (latest==nil) ? 1 : latest.number + 1;
   end
 
 end
