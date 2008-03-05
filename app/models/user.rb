@@ -4,6 +4,8 @@ class User < ActiveRecord::Base
 
   has_and_belongs_to_many :roles
 
+  has_many :test_requests, :order => "problem_id"
+
   validates_presence_of :login
   validates_presence_of :full_name
   validates_length_of :full_name, :minimum => 1

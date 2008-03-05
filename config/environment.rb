@@ -58,3 +58,5 @@ end
 # Mime::Type.register "application/x-mobile", :mobile
 
 # Include your application configuration below
+
+UPLOADED_INPUT_FILE_DIR = '/home/jittat/web_grader/upload/'

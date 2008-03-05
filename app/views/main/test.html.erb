@@ -1,0 +1,67 @@
+<h2>Test Interface</h2>
+
+<% if @problems.length==0 %>
+  "There is no submission" 
+  <% return %>
+<% end %>
+
+<script type="text/javascript">
+var submissionCount = {
+<% @submissions.each do |submission| %>
+  <%= submission.problem_id %> : <%= submission.number %>,
+<% end %>
+};
+function updateSubmissionList() {
+  currentProb = document.getElementById("test_request_problem_id").value;
+  count = submissionCount[currentProb];
+  submissionSelect = document.getElementById("test_request_submission_number");
+  submissionSelect.options.length = 0;
+  for(i=0; i<count; i++) {
+    submissionSelect.options[i] = new Option(""+(i+1),""+(i+1),false,false);
+  }
+}
+</script>
+
+<% form_for :test_request, nil, 
+            :url => { :action => 'test_submit'}, 
+            :html => { :multipart => true } do |f| %>
+  <table>
+    <tr>
+      <td>Task:</td>
+      <td>
+	<%= select(:test_request, 
+	           :problem_id, 
+	           @problems.collect {|p| [p.name, p.id]}, {}, 
+	           { :onclick => "updateSubmissionList();" }) %>
+      </td>
+    </tr>
+    <tr>
+      <td>Submission:</td>
+      <td>
+	<%= select(:test_request,
+	           :submission_number, 
+	           (1..@submissions[0].number).collect {|n| [n,n]}) %>
+      </td>
+    </tr>
+    <tr>
+      <td>Input data:</td>
+      <td><%= f.file_field :input_file %></td>
+    <tr>
+      <td colspan="2">
+        <%= submit_tag 'submit' %>
+      </td>
+    </tr>
+  </table>
+<% end %>
+
+<h3>Previous requests</h3>
+
+<table border="1">
+  <tr>
+    <th></td>
+    <th>problem</th>
+    <th>#</th>
+    <th>status</th>
+  </tr>
+<%= render :partial => 'test_request', :collection => @user.test_requests %>
+</table>

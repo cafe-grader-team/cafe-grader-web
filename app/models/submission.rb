@@ -30,6 +30,25 @@ class Submission < ActiveRecord::Base
 			   "GROUP BY user_id)")
   end
 
+  def self.find_last_for_all_available_problems(user_id)
+    submissions = Array.new
+    problems = Problem.find_available_problems
+    problems.each do |problem|
+      sub = Submission.find_last_by_user_and_problem(user_id, problem.id)
+      submissions << sub if sub!=nil
+    end
+    submissions
+  end
+
+  def self.find_by_user_problem_number(user_id, problem_id, number)
+    Submission.find(:first,
+                    :conditions => {
+                      :user_id => user_id,
+                      :problem_id => problem_id,
+                      :number => number
+                    })
+  end
+
   protected
 
   def self.find_option_in_source(option, source)

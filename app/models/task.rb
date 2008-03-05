@@ -31,6 +31,17 @@ class Task < ActiveRecord::Base
     self.save
   end
 
+  def status_str
+    case self.status
+    when Task::STATUS_INQUEUE
+      "inqueue"
+    when Task::STATUS_GRADING
+      "grading"
+    when Task::STATUS_COMPLETE
+      "complete"
+    end
+  end
+
   def self.get_inqueue_and_change_status(status)
     task = nil
     begin

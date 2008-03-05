@@ -51,6 +51,23 @@ class MainController < ApplicationController
     end
   end
 
+  def test
+    @user = User.find(session[:user_id])
+    @submissions = Submission.find_last_for_all_available_problems(@user.id)
+    @problems = @submissions.collect { |submission| submission.problem }
+  end
+
+  def test_submit
+    @user = User.find(session[:user_id])
+    test_request = TestRequest.new_from_form_params(@user,params[:test_request])
+    if test_request.save
+      redirect_to :action => 'test'
+    else
+      flash[:notice] = 'Error saving your test submission'
+      render :action => 'test'
+    end
+  end
+
   protected
   def prepare_list_information
     @problems = Problem.find_available_problems

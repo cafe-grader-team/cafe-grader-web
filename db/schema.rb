@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 18) do
+ActiveRecord::Schema.define(:version => 19) do
 
   create_table "grader_processes", :force => true do |t|
     t.string   "host",       :limit => 20
@@ -95,6 +95,25 @@ ActiveRecord::Schema.define(:version => 18) do
     t.integer  "status"
     t.datetime "updated_at"
   end
+
+  create_table "test_requests", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.integer  "submission_id"
+    t.string   "input_file_name"
+    t.string   "output_file_name"
+    t.string   "running_stat"
+    t.integer  "status"
+    t.datetime "updated_at"
+    t.datetime "submitted_at"
+    t.datetime "compiled_at"
+    t.string   "compiler_message"
+    t.datetime "graded_at"
+    t.string   "grader_comment"
+    t.datetime "created_at"
+  end
+
+  add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
 
   create_table "users", :force => true do |t|
     t.string "login",           :limit => 10

@@ -2,34 +2,32 @@
 module ApplicationHelper
 
   def user_header
-    options = ''
+    menu_items = ''
     user = User.find(session[:user_id])
 
     # main page
-    options += link_to_unless_current '[Main]',
-                 :controller => 'main', :action => 'list'
-    options += ' '
+    append_to menu_items, '[Main]', 'main', 'list'
+    append_to menu_items, '[Test]', 'main', 'test'
 
     # admin menu
     if (user!=nil) and (user.admin?) 
-      options +=
-	(link_to_unless_current '[Problem admin]', 
-           :controller => 'problems', :action => 'index') + ' '
-      options += 
-	(link_to_unless_current '[User admin]',
-           :controller => 'user_admin', :action => 'index') + ' '
-      options += 
-	(link_to_unless_current '[User stat]',
-           :controller => 'user_admin', :action => 'user_stat') + ' '
+      append_to menu_items, '[Problem admin]', 'problems', 'index'
+      append_to menu_items, '[User admin]', 'user_admin', 'index'
+      append_to menu_items, '[User stat]', 'user_admin', 'user_stat'
     end
 
     # general options
-    options += link_to_unless_current '[Settings]',
-                 :controller => 'users', :action => 'index'
-    options += ' '
-    options += 
-      link_to('[Log out]', {:controller => 'main', :action => 'login'})
-    options
+    append_to menu_items, '[Settings]', 'users', 'index'
+    append_to menu_items, '[Log out]', 'main', 'login'
+
+    menu_items
+  end
+
+  def append_to(option,label, controller, action)
+    option << ' ' if option!=''
+    option << link_to_unless_current(label,
+                                     :controller => controller,
+                                     :action => action)
   end
 
 end
