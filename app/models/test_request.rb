@@ -6,9 +6,11 @@
 #   determined.  However, to be more flexible, we have to ensure that
 #   it works as well with problem=nil.  In this case, we shall provide
 #   a "default" execution environment for it.  This can be done
-#   seamlessly by using TestRequest#name_of when retrieving the name
-#   of the problem: name_of would return problem.name when
-#   problem!=nil and it would return "default" when problem=nil.
+#   seamlessly by using TestRequest#problem_name or
+#   TestRequest#name_of(problem) when retrieving the name of the
+#   problem: #name_of would return problem.name when problem!=nil and
+#   it would return "default" when problem=nil, #problem_name just
+#   call #name_of.
 #
 
 require 'fileutils'
@@ -52,6 +54,12 @@ class TestRequest < Task
     test_request
   end
 
+  def problem_name
+    TestRequest.name_of(self.problem)
+  end
+
+  protected
+
   def self.name_of(problem)
     if problem!=nil
       problem.name
@@ -60,7 +68,6 @@ class TestRequest < Task
     end
   end
 
-  protected
   def self.input_file_name(user,problem)
     problem_name = TestRequest.name_of(problem)
     begin
