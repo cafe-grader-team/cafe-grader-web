@@ -59,4 +59,5 @@ end
 
 # Include your application configuration below
 
-UPLOADED_INPUT_FILE_DIR = RAILS_ROOT + '/upload'
+TEST_REQUEST_INPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/input'
+TEST_REQUEST_OUTPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/output'

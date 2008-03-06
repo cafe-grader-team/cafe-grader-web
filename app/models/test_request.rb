@@ -41,8 +41,9 @@ class TestRequest < Task
 
   protected
   def self.input_file_name(user,problem)
+    problem_name = (problem!=nil) ? problem.name : ""
     begin
-      tmpname = UPLOADED_INPUT_FILE_DIR + "/#{user.login}/#{problem.name}/#{rand(10000)}"
+      tmpname = TEST_REQUEST_INPUT_FILE_DIR + "/#{user.login}/#{problem_name}/#{rand(10000)}"
     end while File.exists?(tmpname)
     tmpname
   end
