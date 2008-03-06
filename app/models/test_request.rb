@@ -1,3 +1,16 @@
+#
+# A TestRequest is a composition of submission with user's testdata.
+#
+# Note about TestRequest#problem: Usually, A TestRequest has to be
+#   associated with a problem, so that execution environment can be
+#   determined.  However, to be more flexible, we have to ensure that
+#   it works as well with problem=nil.  In this case, we shall provide
+#   a "default" execution environment for it.  This can be done
+#   seamlessly by using TestRequest#name_of when retrieving the name
+#   of the problem: name_of would return problem.name when
+#   problem!=nil and it would return "default" when problem=nil.
+#
+
 require 'fileutils'
 
 class TestRequest < Task
@@ -39,9 +52,17 @@ class TestRequest < Task
     test_request
   end
 
+  def self.name_of(problem)
+    if problem!=nil
+      problem.name
+    else
+      "default"
+    end
+  end
+
   protected
   def self.input_file_name(user,problem)
-    problem_name = (problem!=nil) ? problem.name : ""
+    problem_name = TestRequest.name_of(problem)
     begin
       tmpname = TEST_REQUEST_INPUT_FILE_DIR + "/#{user.login}/#{problem_name}/#{rand(10000)}"
     end while File.exists?(tmpname)
