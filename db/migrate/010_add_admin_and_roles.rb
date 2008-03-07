@@ -1,9 +1,16 @@
 class AddAdminAndRoles < ActiveRecord::Migration
+
+
   def self.up
     root = User.new(:login => 'root',
 		    :full_name => 'Administrator',
 		    :alias => 'root')
     root.password = 'ioionrails';
+
+    class << root
+      public :encrypt_new_password
+    end
+
     root.encrypt_new_password
 
     role = Role.create(:name => 'admin')
