@@ -48,23 +48,7 @@ class MainController < ApplicationController
                   :type => 'text/plain'})
     else
       flash[:notice] = 'Error viewing source'
-    end
-  end
-
-  def test
-    @user = User.find(session[:user_id])
-    @submissions = Submission.find_last_for_all_available_problems(@user.id)
-    @problems = @submissions.collect { |submission| submission.problem }
-  end
-
-  def test_submit
-    @user = User.find(session[:user_id])
-    test_request = TestRequest.new_from_form_params(@user,params[:test_request])
-    if test_request.save
-      redirect_to :action => 'test'
-    else
-      flash[:notice] = 'Error saving your test submission'
-      render :action => 'test'
+      redirect_to :action => 'list'
     end
   end
 

@@ -8,8 +8,6 @@ Current time is <%= format_short_time(Time.new) %>.
 
 <hr/>
 
-<p style="color: red"><%= flash[:notice] %></p>
-
 <div class="problist">
   <%= render :partial => 'problem', :collection => @problems %>
 </div>

@@ -35,15 +35,15 @@ class TestRequest < Task
     # since there will be only one grader grading TestRequest
     # we do not need locking (hopefully)
     
-    task = Task.find(:first, 
-                     :order => "created_at", 
-                     :conditions => {:status=> Task::STATUS_INQUEUE})
-    if task!=nil
-      task.status = status
-      task.save!
+    test_request = TestRequest.find(:first, 
+                                    :order => "created_at", 
+                                    :conditions => {:status=> Task::STATUS_INQUEUE})
+    if test_request!=nil
+      test_request.status = status
+      test_request.save!
     end
     
-    task
+    test_request
   end
 
   # interfacing with form

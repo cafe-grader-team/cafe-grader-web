@@ -7,7 +7,7 @@ module ApplicationHelper
 
     # main page
     append_to menu_items, '[Main]', 'main', 'list'
-    append_to menu_items, '[Test]', 'main', 'test'
+    append_to menu_items, '[Test]', 'test', 'index'
 
     # admin menu
     if (user!=nil) and (user.admin?) 
