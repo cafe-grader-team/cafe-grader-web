@@ -23,6 +23,14 @@ class TestRequest < Task
   belongs_to :problem
   belongs_to :submission
 
+  def problem_name
+    TestRequest.name_of(self.problem)
+  end
+
+  def language
+    self.submission.language
+  end
+
   def self.get_inqueue_and_change_status(status)
     # since there will be only one grader grading TestRequest
     # we do not need locking (hopefully)
@@ -54,10 +62,6 @@ class TestRequest < Task
     test_request
   end
 
-  def problem_name
-    TestRequest.name_of(self.problem)
-  end
-
   protected
 
   def self.name_of(problem)
@@ -68,7 +72,7 @@ class TestRequest < Task
     end
   end
 
-  def self.input_file_name(user,problem)
+  def self.random_input_file_name(user,problem)
     problem_name = TestRequest.name_of(problem)
     begin
       tmpname = TEST_REQUEST_INPUT_FILE_DIR + "/#{user.login}/#{problem_name}/#{rand(10000)}"
@@ -77,7 +81,7 @@ class TestRequest < Task
   end
 
   def self.save_input_file(tempfile, user, problem)
-    new_file_name = input_file_name(user,problem)
+    new_file_name = random_input_file_name(user,problem)
     dirname = File.dirname(new_file_name)
     FileUtils.mkdir_p(File.dirname(new_file_name)) if !File.exists?(dirname)
     if tempfile.instance_of?(Tempfile)
