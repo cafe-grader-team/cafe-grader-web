@@ -61,6 +61,10 @@ function updateSubmissionList() {
     <th>problem</th>
     <th>#</th>
     <th>status</th>
+    <th>running stat</th>
+    <th>output</th>
+    <th>grading comment</th>
+    <th>compiler message</th>
   </tr>
 <%= render :partial => 'test_request', :collection => @user.test_requests %>
 </table>
