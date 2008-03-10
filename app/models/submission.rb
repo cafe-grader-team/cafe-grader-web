@@ -10,7 +10,7 @@ class Submission < ActiveRecord::Base
   validate :must_specify_language
   validate :must_have_valid_problem
 
-  before_save :assign_latest_number
+  before_save :assign_latest_number_if_new_recond
 
   def self.find_last_by_user_and_problem(user_id, problem_id)
     last_sub = find(:first, 
@@ -111,7 +111,8 @@ class Submission < ActiveRecord::Base
   end
 
   # callbacks
-  def assign_latest_number
+  def assign_latest_number_if_new_recond
+    return if !self.new_record?
     latest = Submission.find_last_by_user_and_problem(self.user_id, self.problem_id)
     self.number = (latest==nil) ? 1 : latest.number + 1;
   end
