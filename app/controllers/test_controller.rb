@@ -31,6 +31,9 @@ class TestController < ApplicationController
     end
     if test_request.output_file_name!=nil
       data = File.open(test_request.output_file_name).read(2048)
+      if data==nil
+        data=""
+      end
       send_data(data,
                 {:filename => 'output.txt',
                   :type => 'text/plain'})
