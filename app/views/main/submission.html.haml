@@ -14,10 +14,10 @@ Current time is
 - if @submissions!=nil
   %table.info
     %tr.info-head
-      %th.info Sub #
-      %th.info Time
+      %th.info #
+      %th.info At
       %th.info Source
-      %th.info Results
+      %th.info Result
       %th.info{:width => "300px"} 
         Compiler message
     = render :partial => 'submission', :collection => @submissions

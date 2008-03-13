@@ -55,8 +55,13 @@ table.info {
     font-size: 12px;
 }
 
-th.info, td.info {
+th.info {
     border: 1px solid black;
+}
+
+td.info {
+    border-left: 1px solid black;
+    border-right: 1px solid black;
 }
 
 tr.info-head {
@@ -69,7 +74,7 @@ tr.info-odd {
 }
 
 tr.info-even {
-    background: #eeeeee;
+    background: #f0f0f0;
 }
 
 div.task-menu {
