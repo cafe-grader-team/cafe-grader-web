@@ -69,3 +69,26 @@ th.uinfo {
     border: 1px solid black;
     padding: 5px;
 }
+
+table.info {
+    border: 1px solid black;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+th.info, td.info {
+    border: 1px solid black;
+}
+
+tr.info-head {
+    background: #777777;
+    color: white;
+}
+
+tr.info-odd {
+    background: #dddddd;
+}
+
+tr.info-even {
+    background: #eeeeee;
+}
