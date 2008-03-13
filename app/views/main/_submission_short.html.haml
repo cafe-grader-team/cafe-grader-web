@@ -1,0 +1,13 @@
+
+- if submission==nil
+  = "-"
+- else
+  - if submission.graded_at==nil
+    Submitted at
+    = format_short_time(submission.submitted_at)
+  - else
+    = "Graded at #{format_short_time(submission.graded_at)}, " 
+    = "score: #{submission.points} "
+    = " [" + submission.grader_comment + "]"
+  = " | "
+  = link_to('[source]',{:action => 'get_source', :id => submission.id})

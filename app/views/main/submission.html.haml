@@ -1,0 +1,24 @@
+.title
+  Hello 
+  =h @user.full_name
+
+Current time is 
+= format_short_time(Time.new)
+%br/
+
+.task-menu
+  Tasks:
+  - @problems.each do |problem| 
+    = link_to problem.name, :action => 'submission', :id => problem.name
+
+- if @submissions!=nil
+  %table.info
+    %tr.info-head
+      %th.info Sub #
+      %th.info Time
+      %th.info Source
+      %th.info Results
+      %th.info{:width => "300px"} 
+        Compiler message
+    = render :partial => 'submission', :collection => @submissions
+

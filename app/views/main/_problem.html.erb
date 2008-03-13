@@ -10,7 +10,7 @@
     <%= @prob_submissions[problem_counter][:count] %>
   </td>
   <td class="info">
-    <%= render :partial => 'submission', 
+    <%= render :partial => 'submission_short', 
                :locals => { :submission => @prob_submissions[problem_counter][:submission]} %>
   </td>
 </tr>

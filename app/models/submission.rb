@@ -49,6 +49,14 @@ class Submission < ActiveRecord::Base
                     })
   end
 
+  def self.find_all_by_user_problem(user_id, problem_id)
+    Submission.find(:all,
+                    :conditions => {
+                      :user_id => user_id,
+                      :problem_id => problem_id,
+                    })
+  end
+
   protected
 
   def self.find_option_in_source(option, source)

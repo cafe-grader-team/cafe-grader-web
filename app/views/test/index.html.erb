@@ -39,7 +39,7 @@ function updateSubmissionList() {
       <td>
 	<%= select(:test_request,
 	           :submission_number, 
-	           (1..@submissions[0].number).collect {|n| [n,n]}) %>
+	           ((1..@submissions[0].number).collect {|n| [n,n]}).reverse) %>
       </td>
     </tr>
     <tr>
@@ -55,18 +55,18 @@ function updateSubmissionList() {
 
 <h3>Previous requests</h3>
 
-<table border="1">
-  <tr>
-    <th></td>
-    <th>problem</th>
-    <th>#</th>
-    <th>status</th>
-    <th>running stat</th>
-    <th>output (first 2kb)</th>
-    <th>grading comment</th>
-    <th>compiler message</th>
+<table class="info">
+  <tr class="info-head">
+    <th class="info"></td>
+    <th class="info">problem</th>
+    <th class="info">#</th>
+    <th class="info">status</th>
+    <th class="info">running stat</th>
+    <th class="info">output (first 2kb)</th>
+    <th class="info">grading comment</th>
+    <th class="info">compiler message</th>
   </tr>
-<%= render :partial => 'test_request', :collection => @user.test_requests %>
+  <%= render :partial => 'test_request', :collection => @user.test_requests %>
 </table>
 
 <% end %>

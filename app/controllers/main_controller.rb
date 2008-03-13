@@ -52,6 +52,18 @@ class MainController < ApplicationController
     end
   end
 
+  def submission
+    @user = User.find(session[:user_id])
+    @problems = Problem.find_available_problems
+    if params[:id]==nil
+      @problem = nil
+      @submissions = nil
+    else
+      @problem = Problem.find_by_name(params[:id])
+      @submissions = Submission.find_all_by_user_problem(@user.id, @problem.id)
+    end
+  end
+
   protected
   def prepare_list_information
     @problems = Problem.find_available_problems

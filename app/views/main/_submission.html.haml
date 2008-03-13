@@ -1,13 +1,14 @@
 
-- if submission==nil
-  = "-"
-- else
-  - if submission.graded_at==nil
-    Submitted at
-    = format_short_time(submission.submitted_at)
-  - else
-    = "Graded at #{format_short_time(submission.graded_at)}, " 
-    = "score: #{submission.points} "
-    = " [" + submission.grader_comment + "]"
-  = " | "
-  = link_to('[source]',{:action => 'get_source', :id => submission.id})
+%tr{:class => ((submission_counter%2==0) ? "info-even" : "info-odd")}
+  %td.info{:align => "center"}
+    = submission_counter+1
+  %td.info= format_short_time(submission.submitted_at)
+  %td.info= link_to('[source]',{:action => 'get_source', :id => submission.id})
+  %td.info
+    - if submission.graded_at!=nil
+      = "Graded at #{format_short_time(submission.graded_at)}." 
+      %br/
+      = "Score: #{submission.points} "
+      = " [" + submission.grader_comment + "]"
+  %td.info
+    = render :partial => 'compiler_message', :locals => {:compiler_message => submission.compiler_message }

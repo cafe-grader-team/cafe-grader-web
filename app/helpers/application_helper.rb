@@ -7,6 +7,7 @@ module ApplicationHelper
 
     # main page
     append_to menu_items, '[Main]', 'main', 'list'
+    append_to menu_items, '[Submissions]', 'main', 'submission'
     append_to menu_items, '[Test]', 'test', 'index'
 
     # admin menu
