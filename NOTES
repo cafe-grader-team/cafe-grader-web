@@ -40,7 +40,7 @@ added:
   BalancerMember http://127.0.0.1:8002
   BalancerMember http://127.0.0.1:8003
   BalancerMember http://127.0.0.1:8004
-  Allow from localhost
+  Allow from all
 </proxy>
 
 # can't use proxypass because we want access to balancer-manager
