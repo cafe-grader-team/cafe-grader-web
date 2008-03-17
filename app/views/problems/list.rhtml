@@ -1,5 +1,6 @@
 <% content_for :head do %>
   <%= stylesheet_link_tag 'scaffold' %>
+  <%= stylesheet_link_tag 'problems' %>
   <%= javascript_include_tag :defaults %>
 <% end %>
 
@@ -9,7 +10,8 @@
 <%= link_to 'Main', :controller => 'main', :action => 'list' %>
 </div>
 
-<%= link_to 'New problem', :action => 'new' %><br/>
+<%= link_to 'New problem', :action => 'new' %>
+<%= link_to 'Turn off all problems', :action => 'turn_all_off' %><br/>
 
 <table>
   <tr>
@@ -21,7 +23,7 @@
   </tr>
   
 <% for problem in @problems %>
-  <tr>
+  <tr class="<%= (problem.available) ? "available" : "not-available" %>">
     <% @problem=problem %>
     <td><%= in_place_editor_field :problem, :name, {}, :rows=>1 %>
     <td><%= in_place_editor_field :problem, :full_name, {}, :rows=>1 %>

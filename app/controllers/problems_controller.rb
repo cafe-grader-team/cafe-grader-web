@@ -63,6 +63,15 @@ class ProblemsController < ApplicationController
     redirect_to :action => 'list'
   end
 
+  def turn_all_off
+    Problem.find(:all,
+                 :conditions => "available = 1").each do |problem|
+      problem.available = false
+      problem.save
+    end
+    redirect_to :action => 'list'
+  end
+
   def stat
     @problem = Problem.find(params[:id])
     @submissions = Submission.find_all_last_by_problem(params[:id])

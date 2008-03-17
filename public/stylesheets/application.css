@@ -1,14 +1,9 @@
+/* Normal text */
 p {
     font-size: 12px;
 }
 
-div.title {
-    font-size: 20px;
-    font-weight: bold;
-    background: lightgreen;
-    padding: 2px;
-}
-
+/* This is the main menu bad*/
 div.userbar { 
     border-top: thin solid grey;
     border-bottom: thin solid grey;
@@ -16,39 +11,15 @@ div.userbar {
     font-size: 12px;
 }
 
-div.compilermsgbody {
-    font-family: monospace;
-}
-
-div.submitbox {
-    border: thin solid black;
-    padding: 5px;
-    color: white;
-    background-color: #777777;
+/* This is the top bar, displaying user's full name */
+div.title {
+    font-size: 20px;
     font-weight: bold;
-    font-size: 13px;
-}
-
-table.uinfo {
-    border-collapse: collapse;
-    border: 1px solid black;
-    font-size: 13px;
-}
-
-td.uinfo {
-    vertical-align: top;
-    border: 1px solid black;
-    padding: 5px;
-}
-
-th.uinfo {
     background: lightgreen;
-    vertical-align: top;
-    text-align: right;
-    border: 1px solid black;
-    padding: 5px;
+    padding: 2px;
 }
 
+/* Standard table with header and rows with alternating background */
 table.info {
     border: 1px solid black;
     border-collapse: collapse;
@@ -75,6 +46,48 @@ tr.info-odd {
 
 tr.info-even {
     background: #f0f0f0;
+}
+
+/*******************************
+ [Main]
+********************************/
+div.submitbox {
+    border: thin solid black;
+    padding: 5px;
+    color: white;
+    background-color: #777777;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/*******************************
+ [Settings]
+********************************/
+table.uinfo {
+    border-collapse: collapse;
+    border: 1px solid black;
+    font-size: 13px;
+}
+
+td.uinfo {
+    vertical-align: top;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+th.uinfo {
+    background: lightgreen;
+    vertical-align: top;
+    text-align: right;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+/*******************************
+ [Submission]
+********************************/
+div.compilermsgbody {
+    font-family: monospace;
 }
 
 div.task-menu {

@@ -1,0 +1,8 @@
+
+tr.available {
+    background: #c0ffc0;
+}
+
+tr.not-available {
+    background: #ffc0c0;
+}
