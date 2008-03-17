@@ -1,21 +1,24 @@
 <h1>Problem stat: <%= @problem.name %></h1>
 
-<div class="usermenu">
-<%= link_to 'Main', :controller => 'main', :action => 'list' %>
-</div>
-
 <i>This is just a hack.  Really not efficient.</i><br/><br/>
 
 <% if @submissions!=nil %>
-  <table border="1">
-  <tr><td>user_id</td><td>submitted_at</td><td>points</td><td>comment</td></tr>
+  <table class="info">
+  <tr class="info-head">
+    <th>user_id</th>
+    <th>submitted_at</th>
+    <th>points</th>
+    <th>comment</th>
+  </tr>
+  <% count = 0 %>
   <% @submissions.each do |sub| %>
-    <tr>
+    <tr class="<%= (count % 2 ==0) ? "info-even" : "info-odd" %>">
     <td><%= sub.user_id %></td>
     <td><%= sub.submitted_at.to_s %></td>
     <td><%= sub.points %></td>
     <td><div style="font-family: monospace"><%= sub.grader_comment %></div></td>
     </tr>
+    <% count += 1 %>
   <% end %>
   </table>
 <% else %>

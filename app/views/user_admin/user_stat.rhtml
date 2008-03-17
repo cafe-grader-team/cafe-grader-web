@@ -1,19 +1,16 @@
-<h1>User stat</h1>
+<h1>User grading results</h1>
 
-<div class="usermenu">
-<%= link_to 'List', :action => 'list' %>
-<%= link_to 'Main', :controller => 'main', :action => 'list' %>
-</div>
-
-<table border="1">
-<tr><td>User</td>
+<table class="info">
+<tr class="info-head"><th>User</th>
 <% @problems.each do |p| %>
-  <td><%= p.name %></td>
+  <th><%= p.name %></th>
 <% end %>
-<td>Total</td>
+<th>Total</th>
+<th>Passed</th>
 </tr>
+<% counter = 0 %>
 <% @scorearray.each do |sc| %>
-  <tr>
+  <tr class="<%= (counter %2 ==0) ? "info-even" : "info-odd" %>">
     <% total = 0 %>
     <% num_passed = 0 %>
     <% sc.each_index do |i| %>
@@ -28,5 +25,6 @@
     <td><%= total %></td>
     <td><%= num_passed %></td>
   </tr>
+  <% counter += 1 %>
 <% end %>
 </table>

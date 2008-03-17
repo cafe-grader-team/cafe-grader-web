@@ -26,11 +26,11 @@ table.info {
     font-size: 12px;
 }
 
-th.info {
+table.info th {
     border: 1px solid black;
 }
 
-td.info {
+table.info td {
     border-left: 1px solid black;
     border-right: 1px solid black;
 }

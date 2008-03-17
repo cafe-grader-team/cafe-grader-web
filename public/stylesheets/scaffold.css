@@ -1,11 +1,5 @@
 body { background-color: #fff; color: #333; }
 
-div.usermenu { 
-  border-top: thin solid grey;
-  border-bottom: thin solid grey;
-  text-align: right
-}
-
 body, p, ol, ul, td {
   font-family: verdana, arial, helvetica, sans-serif;
   font-size:   13px;

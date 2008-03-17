@@ -10,10 +10,10 @@ Current time is <%= format_short_time(Time.new) %>.
 
 <table class="info">
   <tr class="info-head">
-    <th class="info"></th>
-    <th class="info">Tasks</th>
-    <th class="info"># of sub(s)</th>
-    <th class="info">Results</th>
+    <th></th>
+    <th>Tasks</th>
+    <th># of sub(s)</th>
+    <th>Results</th>
   </tr>
   <%= render :partial => 'problem', :collection => @problems %>
 </table>

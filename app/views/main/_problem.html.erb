@@ -1,15 +1,15 @@
 <tr class="info-<%= (problem_counter%2==0) ? "even" : "odd" %>">
-  <td class="info">
+  <td>
     <%= "#{problem_counter + 1}" %>
   </td>
-  <td class="info">
+  <td>
     <%= "#{problem.full_name} (#{problem.name})" %>
     <%= link_to '[desc]', problem.url, :popup => true if (problem.url!=nil) and (problem.url!='') %>
   </td>
-  <td class="info" align="center">
+  <td align="center">
     <%= @prob_submissions[problem_counter][:count] %>
   </td>
-  <td class="info">
+  <td>
     <%= render :partial => 'submission_short', 
                :locals => { :submission => @prob_submissions[problem_counter][:submission]} %>
   </td>
