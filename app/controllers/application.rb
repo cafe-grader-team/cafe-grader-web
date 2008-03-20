@@ -25,7 +25,7 @@ class ApplicationController < ActionController::Base
       }
       flash[:notice] = 'You are not authorized to view the page you requested'
       #request.env['HTTP_REFERER'] ? (redirect_to :back) : (redirect_to :controller => 'login')
-      redirect_to :controller => 'login'
+      redirect_to :controller => 'main', :action => 'login'
       return false
     end
   end

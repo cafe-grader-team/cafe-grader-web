@@ -4,6 +4,6 @@ class AddTaskToGraderProcess < ActiveRecord::Migration
   end
 
   def self.down
-    remove_column :grader_processes, :task_id, :integer
+    remove_column :grader_processes, :task_id
   end
 end

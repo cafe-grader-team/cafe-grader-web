@@ -1,7 +1,7 @@
 class GradersController < ApplicationController
 
   
-  before_filter :authenticate
+  before_filter :authorization
 
   def list
     @grader_processes = GraderProcess.find(:all, 

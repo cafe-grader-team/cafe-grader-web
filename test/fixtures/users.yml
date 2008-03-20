@@ -1,5 +1,18 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-one:
-  id: 1
-two:
-  id: 2
+
+<%
+User.public_class_method :encrypt
+
+SALT = "abc"
+%>
+
+john:
+  login: john
+  hashed_password: <%= User.encrypt("hello",SALT) %>
+  salt: <%= SALT %>
+mary:
+  login: mary
+  hashed_password: <%= User.encrypt("goodbye",SALT) %>
+  salt: <%= SALT %>
+  roles: admin
+

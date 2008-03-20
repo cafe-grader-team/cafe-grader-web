@@ -1,5 +1,11 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 one:
   id: 1
+  name: add
+  full_name: add_full_name
+  available: true
 two:
   id: 2
+  name: subtract
+  full_name: subtract_full_name
+  available: false

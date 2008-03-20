@@ -24,7 +24,7 @@ class User < ActiveRecord::Base
   end
 
   def authenticated?(password)
-    hashed_password == encrypt(password,salt)
+    hashed_password == User.encrypt(password,self.salt)
   end
 
   def admin?
@@ -63,14 +63,14 @@ class User < ActiveRecord::Base
     def encrypt_new_password
       return if password.blank?
       self.salt = (10+rand(90)).to_s
-      self.hashed_password = encrypt(password,salt)
+      self.hashed_password = User.encrypt(self.password,self.salt)
     end
   
     def password_required?
-      hashed_password.blank? || !password.blank?
+      self.hashed_password.blank? || !self.password.blank?
     end
   
-    def encrypt(string,salt)
+    def self.encrypt(string,salt)
       Digest::SHA1.hexdigest(salt + string)
     end
 end
