@@ -9,11 +9,11 @@
 <% form_tag :action => 'create' do %>
 <table border="0">
 <tr>
-<td><label for="user_name">Login</label></td>
-<td><label for="user_name">Full name</label></td>
+<td><label for="user_login">Login</label></td>
+<td><label for="user_full_name">Full name</label></td>
 <td><label for="user_alias">Alias</label></td>
-<td><label for="password">Password</label></td>
-<td><label for="password_confirmation">confirm</label></td>
+<td><label for="user_password">Password</label></td>
+<td><label for="user_password_confirmation">confirm</label></td>
 </tr>
 <tr>
 <td><%= text_field 'user', 'login', :size => 10  %></td>
