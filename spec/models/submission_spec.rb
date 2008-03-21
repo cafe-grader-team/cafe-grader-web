@@ -1,7 +1,7 @@
 
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe Submission do
+describe Submission, "when verifying user submission" do
 
   before(:each) do
     @submission = Submission.new

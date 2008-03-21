@@ -8,6 +8,7 @@ class TestController < ApplicationController
   def index
     @user = User.find(session[:user_id])
     prepare_index_information
+    @test_requests = @user.test_requests
   end
 
   def submit

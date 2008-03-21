@@ -4,7 +4,7 @@ class User < ActiveRecord::Base
 
   has_and_belongs_to_many :roles
 
-  has_many :test_requests, :order => "problem_id"
+  has_many :test_requests, :order => "submitted_at DESC"
 
   validates_presence_of :login
   validates_presence_of :full_name
