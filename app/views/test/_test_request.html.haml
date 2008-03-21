@@ -1,10 +1,13 @@
 %tr{:class => (test_request_counter%2==0) ? "info-even" : "info-odd"}
-  %td= format_short_time(test_request.submitted_at)
+  %td{:align => "center"}
+    = format_short_time(test_request.submitted_at)
   %td= test_request.problem.full_name
-  %td= test_request.submission.number
-  %td= test_request.status_str
+  %td{:align => "center"}
+    = test_request.submission.number
+  %td{:align => "center"}
+    = test_request.status_str
   %td= simple_format((test_request.running_stat or ''))
-  %td
+  %td{:align => "center"}
     - if test_request.output_file_name!=nil
       = link_to '[output]', :action => 'read', :id => test_request.id
   %td= test_request.grader_comment or ''
