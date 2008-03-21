@@ -11,6 +11,16 @@ class ApplicationController < ActionController::Base
       redirect_to :controller => 'main', :action => 'login'
       return false
     end
+
+    user = User.find(session[:user_id])
+    # check if run in single user mode
+    if (defined?(SINGLE_USER_MODE) and 
+        (SINGLE_USER_MODE) and
+        user.login != 'root')
+      redirect_to :controller => 'main', :action => 'login'
+      return false
+    end
+
     return true
   end
 

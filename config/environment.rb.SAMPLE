@@ -59,5 +59,9 @@ end
 
 # Include your application configuration below
 
+# These are where inputs and outputs of test requests are stored
 TEST_REQUEST_INPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/input'
 TEST_REQUEST_OUTPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/output'
+
+# Uncomment this for single user mode (only root is allowed to log in)
+# SINGLE_USER_MODE = true
