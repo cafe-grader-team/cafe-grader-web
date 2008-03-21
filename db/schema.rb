@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20) do
+ActiveRecord::Schema.define(:version => 21) do
 
   create_table "grader_processes", :force => true do |t|
     t.string   "host",       :limit => 20
@@ -107,7 +107,7 @@ ActiveRecord::Schema.define(:version => 20) do
     t.datetime "updated_at"
     t.datetime "submitted_at"
     t.datetime "compiled_at"
-    t.string   "compiler_message"
+    t.text     "compiler_message"
     t.datetime "graded_at"
     t.string   "grader_comment"
     t.datetime "created_at"
