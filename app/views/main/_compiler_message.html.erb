@@ -9,7 +9,7 @@ else {n.style.display ='none'; } return false;">
     </div>
     <div style="display: none">
       <div class="compilermsgbody" style="border: thin solid grey; margin: 2px">
-        <%=h(compiler_message).gsub(/\n/,'<br/>') %>
+        <%=simple_format(compiler_message) %>
       </div>
   </div></div>
 <% end %>
