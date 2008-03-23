@@ -11,6 +11,8 @@
   </td>
   <td>
     <%= render :partial => 'submission_short', 
-               :locals => { :submission => @prob_submissions[problem_counter][:submission]} %>
+               :locals => { 
+                 :submission => @prob_submissions[problem_counter][:submission],
+                 :problem_name => problem.name }%>
   </td>
 </tr>

@@ -39,13 +39,23 @@ class MainController < ApplicationController
     redirect_to :action => 'list'
   end
 
-  def get_source
+  def source
     submission = Submission.find(params[:id])
     if submission.user_id == session[:user_id]
       fname = submission.problem.name + '.' + submission.language.ext
       send_data(submission.source, 
 		{:filename => fname, 
                   :type => 'text/plain'})
+    else
+      flash[:notice] = 'Error viewing source'
+      redirect_to :action => 'list'
+    end
+  end
+
+  def compiler_msg
+    @submission = Submission.find(params[:id])
+    if @submission.user_id == session[:user_id]
+      render :action => 'compiler_msg', :layout => 'empty'
     else
       flash[:notice] = 'Error viewing source'
       redirect_to :action => 'list'

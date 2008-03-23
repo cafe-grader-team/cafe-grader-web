@@ -9,5 +9,9 @@
     = "Graded at #{format_short_time(submission.graded_at)}, " 
     = "score: #{submission.points} "
     = " [" + submission.grader_comment + "]"
+    = " | "
+    = link_to('[msg]', {:action => 'compiler_msg', :id => submission.id}, {:popup => true})
   = " | "
-  = link_to('[source]',{:action => 'get_source', :id => submission.id})
+  = link_to('[source]',{:action => 'source', :id => submission.id})
+  = " | "
+  = link_to '[submissions]', :action => 'submission', :id => problem_name

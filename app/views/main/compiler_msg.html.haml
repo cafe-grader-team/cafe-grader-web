@@ -1,0 +1,6 @@
+%h2= "Compiler message for submission \##{@submission.number}, task: #{@submission.problem.name}"
+%p
+  - if @submission.compiler_message.chomp == ''
+    no message
+  - else
+    = simple_format(@submission.compiler_message)
