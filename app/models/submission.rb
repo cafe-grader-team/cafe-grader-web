@@ -16,7 +16,7 @@ class Submission < ActiveRecord::Base
     last_sub = find(:first, 
                     :conditions => {:user_id => user_id,
                       :problem_id => problem_id},
-                    :order => 'submitted_at DESC')
+                    :order => 'number DESC')
     return last_sub
   end
 
