@@ -10,6 +10,9 @@
       = "Graded at #{format_short_time(submission.graded_at)}." 
       %br/
       = "Score: #{submission.points} "
-      = " [" + submission.grader_comment + "]"
+      = " [" 
+      %tt
+        = submission.grader_comment
+      = "]"
   %td.info
     = render :partial => 'compiler_message', :locals => {:compiler_message => submission.compiler_message }

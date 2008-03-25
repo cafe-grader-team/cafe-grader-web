@@ -8,7 +8,10 @@
   - else
     = "Graded at #{format_short_time(submission.graded_at)}, " 
     = "score: #{submission.points} "
-    = " [" + submission.grader_comment + "]"
+    = " [" 
+    %tt
+      = submission.grader_comment
+    = "]"
     = " | "
     = link_to('[msg]', {:action => 'compiler_msg', :id => submission.id}, {:popup => true})
   = " | "
