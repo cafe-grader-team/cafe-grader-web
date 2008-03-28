@@ -113,7 +113,7 @@ class Submission < ActiveRecord::Base
     end
     if problem==nil
       errors.add_to_base("must specify problem")
-    elsif !problem.available
+    elsif (!problem.available) and (self.new_record?)
       errors.add_to_base("must specify valid problem")
     else
       self.problem = problem
