@@ -1,0 +1,26 @@
+- content_for :head do
+  = javascript_include_tag :defaults
+
+%h1 Grader configuration
+
+%table
+  %tr
+    %th Key
+    %th Type
+    %th Value
+
+  - @configurations.each do |conf|
+    - @configuration = conf
+    %tr
+      %td
+        = in_place_editor_field :configuration, :key, {}, :rows=>1
+      %td
+        = in_place_editor_field :configuration, :value_type, {}, :rows=>1
+      %td
+        = in_place_editor_field :configuration, :value, {}, :rows=>1
+
+%br/
+= link_to '[Reload configuration]', :action => 'reload'
+%br/
+Your config is saved, but it does not automatically take effect.
+You must reload.

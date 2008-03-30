@@ -9,7 +9,15 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 21) do
+ActiveRecord::Schema.define(:version => 22) do
+
+  create_table "configurations", :force => true do |t|
+    t.string   "key"
+    t.string   "value_type"
+    t.string   "value"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "grader_processes", :force => true do |t|
     t.string   "host",       :limit => 20

@@ -19,6 +19,11 @@ module ApplicationHelper
 
     # general options
     append_to menu_items, '[Settings]', 'users', 'index'
+
+    if (user!=nil) and (user.admin?) 
+      append_to menu_items, '[Site config]', 'configurations', 'index'
+    end
+
     append_to menu_items, '[Log out]', 'main', 'login'
 
     menu_items
