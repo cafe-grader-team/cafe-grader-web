@@ -43,4 +43,21 @@ module ApplicationHelper
     st + time.strftime("%X")
   end
 
+
+  def user_title_bar(user)
+    <<TITLEBAR
+<div class="title">
+<table>
+<tr>
+<td class="left-col">
+#{user.full_name}<br/>
+Current time is #{format_short_time(Time.new)}<br/>
+</td>
+<td class="right-col">APIO'08</td>
+</tr>
+</table>
+</div>
+TITLEBAR
+  end
+
 end

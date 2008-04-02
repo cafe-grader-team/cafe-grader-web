@@ -7,7 +7,7 @@
     = format_short_time(submission.submitted_at)
   - else
     = "Graded at #{format_short_time(submission.graded_at)}, " 
-    = "score: #{submission.points} "
+    = "score: #{submission.points} " if Configuration['ui.show_score']
     = " [" 
     %tt
       = submission.grader_comment

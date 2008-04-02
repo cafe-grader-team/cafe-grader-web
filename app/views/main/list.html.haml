@@ -1,0 +1,22 @@
+= user_title_bar(@user)
+
+.submitbox
+  = error_messages_for 'submission'
+  = render :partial => 'submission_box'
+
+
+%hr/
+
+%table.info
+  %tr.info-head
+    %th
+    %th Tasks
+    %th # of sub(s)
+    %th Results
+  = render :partial => 'problem', :collection => @problems
+
+%hr
+
+.submitbox
+  = render :partial => 'submission_box'
+

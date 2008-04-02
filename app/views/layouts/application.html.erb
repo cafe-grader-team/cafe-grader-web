@@ -14,7 +14,7 @@
 <%= user_header %>
 </div>
 
-<p style="color: green"><%= flash[:notice] %></p>
+<%= content_tag(:p,flash[:notice],:style => "color:green") if flash[:notice]!=nil %>
 
 <%= yield  %>
 

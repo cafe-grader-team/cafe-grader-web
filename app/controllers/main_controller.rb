@@ -15,9 +15,6 @@ class MainController < ApplicationController
     reset_session
     flash[:notice] = saved_notice
 
-    @title = Configuration['ui.front.title']
-    @welcome = Configuration['ui.front.welcome_message']
-
     render :action => 'login', :layout => 'empty'
   end
 

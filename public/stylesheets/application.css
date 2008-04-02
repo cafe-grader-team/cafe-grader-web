@@ -13,10 +13,26 @@ div.userbar {
 
 /* This is the top bar, displaying user's full name */
 div.title {
-    font-size: 20px;
-    font-weight: bold;
-    background: lightgreen;
+    font-size: 12px;
+    background: #ddffdd;
+    border: 1px solid black;
     padding: 2px;
+    margin-top: 3px;
+    margin-bottom: 5px;
+}
+
+div.title table {
+    width: 100%;
+}
+
+div.title td.left-col {
+    text-align: left;
+    vertical-align: top;
+}
+
+div.title td.right-col {
+    text-align: right;
+    vertical-align: top;
 }
 
 /* Standard table with header and rows with alternating background */

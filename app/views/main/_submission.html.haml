@@ -9,7 +9,7 @@
     - if submission.graded_at!=nil
       = "Graded at #{format_short_time(submission.graded_at)}." 
       %br/
-      = "Score: #{submission.points} "
+      = "Score: #{submission.points} " if Configuration['ui.show_score']
       = " [" 
       %tt
         = submission.grader_comment
