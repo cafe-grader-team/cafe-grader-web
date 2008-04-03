@@ -12,3 +12,4 @@
       = link_to '[output]', :action => 'read', :id => test_request.id
   %td= test_request.grader_comment or ''
   %td= simple_format((test_request.compiler_message or ''))
+  %td= link_to '[view]', :action => 'result', :id => test_request.id

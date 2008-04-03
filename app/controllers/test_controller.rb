@@ -2,7 +2,7 @@ class TestController < ApplicationController
 
   before_filter :authenticate
 
-  verify :method => :post, :only => [:test_submit],
+  verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
   def index
@@ -24,8 +24,12 @@ class TestController < ApplicationController
   
   def read
     user = User.find(session[:user_id])
-    test_request = TestRequest.find(params[:id])
-    if test_request.user_id != user.id
+    begin
+      test_request = TestRequest.find(params[:id])
+    rescue
+      test_request = nil
+    end
+    if test_request==nil or test_request.user_id != user.id
       flash[:notice] = 'Invalid output'
       redirect_to :action => 'index'
       return
@@ -41,6 +45,20 @@ class TestController < ApplicationController
       return
     end
     redirect_to :action => 'index'
+  end
+
+  def result
+    @user = User.find(session[:user_id])
+    begin
+      @test_request = TestRequest.find(params[:id])
+    rescue
+      @test_request = nil
+    end
+    if @test_request==nil or @test_request.user_id != @user.id
+      flash[:notice] = 'Invalid request'
+      redirect_to :action => 'index'
+      return
+    end
   end
     
   protected
