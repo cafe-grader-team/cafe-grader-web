@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 22) do
+ActiveRecord::Schema.define(:version => 23) do
 
   create_table "configurations", :force => true do |t|
     t.string   "key"
@@ -119,6 +119,9 @@ ActiveRecord::Schema.define(:version => 22) do
     t.datetime "graded_at"
     t.string   "grader_comment"
     t.datetime "created_at"
+    t.time     "running_time"
+    t.string   "exit_status"
+    t.integer  "memory_usage"
   end
 
   add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
