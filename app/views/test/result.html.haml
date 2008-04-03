@@ -1,13 +1,18 @@
 = user_title_bar(@user)
 
-%div{:style => "text-align: center"}
+%div{:style => "text-align: center; font-size: 12px"}
   = "Problem: #{@test_request.problem.full_name}"
   %br/
   = "Submission: #{@test_request.submission.number}"
   %br/
   = "Test submitted at: #{format_short_time(@test_request.submitted_at)}"
   %br/
-  = simple_format((@test_request.running_stat or ''))
+  = "Execution time: #{@test_request.running_time} s."
+  %br/
+  = "Memory usage: #{@test_request.memory_usage}"
+  %br/
+  %b= @test_request.exit_status
+  %br/
 
 - if @test_request.compiler_message!=nil and @test_request.compiler_message!=''
   %b Compiler Message

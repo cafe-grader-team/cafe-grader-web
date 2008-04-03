@@ -119,7 +119,7 @@ ActiveRecord::Schema.define(:version => 23) do
     t.datetime "graded_at"
     t.string   "grader_comment"
     t.datetime "created_at"
-    t.time     "running_time"
+    t.float    "running_time"
     t.string   "exit_status"
     t.integer  "memory_usage"
   end

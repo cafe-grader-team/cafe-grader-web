@@ -1,6 +1,6 @@
 class AddRunstatColumnsToTestRequest < ActiveRecord::Migration
   def self.up
-    add_column :test_requests, :running_time, :time
+    add_column :test_requests, :running_time, :float
     add_column :test_requests, :exit_status, :string
     add_column :test_requests, :memory_usage, :integer
   end
