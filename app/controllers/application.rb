@@ -24,6 +24,7 @@ class ApplicationController < ActionController::Base
       return false
     end
 
+    Configuration.reload
     # check if run in single user mode
     if (Configuration[SINGLE_USER_MODE_CONF_KEY])
       user = User.find(session[:user_id])
