@@ -9,7 +9,7 @@
   %br/
   = "Execution time: #{@test_request.running_time} s."
   %br/
-  = "Memory usage: #{@test_request.memory_usage}"
+  = "Memory usage: #{@test_request.memory_usage}kb"
   %br/
   %b= @test_request.exit_status
   %br/
@@ -19,12 +19,12 @@
   %div{:style => "border: 1px solid black; background: lightgrey"}
     = simple_format((@test_request.compiler_message or ''))
 
-%b Input
+%b Input (first 2kb)
 %div{:style => "border: 1px solid black; background: lightgrey"}
   - if @test_request.input_file_name!=nil
     = simple_format(read_textfile(@test_request.input_file_name,2048))
 
-%b Output
+%b Output (first 2kb)
 %div{:style => "border: 1px solid black; background: lightgrey"}
   - if @test_request.output_file_name!=nil
     = simple_format(read_textfile(@test_request.output_file_name,2048))

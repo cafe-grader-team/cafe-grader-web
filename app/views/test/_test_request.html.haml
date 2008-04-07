@@ -6,10 +6,13 @@
     = test_request.submission.number
   %td{:align => "center"}
     = test_request.status_str
-  %td= simple_format((test_request.running_stat or ''))
   %td{:align => "center"}
     - if test_request.output_file_name!=nil
-      = link_to '[output]', :action => 'read', :id => test_request.id
-  %td= test_request.grader_comment or ''
-  %td= simple_format((test_request.compiler_message or ''))
-  %td= link_to '[view]', :action => 'result', :id => test_request.id
+      = link_to '[download]', :action => 'read', :id => test_request.id
+  %td{:align => "center"}
+    - if test_request.compiler_message!=nil and test_request.compiler_message!=''
+      = "yes"
+    - else
+      = "no"
+  %td{:align => "center"}
+    = link_to '[view]', :action => 'result', :id => test_request.id
