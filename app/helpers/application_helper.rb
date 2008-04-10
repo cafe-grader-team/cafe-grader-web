@@ -45,9 +45,17 @@ module ApplicationHelper
 
 
   def user_title_bar(user)
+    if user.site!=nil and user.site.finished?
+      contest_over_string = <<CONTEST_OVER
+<tr><td colspan="2" align="center">
+<span class="contest-over-msg">THE CONTEST IS OVER</span>
+</td></tr>
+CONTEST_OVER
+    end
     <<TITLEBAR
 <div class="title">
 <table>
+#{contest_over_string}
 <tr>
 <td class="left-col">
 #{user.full_name}<br/>

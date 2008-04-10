@@ -53,5 +53,17 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def verify_time_limit
+    return true if session[:user_id]==nil
+    user = User.find(session[:user_id], :include => :site)
+    return true if user==nil or user.site == nil
+    if user.site.finished?
+      flash[:notice] = 'Error: the contest on your site is over.'
+      redirect_to :back
+      return false
+    end
+    return true
+  end
+
 end
 

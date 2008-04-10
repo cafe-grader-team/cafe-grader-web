@@ -6,6 +6,8 @@ class User < ActiveRecord::Base
 
   has_many :test_requests, :order => "submitted_at DESC"
 
+  belongs_to :site
+
   validates_presence_of :login
   validates_presence_of :full_name
   validates_length_of :full_name, :minimum => 1

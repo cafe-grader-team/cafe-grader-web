@@ -1,0 +1,18 @@
+<p>
+  <b>Name:</b>
+  <%=h @site.name %>
+</p>
+
+<p>
+  <b>Started:</b>
+  <%=h @site.started %>
+</p>
+
+<p>
+  <b>Start time:</b>
+  <%=h @site.start_time %>
+</p>
+
+
+<%= link_to 'Edit', edit_site_path(@site) %> |
+<%= link_to 'Back', sites_path %>

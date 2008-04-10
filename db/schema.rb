@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 23) do
+ActiveRecord::Schema.define(:version => 25) do
 
   create_table "configurations", :force => true do |t|
     t.string   "key"
@@ -79,6 +79,14 @@ ActiveRecord::Schema.define(:version => 23) do
   add_index "sessions", ["session_id"], :name => "index_sessions_on_session_id"
   add_index "sessions", ["updated_at"], :name => "index_sessions_on_updated_at"
 
+  create_table "sites", :force => true do |t|
+    t.string   "name"
+    t.boolean  "started"
+    t.datetime "start_time"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "submissions", :force => true do |t|
     t.integer  "user_id"
     t.integer  "problem_id"
@@ -127,12 +135,13 @@ ActiveRecord::Schema.define(:version => 23) do
   add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
 
   create_table "users", :force => true do |t|
-    t.string "login",           :limit => 10
-    t.string "full_name"
-    t.string "hashed_password"
-    t.string "salt",            :limit => 5
-    t.string "alias"
-    t.string "email"
+    t.string  "login",           :limit => 10
+    t.string  "full_name"
+    t.string  "hashed_password"
+    t.string  "salt",            :limit => 5
+    t.string  "alias"
+    t.string  "email"
+    t.integer "site_id"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

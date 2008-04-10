@@ -21,6 +21,12 @@ div.title {
     margin-bottom: 5px;
 }
 
+div.title span.contest-over-msg {
+    font-size: 15px;
+    color: red;
+    font-weight: bold;
+}
+
 div.title table {
     width: 100%;
 }

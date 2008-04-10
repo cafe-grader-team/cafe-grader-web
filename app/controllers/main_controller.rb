@@ -2,6 +2,11 @@ class MainController < ApplicationController
 
   before_filter :authenticate, :except => [:index, :login]
 
+#
+#  COMMENT OUT: filter in each action instead
+#
+#  before_filter :verify_time_limit, :only => [:submit]
+
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
@@ -23,11 +28,20 @@ class MainController < ApplicationController
   end
 
   def submit
+    user = User.find(session[:user_id])
+
     @submission = Submission.new(params[:submission])
-    @submission.user_id = session[:user_id]
+    @submission.user = user
     @submission.language_id = 0
     @submission.source = params['file'].read if params['file']!=''
     @submission.submitted_at = Time.new
+
+    if user.site!=nil and user.site.finished?
+      @submission.errors.add_to_base "The contest is over."
+      prepare_list_information
+      render :action => 'list' and return
+    end
+
     if @submission.valid?
       if @submission.save == false
 	flash[:notice] = 'Error saving your submission'

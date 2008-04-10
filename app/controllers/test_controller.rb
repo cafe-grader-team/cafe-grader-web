@@ -2,6 +2,11 @@ class TestController < ApplicationController
 
   before_filter :authenticate
 
+#
+#  COMMENT OUT: filter in each action instead
+#
+#  before_filter :verify_time_limit, :only => [:submit]
+
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
@@ -13,6 +18,12 @@ class TestController < ApplicationController
 
   def submit
     @user = User.find(session[:user_id])
+
+    if @user.site!=nil and @user.site.finished?
+      flash[:notice] = 'Error saving your test submission: Contest is over.'
+      redirect_to :action => 'index' and return
+    end
+
     test_request = TestRequest.new_from_form_params(@user,params[:test_request])
     if test_request.save
       redirect_to :action => 'index'
