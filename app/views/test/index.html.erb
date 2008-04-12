@@ -30,6 +30,8 @@ function updateSubmissionList() {
 }
 </script>
 
+<div class="submitbox">
+<%= error_messages_for 'submitted_test_request' %>
 <% form_for :test_request, nil, 
             :url => { :action => 'submit'}, 
             :html => { :multipart => true } do |f| %>
@@ -61,6 +63,7 @@ function updateSubmissionList() {
     </tr>
   </table>
 <% end %>
+</div>
 
 <h3>Previous requests</h3>
 

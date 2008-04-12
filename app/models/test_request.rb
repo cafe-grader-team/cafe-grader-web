@@ -57,6 +57,9 @@ class TestRequest < Task
                                              problem.id,
                                              params[:submission_number])
     test_request.input_file_name = save_input_file(params[:input_file], user, problem)
+    if test_request.input_file_name == nil
+      test_request.errors.add_to_base("No input submitted.")
+    end
     test_request.submitted_at = Time.new
     test_request.status_inqueue
     test_request
@@ -84,10 +87,14 @@ class TestRequest < Task
     new_file_name = random_input_file_name(user,problem)
     dirname = File.dirname(new_file_name)
     FileUtils.mkdir_p(File.dirname(new_file_name)) if !File.exists?(dirname)
+
+    # when the user did not submit any file
+    return nil if tempfile==""
+
     if tempfile.instance_of?(Tempfile)
       tempfile.close
       FileUtils.move(tempfile.path,new_file_name)
-    else      
+    else
       File.open(new_file_name, "wb") do |f| 
         f.write(tempfile.read) 
       end

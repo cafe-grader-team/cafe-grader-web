@@ -11,25 +11,30 @@ class TestController < ApplicationController
          :redirect_to => { :action => :index }
 
   def index
-    @user = User.find(session[:user_id])
     prepare_index_information
-    @test_requests = @user.test_requests
   end
 
   def submit
     @user = User.find(session[:user_id])
 
-    if @user.site!=nil and @user.site.finished?
-      flash[:notice] = 'Error saving your test submission: Contest is over.'
-      redirect_to :action => 'index' and return
+    @submitted_test_request = TestRequest.new_from_form_params(@user,params[:test_request])
+
+    if @submitted_test_request.errors.length != 0
+      prepare_index_information
+      render :action => 'index' and return
     end
 
-    test_request = TestRequest.new_from_form_params(@user,params[:test_request])
-    if test_request.save
+    if @user.site!=nil and @user.site.finished?
+      @submitted_test_request.errors.add_to_base('Contest is over.')
+      prepare_index_information
+      render :action => 'index' and return
+    end
+
+    if @submitted_test_request.save
       redirect_to :action => 'index'
     else
-      flash[:notice] = 'Error saving your test submission'
-      redirect_to :action => 'index'
+      prepare_index_information
+      render :action => 'index'
     end
   end
   
@@ -75,8 +80,10 @@ class TestController < ApplicationController
   protected
   
   def prepare_index_information
+    @user = User.find(session[:user_id])
     @submissions = Submission.find_last_for_all_available_problems(@user.id)
     @problems = @submissions.collect { |submission| submission.problem }
+    @test_requests = @user.test_requests
   end
 
 end
