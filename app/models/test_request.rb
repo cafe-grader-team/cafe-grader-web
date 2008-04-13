@@ -23,6 +23,9 @@ class TestRequest < Task
   belongs_to :problem
   belongs_to :submission
 
+  validates_presence_of :submission
+  validate :must_have_valid_problem
+
   def problem_name
     TestRequest.name_of(self.problem)
   end
@@ -50,15 +53,30 @@ class TestRequest < Task
   def self.new_from_form_params(user,params)
     test_request = TestRequest.new
     test_request.user = user
-    problem = Problem.find(params[:problem_id])
+    begin
+      problem = Problem.find(params[:problem_id])
+    rescue ActiveRecord::RecordNotFound
+      problem = nil
+    end
     test_request.problem = problem
-    test_request.submission = 
-      Submission.find_by_user_problem_number(user.id,
-                                             problem.id,
-                                             params[:submission_number])
-    test_request.input_file_name = save_input_file(params[:input_file], user, problem)
-    if test_request.input_file_name == nil
+    if problem!=nil
+      test_request.submission = 
+        Submission.find_by_user_problem_number(user.id,
+                                               problem.id,
+                                               params[:submission_number])
+    else
+      test_request.submission = nil
+    end
+
+    # checks if the user submits any input file
+    if params[:input_file]==nil or params[:input_file]==""
       test_request.errors.add_to_base("No input submitted.")
+      test_request.input_file_name = nil
+    else
+      test_request.input_file_name = save_input_file(params[:input_file], user, problem)
+      if test_request.input_file_name == nil
+        test_request.errors.add_to_base("No input submitted.")
+      end
     end
     test_request.submitted_at = Time.new
     test_request.status_inqueue
@@ -101,4 +119,16 @@ class TestRequest < Task
     end
     new_file_name
   end
+
+  #
+  # validations
+  #
+  def must_have_valid_problem
+    if problem==nil
+      errors.add('problem',"must be specified.")
+    elsif (!problem.available) and (self.new_record?)
+      errors.add('problem',"must be valid.")
+    end
+  end
+
 end

@@ -101,20 +101,24 @@ class Submission < ActiveRecord::Base
   def must_specify_language
     return if self.source==nil
     self.language = Submission.find_language_in_source(self.source)
-    errors.add_to_base("must specify programming language") unless self.language!=nil
+    errors.add('source',"must specify programming language") unless self.language!=nil
   end
 
   def must_have_valid_problem
     return if self.source==nil
     if self.problem_id!=-1
-      problem = Problem.find(self.problem_id)
+      begin
+        problem = Problem.find(self.problem_id)
+      rescue ActiveRecord::RecordNotFound
+        problem = nil
+      end
     else
       problem = Submission.find_problem_in_source(self.source)
     end
     if problem==nil
-      errors.add_to_base("must specify problem")
+      errors.add('problem',"must be specified.")
     elsif (!problem.available) and (self.new_record?)
-      errors.add_to_base("must specify valid problem")
+      errors.add('problem',"must be valid.")
     else
       self.problem = problem
     end
