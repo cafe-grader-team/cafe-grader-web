@@ -1,5 +1,7 @@
 %a{:name => problem.name}
-%h3= "#{problem.full_name} (#{problem.name})"
-%pre
-  %div{:style => "border: 1px solid grey; background: #eeeeee"}
+- back_color = ((problem_counter % 2) == 0) ? "#fefedd" : "#feeefe"
+%div{:style => "border: 1px solid grey; background: #{back_color}; padding-left: 20px;"}
+  %div{:style => "border-bottom: 1px solid black; padding: 5px; margin: 5px; font-size: 18px; font-weight: bold"}
+    = "#{problem.full_name} (#{problem.name})"
+  %pre
     = problem.body || "(not available)"
