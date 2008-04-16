@@ -1,0 +1,13 @@
+= user_title_bar(@user)
+
+%h2 Task Listing
+
+%b Task:
+
+- @problems.each do |problem|
+  - if problem.body!=nil
+    %a{:href => "\##{problem.name}"}
+      = problem.full_name
+    &nbsp
+
+= render :partial => 'problem', :collection => @problems

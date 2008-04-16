@@ -1,0 +1,5 @@
+%a{:name => problem.name}
+%h3= "#{problem.full_name} (#{problem.name})"
+%pre
+  %div{:style => "border: 1px solid grey; background: #eeeeee"}
+    = problem.body || "(not available)"

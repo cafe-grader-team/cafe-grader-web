@@ -1,6 +1,13 @@
 <% for column in Problem.content_columns %>
 <p>
-  <b><%= column.human_name %>:</b> <%=h @problem.send(column.name) %>
+  <b><%= column.human_name %>:</b> 
+  <% if column.name != 'body' %>
+    <%=h @problem.send(column.name) %>
+  <% else %>
+    <pre>
+    <%= @problem.body %>
+    </pre>
+  <% end %>
 </p>
 <% end %>
 
