@@ -1,0 +1,17 @@
+<%= user_title_bar(@user) %>
+
+<div class="task-menu">
+  <b>Task Listing:</b>
+
+  <% @problems.each do |problem| %>
+    <% if problem.description!=nil %>
+      <a href="#<%= problem.name %>"><%= "[#{problem.full_name}]" %></a>
+    <% else %>
+      <%= "[#{problem.full_name}]" %>
+    <% end %>
+  <% end %>
+</div>
+
+<table class="taskdesc">
+<%= render :partial => 'problem', :collection => @problems %>
+</table>
