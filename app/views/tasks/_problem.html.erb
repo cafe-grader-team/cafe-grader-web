@@ -1,0 +1,12 @@
+<a name="<%= problem.name %>"></a>
+<% back_color = ((problem_counter % 2) == 0) ? "#fefedd" : "#feeefe" %>
+<div style="border: 1px solid grey; background: <%= back_color %>; padding-left: 20px; padding-bottom: 5px">
+  <div style="border-bottom: 1px solid black; padding-top: 10px; padding-bottom: 5px; font-size: 18px; font-weight: bold">
+    <%= "#{problem.full_name} (#{problem.name})" %>
+  </div>
+  <% if problem.body!=nil %>
+<%= markdown(problem.body) %>
+  <% else %>
+    (not available)
+  <% end %>
+</div>
