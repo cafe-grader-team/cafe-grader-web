@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 28) do
+ActiveRecord::Schema.define(:version => 29) do
 
   create_table "configurations", :force => true do |t|
     t.string   "key"
@@ -52,6 +52,7 @@ ActiveRecord::Schema.define(:version => 28) do
     t.boolean "available"
     t.string  "url"
     t.integer "description_id"
+    t.boolean "test_allowed"
   end
 
   create_table "rights", :force => true do |t|

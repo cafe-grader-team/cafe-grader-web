@@ -15,17 +15,19 @@
     <th>Full name</th>
     <th>Full score</th>
     <th>Date added</th>
-    <th>Available</th>
+    <th>Avail?</th>
+    <th>Test?</th>
   </tr>
   
 <% for problem in @problems %>
   <tr class="<%= (problem.available) ? "available" : "not-available" %>">
     <% @problem=problem %>
-    <td><%= in_place_editor_field :problem, :name, {}, :rows=>1 %>
-    <td><%= in_place_editor_field :problem, :full_name, {}, :rows=>1 %>
-    <td><%= in_place_editor_field :problem, :full_score, {}, :rows=>1 %>
-    <td><%= problem.date_added %>
-    <td><%= problem.available %>
+    <td><%= in_place_editor_field :problem, :name, {}, :rows=>1 %></td>
+    <td><%= in_place_editor_field :problem, :full_name, {}, :rows=>1 %></td>
+    <td><%= in_place_editor_field :problem, :full_score, {}, :rows=>1 %></td>
+    <td><%= problem.date_added %></td>
+    <td><%= problem.available %></td>
+    <td><%= problem.test_allowed %></td>
 
     <td><%= link_to '[Toggle]', :action => 'toggle_avail', :id => problem.id %></td>
     <td><%= link_to '[Stat]', :action => 'stat', :id => problem.id %></td>

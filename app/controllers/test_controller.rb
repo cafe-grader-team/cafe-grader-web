@@ -82,7 +82,13 @@ class TestController < ApplicationController
   def prepare_index_information
     @user = User.find(session[:user_id])
     @submissions = Submission.find_last_for_all_available_problems(@user.id)
-    @problems = @submissions.collect { |submission| submission.problem }
+    all_problems = @submissions.collect { |submission| submission.problem }
+    @problems = []
+    all_problems.each do |problem|
+      if problem.test_allowed
+        @problems << problem
+      end
+    end
     @test_requests = @user.test_requests
   end
 

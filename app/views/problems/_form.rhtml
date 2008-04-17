@@ -13,6 +13,12 @@
 <p><label for="problem_date_added">Date added</label><br/>
 <%= date_select 'problem', 'date_added'  %></p>
 
+<p><label for="problem_available">Available?</label>
+<%= select("problem","available",[['True',true],['False',false]]) %></p>
+
+<p><label for="problem_test_allowed">Test allowed?</label>
+<%= select("problem","test_allowed",[['True',true],['False',false]]) %></p>
+
 <%= error_messages_for 'description' %>
 
 <p><label for="description_body">Description</label><br/>
@@ -28,6 +34,5 @@
 <p><label for="problem_url">URL</label><br/>
 <%= text_field 'problem', 'url'  %></p>
 
-<p><label for="problem_available">Available</label><br/>
-<%= select("problem","available",[['True',true],['False',false]]) %></p>
+
 <!--[eoform:problem]-->
