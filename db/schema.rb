@@ -9,12 +9,19 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 26) do
+ActiveRecord::Schema.define(:version => 28) do
 
   create_table "configurations", :force => true do |t|
     t.string   "key"
     t.string   "value_type"
     t.string   "value"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "descriptions", :force => true do |t|
+    t.text     "body"
+    t.boolean  "markdowned"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -38,13 +45,13 @@ ActiveRecord::Schema.define(:version => 26) do
   end
 
   create_table "problems", :force => true do |t|
-    t.string  "name",       :limit => 30
+    t.string  "name",           :limit => 30
     t.string  "full_name"
     t.integer "full_score"
     t.date    "date_added"
     t.boolean "available"
     t.string  "url"
-    t.text    "body"
+    t.integer "description_id"
   end
 
   create_table "rights", :force => true do |t|

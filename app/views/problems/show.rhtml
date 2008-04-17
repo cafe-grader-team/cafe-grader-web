@@ -1,15 +1,18 @@
 <% for column in Problem.content_columns %>
 <p>
   <b><%= column.human_name %>:</b> 
-  <% if column.name != 'body' %>
-    <%=h @problem.send(column.name) %>
-  <% else %>
-    <pre>
-    <%= @problem.body %>
-    </pre>
-  <% end %>
+  <%=h @problem.send(column.name) %>
 </p>
 <% end %>
+
+<p>
+<b>Description:</b><br/>
+<% if @problem.description!=nil %>
+<pre>
+<%= @problem.description.body %>
+</pre>
+<% end %>
+</p>
 
 <%= link_to 'Edit', :action => 'edit', :id => @problem %> |
 <%= link_to 'Back', :action => 'list' %>

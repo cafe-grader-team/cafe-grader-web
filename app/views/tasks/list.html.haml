@@ -4,9 +4,10 @@
   %b Task Listing:
 
   - @problems.each do |problem|
-    - if problem.body!=nil
+    - if problem.description!=nil
       %a{:href => "\##{problem.name}"}= "[#{problem.full_name}]"
     - else
       = "[#{problem.full_name}]"
 
-= render :partial => 'problem', :collection => @problems
+%table.taskdesc
+  = render :partial => 'problem', :collection => @problems

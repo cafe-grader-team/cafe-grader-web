@@ -13,8 +13,17 @@
 <p><label for="problem_date_added">Date added</label><br/>
 <%= date_select 'problem', 'date_added'  %></p>
 
-<p><label for="problem_body">Body</label><br/>
-<%= text_area 'problem', 'body', :rows => 10, :cols => 80  %></p>
+<%= error_messages_for 'description' %>
+
+<p><label for="description_body">Description</label><br/>
+<%= text_area :description, :body, :rows => 10, :cols => 80  %></p>
+
+<p><label for="description_markdowned">Markdowned?</label>
+<%= select "description",
+           "markdowned",
+           [['True',true],['False',false]], 
+           {:selected => (@description) ? @description.markdowned : false } 
+%></p>
 
 <p><label for="problem_url">URL</label><br/>
 <%= text_field 'problem', 'url'  %></p>
@@ -22,4 +31,3 @@
 <p><label for="problem_available">Available</label><br/>
 <%= select("problem","available",[['True',true],['False',false]]) %></p>
 <!--[eoform:problem]-->
-

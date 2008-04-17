@@ -25,10 +25,20 @@ class ProblemsController < ApplicationController
 
   def new
     @problem = Problem.new
+    @description = nil
   end
 
   def create
     @problem = Problem.new(params[:problem])
+    @description = Description.new(params[:description])
+    if @description.body!=''
+      if !@description.save
+        render :action => new and return
+      end
+    else
+      @description = nil
+    end
+    @problem.description = @description
     if @problem.save
       flash[:notice] = 'Problem was successfully created.'
       redirect_to :action => 'list'
@@ -39,10 +49,25 @@ class ProblemsController < ApplicationController
 
   def edit
     @problem = Problem.find(params[:id])
+    @description = @problem.description
   end
 
   def update
     @problem = Problem.find(params[:id])
+    @description = @problem.description
+    if @description == nil and params[:description][:body]!=''
+      @description = Description.new(params[:description])
+      if !@description.save
+        flash[:notice] = 'Error saving description'
+        render :action => 'edit' and return
+      end
+      @problem.description = @description
+    elsif @description!=nil
+      if !@description.update_attributes(params[:description])
+        flash[:notice] = 'Error saving description'
+        render :action => 'edit' and return
+      end
+    end
     if @problem.update_attributes(params[:problem])
       flash[:notice] = 'Problem was successfully updated.'
       redirect_to :action => 'show', :id => @problem

@@ -121,3 +121,34 @@ div.task-menu {
     margin-top: 2px;
     margin-bottom: 4px;
 }
+
+/*******************************
+ [Submission]
+********************************/
+table.taskdesc {
+    border: 1px solid black;
+    border-collapse: collapse;
+    font-size: 12px;
+    width: 100%;
+}
+
+table.taskdesc tr.name {
+    border: 1px solid black;
+    background: #aaaaaa;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+}
+
+table.taskdesc td.desc-odd {
+    padding: 5px;
+    padding-left: 10px;
+    background: #fefeee;
+}
+
+table.taskdesc td.desc-even {
+    padding: 5px;
+    padding-left: 10px;
+    background: #feeefe;
+}
