@@ -128,8 +128,12 @@ div.task-menu {
 table.taskdesc {
     border: 1px solid black;
     border-collapse: collapse;
-    font-size: 12px;
-    width: 100%;
+    width: 95%;
+    font-size: 13px;
+}
+
+table.taskdesc p {
+    font-size: 13px;
 }
 
 table.taskdesc tr.name {
@@ -143,12 +147,12 @@ table.taskdesc tr.name {
 
 table.taskdesc td.desc-odd {
     padding: 5px;
-    padding-left: 10px;
+    padding-left: 20px;
     background: #fefeee;
 }
 
 table.taskdesc td.desc-even {
     padding: 5px;
-    padding-left: 10px;
+    padding-left: 20px;
     background: #feeefe;
 }
