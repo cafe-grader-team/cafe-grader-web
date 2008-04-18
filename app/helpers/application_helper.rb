@@ -8,6 +8,7 @@ module ApplicationHelper
     if (user!=nil) and (user.admin?) 
       # admin menu
       menu_items << "<b>Administrative task:</b> "
+      append_to menu_items, '[Announcements]', 'announcements', 'index'
       append_to menu_items, '[Problem admin]', 'problems', 'index'
       append_to menu_items, '[User admin]', 'user_admin', 'index'
       append_to menu_items, '[User stat]', 'user_admin', 'user_stat'

@@ -1,4 +1,6 @@
 ActionController::Routing::Routes.draw do |map|
+  map.resources :announcements
+
   map.resources :sites
 
   # The priority is based upon order of creation: first created -> highest priority.

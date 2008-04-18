@@ -104,6 +104,10 @@ class MainController < ApplicationController
         @prob_submissions << { :count => 0, :submission => nil }
       end
     end
+
+    @announcements = Announcement.find(:all,
+                                       :conditions => "published = 1",
+                                       :order => "created_at DESC")
   end
 
 end

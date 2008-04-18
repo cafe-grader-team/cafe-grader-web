@@ -1,0 +1,30 @@
+<% content_for :head do %>
+  <%= stylesheet_link_tag 'scaffold' %>
+  <%= javascript_include_tag :defaults %>
+<% end %>
+
+<h1>Listing announcements</h1>
+
+<table>
+  <tr>
+    <th>Body</th>
+    <th>Author</th>
+    <th>Published</th>
+  </tr>
+
+<% for announcement in @announcements %>
+  <tr>
+    <% @announcement = announcement %>
+    <td><%=h announcement.body %></td>
+    <td><%=h announcement.author %></td>
+    <td><%= in_place_editor_field :announcement, :published, {}, :rows => 1 %></td>
+    <td><%= link_to 'Show', announcement %></td>
+    <td><%= link_to 'Edit', edit_announcement_path(announcement) %></td>
+    <td><%= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New announcement', new_announcement_path %>

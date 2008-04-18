@@ -1,5 +1,11 @@
 = user_title_bar(@user)
 
+- if @announcements.length!=0
+  .announcementbox
+    %span{:class => 'title'}
+      Announcements
+    = render :partial => 'announcement', :collection => @announcements
+
 .submitbox
   = error_messages_for 'submission'
   = render :partial => 'submission_box'

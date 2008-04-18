@@ -1,0 +1,26 @@
+<h1>New announcement</h1>
+
+<%= error_messages_for :announcement %>
+
+<% form_for(@announcement) do |f| %>
+  <p>
+    <b>Body</b><br />
+    <%= f.text_area :body %>
+  </p>
+
+  <p>
+    <b>Author</b><br />
+    <%= f.text_field :author %>
+  </p>
+
+  <p>
+    <b>Published</b><br />
+    <%= f.check_box :published %>
+  </p>
+
+  <p>
+    <%= f.submit "Create" %>
+  </p>
+<% end %>
+
+<%= link_to 'Back', announcements_path %>

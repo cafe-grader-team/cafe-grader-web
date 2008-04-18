@@ -9,7 +9,15 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 29) do
+ActiveRecord::Schema.define(:version => 30) do
+
+  create_table "announcements", :force => true do |t|
+    t.string   "author"
+    t.text     "body"
+    t.boolean  "published"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "configurations", :force => true do |t|
     t.string   "key"

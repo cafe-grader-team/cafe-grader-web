@@ -1,0 +1,18 @@
+<p>
+  <b>Author:</b>
+  <%=h @announcement.author %>
+</p>
+
+<p>
+  <b>Body:</b>
+  <%=h @announcement.body %>
+</p>
+
+<p>
+  <b>Published:</b>
+  <%=h @announcement.published %>
+</p>
+
+
+<%= link_to 'Edit', edit_announcement_path(@announcement) %> |
+<%= link_to 'Back', announcements_path %>
