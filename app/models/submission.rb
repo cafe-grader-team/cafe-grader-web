@@ -4,11 +4,14 @@ class Submission < ActiveRecord::Base
   belongs_to :problem
   belongs_to :user
 
+  before_validation :assign_problem
+  before_validation :assign_language
+
   validates_presence_of :source
   validates_length_of :source, :maximum => 100_000, :allow_blank => true, :message => 'too long'
   validates_length_of :source, :minimum => 1, :allow_blank => true, :message => 'too short'
-  validate :must_specify_language
   validate :must_have_valid_problem
+  validate :must_specify_language
 
   before_save :assign_latest_number_if_new_recond
 
@@ -97,30 +100,40 @@ class Submission < ActiveRecord::Base
     end
   end
 
+  def assign_problem
+    if self.problem_id!=-1
+      begin
+        self.problem = Problem.find(self.problem_id)
+      rescue ActiveRecord::RecordNotFound
+        self.problem = nil
+      end
+    else
+      self.problem = Submission.find_problem_in_source(self.source)
+    end
+  end
+
+  def assign_language
+    self.language = Submission.find_language_in_source(self.source)
+  end
+
   # validation codes
   def must_specify_language
     return if self.source==nil
-    self.language = Submission.find_language_in_source(self.source)
-    errors.add('source',"must specify programming language") unless self.language!=nil
+
+    # for output_only tasks
+    return if self.problem!=nil and self.problem.output_only
+    
+    if self.language==nil
+      errors.add('source',"must specify programming language") unless self.language!=nil
+    end
   end
 
   def must_have_valid_problem
     return if self.source==nil
-    if self.problem_id!=-1
-      begin
-        problem = Problem.find(self.problem_id)
-      rescue ActiveRecord::RecordNotFound
-        problem = nil
-      end
-    else
-      problem = Submission.find_problem_in_source(self.source)
-    end
-    if problem==nil
+    if self.problem==nil
       errors.add('problem',"must be specified.")
-    elsif (!problem.available) and (self.new_record?)
+    elsif (!self.problem.available) and (self.new_record?)
       errors.add('problem',"must be valid.")
-    else
-      self.problem = problem
     end
   end
 

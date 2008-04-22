@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 30) do
+ActiveRecord::Schema.define(:version => 31) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -61,6 +61,7 @@ ActiveRecord::Schema.define(:version => 30) do
     t.string  "url"
     t.integer "description_id"
     t.boolean "test_allowed"
+    t.boolean "output_only"
   end
 
   create_table "rights", :force => true do |t|
@@ -117,6 +118,7 @@ ActiveRecord::Schema.define(:version => 30) do
     t.integer  "points"
     t.text     "grader_comment"
     t.integer  "number"
+    t.string   "source_filename"
   end
 
   add_index "submissions", ["user_id", "problem_id", "number"], :name => "index_submissions_on_user_id_and_problem_id_and_number", :unique => true

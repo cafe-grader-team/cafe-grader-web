@@ -33,7 +33,10 @@ class MainController < ApplicationController
     @submission = Submission.new(params[:submission])
     @submission.user = user
     @submission.language_id = 0
-    @submission.source = params['file'].read if params['file']!=''
+    if params['file']!=''
+      @submission.source = params['file'].read 
+      @submission.source_filename = params['file'].original_filename
+    end
     @submission.submitted_at = Time.new
 
     if user.site!=nil and user.site.finished?
