@@ -99,6 +99,10 @@ class ProblemsController < ApplicationController
 
   def stat
     @problem = Problem.find(params[:id])
-    @submissions = Submission.find_all_last_by_problem(params[:id])
+    if !@problem.available
+      redirect_to :controller => 'main', :action => 'list'
+    else
+      @submissions = Submission.find_all_last_by_problem(params[:id])
+    end
   end
 end

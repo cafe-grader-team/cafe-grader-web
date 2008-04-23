@@ -62,7 +62,11 @@ class MainController < ApplicationController
   def source
     submission = Submission.find(params[:id])
     if submission.user_id == session[:user_id]
-      fname = submission.problem.name + '.' + submission.language.ext
+      if submission.problem.output_only
+        fname = submission.source_filename
+      else
+        fname = submission.problem.name + '.' + submission.language.ext
+      end
       send_data(submission.source, 
 		{:filename => fname, 
                   :type => 'text/plain'})
