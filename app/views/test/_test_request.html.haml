@@ -1,7 +1,11 @@
 %tr{:class => (test_request_counter%2==0) ? "info-even" : "info-odd"}
   %td{:align => "center"}
     = format_short_time(test_request.submitted_at)
-  %td= test_request.problem.full_name
+  %td
+    - if test_request.problem!=nil
+      = test_request.problem.full_name 
+    - else
+      (n/a)
   %td{:align => "center"}
     = test_request.submission.number
   %td{:align => "center"}

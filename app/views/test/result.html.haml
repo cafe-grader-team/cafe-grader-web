@@ -1,7 +1,11 @@
 = user_title_bar(@user)
 
 %div{:style => "text-align: center; font-size: 12px"}
-  = "Problem: #{@test_request.problem.full_name}"
+  Problem: 
+  - if @test_request.problem!=nil
+    = "#{@test_request.problem.full_name}"
+  - else
+    = "(n/a)"
   %br/
   = "Submission: #{@test_request.submission.number}"
   %br/

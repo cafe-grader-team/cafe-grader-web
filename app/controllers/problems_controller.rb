@@ -97,6 +97,15 @@ class ProblemsController < ApplicationController
     redirect_to :action => 'list'
   end
 
+  def turn_all_on
+    Problem.find(:all,
+                 :conditions => "available = 0").each do |problem|
+      problem.available = true
+      problem.save
+    end
+    redirect_to :action => 'list'
+  end
+
   def stat
     @problem = Problem.find(params[:id])
     if !@problem.available

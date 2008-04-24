@@ -165,7 +165,7 @@ div.announcementbox {
     margin-top: 10px;
     margin-bottom: 10px;
     background: green;
-    padding: 2px;
+    padding: 1px;
 }
 
 div.announcementbox span.title {
@@ -177,17 +177,17 @@ div.announcementbox span.title {
 div.announcement {
     margin: 2px;
     background: white;
-    padding: 2px;
+    padding: 1px;
     padding-left: 10px;
     padding-right: 10px;
 }
 
 div.announcement p {
-    font-size: 13px;
+    font-size: 12px;
 }
 
 div.pub-info, div.pub-info p {
     text-align: right;
     font-style: italic;
-    font-size: 10px;
+    font-size: 9px;
 }
