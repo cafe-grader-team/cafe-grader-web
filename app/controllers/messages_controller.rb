@@ -5,9 +5,7 @@ class MessagesController < ApplicationController
   verify :method => :post, :only => ['create'],
          :redirect_to => { :action => 'list' }
 
-  before_filter :only => ['console','show'] do |controller| 
-    controller.authorization_by_roles(['admin'])
-  end
+  before_filter :admin_authorization, :only => ['console','show','reply']
 
   def list
     @user = User.find(session[:user_id])

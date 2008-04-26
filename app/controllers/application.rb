@@ -7,6 +7,12 @@ class ApplicationController < ActionController::Base
 
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
 
+  def admin_authorization
+    return false unless authenticate
+    user = User.find(session[:user_id], :include => ['roles'])
+    redirect_to :controller => 'main', :action => 'login' unless user.admin?
+  end
+
   def authorization_by_roles(allowed_roles)
     return false unless authenticate
     user = User.find(session[:user_id])
@@ -18,13 +24,14 @@ class ApplicationController < ActionController::Base
   end
 
   protected
+
   def authenticate
     unless session[:user_id]
       redirect_to :controller => 'main', :action => 'login'
       return false
     end
 
-    Configuration.reload
+    #Configuration.reload
     # check if run in single user mode
     if (Configuration[SINGLE_USER_MODE_CONF_KEY])
       user = User.find(session[:user_id])

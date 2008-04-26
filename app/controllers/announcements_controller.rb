@@ -1,7 +1,6 @@
 class AnnouncementsController < ApplicationController
 
-  before_filter :authenticate
-  before_filter { |controller| controller.authorization_by_roles(['admin'])}
+  before_filter :admin_authorization
 
   in_place_edit_for :announcement, :published
 

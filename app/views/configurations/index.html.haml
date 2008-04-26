@@ -20,7 +20,11 @@
         = in_place_editor_field :configuration, :value, {}, :rows=>1
 
 %br/
-= link_to '[Reload configuration]', :action => 'reload'
-%br/
 Your config is saved, but it does not automatically take effect.
-You must reload.
+%br/
+If you have one mongrel process running, you can
+= link_to '[click]', :action => 'reload'
+here to reload.
+%br/
+If you have more than one process running, you should restart 
+them manually.

@@ -5,7 +5,7 @@ module ApplicationHelper
     menu_items = ''
     user = User.find(session[:user_id])
 
-    if (user!=nil) and (user.admin?) 
+    if (user!=nil) and (session[:admin]) 
       # admin menu
       menu_items << "<b>Administrative task:</b> "
       append_to menu_items, '[Announcements]', 'announcements', 'index'

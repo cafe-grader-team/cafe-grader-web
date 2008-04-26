@@ -10,6 +10,11 @@ class LoginController < ApplicationController
     if user = User.authenticate(params[:login], params[:password])
       session[:user_id] = user.id
       redirect_to :controller => 'main', :action => 'list'
+      if user.admin?
+        session[:admin] = true
+      else
+        session[:admin] = false
+      end
     else
       flash[:notice] = 'Wrong password'
       redirect_to :controller => 'main', :action => 'login'
