@@ -30,7 +30,8 @@ class Submission < ActiveRecord::Base
 			   "(SELECT MAX(id) FROM submissions AS subs " +
 			   "WHERE subs.user_id = submissions.user_id AND " +
                            "problem_id = " + problem_id.to_s + " " +
-			   "GROUP BY user_id)")
+			   "GROUP BY user_id) " +
+                           "ORDER BY user_id")
   end
 
   def self.find_last_for_all_available_problems(user_id)

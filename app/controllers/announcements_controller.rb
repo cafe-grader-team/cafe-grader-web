@@ -8,7 +8,8 @@ class AnnouncementsController < ApplicationController
   # GET /announcements
   # GET /announcements.xml
   def index
-    @announcements = Announcement.find(:all)
+    @announcements = Announcement.find(:all,
+                                       :order => "created_at DESC")
 
     respond_to do |format|
       format.html # index.html.erb
