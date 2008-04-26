@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 31) do
+ActiveRecord::Schema.define(:version => 32) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -50,6 +50,16 @@ ActiveRecord::Schema.define(:version => 31) do
     t.string "name",        :limit => 10
     t.string "pretty_name"
     t.string "ext",         :limit => 10
+  end
+
+  create_table "messages", :force => true do |t|
+    t.integer  "sender_id"
+    t.integer  "receiver_id"
+    t.integer  "replying_message_id"
+    t.text     "body"
+    t.boolean  "replied"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "problems", :force => true do |t|

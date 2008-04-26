@@ -9,6 +9,7 @@ module ApplicationHelper
       # admin menu
       menu_items << "<b>Administrative task:</b> "
       append_to menu_items, '[Announcements]', 'announcements', 'index'
+      append_to menu_items, '[Msg console]', 'messages', 'console'
       append_to menu_items, '[Problem admin]', 'problems', 'index'
       append_to menu_items, '[User admin]', 'user_admin', 'index'
       append_to menu_items, '[User stat]', 'user_admin', 'user_stat'
@@ -19,6 +20,7 @@ module ApplicationHelper
 
     # main page
     append_to menu_items, '[Main]', 'main', 'list'
+    append_to menu_items, '[Messages]', 'messages', 'list'
     append_to menu_items, '[Tasks]', 'tasks', 'list'
     append_to menu_items, '[Submissions]', 'main', 'submission'
     append_to menu_items, '[Test]', 'test', 'index'

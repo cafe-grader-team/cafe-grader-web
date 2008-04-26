@@ -6,6 +6,16 @@ class User < ActiveRecord::Base
 
   has_many :test_requests, :order => "submitted_at DESC"
 
+  has_many :messages, 
+           :class_name => "Message",
+           :foreign_key => "sender_id", 
+           :order => 'created_at DESC'
+
+  has_many :replied_messages, 
+           :class_name => "Message",
+           :foreign_key => "receiver_id", 
+           :order => 'created_at DESC'
+
   belongs_to :site
 
   validates_presence_of :login

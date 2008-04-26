@@ -1,0 +1,7 @@
+.message
+  .stat
+    = "#{message.sender.full_name} at #{message.created_at}"
+  %div{:class => (!defined?(reply) or (reply==false)) ? "body" : "reply-body"}
+    = simple_format(message.body)
+  - if message.replied_messages.length!=0
+    = render :partial => 'message', :collection => message.replied_messages, :locals => {:reply => true}

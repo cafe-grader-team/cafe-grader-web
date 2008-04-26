@@ -1,0 +1,6 @@
+%tr
+  %td=h short_message.sender.full_name
+  %td= "#{short_message.created_at}"
+  %td=h truncate(short_message.body)
+  %td
+    = link_to "[reply]", :action => 'show', :id => short_message.id

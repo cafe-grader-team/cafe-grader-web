@@ -1,0 +1,14 @@
+= user_title_bar(@user)
+
+%h3 Your Messages
+
+- form_for 'message', nil, :url => { :action => 'create'} do |f|
+  %p 
+    %b New message
+    = submit_tag "Post"
+    %br/
+    = f.text_area :body, :rows => 5, :cols => 100
+
+%hr/
+
+= render :partial => 'message', :collection => @messages, :locals => {:reply => false}

@@ -191,3 +191,31 @@ div.pub-info, div.pub-info p {
     font-style: italic;
     font-size: 9px;
 }
+
+/******************
+  [Messages
+******************/
+
+div.message {
+    padding-top: 5px;
+    padding-left: 10px;
+}
+
+div.message div.body {
+    border: 1px solid green;
+    background: #eeffee;
+    padding-left: 5px;
+}
+
+div.message div.reply-body {
+    border: 1px solid black;
+    background: #ffeeee;
+    padding-left: 5px;
+}
+
+div.message div.stat {
+    font-size: 10px;
+    color: white;
+    background: green;
+    font-weight: bold;
+}
