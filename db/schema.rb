@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 33) do
+ActiveRecord::Schema.define(:version => 35) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -23,6 +23,12 @@ ActiveRecord::Schema.define(:version => 33) do
     t.string   "key"
     t.string   "value_type"
     t.string   "value"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "countries", :force => true do |t|
+    t.string   "name"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -114,6 +120,8 @@ ActiveRecord::Schema.define(:version => 33) do
     t.datetime "start_time"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "country_id"
+    t.string   "password"
   end
 
   create_table "submissions", :force => true do |t|
@@ -172,6 +180,7 @@ ActiveRecord::Schema.define(:version => 33) do
     t.string  "alias"
     t.string  "email"
     t.integer "site_id"
+    t.integer "country_id"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

@@ -17,6 +17,7 @@ class User < ActiveRecord::Base
            :order => 'created_at DESC'
 
   belongs_to :site
+  belongs_to :country
 
   validates_presence_of :login
   validates_presence_of :full_name

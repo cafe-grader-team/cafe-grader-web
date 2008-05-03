@@ -4,29 +4,33 @@
 
 <h1>Listing users</h1>
 
-<div style="border: solid 1px; margin: 2px">
+<div class="submitbox">
 <b>Quick add</b>
 <% form_tag :action => 'create' do %>
-<table border="0">
-<tr>
-<td><label for="user_login">Login</label></td>
-<td><label for="user_full_name">Full name</label></td>
-<td><label for="user_alias">Alias</label></td>
-<td><label for="user_password">Password</label></td>
-<td><label for="user_password_confirmation">confirm</label></td>
-</tr>
-<tr>
-<td><%= text_field 'user', 'login', :size => 10  %></td>
-<td><%= text_field 'user', 'full_name', :size => 30  %></td>
-<td><%= text_field 'user', 'alias', :size => 10  %></td>
-<td><%= password_field 'user', 'password', :size => 10  %></td>
-<td><%= password_field 'user', 'password_confirmation', :size => 10 %></td>
-<td><%= submit_tag "Create" %></td>
-</tr></table>
+  <table border="0">
+  <tr>
+  <td><label for="user_login">Login</label></td>
+  <td><label for="user_full_name">Full name</label></td>
+  <td><label for="user_alias">Alias</label></td>
+  <td><label for="user_password">Password</label></td>
+  <td><label for="user_password_confirmation">confirm</label></td>
+  </tr>
+  <tr>
+  <td><%= text_field 'user', 'login', :size => 10  %></td>
+  <td><%= text_field 'user', 'full_name', :size => 30  %></td>
+  <td><%= text_field 'user', 'alias', :size => 10  %></td>
+  <td><%= password_field 'user', 'password', :size => 10  %></td>
+  <td><%= password_field 'user', 'password_confirmation', :size => 10 %></td>
+  <td><%= submit_tag "Create" %></td>
+  </tr></table>
+<% end %>
+<br/>
+<b>Import from site management</b>
+<% form_tag({:action => 'import'}, :multipart => true) do %>
+  File: <%= file_field_tag 'file' %> <%= submit_tag 'Import' %>
 <% end %>
 
 </div>
-
 <table>
   <tr>
   <% for column in User.content_columns %>

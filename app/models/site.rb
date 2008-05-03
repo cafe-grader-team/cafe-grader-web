@@ -1,5 +1,8 @@
 class Site < ActiveRecord::Base
 
+  belongs_to :country
+  has_many :users
+
   def clear_start_time_if_not_started
     if !self.started
       self.start_time = nil

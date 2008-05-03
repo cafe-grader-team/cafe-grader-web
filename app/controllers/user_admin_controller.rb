@@ -88,4 +88,71 @@ class UserAdminController < ApplicationController
       @scorearray << ustat
     end
   end
+
+  def import
+    if params[:file]==''
+      flash[:notice] = 'Error importing no file'
+      redirect_to :action => 'list' and return
+    end
+    import_from_file(params[:file])
+  end
+
+  protected
+
+  def import_from_file(f)
+    data_hash = YAML.load(f)
+    @import_log = ""
+
+    country_data = data_hash[:countries]
+    site_data = data_hash[:sites]
+    user_data = data_hash[:users]
+
+    # import country
+    countries = {}
+    country_data.each_pair do |id,country|
+      c = Country.find_by_name(country[:name])
+      if c!=nil
+        countries[id] = c
+        @import_log << "Found #{country[:name]}\n"
+      else
+        countries[id] = Country.new(:name => country[:name])
+        countries[id].save
+        @import_log << "Created #{country[:name]}\n"
+      end
+    end
+
+    # import sites
+    sites = {}
+    site_data.each_pair do |id,site|
+      s = Site.find_by_name(site[:name])
+      if s!=nil
+        @import_log << "Found #{site[:name]}\n"
+      else
+        s = Site.new(:name => site[:name])
+        @import_log << "Created #{site[:name]}\n"
+      end
+      s.password = site[:password]
+      s.country = countries[site[:country_id]]
+      s.save
+      sites[id] = s
+    end
+
+    # import users
+    user_data.each_pair do |id,user|
+      u = User.find_by_login(user[:login])
+      if u!=nil
+        @import_log << "Found #{user[:login]}\n"
+      else
+        u = User.new(:login => user[:login])
+        @import_log << "Created #{user[:login]}\n"
+      end
+      u.full_name = user[:name]
+      u.password = user[:password]
+      u.country = countries[user[:country_id]]
+      u.site = sites[user[:site_id]]
+      u.save
+    end
+
+  end
+
 end
