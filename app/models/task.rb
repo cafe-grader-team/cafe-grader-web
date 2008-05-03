@@ -1,5 +1,7 @@
 class Task < ActiveRecord::Base
 
+  belongs_to :submission
+
   STATUS_GRADING = 0
   STATUS_INQUEUE = 1
   STATUS_COMPLETE = 2

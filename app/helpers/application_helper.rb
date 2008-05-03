@@ -13,7 +13,7 @@ module ApplicationHelper
       append_to menu_items, '[Problem admin]', 'problems', 'index'
       append_to menu_items, '[User admin]', 'user_admin', 'index'
       append_to menu_items, '[User stat]', 'user_admin', 'user_stat'
-      #append_to menu_items, '[Graders]', 'graders', 'list'
+      append_to menu_items, '[Graders]', 'graders', 'list'
       append_to menu_items, '[Site config]', 'configurations', 'index'
       menu_items << "<br/>"
     end
@@ -70,6 +70,14 @@ Current time is #{format_short_time(Time.new)}<br/>
 </table>
 </div>
 TITLEBAR
+  end
+
+  def read_textfile(fname,max_size=2048)
+    begin
+      File.open(fname).read(max_size)
+    rescue
+      nil
+    end
   end
 
 end

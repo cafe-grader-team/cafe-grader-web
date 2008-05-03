@@ -1,7 +1,5 @@
 class GraderProcess < ActiveRecord::Base
   
-  belongs_to :task
-
   def self.find_by_host_and_pid(host,pid)
     return GraderProcess.find(:first, 
                               :conditions => { 
@@ -16,6 +14,7 @@ class GraderProcess < ActiveRecord::Base
       grader.mode = mode
       grader.active = nil
       grader.task_id = nil
+      grader.task_type = nil
       grader.save
     else
       grader = GraderProcess.create(:host => host, 
@@ -33,13 +32,15 @@ class GraderProcess < ActiveRecord::Base
   
   def report_active(task=nil)
     self.active = true
-    self.task = task
+    self.task_id = task.id
+    self.task_type = task.class.to_s
     self.save
   end                
 
   def report_inactive()
     self.active = false
-    self.task = nil
+    self.task_id = nil
+    self.task_type = nil
     self.save
   end                
 

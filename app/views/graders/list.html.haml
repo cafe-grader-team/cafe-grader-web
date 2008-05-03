@@ -3,6 +3,9 @@
 
 %h2 (Under Experiments)
 
+- form_for :clear, nil, :url => {:action => 'clear_all'} do |f|
+  = submit_tag 'Clear all data'
+
 %h3 Current graders
 
 = render :partial => 'grader_list', :locals => {:grader_list => @grader_processes}

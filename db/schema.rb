@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 32) do
+ActiveRecord::Schema.define(:version => 33) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -42,6 +42,7 @@ ActiveRecord::Schema.define(:version => 32) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "task_id"
+    t.string   "task_type"
   end
 
   add_index "grader_processes", ["host", "pid"], :name => "index_grader_processes_on_ip_and_pid"

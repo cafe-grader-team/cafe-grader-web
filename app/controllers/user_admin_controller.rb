@@ -1,6 +1,6 @@
 class UserAdminController < ApplicationController
 
-  before_filter :authenticate, :authorization
+  before_filter :admin_authorization
 
   def index
     list

@@ -1,0 +1,22 @@
+%h1= "Submission: #{@submission.id}"
+
+%p
+  User:
+  = "#{@submission.user.login}"
+  %br/
+  Problem: 
+  - if @submission.problem!=nil
+    = "#{@submission.problem.full_name}"
+  - else
+    = "(n/a)"
+  %br/
+  = "Number: #{@submission.number}"
+  %br/
+  = "Submitted at: #{format_short_time(@submission.submitted_at)}"
+
+%b Source code (first 10kb)
+%div{:style => "border: 1px solid black; background: lightgrey"}
+  - if @submission.source
+    %pre
+      = truncate(@submission.source,10240)
+

@@ -1,9 +1,11 @@
 
 %td= grader.host
 %td= grader.pid
+%td= grader.mode
 %td= grader.updated_at.strftime("%H:%M:%S") if grader.updated_at!=nil
+%td= grader.task_type
 %td
   - if grader.task_id==nil
-    \-
+    idle
   - else
-    = grader.task_id
+    = link_to "#{grader.task_id}", :action => 'view', :id => grader.task_id, :type => grader.task_type
