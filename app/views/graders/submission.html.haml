@@ -18,5 +18,5 @@
 %div{:style => "border: 1px solid black; background: lightgrey"}
   - if @submission.source
     %pre
-      = truncate(@submission.source,10240)
+      =h simple_format(truncate(@submission.source,10240))
 
