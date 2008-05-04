@@ -102,6 +102,10 @@ class MainController < ApplicationController
     end
   end
 
+  def error
+    @user = User.find(session[:user_id])
+  end
+
   protected
   def prepare_list_information
     @problems = Problem.find_available_problems
