@@ -34,6 +34,6 @@ class SizeFilterHandler < Mongrel::HttpHandler
   end
 end
 
-uri "/", :handler => SizeFilterHandler.new(:max_size => 200_000,
-                                           :redirect_url => "/main/list"), 
+uri "/", :handler => SizeFilterHandler.new(:max_size => 2_100_000,
+                                           :redirect_url => "/main/error"), 
          :in_front => true
