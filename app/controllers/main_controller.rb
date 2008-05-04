@@ -27,6 +27,10 @@ class MainController < ApplicationController
     prepare_list_information
   end
 
+  def help
+    @user = User.find(session[:user_id])
+  end
+
   def submit
     user = User.find(session[:user_id])
 

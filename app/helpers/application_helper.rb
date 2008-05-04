@@ -24,7 +24,8 @@ module ApplicationHelper
     append_to menu_items, '[Tasks]', 'tasks', 'list'
     append_to menu_items, '[Submissions]', 'main', 'submission'
     append_to menu_items, '[Test]', 'test', 'index'
-    append_to menu_items, '[Settings]', 'users', 'index'
+    append_to menu_items, '[Help]', 'main', 'help'
+    #append_to menu_items, '[Settings]', 'users', 'index'
     append_to menu_items, '[Log out]', 'main', 'login'
 
     menu_items
