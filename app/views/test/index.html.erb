@@ -57,8 +57,26 @@ function updateSubmissionList() {
       <td>Input data:</td>
       <td>
         <%= f.file_field :input_file %>
-        (should be smaller than 2MB)
       </td>
+      <td>
+        (combined size should not exceed 2MB)
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Additional file<sup><span style="color:red">*</span></sup>:
+      </td>
+      <td>
+        <%= f.file_field :additional_file %>
+      </td>
+      <td>
+        <small>
+          * This option works <u>only</u> for task max.
+          You can use this to submit <tt>questions.txt</tt>.<br/>
+          The file shall be copied to the execution directory before your program runs.
+        </small>
+      </td> 
+    </tr>
     <tr>
       <td colspan="2">
         <%= submit_tag 'submit' %>
