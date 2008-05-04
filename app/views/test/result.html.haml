@@ -26,11 +26,13 @@
 %b Input (first 2kb)
 %div{:style => "border: 1px solid black; background: lightgrey"}
   - if @test_request.input_file_name!=nil
-    = simple_format(read_textfile(@test_request.input_file_name,2048))
+    %pre
+      = h(read_textfile(@test_request.input_file_name,2048))
 
 %b Output (first 2kb)
 %div{:style => "border: 1px solid black; background: lightgrey"}
   - if @test_request.output_file_name!=nil
-    = simple_format(read_textfile(@test_request.output_file_name,2048))
+    %pre
+      = h(read_textfile(@test_request.output_file_name,2048))
   - else
     (no output)
