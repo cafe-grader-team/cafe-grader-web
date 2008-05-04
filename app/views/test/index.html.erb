@@ -55,7 +55,10 @@ function updateSubmissionList() {
     </tr>
     <tr>
       <td>Input data:</td>
-      <td><%= f.file_field :input_file %></td>
+      <td>
+        <%= f.file_field :input_file %>
+        (should be smaller than 2MB)
+      </td>
     <tr>
       <td colspan="2">
         <%= submit_tag 'submit' %>
