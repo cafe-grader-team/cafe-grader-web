@@ -82,7 +82,7 @@ class TestRequest < Task
                              "#{test_request.input_file_name}.files")
       end
     end
-    test_request.submitted_at = Time.new
+    test_request.submitted_at = Time.new.gmtime
     test_request.status_inqueue
     test_request
   end

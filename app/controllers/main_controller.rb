@@ -41,7 +41,7 @@ class MainController < ApplicationController
       @submission.source = params['file'].read 
       @submission.source_filename = params['file'].original_filename
     end
-    @submission.submitted_at = Time.new
+    @submission.submitted_at = Time.new.gmtime
 
     if user.site!=nil and user.site.finished?
       @submission.errors.add_to_base "The contest is over."
