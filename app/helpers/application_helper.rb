@@ -1,6 +1,8 @@
 # Methods added to this helper will be available to all templates in the application.
 module ApplicationHelper
 
+  SYSTEM_MODE_CONF_KEY = 'system.mode'
+
   def user_header
     menu_items = ''
     user = User.find(session[:user_id])
@@ -21,9 +23,12 @@ module ApplicationHelper
     # main page
     append_to menu_items, '[Main]', 'main', 'list'
     append_to menu_items, '[Messages]', 'messages', 'list'
-    append_to menu_items, '[Tasks]', 'tasks', 'list'
-    append_to menu_items, '[Submissions]', 'main', 'submission'
-    append_to menu_items, '[Test]', 'test', 'index'
+
+    if (user!=nil) and (Configuration.show_tasks_to?(user))
+      append_to menu_items, '[Tasks]', 'tasks', 'list'
+      append_to menu_items, '[Submissions]', 'main', 'submission'
+      append_to menu_items, '[Test]', 'test', 'index'
+    end
     append_to menu_items, '[Help]', 'main', 'help'
     #append_to menu_items, '[Settings]', 'users', 'index'
     append_to menu_items, '[Log out]', 'main', 'login'
@@ -48,19 +53,44 @@ module ApplicationHelper
     st + time.strftime("%X")
   end
 
+  def read_textfile(fname,max_size=2048)
+    begin
+      File.open(fname).read(max_size)
+    rescue
+      nil
+    end
+  end
 
   def user_title_bar(user)
-    if user.site!=nil and user.site.finished?
-      contest_over_string = <<CONTEST_OVER
+    header = ''
+
+    #
+    # if the contest is over
+    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' and 
+        user.site!=nil and user.site.finished?
+      header = <<CONTEST_OVER
 <tr><td colspan="2" align="center">
 <span class="contest-over-msg">THE CONTEST IS OVER</span>
 </td></tr>
 CONTEST_OVER
     end
+    
+    #
+    # if the contest is in the anaysis mode
+    if Configuration[SYSTEM_MODE_CONF_KEY]=='analysis'
+      header = <<ANALYSISMODE
+<tr><td colspan="2" align="center">
+<span class="contest-over-msg">ANALYSIS MODE</span>
+</td></tr>
+ANALYSISMODE
+    end
+
+    #
+    # build real title bar
     <<TITLEBAR
 <div class="title">
 <table>
-#{contest_over_string}
+#{header}
 <tr>
 <td class="left-col">
 #{user.full_name}<br/>
@@ -71,14 +101,6 @@ Current time is #{format_short_time(Time.new.gmtime)} UTC<br/>
 </table>
 </div>
 TITLEBAR
-  end
-
-  def read_textfile(fname,max_size=2048)
-    begin
-      File.open(fname).read(max_size)
-    rescue
-      nil
-    end
   end
 
 end

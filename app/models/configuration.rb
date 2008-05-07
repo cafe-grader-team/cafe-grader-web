@@ -1,4 +1,9 @@
+#
+# This class also contains various login of the system.
+#
 class Configuration < ActiveRecord::Base
+
+  SYSTEM_MODE_CONF_KEY = 'system.mode'
 
   @@configurations = nil
 
@@ -20,6 +25,28 @@ class Configuration < ActiveRecord::Base
   def self.clear
     @@configurations = nil
   end
+
+  #
+  # View decision
+  #
+  def self.show_submitbox_to?(user)
+    mode = get(SYSTEM_MODE_CONF_KEY)
+    return false if mode=='analysis'
+    if (mode=='contest') 
+      return false if (user.site!=nil) and 
+        ((user.site.started==false) or (user.site.finished?))
+    end
+    return true
+  end
+
+  def self.show_tasks_to?(user)
+    mode = get(SYSTEM_MODE_CONF_KEY)
+    if (mode=='contest') 
+      return false if (user.site!=nil) and (user.site.started==false)
+    end
+    return true
+  end
+  
 
   protected
   def self.read_config

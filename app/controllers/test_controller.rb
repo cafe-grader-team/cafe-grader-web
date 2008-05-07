@@ -1,6 +1,8 @@
 class TestController < ApplicationController
 
-  before_filter :authenticate
+  SYSTEM_MODE_CONF_KEY = 'system.mode'
+
+  before_filter :authenticate, :check_viewability
 
 #
 #  COMMENT OUT: filter in each action instead
@@ -24,7 +26,8 @@ class TestController < ApplicationController
       render :action => 'index' and return
     end
 
-    if @user.site!=nil and @user.site.finished?
+    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' and
+        @user.site!=nil and @user.site.finished?
       @submitted_test_request.errors.add_to_base('Contest is over.')
       prepare_index_information
       render :action => 'index' and return
@@ -90,6 +93,16 @@ class TestController < ApplicationController
       end
     end
     @test_requests = @user.test_requests
+  end
+
+  def check_viewability
+    user = User.find(session[:user_id])
+    if !Configuration.show_tasks_to?(user)
+      redirect_to :controller => 'main', :action => 'list'
+    end
+    if (!Configuration.show_submitbox_to?(user)) and (action_name=='submit')
+      redirect_to :controller => 'test', :action => 'index'
+    end
   end
 
 end

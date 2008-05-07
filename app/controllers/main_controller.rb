@@ -1,6 +1,9 @@
 class MainController < ApplicationController
 
+  SYSTEM_MODE_CONF_KEY = 'system.mode'
+
   before_filter :authenticate, :except => [:index, :login]
+  before_filter :check_viewability
 
 #
 #  COMMENT OUT: filter in each action instead
@@ -43,7 +46,8 @@ class MainController < ApplicationController
     end
     @submission.submitted_at = Time.new.gmtime
 
-    if user.site!=nil and user.site.finished?
+    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' and
+        user.site!=nil and user.site.finished?
       @submission.errors.add_to_base "The contest is over."
       prepare_list_information
       render :action => 'list' and return
@@ -123,6 +127,14 @@ class MainController < ApplicationController
     @announcements = Announcement.find(:all,
                                        :conditions => "published = 1",
                                        :order => "created_at DESC")
+  end
+
+  def check_viewability
+    user = User.find(session[:user_id])
+    if (!Configuration.show_tasks_to?(user)) and
+        ((action_name=='submission') or (action_name=='submit'))
+      redirect_to :action => 'list' and return
+    end
   end
 
 end

@@ -30,61 +30,63 @@ function updateSubmissionList() {
 }
 </script>
 
-<div class="submitbox">
-<%= error_messages_for 'submitted_test_request' %>
-<% form_for :test_request, nil, 
-            :url => { :action => 'submit'}, 
-            :html => { :multipart => true } do |f| %>
-  <table>
-    <tr>
-      <td>Task:</td>
-      <td>
-	<%= select(:test_request, 
-	           :problem_id, 
-	           @problems.collect {|p| [p.name, p.id]}, {}, 
-	           { :onclick => "updateSubmissionList();" }) %>
-      </td>
-    </tr>
-    <tr>
-      <td>Submission:</td>
-      <td>
-	<%= select(:test_request,
-	           :submission_number, 
-	           ((1..@submissions[0].number).collect {|n| [n,n]}).reverse) %>
-      </td>
-    </tr>
-    <tr>
-      <td>Input data:</td>
-      <td>
-        <%= f.file_field :input_file %>
-      </td>
-      <td>
-        (combined size should not exceed 2MB)
-      </td>
-    </tr>
-    <tr>
-      <td>
-        Additional file<sup><span style="color:red">*</span></sup>:
-      </td>
-      <td>
-        <%= f.file_field :additional_file %>
-      </td>
-      <td>
-        <small>
-          * This option works <u>only</u> for task max.
-          You can use this to submit <tt>questions.txt</tt>.<br/>
-          The file shall be copied to the execution directory before your program runs.
-        </small>
-      </td> 
-    </tr>
-    <tr>
-      <td colspan="2">
-        <%= submit_tag 'submit' %>
-      </td>
-    </tr>
-  </table>
+<% if Configuration.show_submitbox_to?(@user) %>
+  <div class="submitbox">
+  <%= error_messages_for 'submitted_test_request' %>
+  <% form_for :test_request, nil, 
+              :url => { :action => 'submit'}, 
+              :html => { :multipart => true } do |f| %>
+    <table>
+      <tr>
+        <td>Task:</td>
+        <td>
+	  <%= select(:test_request, 
+	             :problem_id, 
+	             @problems.collect {|p| [p.name, p.id]}, {}, 
+	             { :onclick => "updateSubmissionList();" }) %>
+        </td>
+      </tr>
+      <tr>
+        <td>Submission:</td>
+        <td>
+	  <%= select(:test_request,
+	             :submission_number, 
+	             ((1..@submissions[0].number).collect {|n| [n,n]}).reverse) %>
+        </td>
+      </tr>
+      <tr>
+        <td>Input data:</td>
+        <td>
+          <%= f.file_field :input_file %>
+        </td>
+        <td>
+          (combined size should not exceed 2MB)
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Additional file<sup><span style="color:red">*</span></sup>:
+        </td>
+        <td>
+          <%= f.file_field :additional_file %>
+        </td>
+        <td>
+          <small>
+            * This option works <u>only</u> for task max.
+            You can use this to submit <tt>questions.txt</tt>.<br/>
+            The file shall be copied to the execution directory before your program runs.
+          </small>
+        </td> 
+      </tr>
+      <tr>
+        <td colspan="2">
+          <%= submit_tag 'submit' %>
+        </td>
+      </tr>
+    </table>
+  <% end %>
+  </div>
 <% end %>
-</div>
 
 <h3>Previous requests</h3>
 
