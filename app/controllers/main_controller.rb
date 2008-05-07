@@ -13,6 +13,7 @@ class MainController < ApplicationController
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
+  caches_action :index, :login
 
   def index
     redirect_to :action => 'login'
@@ -26,7 +27,7 @@ class MainController < ApplicationController
     #
     # These are for site administrator login
     #
-    @countries = Country.find(:all)
+    @countries = Country.find(:all, :include => :sites)
     @country_select = @countries.collect { |c| [c.name, c.id] }
 
     @country_select_with_all = [['Any',0]]
@@ -148,8 +149,8 @@ class MainController < ApplicationController
   end
 
   def check_viewability
-    user = User.find(session[:user_id])
-    if (!Configuration.show_tasks_to?(user)) and
+    @user = User.find(session[:user_id])
+    if (!Configuration.show_tasks_to?(@user)) and
         ((action_name=='submission') or (action_name=='submit'))
       redirect_to :action => 'list' and return
     end
