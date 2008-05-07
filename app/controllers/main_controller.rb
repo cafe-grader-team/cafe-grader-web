@@ -3,7 +3,7 @@ class MainController < ApplicationController
   SYSTEM_MODE_CONF_KEY = 'system.mode'
 
   before_filter :authenticate, :except => [:index, :login]
-  before_filter :check_viewability
+  before_filter :check_viewability, :except => [:index, :login]
 
 #
 #  COMMENT OUT: filter in each action instead
@@ -22,6 +22,24 @@ class MainController < ApplicationController
     saved_notice = flash[:notice]
     reset_session
     flash[:notice] = saved_notice
+
+    #
+    # These are for site administrator login
+    #
+    @countries = Country.find(:all)
+    @country_select = @countries.collect { |c| [c.name, c.id] }
+
+    @country_select_with_all = [['Any',0]]
+    @countries.each do |country|
+      @country_select_with_all << [country.name, country.id]
+    end
+
+    @site_select = []
+    @countries.each do |country|
+      country.sites.each do |site|
+        @site_select << ["#{site.name}, #{country.name}", site.id]
+      end
+    end
 
     render :action => 'login', :layout => 'empty'
   end

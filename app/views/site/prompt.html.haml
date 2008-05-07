@@ -1,0 +1,22 @@
+%h2 
+  Contest Administration for site:
+  = "#{@site.name}, #{@site.country.name}"
+
+
+Current time at the server is
+= "#{format_short_time(Time.new.gmtime)} UTC"
+(please 
+= link_to 'refresh', :action => 'index'
+to update)
+%br/
+%br/
+
+- form_tag :action => 'start' do
+  When you're ready, you can click the button below to start the contest.
+  %br/
+  Please make sure that the contestants are ready.
+  After the contest is started, it <b>cannot</b> be paused or stopped.
+  %br/
+  = submit_tag 'Start the Contest.'
+
+    

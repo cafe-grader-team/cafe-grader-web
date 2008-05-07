@@ -21,4 +21,23 @@ class LoginController < ApplicationController
     end
   end
 
+  def site_login
+    begin
+      site = Site.find(params[:login][:site_id])
+    rescue ActiveRecord::RecordNotFound
+      site = nil
+    end
+    if site==nil
+      flash[:notice] = 'Wrong site'
+      redirect_to :controller => 'main', :action => 'login'  and return
+    end
+    if site.password == params[:login][:password]
+      session[:site_id] = site.id
+      redirect_to :controller => 'site', :action => 'index'
+    else
+      flash[:notice] = 'Wrong site password'
+      redirect_to :controller => 'main', :action => 'login'
+    end
+  end
+
 end

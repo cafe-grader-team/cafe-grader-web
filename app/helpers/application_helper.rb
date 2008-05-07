@@ -63,16 +63,21 @@ module ApplicationHelper
 
   def user_title_bar(user)
     header = ''
+    time_left = ''
 
     #
     # if the contest is over
-    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' and 
-        user.site!=nil and user.site.finished?
-      header = <<CONTEST_OVER
+    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' 
+      if user.site!=nil and user.site.finished?
+        header = <<CONTEST_OVER
 <tr><td colspan="2" align="center">
 <span class="contest-over-msg">THE CONTEST IS OVER</span>
 </td></tr>
 CONTEST_OVER
+      end
+      if user.site!=nil
+        time_left = ". Time left: #{Time.at(user.site.time_left).gmtime.strftime("%X")}"
+      end
     end
     
     #
@@ -94,7 +99,9 @@ ANALYSISMODE
 <tr>
 <td class="left-col">
 #{user.full_name}<br/>
-Current time is #{format_short_time(Time.new.gmtime)} UTC<br/>
+Current time is #{format_short_time(Time.new.gmtime)} UTC
+#{time_left}
+<br/>
 </td>
 <td class="right-col">APIO'08</td>
 </tr>

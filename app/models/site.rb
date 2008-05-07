@@ -9,6 +9,24 @@ class Site < ActiveRecord::Base
     end
   end
 
+  def time_left
+    contest_time = Configuration['contest.time_limit']
+    if tmatch = /(\d+):(\d+)/.match(contest_time)
+      h = tmatch[1].to_i
+      m = tmatch[2].to_i
+      finish_time = self.start_time + h.hour + m.minute 
+      current_time = Time.now.gmtime
+
+      if current_time > finish_time
+        return current_time - current_time
+      else
+        finish_time - current_time 
+      end
+    else
+      nil
+    end
+  end
+
   def finished?
     if !self.started
       return false

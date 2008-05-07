@@ -1,0 +1,29 @@
+%h2 
+  Contest Administration for site:
+  = "#{@site.name}, #{@site.country.name}"
+
+- curr_time = Time.new.gmtime
+
+- if @site.finished?
+  %h3 Contest ended.
+- else
+  %h3 Contest started.
+
+Current time at the server is
+= "#{format_short_time(curr_time)} UTC"
+(please 
+= link_to 'refresh', :action => 'index'
+to update)
+%br/
+%br/
+
+The contest at your site has been started at
+= "#{format_short_time(@site.start_time)} UTC"
+
+%br/
+
+%h3
+  Time left: 
+  = "#{Time.at(@site.time_left).gmtime.strftime("%X")}"
+
+
