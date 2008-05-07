@@ -39,7 +39,7 @@ module ApplicationHelper
   end
 
   def format_short_time(time)
-    now = Time.now
+    now = Time.now.gmtime
     st = ''
     if (time.yday != now.yday) or
 	(time.year != now.year)
@@ -64,7 +64,7 @@ CONTEST_OVER
 <tr>
 <td class="left-col">
 #{user.full_name}<br/>
-Current time is #{format_short_time(Time.new)}<br/>
+Current time is #{format_short_time(Time.new.gmtime)} UTC<br/>
 </td>
 <td class="right-col">APIO'08</td>
 </tr>
