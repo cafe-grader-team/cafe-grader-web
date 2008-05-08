@@ -1,6 +1,18 @@
 = user_title_bar(@user)
 
-%h3 Your Messages
+.announcementbox
+  %span{:class => 'title'}
+    How to submit clarification requests
+  .announcement
+    %p
+      :markdown
+        The clarification requests should be phrased as yes/no questions.  
+        The answers will be one of the following:
+        (1) **YES**,
+        (2) <b>NO</b>,
+        (3) **ANSWERED IN TASK DESCRIPTION (EXPLICITLY OR IMPLICITLY)**,
+        (4) **INVALID QUESTION**, and
+        (5) **NO COMMENT**.
 
 - form_for 'message', nil, :url => { :action => 'create'} do |f|
   %p 

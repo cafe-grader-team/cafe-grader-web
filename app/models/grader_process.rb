@@ -32,7 +32,11 @@ class GraderProcess < ActiveRecord::Base
   
   def report_active(task=nil)
     self.active = true
-    self.task_id = task.id
+    if task!=nil
+      self.task_id = task.id
+    else
+      self.task_id = nil
+    end
     self.task_type = task.class.to_s
     self.save
   end                
