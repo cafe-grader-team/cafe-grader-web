@@ -12,13 +12,19 @@ class TasksController < ApplicationController
   end
 
   def view
-    file_name = "#{RAILS_ROOT}/data/tasks/#{params[:file]}"
-    if !FileTest.exists?(file_name)
+    base_filename = File.basename("#{params[:file]}.#{params[:ext]}")
+    filename = "#{RAILS_ROOT}/data/tasks/#{base_filename}"
+    if !FileTest.exists?(filename)
       redirect_to :action => 'index' and return
     end
-    # ask Apache to send the file
-    response.headers['X-Sendfile'] = file_name
-    render :nothing => true
+    # ask Apache to send the file --- doesn't quite work...
+    #response.headers['Content-Type'] = "application/force-download" 
+    #response.headers['Content-Disposition'] = "attachment; filename=\"#{File.basename(filename)}\"" 
+    #response.headers['Content-length'] = File.size(filename)
+    #response.headers['X-Sendfile'] = filename
+    #render :nothing => true
+
+    send_file filename, :stream => false, :filename => base_filename
   end
 
   protected
