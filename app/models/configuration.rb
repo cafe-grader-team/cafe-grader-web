@@ -55,7 +55,7 @@ class Configuration < ActiveRecord::Base
     return false if mode=='analysis'
     return true
   end
-
+  
   protected
   def self.read_config
     @@configurations = {}

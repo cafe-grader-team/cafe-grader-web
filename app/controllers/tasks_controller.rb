@@ -11,6 +11,16 @@ class TasksController < ApplicationController
     @user = User.find(session[:user_id])
   end
 
+  def view
+    file_name = "#{RAILS_ROOT}/data/tasks/#{params[:file]}"
+    if !FileTest.exists?(file_name)
+      redirect_to :action => 'index' and return
+    end
+    # ask Apache to send the file
+    response.headers['X-Sendfile'] = file_name
+    render :nothing => true
+  end
+
   protected
 
   def check_viewability
