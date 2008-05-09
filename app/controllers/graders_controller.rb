@@ -13,6 +13,11 @@ class GradersController < ApplicationController
     @grader_processes = GraderProcess.find(:all, 
                                            :order => 'updated_at desc')
     @stalled_processes = GraderProcess.find_stalled_process
+    
+    @last_task = Task.find(:first,
+                           :order => 'created_at DESC')
+    @last_test_request = TestRequest.find(:first,
+                                          :order => 'created_at DESC')
   end
 
   def clear
