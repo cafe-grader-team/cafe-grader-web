@@ -26,11 +26,18 @@ class TestController < ApplicationController
       render :action => 'index' and return
     end
 
-    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' and
-        @user.site!=nil and @user.site.finished?
-      @submitted_test_request.errors.add_to_base('Contest is over.')
-      prepare_index_information
-      render :action => 'index' and return
+    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest'
+      if @user.site!=nil and @user.site.finished?
+        @submitted_test_request.errors.add_to_base('Contest is over.')
+        prepare_index_information
+        render :action => 'index' and return
+      end
+
+      if !Configuration.allow_test_request(@user)
+        prepare_index_information
+        flash[:notice] = 'Test request is not allowed during the last 30 minutes'
+        redirect_to :action => 'index' and return
+      end
     end
 
     if @submitted_test_request.save

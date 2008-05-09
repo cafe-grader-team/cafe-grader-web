@@ -46,7 +46,16 @@ class Configuration < ActiveRecord::Base
     end
     return true
   end
-  
+
+  def self.allow_test_request(user)
+    mode = get(SYSTEM_MODE_CONF_KEY)
+    if (mode=='contest') 
+      return false if (user.site!=nil) and ((user.site.started==false) or
+                                            (user.site.time_left < 30.minutes))
+    end
+    return false if mode=='analysis'
+    return true
+  end
 
   protected
   def self.read_config
