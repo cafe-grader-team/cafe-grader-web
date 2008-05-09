@@ -8,7 +8,10 @@
   </tr>
 
 <% for site in @sites %>
-  <tr>
+  <% background = "white" %>
+  <% background = "grey" if (site.started==true) and (site.finished? == true) %>
+  <% background = "lightgreen" if (site.started==true) and (site.finished? != true) %>
+  <tr style="background: <%= background %>;">
     <td><%=h site.name %></td>
     <td><%=h site.started %></td>
     <td><%=h site.start_time %></td>

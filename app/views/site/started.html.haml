@@ -26,4 +26,6 @@ The contest at your site has been started at
   Time left: 
   = "#{Time.at(@site.time_left).gmtime.strftime("%X")}"
 
-
+%br/
+%br/
+= link_to '[log out]', :action => 'logout'
