@@ -14,8 +14,13 @@ class Site < ActiveRecord::Base
     if tmatch = /(\d+):(\d+)/.match(contest_time)
       h = tmatch[1].to_i
       m = tmatch[2].to_i
-      finish_time = self.start_time + h.hour + m.minute 
+
       current_time = Time.now.gmtime
+      if self.start_time!=nil
+        finish_time = self.start_time + h.hour + m.minute 
+      else
+        finish_time = current_time + h.hour + m.minute
+      end
 
       if current_time > finish_time
         return current_time - current_time

@@ -34,7 +34,7 @@ class Configuration < ActiveRecord::Base
     return false if mode=='analysis'
     if (mode=='contest') 
       return false if (user.site!=nil) and 
-        ((user.site.started==false) or (user.site.finished?))
+        ((user.site.started!=true) or (user.site.finished?))
     end
     return true
   end
@@ -42,7 +42,7 @@ class Configuration < ActiveRecord::Base
   def self.show_tasks_to?(user)
     mode = get(SYSTEM_MODE_CONF_KEY)
     if (mode=='contest') 
-      return false if (user.site!=nil) and (user.site.started==false)
+      return false if (user.site!=nil) and (user.site.started!=true)
     end
     return true
   end
@@ -50,8 +50,7 @@ class Configuration < ActiveRecord::Base
   def self.allow_test_request(user)
     mode = get(SYSTEM_MODE_CONF_KEY)
     if (mode=='contest') 
-      return false if (user.site!=nil) and ((user.site.started==false) or
-                                            (user.site.time_left < 30.minutes))
+      return false if (user.site!=nil) and ((user.site.started!=true) or (user.site.time_left < 30.minutes))
     end
     return false if mode=='analysis'
     return true
