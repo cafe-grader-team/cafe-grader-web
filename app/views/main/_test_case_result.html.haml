@@ -1,0 +1,18 @@
+%td
+  = test_case[:num]
+%td{:style => 'padding-left: 5px; padding-right: 5px'}
+  = test_case[:msg]
+- if test_case[:run_stat]!=nil
+  %td{:style => 'padding-left: 5px; padding-right: 5px'}
+    = test_case[:run_stat][:exit_status]
+  %td{:style => 'padding-left: 5px; padding-right: 3px; text-align: center'}
+    = test_case[:run_stat][:running_time]
+  %td{:style => 'padding-left: 5px; padding-right: 10px; text-align: right'}
+    = number_with_delimiter(test_case[:run_stat][:memory_usage])
+  %td{:style => 'padding-left: 5px; padding-right: 5px'}
+    = link_to "output (#{number_to_human_size(test_case[:output_size])})", :action => 'load_output', :id => @submission.id, :num => test_case[:num] if test_case[:output]    
+- else
+  %td
+  %td
+  %td
+  %td

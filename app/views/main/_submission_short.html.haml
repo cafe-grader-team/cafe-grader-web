@@ -12,9 +12,12 @@
     %tt
       = submission.grader_comment
     = "]"
+    - if Configuration.show_grading_result
+      = " | "
+      = link_to '[detailed result]', :action => 'result', :id => submission.id
     = " | "
     = link_to('[msg]', {:action => 'compiler_msg', :id => submission.id}, {:popup => true})
   = " | "
-  = link_to('[source]',{:action => 'source', :id => submission.id})
+  = link_to('[src]',{:action => 'source', :id => submission.id})
   = " | "
   = link_to '[submissions]', :action => 'submission', :id => problem_name

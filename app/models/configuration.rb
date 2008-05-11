@@ -1,3 +1,5 @@
+require 'yaml'
+
 #
 # This class also contains various login of the system.
 #
@@ -6,6 +8,7 @@ class Configuration < ActiveRecord::Base
   SYSTEM_MODE_CONF_KEY = 'system.mode'
 
   @@configurations = nil
+  @@task_grading_info = nil
 
   def self.get(key)
     if @@configurations == nil
@@ -47,6 +50,10 @@ class Configuration < ActiveRecord::Base
     return true
   end
 
+  def self.show_grading_result
+    return (get(SYSTEM_MODE_CONF_KEY)=='analysis')
+  end
+
   def self.allow_test_request(user)
     mode = get(SYSTEM_MODE_CONF_KEY)
     if (mode=='contest') 
@@ -54,6 +61,13 @@ class Configuration < ActiveRecord::Base
     end
     return false if mode=='analysis'
     return true
+  end
+
+  def self.task_grading_info
+    if @@task_grading_info==nil
+      read_grading_info
+    end
+    return @@task_grading_info
   end
   
   protected
@@ -73,6 +87,12 @@ class Configuration < ActiveRecord::Base
         @@configurations[key] = (val=='true')
       end
     end
+  end
+
+  def self.read_grading_info
+    f = File.open(TASK_GRADING_INFO_FILENAME)
+    @@task_grading_info = YAML.load(f)
+    f.close
   end
   
 end

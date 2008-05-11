@@ -1,0 +1,41 @@
+= user_title_bar(@user)
+
+%h2 
+  Grading Result for Task
+  = @submission.problem.full_name
+
+%p
+  = "Submission: #{@submission.number}"
+  %br/
+  = "Submitted at: #{format_short_time(@submission.submitted_at)}"
+  %br/
+  = "Graded at #{format_short_time(@submission.graded_at)} "
+  %br/
+  = "score: #{(@submission.points*100/@submission.problem.full_score).to_i} " if Configuration['ui.show_score']
+  = " ["
+  %tt
+    = @submission.grader_comment
+  = "]"
+
+%table.info
+  %tr.info-head
+    %th Runs
+    %th Cases
+    %th Result
+    %th Exit
+    %th Time (s)
+    %th Memory (KB)
+    %th Output
+  - r = 0
+  - @test_runs.each do |test_run|
+    - r += 1
+    - case_count = test_run.length
+    - first_case = true
+    - test_run.each do |test_case|
+      %tr{:class => ((r%2==0) ? "info-even" : "info-odd")}
+        - if first_case
+          %td{:rowspan => case_count}
+            = r
+          - first_case = false
+        = render :partial => 'test_case_result', :locals => {:test_case => test_case}
+
