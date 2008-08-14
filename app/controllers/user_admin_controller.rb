@@ -36,14 +36,14 @@ class UserAdminController < ApplicationController
   def create_from_list
     lines = params[:user_list]
     lines.split("\n").each do |line|
-      items = line.split
-      if items.length==5
+      items = line.split(',')
+      if items.length==4
         user = User.new
         user.login = items[0]
-        user.full_name = "#{items[1]} #{items[2]}"
-        user.alias = items[3]
-        user.password = items[4]
-        user.password_confirmation = items[4]
+        user.full_name = items[1]
+        user.alias = items[2]
+        user.password = items[3]
+        user.password_confirmation = items[3]
         user.save
       end
     end
