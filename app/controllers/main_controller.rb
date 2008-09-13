@@ -13,7 +13,8 @@ class MainController < ApplicationController
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
-  caches_action :index, :login
+#  COMMENT OUT, only need when having high load
+#  caches_action :index, :login
 
   def index
     redirect_to :action => 'login'

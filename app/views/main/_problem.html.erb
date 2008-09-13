@@ -1,18 +1,18 @@
 <tr class="info-<%= (problem_counter%2==0) ? "even" : "odd" %>">
   <td>
-    <%= "#{problem_counter + 1}" %>
+    <%= "#{problem_counter}" %>
   </td>
   <td>
     <%= "#{problem.full_name} (#{problem.name})" %>
     <%= link_to '[desc]', problem.url, :popup => true if (problem.url!=nil) and (problem.url!='') %>
   </td>
   <td align="center">
-    <%= @prob_submissions[problem_counter][:count] %>
+    <%= @prob_submissions[problem_counter-1][:count] %>
   </td>
   <td>
     <%= render :partial => 'submission_short', 
                :locals => { 
-                 :submission => @prob_submissions[problem_counter][:submission],
+                 :submission => @prob_submissions[problem_counter-1][:submission],
                  :problem_name => problem.name }%>
   </td>
 </tr>
