@@ -80,7 +80,7 @@ class UserAdminController < ApplicationController
       @problems.each do |p|
 	sub = Submission.find_last_by_user_and_problem(u.id,p.id)
 	if (sub!=nil) and (sub.points!=nil) 
-	  ustat << [sub.points, (sub.points>=p.full_score)]
+	  ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
 	else
 	  ustat << [0,false]
 	end

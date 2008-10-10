@@ -9,9 +9,10 @@ class UsersController < ApplicationController
   in_place_edit_for :user, :email_for_editing
 
   def index
-    # ... disable in this contest ...
-    # @user = User.find(session[:user_id])
-    redirect_to :controller => 'main', :action => 'list'
+    # uncomment below to disable settings
+    #redirect_to :controller => 'main', :action => 'list'
+
+    @user = User.find(session[:user_id])
   end
 
   def chg_passwd
