@@ -36,7 +36,7 @@ class UserAdminController < ApplicationController
   def create_from_list
     lines = params[:user_list]
     lines.split("\n").each do |line|
-      items = line.split(',')
+      items = line.chomp.split(',')
       if items.length==4
         user = User.new
         user.login = items[0]
