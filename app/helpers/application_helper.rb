@@ -90,6 +90,8 @@ CONTEST_OVER
 ANALYSISMODE
     end
 
+    contest_name = Configuration['contest.name']
+
     #
     # build real title bar
     <<TITLEBAR
@@ -103,7 +105,7 @@ Current time is #{format_short_time(Time.new.gmtime)} UTC
 #{time_left}
 <br/>
 </td>
-<td class="right-col">APIO'08</td>
+<td class="right-col">#{contest_name}</td>
 </tr>
 </table>
 </div>
