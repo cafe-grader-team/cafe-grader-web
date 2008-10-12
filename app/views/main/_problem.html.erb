@@ -7,12 +7,12 @@
     <%= link_to '[desc]', problem.url, :popup => true if (problem.url!=nil) and (problem.url!='') %>
   </td>
   <td align="center">
-    <%= @prob_submissions[problem_counter-1][:count] %>
+    <%= @prob_submissions[problem_counter][:count] %>
   </td>
   <td>
     <%= render :partial => 'submission_short', 
                :locals => { 
-                 :submission => @prob_submissions[problem_counter-1][:submission],
+                 :submission => @prob_submissions[problem_counter][:submission],
                  :problem_name => problem.name }%>
   </td>
 </tr>
