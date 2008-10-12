@@ -42,12 +42,12 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
 
   create_table "grader_processes", :force => true do |t|
     t.string   "host",       :limit => 20
-    t.integer  "pid",        :limit => 11
+    t.integer  "pid"
     t.string   "mode"
     t.boolean  "active"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "task_id",    :limit => 11
+    t.integer  "task_id"
     t.string   "task_type"
   end
 
@@ -60,9 +60,9 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
   end
 
   create_table "messages", :force => true do |t|
-    t.integer  "sender_id",           :limit => 11
-    t.integer  "receiver_id",         :limit => 11
-    t.integer  "replying_message_id", :limit => 11
+    t.integer  "sender_id"
+    t.integer  "receiver_id"
+    t.integer  "replying_message_id"
     t.text     "body"
     t.boolean  "replied"
     t.datetime "created_at"
@@ -72,11 +72,11 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
   create_table "problems", :force => true do |t|
     t.string  "name",           :limit => 30
     t.string  "full_name"
-    t.integer "full_score",     :limit => 11
+    t.integer "full_score"
     t.date    "date_added"
     t.boolean "available"
     t.string  "url"
-    t.integer "description_id", :limit => 11
+    t.integer "description_id"
     t.boolean "test_allowed"
     t.boolean "output_only"
   end
@@ -88,8 +88,8 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
   end
 
   create_table "rights_roles", :id => false, :force => true do |t|
-    t.integer "right_id", :limit => 11
-    t.integer "role_id",  :limit => 11
+    t.integer "right_id"
+    t.integer "role_id"
   end
 
   add_index "rights_roles", ["role_id"], :name => "index_rights_roles_on_role_id"
@@ -99,8 +99,8 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
   end
 
   create_table "roles_users", :id => false, :force => true do |t|
-    t.integer "role_id", :limit => 11
-    t.integer "user_id", :limit => 11
+    t.integer "role_id"
+    t.integer "user_id"
   end
 
   add_index "roles_users", ["user_id"], :name => "index_roles_users_on_user_id"
@@ -120,23 +120,23 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
     t.datetime "start_time"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "country_id", :limit => 11
+    t.integer  "country_id"
     t.string   "password"
   end
 
   create_table "submissions", :force => true do |t|
-    t.integer  "user_id",          :limit => 11
-    t.integer  "problem_id",       :limit => 11
-    t.integer  "language_id",      :limit => 11
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.integer  "language_id"
     t.text     "source"
     t.binary   "binary"
     t.datetime "submitted_at"
     t.datetime "compiled_at"
     t.text     "compiler_message"
     t.datetime "graded_at"
-    t.integer  "points",           :limit => 11
+    t.integer  "points"
     t.text     "grader_comment"
-    t.integer  "number",           :limit => 11
+    t.integer  "number"
     t.string   "source_filename"
   end
 
@@ -144,20 +144,20 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
   add_index "submissions", ["user_id", "problem_id"], :name => "index_submissions_on_user_id_and_problem_id"
 
   create_table "tasks", :force => true do |t|
-    t.integer  "submission_id", :limit => 11
+    t.integer  "submission_id"
     t.datetime "created_at"
-    t.integer  "status",        :limit => 11
+    t.integer  "status"
     t.datetime "updated_at"
   end
 
   create_table "test_requests", :force => true do |t|
-    t.integer  "user_id",          :limit => 11
-    t.integer  "problem_id",       :limit => 11
-    t.integer  "submission_id",    :limit => 11
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.integer  "submission_id"
     t.string   "input_file_name"
     t.string   "output_file_name"
     t.string   "running_stat"
-    t.integer  "status",           :limit => 11
+    t.integer  "status"
     t.datetime "updated_at"
     t.datetime "submitted_at"
     t.datetime "compiled_at"
@@ -167,7 +167,7 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
     t.datetime "created_at"
     t.float    "running_time"
     t.string   "exit_status"
-    t.integer  "memory_usage",     :limit => 11
+    t.integer  "memory_usage"
   end
 
   add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
@@ -179,8 +179,8 @@ ActiveRecord::Schema.define(:version => 20081012050458) do
     t.string  "salt",            :limit => 5
     t.string  "alias"
     t.string  "email"
-    t.integer "site_id",         :limit => 11
-    t.integer "country_id",      :limit => 11
+    t.integer "site_id"
+    t.integer "country_id"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true
