@@ -7,14 +7,21 @@ class Configuration < ActiveRecord::Base
 
   SYSTEM_MODE_CONF_KEY = 'system.mode'
 
+  # set @@cache = true to only reload once.
+  @@cache = false
+
   @@configurations = nil
   @@task_grading_info = nil
 
   def self.get(key)
-    if @@configurations == nil
-      self.read_config
+    if @@cache
+      if @@configurations == nil
+        self.read_config
+      end
+      return @@configurations[key]
+    else
+      return Configuration.read_one_key(key)
     end
-    return @@configurations[key]
   end
 
   def self.[](key)
@@ -71,22 +78,32 @@ class Configuration < ActiveRecord::Base
   end
   
   protected
+
+  def self.convert_type(val,type)
+    case type
+    when 'string'
+      return val
+      
+    when 'integer'
+      return val.to_i
+      
+    when 'boolean'
+      return (val=='true')
+    end
+  end    
+
   def self.read_config
     @@configurations = {}
     Configuration.find(:all).each do |conf|
       key = conf.key
       val = conf.value
-      case conf.value_type
-      when 'string'
-        @@configurations[key] = val
-
-      when 'integer'
-        @@configurations[key] = val.to_i
-
-      when 'boolean'
-        @@configurations[key] = (val=='true')
-      end
+      @@configurations[key] = Configuration.convert_type(val,conf.value_type)
     end
+  end
+
+  def self.read_one_key(key)
+    conf = Configuration.find_by_key(key)
+    return Configuration.convert_type(conf.value,conf.value_type)
   end
 
   def self.read_grading_info
