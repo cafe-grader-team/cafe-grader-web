@@ -7,11 +7,17 @@
 
 <p>
 <b>Description:</b><br/>
-<% if @problem.description!=nil %>
+  <% if @problem.description!=nil %>
+    <% if @problem.description.markdowned %>
+<%= markdown(@problem.description.body) %>
+    <% else %>
 <pre>
 <%= @problem.description.body %>
 </pre>
-<% end %>
+    <% end %>
+  <% else %>
+    (not available)
+  <% end %>
 </p>
 
 <%= link_to 'Edit', :action => 'edit', :id => @problem %> |
