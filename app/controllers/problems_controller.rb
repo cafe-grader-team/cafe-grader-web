@@ -81,11 +81,10 @@ class ProblemsController < ApplicationController
     redirect_to :action => 'list'
   end
 
-  def toggle_avail
-    problem = Problem.find(params[:id])
-    problem.available = !(problem.available)
-    problem.save
-    redirect_to :action => 'list'
+  def toggle
+    @problem = Problem.find(params[:id])
+    @problem.available = !(@problem.available)
+    @problem.save
   end
 
   def turn_all_off

@@ -1,0 +1,5 @@
+if @problem.available
+  page["prob-#{@problem.id}"].className = "available"
+else
+  page["prob-#{@problem.id}"].className = "not-available"
+end
