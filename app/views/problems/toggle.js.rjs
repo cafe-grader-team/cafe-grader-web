@@ -3,3 +3,4 @@ if @problem.available
 else
   page["prob-#{@problem.id}"].className = "not-available"
 end
+page["prob-#{@problem.id}-avail"].innerHTML = @problem.available.to_s
