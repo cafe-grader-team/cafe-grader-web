@@ -82,13 +82,9 @@ class ProblemsController < ApplicationController
   end
 
   def toggle
-    respond_to do |wants|
-      wants.js {
-        @problem = Problem.find(params[:id])
-        @problem.available = !(@problem.available)
-        @problem.save
-      }
-    end
+    @problem = Problem.find(params[:id])
+    @problem.available = !(@problem.available)
+    @problem.save
   end
 
   def turn_all_off
