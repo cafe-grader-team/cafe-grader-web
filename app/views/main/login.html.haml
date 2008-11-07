@@ -1,5 +1,11 @@
 %h1= Configuration['ui.front.title']
 
+- if @announcements.length!=0
+  .announcementbox
+    %span{:class => 'title'}
+      Announcements
+    = render :partial => 'announcement', :collection => @announcements
+
 %b= Configuration['ui.front.welcome_message']
 %br/
 Please login to see the problem list.

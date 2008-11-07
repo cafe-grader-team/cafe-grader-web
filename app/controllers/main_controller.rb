@@ -43,6 +43,7 @@ class MainController < ApplicationController
       end
     end
 
+    @announcements = Announcement.find_for_frontpage
     render :action => 'login', :layout => 'empty'
   end
 
@@ -183,10 +184,7 @@ class MainController < ApplicationController
         @prob_submissions << { :count => 0, :submission => nil }
       end
     end
-
-    @announcements = Announcement.find(:all,
-                                       :conditions => "published = 1",
-                                       :order => "created_at DESC")
+    @announcements = Announcement.find_published
   end
 
   def check_viewability

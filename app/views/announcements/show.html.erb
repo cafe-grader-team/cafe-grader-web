@@ -13,6 +13,11 @@
   <%=h @announcement.published %>
 </p>
 
+<p>
+  <b>Show on front page:</b>
+  <%=h @announcement.frontpage %>
+</p>
+
 
 <%= link_to 'Edit', edit_announcement_path(@announcement) %> |
 <%= link_to 'Back', announcements_path %>
