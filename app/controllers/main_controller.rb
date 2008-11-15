@@ -125,7 +125,7 @@ class MainController < ApplicationController
       @problem = Problem.find_by_name(params[:id])
       if not @problem.available
         redirect_to :action => 'list'
-        flash[:notice] = 'Error: submissions for that problem is not available'
+        flash[:notice] = 'Error: submissions for that problem are not viewable.'
         return
       end
       @submissions = Submission.find_all_by_user_problem(@user.id, @problem.id)
