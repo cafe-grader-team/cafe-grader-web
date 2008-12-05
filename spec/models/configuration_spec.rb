@@ -3,6 +3,11 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Configuration do
 
+  # only work with cached configuration
+  class Configuration
+    @@cache = true
+  end
+
   before(:each) do
     @int_config = mock(Configuration,
                        :id => 1,

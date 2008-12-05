@@ -25,6 +25,7 @@ class UserAdminController < ApplicationController
 
   def create
     @user = User.new(params[:user])
+    @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'
       redirect_to :action => 'list'
@@ -44,6 +45,7 @@ class UserAdminController < ApplicationController
         user.alias = items[2]
         user.password = items[3]
         user.password_confirmation = items[3]
+        user.activated = true
         user.save
       end
     end

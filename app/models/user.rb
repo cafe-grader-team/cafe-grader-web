@@ -37,7 +37,11 @@ class User < ActiveRecord::Base
   end
 
   def authenticated?(password)
-    hashed_password == User.encrypt(password,self.salt)
+    if self.activated
+      hashed_password == User.encrypt(password,self.salt)
+    else
+      false
+    end
   end
 
   def admin?
@@ -70,6 +74,14 @@ class User < ActiveRecord::Base
 
   def alias_for_editing=(e)
     self.alias=e
+  end
+
+  def activation_key
+    Digest::SHA1.hexdigest(self.hashed_password)[0..7]
+  end
+
+  def verify_activation_key(key)
+    key == activation_key
   end
 
   protected

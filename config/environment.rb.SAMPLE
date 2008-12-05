@@ -43,8 +43,15 @@ Rails::Initializer.run do |config|
   
   # See Rails::Configuration for more options
 
+  # -------------
+  # Required gems
+  # -------------
+
   # This is for rspec
   config.gem "rspec-rails", :lib => "spec" 
+  config.gem "haml"
+  config.gem "pony"
+  #config.gem "BlueCloth", :lig => "bluecloth"
 end
 
 # Add new inflection rules using the following format 

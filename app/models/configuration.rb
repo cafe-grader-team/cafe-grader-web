@@ -103,7 +103,11 @@ class Configuration < ActiveRecord::Base
 
   def self.read_one_key(key)
     conf = Configuration.find_by_key(key)
-    return Configuration.convert_type(conf.value,conf.value_type)
+    if conf
+      return Configuration.convert_type(conf.value,conf.value_type)
+    else
+      return nil
+    end
   end
 
   def self.read_grading_info

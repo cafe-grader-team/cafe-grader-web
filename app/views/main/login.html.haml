@@ -30,7 +30,14 @@ Please login to see the problem list.
 
 %br/
 
-- if Configuration['system.mode']=='contest'
+-# if Configuration['system.online_registration']
+  Want to participate?  
+  %b
+    Please 
+    = link_to 'register.', :controller => :users, :action => :new
+  %br/
+
+- if (Configuration['system.mode']=='contest') and (Configuration['contest.multisites'])
   %script{:type => 'text/javascript'}
     var siteList = new Array();
     - @countries.each do |country|
