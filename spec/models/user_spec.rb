@@ -10,26 +10,26 @@ describe User do
                        :hashed_password => User.encrypt(@password,@salt))
   end
 
-  it "should authenticate activated user" do
+  it "should be authenticated if activated" do
     @john.should_receive(:activated).and_return(true)
     @john.authenticated?(@password).should == true
   end
 
-  it "should not authenticate inactivated user" do
+  it "should not be authenticated if inactivated" do
     @john.should_receive(:activated).and_return(false)
     @john.authenticated?(@password).should == false
   end
 
-  it "should not authenticate user with incorrect password" do
+  it "should not be authenticated if incorrect password is provided" do
     @john.should_receive(:activated).and_return(true)
     @john.should_receive(:hashed_password).and_return("byebye")
     @john.authenticated?(@password).should == false
   end
-
+  
 end
 
 describe User, "during registration" do
-
+  
   class User
     public :encrypt_new_password
   end
@@ -38,16 +38,26 @@ describe User, "during registration" do
     @john = User.new(:login => 'john', :password => 'hello')
     @john.encrypt_new_password
   end
-
+  
   it "should produce and accept activation key" do
     activation_key = @john.activation_key
 
     @john.verify_activation_key(activation_key).should == true
   end
-
+  
   it "should not accept invalid activation key" do
     @john.verify_activation_key("12345").should == false
   end
+  
+end
 
+describe User, "as a class" do
 
+  it "should be able to generate random password" do
+    password1 = User.random_password
+    password2 = User.random_password
+    
+    password1.should_not == password2
+  end
+  
 end

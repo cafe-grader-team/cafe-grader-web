@@ -1,3 +1,5 @@
+require 'pony'
+
 class UsersController < ApplicationController
 
   before_filter :authenticate, :except => [:new, :register]
@@ -28,4 +30,27 @@ class UsersController < ApplicationController
     redirect_to :action => 'index'
   end
 
+  def new
+    @user = User.new
+    render :action => 'new', :layout => 'empty'
+  end
+
+  def register
+    @user = User.new(params[:user])
+    @user.password_confirmation = @user.password = User.random_password
+    @user.activated = false
+    if (@user.valid?) and (@user.save)
+      send_confirmation_email(@user)
+      render :action => 'new_splash', :layout => 'empty'
+    else
+      @user.errors.add_to_base("Email cannot be blank") if @user.email==''
+      render :action => 'new', :layout => 'empty'
+    end
+  end
+
+  protected
+
+  def send_confirmation_email(user)
+  end
+  
 end

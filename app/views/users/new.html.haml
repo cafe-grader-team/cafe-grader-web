@@ -1,0 +1,29 @@
+%h1 New user registration
+
+= error_messages_for :user, :header_message => 'Errors occured during registration'
+
+%table
+  - form_for :user, @user, :url => { :action => 'register' } do |f|
+    %tr
+      %td Login:
+      %td= f.text_field :login
+    %tr
+      %td
+      %td 
+        %small Only a-z, A-Z, 0-9 and _
+    %tr
+      %td Full name:
+      %td= f.text_field :full_name
+    %tr
+      %td E-mail:
+      %td= f.text_field :email
+    %tr
+      %td
+      %td 
+        %small
+          Please make sure that your e-mail is correct.
+          %br/
+          You'll need to verify your account by email.
+    %tr
+      %td{:colspan => 2}= submit_tag "Register" 
+

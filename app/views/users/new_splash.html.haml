@@ -1,0 +1,11 @@
+%h1 Registration successful
+
+We have sent a confimation message to your e-mail.
+%br/
+Please check at 
+= "#{@user.email}."
+%br/
+%br/
+
+Go back to
+= link_to 'login page.', :controller => 'main', :action => 'login'

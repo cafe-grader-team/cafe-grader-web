@@ -19,13 +19,23 @@ class User < ActiveRecord::Base
   belongs_to :site
   belongs_to :country
 
+  named_scope :activated, :conditions => {:activated => true}
+
   validates_presence_of :login
+  validates_uniqueness_of :login
+  validates_format_of :login, :with => /^[\_a-z0-9]+$/
+  validates_length_of :login, :within => 3..10
+
   validates_presence_of :full_name
   validates_length_of :full_name, :minimum => 1
   
   validates_presence_of :password, :if => :password_required?
   validates_length_of :password, :within => 4..20, :if => :password_required?
   validates_confirmation_of :password, :if => :password_required?
+
+  validates_format_of :email, :with => /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i, :allow_blank => true
+
+  validate :uniqueness_of_email_from_activated_users
 
   attr_accessor :password
 
@@ -84,6 +94,13 @@ class User < ActiveRecord::Base
     key == activation_key
   end
 
+  def self.random_password(length=5)
+    chars = 'abcdefghjkmnopqrstuvwxyz'
+    password = ''
+    length.times { password << chars[rand(chars.length - 1)] }
+    password
+  end
+
   protected
     def encrypt_new_password
       return if password.blank?
@@ -97,5 +114,11 @@ class User < ActiveRecord::Base
   
     def self.encrypt(string,salt)
       Digest::SHA1.hexdigest(salt + string)
+    end
+
+    def uniqueness_of_email_from_activated_users
+      if User.activated.find_by_email(self.email)!=nil
+        self.errors.add_to_base("Email has already been taken")
+      end
     end
 end
