@@ -30,7 +30,10 @@ module ApplicationHelper
       append_to menu_items, '[Test]', 'test', 'index'
     end
     append_to menu_items, '[Help]', 'main', 'help'
-    append_to menu_items, '[Settings]', 'users', 'index'
+
+    if Configuration['system.user_setting_enabled']
+      append_to menu_items, '[Settings]', 'users', 'index'
+    end
     append_to menu_items, '[Log out]', 'main', 'login'
 
     menu_items

@@ -14,10 +14,18 @@ class AddMoreOptionsToConfigurations < ActiveRecord::Migration
     Configuration.create(:key => 'system.online_registration',
                          :value_type => 'boolean',
                          :value => 'false')
+
+    # If Configuration['system.user_setting_enabled'] is true,
+    #   users can change their settings
+
+    Configuration.create(:key => 'system.user_setting_enabled',
+                         :value_type => 'boolean',
+                         :value => 'true')
   end
 
   def self.down
     Configuration.find_by_key('contest.multisites').destroy
     Configuration.find_by_key('system.online_registration').destroy
+    Configuration.find_by_key('system.user_setting_enabled').destroy
   end
 end

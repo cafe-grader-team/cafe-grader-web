@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
 
-  before_filter :authenticate
+  before_filter :authenticate, :except => [:new, :register]
 
   verify :method => :post, :only => [:chg_passwd],
          :redirect_to => { :action => :index }
@@ -9,10 +9,11 @@ class UsersController < ApplicationController
   in_place_edit_for :user, :email_for_editing
 
   def index
-    # uncomment below to disable settings
-    #redirect_to :controller => 'main', :action => 'list'
-
-    @user = User.find(session[:user_id])
+    if !Configuration['system.user_setting_enabled']
+      redirect_to :controller => 'main', :action => 'list'
+    else
+      @user = User.find(session[:user_id])
+    end
   end
 
   def chg_passwd
