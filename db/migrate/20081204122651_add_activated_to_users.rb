@@ -3,6 +3,14 @@ class AddActivatedToUsers < ActiveRecord::Migration
     add_column :users, :activated, :boolean, :default => 0
 
     User.find(:all).each do |user|
+
+      # disable validation
+      class <<user
+        def valid?
+          return true
+        end
+      end
+
       user.activated = true
       user.save
     end
