@@ -50,7 +50,7 @@ Rails::Initializer.run do |config|
   # This is for rspec
   config.gem "rspec-rails", :lib => "spec" 
   config.gem "haml"
-  config.gem "pony"
+  config.gem "tmail"
   #config.gem "BlueCloth", :lig => "bluecloth"
 end
 
@@ -72,3 +72,6 @@ end
 # These are where inputs and outputs of test requests are stored
 TEST_REQUEST_INPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/input'
 TEST_REQUEST_OUTPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/output'
+
+# Uncomment so that configuration is read only once when the server is loaded
+# Configuration.enable_caching

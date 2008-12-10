@@ -82,6 +82,14 @@ div.submitbox {
     font-size: 13px;
 }
 
+div.errorExplanation {
+    border: 1px dashed black;
+    color: black;
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: white;
+}
+
 /*******************************
  [Settings]
 ********************************/

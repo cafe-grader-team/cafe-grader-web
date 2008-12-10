@@ -36,6 +36,10 @@ class Configuration < ActiveRecord::Base
     @@configurations = nil
   end
 
+  def self.enable_caching
+    @@cache = true
+  end
+
   #
   # View decision
   #

@@ -7,7 +7,7 @@ describe TestController do
     @john = mock(User, :id => "1", :login => 'john')
     @john_result = mock(TestRequest, :id => "1", :user_id => @john.id)
     @mary_result = mock(TestRequest, :id => "2", :user_id => @john.id + '1')
-    User.should_receive(:find).with(@john.id).and_return(@john)
+    User.should_receive(:find).at_least(:once).with(@john.id).and_return(@john)
   end
 
   it "should let user see her testing result" do

@@ -1,0 +1,15 @@
+- if @result == :successful
+  %h1 User activated
+  Your account has been activated.
+  %br/
+  Please go ahead to
+  = link_to 'login.', :controller => 'main', :action => 'login'
+- else
+  %h1 Activation failed
+  - if @result == :email_used
+    A user with this E-mail exists.
+  - else 
+    Your activation code is invalid.  Please check again.
+  %br/
+  Get back to
+  = link_to 'home.', :controller => 'main', :action => 'login'
