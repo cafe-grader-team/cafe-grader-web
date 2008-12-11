@@ -8,26 +8,27 @@
 
 %b= Configuration['ui.front.welcome_message']
 %br/
-Please login to see the problem list.
-%br/
-%br/
 
-- if flash[:notice]
-  %hr/
-  %b= flash[:notice]
-  %hr/
+- if !@hidelogin
+  Please login to see the problem list.
+  %br/
+  %br/
 
-%div{ :style => "border: solid 1px gray; padding: 2px; background: #f0f0f0;"}
-  - form_tag :controller => 'login', :action => 'login' do
-    %table
-      %tr
-        %td{:align => "right"} Login:
-        %td= text_field_tag 'login'
-      %tr
-        %td{:align => "right"} Password:
-        %td= password_field_tag
-    = submit_tag 'Login'
+  - if flash[:notice]
+    %hr/
+    %b= flash[:notice]
+    %hr/
 
+  %div{ :style => "border: solid 1px gray; padding: 2px; background: #f0f0f0;"}
+    - form_tag :controller => 'login', :action => 'login' do
+      %table
+        %tr
+          %td{:align => "right"} Login:
+          %td= text_field_tag 'login'
+        %tr
+          %td{:align => "right"} Password:
+          %td= password_field_tag
+      = submit_tag 'Login'
 %br/
 
 - if Configuration['system.online_registration']

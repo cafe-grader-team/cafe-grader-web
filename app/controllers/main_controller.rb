@@ -5,17 +5,17 @@ class MainController < ApplicationController
   before_filter :authenticate, :except => [:index, :login]
   before_filter :check_viewability, :except => [:index, :login]
 
-#
-#  COMMENT OUT: filter in each action instead
-#
-#  before_filter :verify_time_limit, :only => [:submit]
+  # COMMENTED OUT: filter in each action instead
+  # before_filter :verify_time_limit, :only => [:submit]
 
   verify :method => :post, :only => [:submit],
          :redirect_to => { :action => :index }
 
-#  COMMENT OUT, only need when having high load
-#  caches_action :index, :login
+  # COMMENT OUT: only need when having high load
+  # caches_action :index, :login
 
+  # NOTE: This method is not actually needed, 'config/routes.rb' has
+  # assigned action login as a default action.
   def index
     redirect_to :action => 'login'
   end
@@ -25,9 +25,17 @@ class MainController < ApplicationController
     reset_session
     flash[:notice] = saved_notice
 
+    # EXPERIMENT:
+    # Hide login if in single user mode and the url does not
+    # explicitly specify /login
     #
-    # These are for site administrator login
-    #
+    # logger.info "PATH: #{request.path}"
+    # if Configuration['system.single_user_mode'] and 
+    #     request.path!='/main/login'
+    #   @hidelogin = true
+    # end
+
+    # Site administrator login
     @countries = Country.find(:all, :include => :sites)
     @country_select = @countries.collect { |c| [c.name, c.id] }
 

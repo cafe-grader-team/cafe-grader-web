@@ -55,11 +55,11 @@ class UsersController < ApplicationController
   def confirm
     login = params[:login]
     key = params[:activation]
-    user = User.find_by_login(login)
-    if (user) and (user.verify_activation_key(key))
-      if user.valid?  # check uniquenss of email
-        user.activated = true
-        user.save
+    @user = User.find_by_login(login)
+    if (@user) and (@user.verify_activation_key(key))
+      if @user.valid?  # check uniquenss of email
+        @user.activated = true
+        @user.save
         @result = :successful
       else
         @result = :email_used

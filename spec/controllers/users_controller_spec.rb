@@ -83,6 +83,7 @@ describe UsersController, "when a new user registers" do
     User.should_receive(:find_by_login).
       with(login).
       and_return(@john)
+    User.should_not_receive(:find_by_email)
     @john.should_receive(:valid?).and_return(true)
     @john.should_receive(:activated=).with(true)
     @john.should_receive(:save).and_return(true)

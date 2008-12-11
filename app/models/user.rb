@@ -128,6 +128,7 @@ class User < ActiveRecord::Base
     end
     
     def enough_time_interval_between_same_email_registrations
+      return if !self.new_record?
       open_user = User.find_by_email(self.email,
                                      :order => 'created_at DESC')
       if open_user and open_user.created_at and 
