@@ -6,6 +6,6 @@ class AddSupportsForOutputOnlyProblems < ActiveRecord::Migration
 
   def self.down
     remove_column :submissions, :source_filename
-    add_column :problems, :output_only, :boolean
+    remove_column :problems, :output_only
   end
 end

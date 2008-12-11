@@ -8,6 +8,13 @@ class AddSiteToUserAndAddDefaultSite < ActiveRecord::Migration
     User.reset_column_information
 
     User.find(:all).each do |user|
+
+      class << user
+        def valid?
+          true
+        end
+      end
+
       user.site_id = default_site.id
       user.save
     end

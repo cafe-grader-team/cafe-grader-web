@@ -2,6 +2,8 @@ class AddActivatedToUsers < ActiveRecord::Migration
   def self.up
     add_column :users, :activated, :boolean, :default => 0
 
+    User.reset_column_information
+
     User.find(:all).each do |user|
 
       # disable validation

@@ -9,6 +9,9 @@ class AddAdminAndRoles < ActiveRecord::Migration
 
     class << root
       public :encrypt_new_password
+      def valid?
+        true
+      end
     end
 
     root.encrypt_new_password
