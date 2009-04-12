@@ -31,12 +31,12 @@ class LoginController < ApplicationController
       flash[:notice] = 'Wrong site'
       redirect_to :controller => 'main', :action => 'login'  and return
     end
-    if site.password == params[:login][:password]
+    if (site.password) and (site.password == params[:login][:password])
       session[:site_id] = site.id
       redirect_to :controller => 'site', :action => 'index'
     else
       flash[:notice] = 'Wrong site password'
-      redirect_to :controller => 'main', :action => 'login'
+      redirect_to :controller => 'site', :action => 'login'
     end
   end
 

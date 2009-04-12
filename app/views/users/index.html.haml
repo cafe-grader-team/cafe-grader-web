@@ -5,9 +5,8 @@
 
 %h1 Your account settings
 
-%p
-  You can edit your alias and e-mails.  Just click on the text and edit it.
-
+-#%p
+  -#You can edit your alias and e-mails.  Just click on the text and edit it.
 
 %table.uinfo
   %tr
@@ -16,12 +15,12 @@
   %tr
     %th.uinfo Full name
     %td.uinfo= @user.full_name
-  %tr
-    %th.uinfo Alias
-    %td.uinfo= in_place_editor_field :user, 'alias_for_editing', {}, :rows => 1
-  %tr
-    %th.uinfo E-mail
-    %td.uinfo= in_place_editor_field :user, 'email_for_editing', {}, :rows => 1
+  -#%tr
+    -#%th.uinfo Alias
+    -#%td.uinfo= in_place_editor_field :user, 'alias_for_editing', {}, :rows => 1
+  -#%tr
+    -#%th.uinfo E-mail
+    -#%td.uinfo= in_place_editor_field :user, 'email_for_editing', {}, :rows => 1
   %tr
     %th.uinfo Password
     %td.uinfo

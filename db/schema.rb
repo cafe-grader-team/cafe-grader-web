@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20081210021333) do
+ActiveRecord::Schema.define(:version => 20090206145016) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -17,7 +17,8 @@ ActiveRecord::Schema.define(:version => 20081210021333) do
     t.boolean  "published"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "frontpage",  :default => false
+    t.boolean  "frontpage",    :default => false
+    t.boolean  "contest_only", :default => false
   end
 
   create_table "configurations", :force => true do |t|
@@ -174,7 +175,7 @@ ActiveRecord::Schema.define(:version => 20081210021333) do
   add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
 
   create_table "users", :force => true do |t|
-    t.string   "login",           :limit => 10
+    t.string   "login",           :limit => 50
     t.string   "full_name"
     t.string   "hashed_password"
     t.string   "salt",            :limit => 5

@@ -10,7 +10,7 @@
 %br/
 
 - if !@hidelogin
-  Please login to see the problem list.
+  =t 'login.message'
   %br/
   %br/
 
@@ -23,48 +23,20 @@
     - form_tag :controller => 'login', :action => 'login' do
       %table
         %tr
-          %td{:align => "right"} Login:
+          %td{:align => "right"} 
+            ="#{t 'login_label'}:"
           %td= text_field_tag 'login'
         %tr
-          %td{:align => "right"} Password:
+          %td{:align => "right"} 
+            ="#{t 'password_label'}:"
           %td= password_field_tag
-      = submit_tag 'Login'
+      = submit_tag t('login.login_submit')
 %br/
 
 - if Configuration['system.online_registration']
-  Want to participate?  
+  =t 'login.participation'
   %b
-    Please 
-    = link_to 'register.', :controller => :users, :action => :new
+    = "#{t 'login.please'} "
+    = link_to "#{t 'login.register'}", :controller => :users, :action => :new
   %br/
 
-- if (Configuration['system.mode']=='contest') and (Configuration['contest.multisites'])
-  %script{:type => 'text/javascript'}
-    var siteList = new Array();
-    - @countries.each do |country|
-      = "siteList[#{country.id}] = new Array();"
-      - country.sites.each do |site| 
-        = "siteList[#{country.id}][#{site.id}] = \"#{site.name}\";"
-
-    var allSiteList = new Array();
-    - @site_select.each do |sel|
-      = "allSiteList[#{sel[1]}]=\"#{sel[0]}\";"
-
-  %script{:type => 'text/javascript', :src => '/javascripts/site_update.js'}
-
-  %div{ :style => "border: solid 1px gray; padding: 2px; background: #f0f0f0;"}
-    %b For Site Administrator.
-    %br/
-    Please select your country and site and login.
-    - form_for :login, nil, :url => {:controller => 'login', :action => 'site_login'} do |f|
-      Country:
-      = select :site_country, :id, @country_select_with_all, {}, {:onchange => "updateSiteList();", :onclick => "updateSiteList();" }
-      Site: 
-      = select :login, :site_id, @site_select
-      %br/
-      Password:
-      = f.password_field :password
-      = submit_tag "Site Administrator Login"
-
-  %script{:type => 'text/javascript'}
-    updateSiteList();

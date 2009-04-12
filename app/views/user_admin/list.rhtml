@@ -1,7 +1,3 @@
-<% content_for :head do %>
-  <%= stylesheet_link_tag 'scaffold' %>
-<% end %>
-
 <h1>Listing users</h1>
 
 <div class="submitbox">
@@ -11,16 +7,16 @@
   <tr>
   <td><label for="user_login">Login</label></td>
   <td><label for="user_full_name">Full name</label></td>
-  <td><label for="user_alias">Alias</label></td>
   <td><label for="user_password">Password</label></td>
-  <td><label for="user_password_confirmation">confirm</label></td>
+  <td><label for="user_password_confirmation">Confirm</label></td>
+  <td><label for="user_email">Email</label></td>
   </tr>
   <tr>
   <td><%= text_field 'user', 'login', :size => 10  %></td>
   <td><%= text_field 'user', 'full_name', :size => 30  %></td>
-  <td><%= text_field 'user', 'alias', :size => 10  %></td>
   <td><%= password_field 'user', 'password', :size => 10  %></td>
   <td><%= password_field 'user', 'password_confirmation', :size => 10 %></td>
+  <td><%= text_field 'user', 'email', :size => 15 %></td>
   <td><%= submit_tag "Create" %></td>
   </tr></table>
 <% end %>
@@ -34,14 +30,18 @@
 <table>
   <tr>
   <% for column in User.content_columns %>
-    <th><%= column.human_name %></th>
+    <% if !@hidden_columns.index(column.name) %>
+      <th><%= column.human_name %></th>
+    <% end %>
   <% end %>
   </tr>
   
 <% for user in @users %>
   <tr>
   <% for column in User.content_columns %>
-    <td><%=h user.send(column.name) %></td>
+    <% if !@hidden_columns.index(column.name) %>
+      <td><%=h user.send(column.name) %></td>
+    <% end %>
   <% end %>
     <td><%= link_to 'Show', :action => 'show', :id => user %></td>
     <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>

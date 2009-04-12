@@ -1,11 +1,11 @@
-%h1 Registration successful
+%h1
+  =t 'registration.successful_title'
 
-We have sent a confimation message to your e-mail.
+=t 'registration.email_sent'
 %br/
-Please check at 
-= "#{@user.email}."
+=t 'registration.email_verify_at', :email => @user.email
 %br/
 %br/
 
-Go back to
-= link_to 'login page.', :controller => 'main', :action => 'login'
+=t 'go_back_to'
+=link_to((t 'login_page'), {:controller => 'main', :action => 'login'})

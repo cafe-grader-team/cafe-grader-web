@@ -14,27 +14,28 @@ module ApplicationHelper
       append_to menu_items, '[Msg console]', 'messages', 'console'
       append_to menu_items, '[Problem admin]', 'problems', 'index'
       append_to menu_items, '[User admin]', 'user_admin', 'index'
-      append_to menu_items, '[User stat]', 'user_admin', 'user_stat'
+      append_to menu_items, '[Results]', 'user_admin', 'user_stat'
       append_to menu_items, '[Graders]', 'graders', 'list'
-      append_to menu_items, '[Site config]', 'configurations', 'index'
+      append_to menu_items, '[Sites]', 'sites', 'index'
+      append_to menu_items, '[System config]', 'configurations', 'index'
       menu_items << "<br/>"
     end
 
     # main page
-    append_to menu_items, '[Main]', 'main', 'list'
-    append_to menu_items, '[Messages]', 'messages', 'list'
+    append_to menu_items, "[#{I18n.t 'menu.main'}]", 'main', 'list'
+    append_to menu_items, "[#{I18n.t 'menu.messages'}]", 'messages', 'list'
 
     if (user!=nil) and (Configuration.show_tasks_to?(user))
-      append_to menu_items, '[Tasks]', 'tasks', 'list'
-      append_to menu_items, '[Submissions]', 'main', 'submission'
-      append_to menu_items, '[Test]', 'test', 'index'
+      append_to menu_items, "[#{I18n.t 'menu.tasks'}]", 'tasks', 'list'
+      append_to menu_items, "[#{I18n.t 'menu.submissions'}]", 'main', 'submission'
+      append_to menu_items, "[#{I18n.t 'menu.test'}]", 'test', 'index'
     end
-    append_to menu_items, '[Help]', 'main', 'help'
+    append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'
 
     if Configuration['system.user_setting_enabled']
-      append_to menu_items, '[Settings]', 'users', 'index'
+      append_to menu_items, "[#{I18n.t 'menu.settings'}]", 'users', 'index'
     end
-    append_to menu_items, '[Log out]', 'main', 'login'
+    append_to menu_items, "[#{I18n.t 'menu.log_out'}]", 'main', 'login'
 
     menu_items
   end
@@ -78,8 +79,13 @@ module ApplicationHelper
 </td></tr>
 CONTEST_OVER
       end
-      if user.site!=nil
-        time_left = ". Time left: #{Time.at(user.site.time_left).gmtime.strftime("%X")}"
+      if !user.site.started
+        time_left = "&nbsp;&nbsp;" + (t 'title_bar.contest_not_started')
+      else
+        if user.site!=nil
+          time_left = "&nbsp;&nbsp;" + (t 'title_bar.remaining_time') + 
+            " #{Time.at(user.site.time_left).gmtime.strftime("%X")}"
+        end
       end
     end
     
@@ -104,7 +110,7 @@ ANALYSISMODE
 <tr>
 <td class="left-col">
 #{user.full_name}<br/>
-Current time is #{format_short_time(Time.new.gmtime)} UTC
+#{t 'title_bar.current_time'} #{format_short_time(Time.new)}
 #{time_left}
 <br/>
 </td>

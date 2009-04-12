@@ -1,0 +1,118 @@
+# Sample localization file for English. Add more files in this directory for other locales.
+# See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
+
+en:
+  cancel: 'Cancel'
+
+  login_label: 'Login'
+  full_name_label: 'Full name'
+  email_label: 'E-mail'
+  password_label: 'Password'
+
+  go_ahead_to: "Go ahead to"
+  go_back_to: "Go back to"
+  login_page: "login page"
+  home_page: "home page"
+
+  menu:
+    main: 'Main'
+    messages: 'Messages'
+    tasks: 'Tasks'
+    submissions: 'Submissions'
+    test: 'Test Interface'
+    help: 'Help'
+    settings: 'Settings'
+    log_out: 'Log out'
+
+  title_bar:
+    current_time: "Current time is"
+    remaining_time: "Time left: "
+    contest_not_started: "The contest has not started."
+
+  login:
+    message: 'Please login to see the problem list'
+    login_submit: 'Login'
+    participation: 'Want to participate?'
+    please: 'Please'
+    register: 'register'
+
+  main:
+    start_soon: "The contest at your site will start soon.  Please wait."
+    specified_in_header: "Specified in header"
+
+    problem_desc: "desc"
+    submitted_at: "Submitted at"
+    graded_at: "Graded at"
+    score: "score: "
+    cmp_msg: "compiler msg"
+    src_link: "src"
+    submissions_link: "submissions"
+
+  test:
+    title: "Test Interface"
+    intro: "You can test your submission with your own test data on the grading environment using this test interface."
+    disabled_at_end_announcement: "<b>Note:</b> Test interface will be disabled in the last 30 minutes of the contest time on your site."
+
+  registration:
+    title: "New user registration"
+    successful_title: "Registration successful"
+    
+    login_guide: "Only a-z, A-Z, 0-9 and _.  Can be at most 20 characters long"
+    email_guide: "Please make sure that your e-mail is correct.<br/>You'll need to verify your account by email."
+    register: "Register"
+
+    email_body: "Hello {{full_name}},
+
+You have registered for {{contest_name}}
+
+Your login is: {{login}}
+
+Your password is: {{password}}
+
+Please follow the link:
+
+{{activation_url}}
+
+to activate your user account.
+
+If you did not register, please ignore this e-mail 
+and report this event to {{admin_email}}.
+
+Thanks!"
+
+    email_sent: "We have sent a confimation message to your e-mail.  (Please also check the Junk mail box."
+    email_verify_at: "Please check at {{email}} and confirm."
+
+    activation_sucessful_title: "User activated"
+    account_activated: "Your account has been activated."
+
+    activation_failed_title: "Activation failed"
+
+    errors:
+      header: "Errors occured during registration"
+      email:
+        title: "Errors in sending registration confirmation"
+        expl: "<h2>Your user account has been created, but the system cannot send you the confirmation e-mail.</h2>
+Maybe there's a problem in the configuration.  Please report the admin at {{email}}.<br/>Thank you!"
+      activation:
+        email_exists: "A user with this E-mail exists."
+        invalid: "Your activation code is invalid.  Please check again."
+
+  help:
+    how_to_submit: "How to submit"
+    must_specify_language: "You <b>must</b> specify the language you are using in your program header.  You can optionally specify the task you are submitting to."
+    list_available_language: "The possible language options are <tt>C</tt>, <tt>C++</tt>, and <tt>Pascal</tt>. The follow are examples."
+    accept_only_language_specified: "The server <b>will not</b> accept your submission, if you do not specify the language."
+    specifying_task: "Optionally, you can also specify the task with <tt>TASK:</tt> <i>taskname</i>.  On the first page, the taskname for each task is shown in parentheses."
+    example_cpp: "For example, suppose you are using <tt>C++</tt> to write task <b>mobiles</b>, you put the following on top of your source code."
+    example_pas: "If you are using <tt>Pascal</tt> to write the same task, you'll use"
+    ask_questions_at_messages: "If you have any problems, you can ask at [<a href=\"{{url}}\">{{message_link_name}}</a>]."
+
+  activerecord:
+    attributes:
+      user:
+        login: "login"
+        full_name: "full name"
+        email: "e-mail"
+        province: "province"
+

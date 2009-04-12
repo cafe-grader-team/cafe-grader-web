@@ -2,55 +2,46 @@
 
 .announcementbox
   %span{:class => 'title'}
-    How to submit
+    =t 'help.how_to_submit'
   .announcement
     %p
-      You <b>must</b> specify the language you are using 
-      in your program header.  You can optionally 
-      specify the task you are submitting to.
+      =t 'help.must_specify_language'
 
     %p
-      The possible language options are 
-      <tt>C</tt>, <tt>C++</tt>, and <tt>Pascal</tt>.
-      The follow are examples.
+      =t 'help.list_available_language'
 
     %table{:border => '1'}
       %tr
-        %th{:width => '100px'} C
-        %th{:width => '100px'} C++
-        %th{:width => '100px'} Pascal
+        %th{:width => '150px'} C
+        %th{:width => '150px'} C++
+        %th{:width => '150px'} Pascal
       %tr
         %td= "<tt>/*<br/>LANG: C<br/>*/</tt>"
         %td= "<tt>/*<br/>LANG: C++<br/>*/</tt>"
         %td= "<tt>{<br/>LANG: Pascal<br/>}</tt>"
 
     %p
-      The server <b>will not</b> accept your submission,
-      if you do not specify the language.
+      =t 'help.accept_only_language_specified'
 
     %p
-      Optionally, you can also specify 
-      the task with <tt>TASK:</tt> <i>taskname</i>.
-      On the first page, the taskname for each task is 
-      shown in parentheses.
+      =t 'help.specifying_task'
 
     %p 
-      For example, suppose you are using <tt>C++</tt> 
-      to write task <b>mobiles</b>, you put
+      =t 'help.example_cpp'
 
     %table{:border => '1'}
       %tr
-        %td{:width => '100px'}
+        %td{:width => '300px'}
           %tt <tt>/*<br/>LANG: C++<br/>TASK: mobiles<br/>*/</tt>
     
     %p
-      on top of your source code.  
-      If you are using <tt>Pascal</tt> to write the same task,
-      you'll use
+      =t 'help.example_pas'
  
     %table{:border => '1'}
       %tr
-        %td{:width => '100px'}
+        %td{:width => '300px'}
           %tt <tt>{<br/>LANG: Pascal<br/>TASK: mobiles<br/>}</tt>
     
+    %p
+      = (t('help.ask_questions_at_messages',:message_link_name => (t 'menu.messages'),:url => url_for(:controller => 'messages', :action => 'list')))
 

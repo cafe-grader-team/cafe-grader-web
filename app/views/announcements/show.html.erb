@@ -18,6 +18,10 @@
   <%=h @announcement.frontpage %>
 </p>
 
+<p>
+  <b>Show only in contest:</b>
+  <%=h @announcement.contest_only %>
+</p>
 
 <%= link_to 'Edit', edit_announcement_path(@announcement) %> |
 <%= link_to 'Back', announcements_path %>

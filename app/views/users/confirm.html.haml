@@ -1,15 +1,17 @@
 - if @result == :successful
-  %h1 User activated
-  Your account has been activated.
+  %h1 
+    =t 'registration.activation_sucessful_title'
+  =t 'registration.account_activated' 
   %br/
-  Please go ahead to
-  = link_to 'login.', :controller => 'main', :action => 'login'
+  =t 'go_ahead_to'
+  = link_to((t 'login_page'), {:controller => 'main', :action => 'login'})
 - else
-  %h1 Activation failed
+  %h1 
+    =t 'registration.activation_failed_title'
   - if @result == :email_used
-    A user with this E-mail exists.
+    =t 'registration.errors.activation.email_exists'
   - else 
-    Your activation code is invalid.  Please check again.
+    =t 'registration.errors.activation.invalid'
   %br/
-  Get back to
-  = link_to 'home.', :controller => 'main', :action => 'login'
+  =t 'go_back_to'
+  = link_to((t 'home_page'), {:controller => 'main', :action => 'login'})

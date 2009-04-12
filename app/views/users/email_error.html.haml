@@ -1,9 +1,8 @@
-%h1 Errors in sending registration confirmation
+%h1
+  =t 'registration.errors.email.title'
 
 .errorExplanation
-  %h2 
-    Your user account has been created, but the system cannot send you the
-    confirmation e-mail.
+  =t 'registration.errors.email.expl', :email => @admin_email
 
-  Maybe there's a problem in the configuration.  Please report the
-  admin.  Thank you!
+=t 'go_back_to'
+=link_to((t 'login_page'), {:controller => 'main', :action => 'login'})

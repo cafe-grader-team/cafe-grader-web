@@ -1,6 +1,7 @@
 /* Normal text */
-p {
-    font-size: 12px;
+body {
+    font-size: 13px;
+    font-family: "Sans Serif";
 }
 
 /* This is the main menu bad*/
@@ -226,4 +227,34 @@ div.message div.stat {
     color: white;
     background: green;
     font-weight: bold;
+}
+
+/********************
+   Registration
+********************/
+div.contest-title {
+    color: white;
+    background: #007700;
+    text-align: center;
+    padding: 5px;
+}
+
+div.registration-desc {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: solid 1px gray; 
+    padding: 10px; 
+    background: #f0f0f0;
+}
+
+/********************
+  [Test Interface]
+********************/
+
+div.test-desc {
+    border: solid 1px gray; 
+    background: #f0f0f0;
+    padding: 5px;
+    font-size: 12px;
+    margin-bottom: 5px;
 }

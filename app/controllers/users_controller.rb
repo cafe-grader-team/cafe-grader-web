@@ -5,11 +5,13 @@ class UsersController < ApplicationController
 
   before_filter :authenticate, :except => [:new, :register, :confirm]
 
+  before_filter :verify_online_registration, :only => [:new, :register]
+
   verify :method => :post, :only => [:chg_passwd],
          :redirect_to => { :action => :index }
 
-  in_place_edit_for :user, :alias_for_editing
-  in_place_edit_for :user, :email_for_editing
+  #in_place_edit_for :user, :alias_for_editing
+  #in_place_edit_for :user, :email_for_editing
 
   def index
     if !Configuration['system.user_setting_enabled']
@@ -37,6 +39,10 @@ class UsersController < ApplicationController
   end
 
   def register
+    if(params[:cancel])
+      redirect_to :controller => 'main', :action => 'login'
+      return
+    end
     @user = User.new(params[:user])
     @user.password_confirmation = @user.password = User.random_password
     @user.activated = false
@@ -44,6 +50,7 @@ class UsersController < ApplicationController
       if send_confirmation_email(@user)
         render :action => 'new_splash', :layout => 'empty'
       else
+        @admin_email = Configuration['system.admin_email']
         render :action => 'email_error', :layout => 'empty'
       end
     else
@@ -72,8 +79,15 @@ class UsersController < ApplicationController
 
   protected
 
+  def verify_online_registration
+    if !Configuration['system.online_registration']
+      redirect_to :controller => 'main', :action => 'login'
+    end
+  end
+
   def send_confirmation_email(user)
     contest_name = Configuration['contest.name']
+    admin_email = Configuration['system.admin_email']
     activation_url = url_for(:action => 'confirm', 
                              :login => user.login, 
                              :activation => user.activation_key)
@@ -82,22 +96,16 @@ class UsersController < ApplicationController
     mail.to = user.email
     mail.from = Configuration['system.online_registration.from']
     mail.subject = "[#{contest_name}] Confirmation"
-    mail.body = <<-EOF
-Hello #{user.full_name},
+    mail.body = t('registration.email_body', {
+                    :full_name => user.full_name,
+                    :contest_name => contest_name,
+                    :login => user.login,
+                    :password => user.password,
+                    :activation_url => activation_url,
+                    :admin_email => admin_email
+                  })
 
-You have registered for #{contest_name} (#{home_url}).  
-
-Your login is: #{user.login}
-Your password is: #{user.password}
-
-Please follow the link:
-#{activation_url}
-to activate your user account.
-
-If you did not register, please ignore this e-mail.
-
-Thanks!
-EOF
+    logger.info mail.body
 
     smtp_server = Configuration['system.online_registration.smtp']
 

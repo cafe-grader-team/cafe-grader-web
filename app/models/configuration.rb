@@ -6,6 +6,7 @@ require 'yaml'
 class Configuration < ActiveRecord::Base
 
   SYSTEM_MODE_CONF_KEY = 'system.mode'
+  TEST_REQUEST_EARLY_TIMEOUT_KEY = 'contest.test_request.early_timeout'
 
   # set @@cache = true to only reload once.
   @@cache = false
@@ -34,6 +35,10 @@ class Configuration < ActiveRecord::Base
 
   def self.clear
     @@configurations = nil
+  end
+
+  def self.cache?
+    @@cache
   end
 
   def self.enable_caching
@@ -67,8 +72,11 @@ class Configuration < ActiveRecord::Base
 
   def self.allow_test_request(user)
     mode = get(SYSTEM_MODE_CONF_KEY)
+    early_timeout = get(TEST_REQUEST_EARLY_TIMEOUT_KEY)
     if (mode=='contest') 
-      return false if (user.site!=nil) and ((user.site.started!=true) or (user.site.time_left < 30.minutes))
+      return false if ((user.site!=nil) and 
+        ((user.site.started!=true) or 
+         (early_timeout and (user.site.time_left < 30.minutes))))
     end
     return false if mode=='analysis'
     return true

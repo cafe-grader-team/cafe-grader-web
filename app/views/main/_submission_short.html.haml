@@ -3,11 +3,14 @@
   = "-"
 - else
   - if submission.graded_at==nil
-    Submitted at
-    = format_short_time(submission.submitted_at)
+    =t 'main.submitted_at'
+    = format_short_time(submission.submitted_at.localtime)
   - else
-    = "Graded at #{format_short_time(submission.graded_at)}, " 
-    = "score: #{(submission.points*100/submission.problem.full_score).to_i} " if Configuration['ui.show_score']
+    = t 'main.graded_at'
+    = "#{format_short_time(submission.graded_at.localtime)}, " 
+    - if Configuration['ui.show_score']
+      = t 'main.score'
+      = "#{(submission.points*100/submission.problem.full_score).to_i} "
     = " [" 
     %tt
       = submission.grader_comment
@@ -16,8 +19,8 @@
       = " | "
       = link_to '[detailed result]', :action => 'result', :id => submission.id
     = " | "
-    = link_to('[msg]', {:action => 'compiler_msg', :id => submission.id}, {:popup => true})
+    = link_to("[#{t 'main.cmp_msg'}]", {:action => 'compiler_msg', :id => submission.id}, {:popup => true})
   = " | "
-  = link_to('[src]',{:action => 'source', :id => submission.id})
+  = link_to("[#{t 'main.src_link'}]",{:action => 'source', :id => submission.id})
   = " | "
-  = link_to '[submissions]', :action => 'submission', :id => problem_name
+  = link_to "[#{t 'main.submissions_link'}]", :action => 'submission', :id => problem_name

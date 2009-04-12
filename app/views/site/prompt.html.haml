@@ -1,6 +1,6 @@
 %h2 
   Contest Administration for site:
-  = "#{@site.name}, #{@site.country.name}"
+  = "#{@site.name}, #{@site.country.name if @site.country}"
 
 
 Current time at the server is

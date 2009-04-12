@@ -4,7 +4,7 @@
   </td>
   <td>
     <%= "#{problem.full_name} (#{problem.name})" %>
-    <%= link_to '[desc]', problem.url, :popup => true if (problem.url!=nil) and (problem.url!='') %>
+    <%= link_to "[#{t 'main.problem_desc'}]", problem.url, :popup => true if (problem.url!=nil) and (problem.url!='') %>
   </td>
   <td align="center">
     <%= @prob_submissions[problem_counter][:count] %>

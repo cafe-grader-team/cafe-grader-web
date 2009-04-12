@@ -13,7 +13,7 @@
   <% count = 0 %>
   <% @submissions.each do |sub| %>
     <tr class="<%= (count % 2 ==0) ? "info-even" : "info-odd" %>">
-    <td><%= sub.user.full_name %></td>
+    <td><%= sub.user.full_name if sub.user %></td>
     <td><%= sub.submitted_at.to_s %></td>
     <td><%= sub.points %></td>
     <td><div style="font-family: monospace"><%= sub.grader_comment %></div></td>

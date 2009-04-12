@@ -23,8 +23,8 @@ class User < ActiveRecord::Base
 
   validates_presence_of :login
   validates_uniqueness_of :login
-  validates_format_of :login, :with => /^[\_a-z0-9]+$/
-  validates_length_of :login, :within => 3..10
+  validates_format_of :login, :with => /^[\_A-Za-z0-9]+$/
+  validates_length_of :login, :within => 3..30
 
   validates_presence_of :full_name
   validates_length_of :full_name, :minimum => 1
@@ -33,14 +33,22 @@ class User < ActiveRecord::Base
   validates_length_of :password, :within => 4..20, :if => :password_required?
   validates_confirmation_of :password, :if => :password_required?
 
-  validates_format_of :email, :with => /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i, :allow_blank => true
+  validates_format_of :email, 
+                      :with => /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i, 
+                      :if => :email_validation?
+  validate :uniqueness_of_email_from_activated_users, 
+           :if => :email_validation?
+  validate :enough_time_interval_between_same_email_registrations, 
+           :if => :email_validation?
 
-  validate :uniqueness_of_email_from_activated_users
-  validate :enough_time_interval_between_same_email_registrations
+  # these are for ytopc
+  # disable for now
+  #validates_presence_of :province
 
   attr_accessor :password
 
   before_save :encrypt_new_password
+  before_save :assign_default_site
 
   def self.authenticate(login, password)
     user = find_by_login(login)
@@ -112,6 +120,16 @@ class User < ActiveRecord::Base
       self.hashed_password = User.encrypt(self.password,self.salt)
     end
   
+    def assign_default_site
+      # have to catch error when migrating (because self.site is not available).
+      begin
+        if self.site==nil
+          self.site = Site.find_by_name('default')
+        end
+      rescue
+      end
+    end
+
     def password_required?
       self.hashed_password.blank? || !self.password.blank?
     end
@@ -129,11 +147,20 @@ class User < ActiveRecord::Base
     
     def enough_time_interval_between_same_email_registrations
       return if !self.new_record?
+      return if self.activated
       open_user = User.find_by_email(self.email,
                                      :order => 'created_at DESC')
       if open_user and open_user.created_at and 
           (open_user.created_at > Time.now.gmtime - 5.minutes)
         self.errors.add_to_base("There are already unactivated registrations with this e-mail address (please wait for 5 minutes)")
+      end
+    end
+
+    def email_validation?
+      begin
+        return VALIDATE_USER_EMAILS
+      rescue
+        return false
       end
     end
 end

@@ -1,6 +1,28 @@
 class SiteController < ApplicationController
 
-  before_filter :site_admin_authorization
+  before_filter :site_admin_authorization, :except => 'login'
+
+  def login
+    # Site administrator login
+    @countries = Country.find(:all, :include => :sites)
+    @country_select = @countries.collect { |c| [c.name, c.id] }
+    
+    @country_select_with_all = [['Any',0]]
+    @countries.each do |country|
+      @country_select_with_all << [country.name, country.id]
+    end
+    
+    @site_select = []
+    @countries.each do |country|
+      country.sites.each do |site|
+        @site_select << ["#{site.name}, #{country.name}", site.id]
+      end
+    end
+    
+    @default_site = Site.first if !Configuration['contest.multisites']
+    
+    render :action => 'login', :layout => 'empty'
+  end
 
   def index
     if @site.started
@@ -25,7 +47,7 @@ class SiteController < ApplicationController
   protected
   def site_admin_authorization
     if session[:site_id]==nil
-      redirect_to :controller => 'main', :action => 'login' and return
+      redirect_to :controller => 'site', :action => 'login' and return
     end
     begin
       @site = Site.find(session[:site_id], :include => :country)
@@ -33,7 +55,7 @@ class SiteController < ApplicationController
       @site = nil
     end
     if @site==nil
-      redirect_to :controller => 'main', :action => 'login' and return
+      redirect_to :controller => 'site', :action => 'login' and return
     end
   end
 

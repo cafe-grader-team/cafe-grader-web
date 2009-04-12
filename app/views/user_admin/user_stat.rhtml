@@ -1,7 +1,10 @@
 <h1>User grading results</h1>
 
 <table class="info">
-<tr class="info-head"><th>User</th><th>Name</th>
+<tr class="info-head">
+  <th>User</th>
+  <th>Name</th>
+  <th>Activated?</th>
 <% @problems.each do |p| %>
   <th><%= p.name %></th>
 <% end %>
@@ -14,8 +17,10 @@
     <% total = 0 %>
     <% num_passed = 0 %>
     <% sc.each_index do |i| %>
-      <% if i<=1 %>
-        <td><%= sc[i] %></td>
+      <% if i==0 %>
+        <td><%= sc[i].login %></td>
+        <td><%= sc[i].full_name %></td>
+        <td><%= sc[i].activated %></td>
       <% else %>  
         <td><%= sc[i][0] %></td>
         <% total += sc[i][0] %>

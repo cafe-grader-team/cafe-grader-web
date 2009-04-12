@@ -1,7 +1,7 @@
 - content_for :head do
   = javascript_include_tag :defaults
 
-%h1 Grader configuration
+%h1 System configuration
 
 %table.info
   %tr.info-head
@@ -19,12 +19,13 @@
       %td
         = in_place_editor_field :configuration, :value, {}, :rows=>1
 
-%br/
-Your config is saved, but it does not automatically take effect.
-%br/
-If you have one mongrel process running, you can
-= link_to '[click]', :action => 'reload'
-here to reload.
-%br/
-If you have more than one process running, you should restart 
-them manually.
+- if Configuration.cache?
+  %br/
+  Your config is saved, but it does not automatically take effect.
+  %br/
+  If you have one mongrel process running, you can
+  = link_to '[click]', :action => 'reload'
+  here to reload.
+  %br/
+  If you have more than one process running, you should restart 
+  them manually.

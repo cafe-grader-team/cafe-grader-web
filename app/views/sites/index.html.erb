@@ -3,6 +3,7 @@
 <table>
   <tr>
     <th>Name</th>
+    <th>Password</th>
     <th>Started</th>
     <th>Start time</th>
   </tr>
@@ -13,6 +14,7 @@
   <% background = "lightgreen" if (site.started==true) and (site.finished? != true) %>
   <tr style="background: <%= background %>;">
     <td><%=h site.name %></td>
+    <td><%=h site.password %></td>
     <td><%=h site.started %></td>
     <td><%=h site.start_time %></td>
     <td><%= link_to 'Show', site %></td>

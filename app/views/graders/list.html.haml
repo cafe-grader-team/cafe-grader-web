@@ -2,18 +2,20 @@
   = stylesheet_link_tag 'graders'
   <meta http-equiv ="refresh" content="10"/>
 
-%h2 (Under Experiments)
+%h1 Grader information
 
 - form_for :clear, nil, :url => {:action => 'clear_all'} do |f|
   = submit_tag 'Clear all data'
 
-Last task:
-= link_to "#{@last_task.id}", :action => 'view', :id => @last_task.id, :type => 'Task'
+- if @last_task
+  Last task:
+  = link_to "#{@last_task.id}", :action => 'view', :id => @last_task.id, :type => 'Task'
 
-%br/
+  %br/
 
-Last test_request:
-= link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
+- if @last_test_request
+  Last test_request:
+  = link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
 
 
 %h3 Current graders

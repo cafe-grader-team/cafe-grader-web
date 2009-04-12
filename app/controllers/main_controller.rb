@@ -35,22 +35,6 @@ class MainController < ApplicationController
     #   @hidelogin = true
     # end
 
-    # Site administrator login
-    @countries = Country.find(:all, :include => :sites)
-    @country_select = @countries.collect { |c| [c.name, c.id] }
-
-    @country_select_with_all = [['Any',0]]
-    @countries.each do |country|
-      @country_select_with_all << [country.name, country.id]
-    end
-
-    @site_select = []
-    @countries.each do |country|
-      country.sites.each do |site|
-        @site_select << ["#{site.name}, #{country.name}", site.id]
-      end
-    end
-
     @announcements = Announcement.find_for_frontpage
     render :action => 'login', :layout => 'empty'
   end
@@ -197,7 +181,11 @@ class MainController < ApplicationController
         @prob_submissions << { :count => 0, :submission => nil }
       end
     end
-    @announcements = Announcement.find_published
+    if Configuration.show_tasks_to?(@user)
+      @announcements = Announcement.find_published(true)
+    else
+      @announcements = Announcement.find_published
+    end
   end
 
   def check_viewability

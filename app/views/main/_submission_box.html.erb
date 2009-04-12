@@ -1,6 +1,6 @@
 <% form_tag({:action => 'submit'}, :multipart => true) do %>
 Problem: <%= select 'submission', 'problem_id', 
-             	[['Specified in header','-1']] + 
+             	[[(t 'main.specified_in_header'),'-1']] + 
 		@problems.collect {|p| [p.full_name, p.id]},
 		:selected => '-1' %>
 File: <%= file_field_tag 'file' %>

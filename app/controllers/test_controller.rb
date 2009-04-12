@@ -99,7 +99,12 @@ class TestController < ApplicationController
         @problems << problem
       end
     end
-    @test_requests = @user.test_requests
+    @test_requests = []
+    @user.test_requests.each do |ts|
+      if ts.problem.available
+        @test_requests << ts
+      end
+    end
   end
 
   def check_viewability

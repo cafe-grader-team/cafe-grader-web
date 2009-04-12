@@ -15,7 +15,7 @@
 %hr/
 
 - if (@user.site!=nil) and (@user.site.started!=true)
-  %p The contest at your site will start soon.  Please wait.
+  %p=t 'main.start_soon'
 
 - if Configuration.show_tasks_to?(@user)
   %table.info
