@@ -61,6 +61,15 @@ class Submission < ActiveRecord::Base
                     })
   end
 
+  def download_filename
+    if self.problem.output_only
+      return self.source_filename
+    else
+      timestamp = self.submitted_at.localtime.strftime("%H%M%S")
+      return "#{self.problem.name}-#{timestamp}.#{self.language.ext}"
+    end
+  end
+
   protected
 
   def self.find_option_in_source(option, source)

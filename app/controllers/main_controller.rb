@@ -83,13 +83,8 @@ class MainController < ApplicationController
   def source
     submission = Submission.find(params[:id])
     if submission.user_id == session[:user_id]
-      if submission.problem.output_only
-        fname = submission.source_filename
-      else
-        fname = submission.problem.name + '.' + submission.language.ext
-      end
       send_data(submission.source, 
-		{:filename => fname, 
+		{:filename => submission.download_filename, 
                   :type => 'text/plain'})
     else
       flash[:notice] = 'Error viewing source'
