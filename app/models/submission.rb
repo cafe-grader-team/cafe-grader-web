@@ -95,12 +95,16 @@ class Submission < ActiveRecord::Base
     end
   end
 
-  def self.find_problem_in_source(source)
+  def self.find_problem_in_source(source, source_filename="")
     prob_opt = find_option_in_source(/^TASK:/,source)
     if problem = Problem.find_by_name(prob_opt)
       return problem
     else
-      return nil
+      if source_filename
+        return Problem.find_by_name(source_filename.split('.').first)
+      else
+        return nil
+      end
     end
   end
 
@@ -112,7 +116,8 @@ class Submission < ActiveRecord::Base
         self.problem = nil
       end
     else
-      self.problem = Submission.find_problem_in_source(self.source)
+      self.problem = Submission.find_problem_in_source(self.source,
+                                                       self.source_filename)
     end
   end
 
