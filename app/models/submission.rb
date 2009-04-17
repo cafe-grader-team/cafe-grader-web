@@ -81,14 +81,17 @@ class Submission < ActiveRecord::Base
     return nil
   end
 
-  def self.find_language_in_source(source)
+  def self.find_language_in_source(source, source_filename="")
     langopt = find_option_in_source(/^LANG:/,source)
-    if language = Language.find_by_name(langopt)
-      return language
-    elsif language = Language.find_by_pretty_name(langopt)
-      return language
+    if langopt
+      return (Language.find_by_name(langopt) || 
+              Language.find_by_pretty_name(langopt))
     else
-      return nil
+      if source_filename
+        return Language.find_by_extension(source_filename.split('.').last)
+      else
+        return nil
+      end
     end
   end
 
@@ -114,7 +117,8 @@ class Submission < ActiveRecord::Base
   end
 
   def assign_language
-    self.language = Submission.find_language_in_source(self.source)
+    self.language = Submission.find_language_in_source(self.source,
+                                                       self.source_filename)
   end
 
   # validation codes

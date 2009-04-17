@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090206145016) do
+ActiveRecord::Schema.define(:version => 20090416235658) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -59,6 +59,7 @@ ActiveRecord::Schema.define(:version => 20090206145016) do
     t.string "name",        :limit => 10
     t.string "pretty_name"
     t.string "ext",         :limit => 10
+    t.string "common_ext"
   end
 
   create_table "messages", :force => true do |t|
