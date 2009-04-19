@@ -53,7 +53,7 @@ class MainController < ApplicationController
     @submission = Submission.new(params[:submission])
     @submission.user = user
     @submission.language_id = 0
-    if params['file']!=''
+    if (params['file']) and (params['file']!='')
       @submission.source = params['file'].read 
       @submission.source_filename = params['file'].original_filename
     end
