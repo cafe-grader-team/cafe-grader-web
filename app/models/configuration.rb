@@ -89,6 +89,10 @@ class Configuration < ActiveRecord::Base
     return @@task_grading_info
   end
   
+  def self.contest_mode
+    return get(SYSTEM_MODE_CONF_KEY) == 'contest'
+  end
+
   protected
 
   def self.convert_type(val,type)
