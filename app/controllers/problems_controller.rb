@@ -47,6 +47,23 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def quick_create
+    @problem = Problem.new(params[:problem])
+    @problem.full_name = @problem.name if @problem.full_name == ''
+    @problem.full_score = 100
+    @problem.available = false
+    @problem.test_allowed = true
+    @problem.output_only = false
+    @problem.date_added = Time.new
+    if @problem.save
+      flash[:notice] = 'Problem was successfully created.'
+      redirect_to :action => 'list'
+    else
+      flash[:notice] = 'Error saving problem'
+      redirect_to :action => 'list'
+    end
+  end
+
   def edit
     @problem = Problem.find(params[:id])
     @description = @problem.description

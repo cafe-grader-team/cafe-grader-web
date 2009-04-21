@@ -11,6 +11,17 @@
 <%= link_to 'Turn on all problems', :action => 'turn_all_on' %>
 </p>
 
+<div class="submitbox">
+  <% form_tag :action => 'quick_create' do %>
+    <b>Quick New:</b>
+    <label for="problem_name">Name</label>
+    <%= text_field 'problem', 'name'  %> |
+    <label for="problem_full_name">Full name</label>
+    <%= text_field 'problem', 'full_name'  %>
+    <%= submit_tag "Create" %>
+  <% end %>
+</div>
+
 <table>
   <tr>
     <th>Name</th>
