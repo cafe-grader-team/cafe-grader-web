@@ -20,15 +20,15 @@ class TasksController < ApplicationController
       redirect_to :action => 'index' and return
     end
 
-    response.headers['Content-Type'] = "application/force-download" 
-    response.headers['Content-Disposition'] = "attachment; filename=\"#{File.basename(filename)}\"" 
-    response.headers["X-Sendfile"] = filename
-    response.headers['Content-length'] = File.size(filename)
-    render :nothing => true
-
-    return
-
-    send_file filename, :stream => false, :filename => base_filename
+    if defined?(USE_APACHE_XSENDFILE) and USE_APACHE_XSENDFILE
+      response.headers['Content-Type'] = "application/force-download" 
+      response.headers['Content-Disposition'] = "attachment; filename=\"#{File.basename(filename)}\"" 
+      response.headers["X-Sendfile"] = filename
+      response.headers['Content-length'] = File.size(filename)
+      render :nothing => true
+    else
+      send_file filename, :stream => false, :filename => base_filename
+    end
   end
 
   protected

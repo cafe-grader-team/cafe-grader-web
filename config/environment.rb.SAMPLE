@@ -87,3 +87,7 @@ GRADING_RESULT_DIR = '/home/thailandoi/ytopc/judge/result'
 
 # Uncomment so that the system validates user e-mails
 # VALIDATE_USER_EMAILS = true
+
+# Uncomment so that Apache X-Sendfile is used when delivering files
+# (e.g., in /tasks/view).
+# USE_APACHE_XSENDFILE = true
