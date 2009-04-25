@@ -11,3 +11,10 @@
   = f.hidden_field :receiver_id, {:value => @message.sender_id }
   = f.hidden_field :replying_message_id, {:value => @message.id }
   = submit_tag "Post"
+
+%p
+  If you do not want to reply, but want to hide this message from
+  console, you can   
+  = link_to "[hide]", :action => 'hide', :id => @message.id
+  this message.  (This message will be marked as replied.)
+

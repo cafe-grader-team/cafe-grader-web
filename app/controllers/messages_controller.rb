@@ -5,7 +5,8 @@ class MessagesController < ApplicationController
   verify :method => :post, :only => ['create'],
          :redirect_to => { :action => 'list' }
 
-  before_filter :admin_authorization, :only => ['console','show','reply']
+  before_filter :admin_authorization, :only => ['console','show',
+                                                'reply','hide']
 
   def list
     @user = User.find(session[:user_id])
@@ -46,6 +47,14 @@ class MessagesController < ApplicationController
       rep_msg.save
       redirect_to :action => 'console'
     end
+  end
+
+  def hide
+    message = Message.find(params[:id])
+    message.replied = true
+    message.save
+    flash[:notice] = 'Message hided (just marked replied)'
+    redirect_to :action => 'console'
   end
 
   protected
