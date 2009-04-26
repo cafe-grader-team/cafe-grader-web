@@ -2,7 +2,7 @@ class GradersController < ApplicationController
 
   before_filter :admin_authorization
 
-  verify :method => :post, :only => ['clear_all'], 
+  verify :method => :post, :only => ['clear_all', 'clear_terminated'], 
          :redirect_to => {:action => 'index'}
 
   def index
@@ -10,9 +10,10 @@ class GradersController < ApplicationController
   end
 
   def list
-    @grader_processes = GraderProcess.find(:all, 
-                                           :order => 'updated_at desc')
+    @grader_processes = GraderProcess.find_running_graders
     @stalled_processes = GraderProcess.find_stalled_process
+
+    @terminated_processes = GraderProcess.find_terminated_graders
     
     @last_task = Task.find(:first,
                            :order => 'created_at DESC')
@@ -23,6 +24,13 @@ class GradersController < ApplicationController
   def clear
     grader_proc = GraderProcess.find(params[:id])
     grader_proc.destroy if grader_proc!=nil
+    redirect_to :action => 'list'
+  end
+
+  def clear_terminated
+    GraderProcess.find_terminated_graders.each do |p|
+      p.destroy
+    end
     redirect_to :action => 'list'
   end
 

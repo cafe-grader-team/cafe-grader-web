@@ -1,18 +1,24 @@
-
-%table.graders
-  %tr
-    %th host
-    %th pid
-    %th mode
-    %th last updated
-    %th type
-    %th task
-  - grader_list.each do |grader|
-    - if grader.active
-      - c = 'active'
-    - else
-      - c = 'inactive'
-    %tr{:class => c}        
-      = render :partial => 'grader', :locals => {:grader => grader}
-      %td= link_to 'clear', {:action => 'clear', :id => grader}
+- if grader_list.length!=0
+  %table.graders
+    %tr
+      %th host
+      %th pid
+      %th mode
+      %th last updated
+      %th type
+      %th task
+    - grader_list.each do |grader|
+      - if grader.active
+        - c = 'active'
+      - else
+        - c = 'inactive'
+      %tr{:class => c}        
+        = render :partial => 'grader', :locals => {:grader => grader}
+        - if not grader.terminated
+          %td= link_to 'stop', {:action => 'stop', :id => grader}
+        - else
+          %td= link_to 'clear', {:action => 'clear', :id => grader}
+- else
+  %ul
+    %li None
 

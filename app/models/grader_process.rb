@@ -15,18 +15,31 @@ class GraderProcess < ActiveRecord::Base
       grader.active = nil
       grader.task_id = nil
       grader.task_type = nil
+      grader.terminated = false
       grader.save
     else
       grader = GraderProcess.create(:host => host, 
                                     :pid => pid, 
-                                    :mode => mode)
+                                    :mode => mode,
+                                    :terminated => false)
     end
     grader
   end
-
-  def self.find_stalled_process()
+ 
+  def self.find_running_graders
     GraderProcess.find(:all,
-                       :conditions => ["active AND updated_at < ?",
+                       :conditions => {:terminated => 0})
+  end
+
+  def self.find_terminated_graders
+    GraderProcess.find(:all,
+                       :conditions => "`terminated`")
+  end
+
+  def self.find_stalled_process
+    GraderProcess.find(:all,
+                       :conditions => ["(`terminated` = 0) AND active AND " + 
+                                       "(updated_at < ?)",
                                        Time.now.gmtime - GraderProcess.stalled_time])
   end
   
@@ -53,6 +66,11 @@ class GraderProcess < ActiveRecord::Base
     end
     self.save
   end                
+
+  def terminate
+    self.terminated = true
+    self.save
+  end
 
   protected
 

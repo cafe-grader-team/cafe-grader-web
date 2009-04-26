@@ -18,10 +18,17 @@
   = link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
 
 
-%h3 Current graders
+%h2 Current graders
 
 = render :partial => 'grader_list', :locals => {:grader_list => @grader_processes}
 
-%h3 Stalled graders
+%h2 Stalled graders
 
 = render :partial => 'grader_list', :locals => {:grader_list => @stalled_processes}
+
+%h2 Terminated graders
+
+- form_for :clear, nil, :url => {:action => 'clear_terminated'} do |f|
+  = submit_tag 'Clear data for terminated graders'
+
+= render :partial => 'grader_list', :locals => {:grader_list => @terminated_processes}
