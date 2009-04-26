@@ -2,8 +2,6 @@
 # Likewise, all the methods added will be available for all controllers.
 
 class ApplicationController < ActionController::Base
-  # Pick a unique cookie name to distinguish our session data from others'
-  session :session_key => '_grader_session_id'
 
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
 
