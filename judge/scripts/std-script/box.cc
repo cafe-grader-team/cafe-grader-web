@@ -109,7 +109,7 @@ box_exit(void)
 }
 
 static void NONRET __attribute__((format(printf,1,2)))
-die(char *msg, ...)
+die(const char *msg, ...)
 {
   va_list args;
   va_start(args, msg);
@@ -119,7 +119,7 @@ die(char *msg, ...)
 }
 
 static void __attribute__((format(printf,1,2)))
-log(char *msg, ...)
+log(const char *msg, ...)
 {
   va_list args;
   va_start(args, msg);
