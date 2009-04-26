@@ -1,0 +1,164 @@
+#!/usr/bin/ruby
+
+# import_problem:
+#  * creates a directory for a problem in the current directory,
+#  * copy testdata in the old format and create standard testcase config file
+
+require 'erb'
+require 'fileutils'
+require File.join(File.dirname(__FILE__),'lib/import_helper')
+
+def input_filename(dir,i)
+  "#{dir}/input-#{i}.txt"
+end
+
+def answer_filename(dir,i)
+  "#{dir}/answer-#{i}.txt"
+end
+
+def build_testrun_info_from_dir(num_testruns,importing_test_dir)
+  filenames = Dir["#{importing_test_dir}/*.in"].collect do |filename|
+    File.basename((/(.*)\.in/.match(filename))[1])
+  end
+  build_testrun_info(num_testruns,filenames)
+end
+
+def copy_testcase(importing_test_dir,fname,dir,i)
+  system("cp #{importing_test_dir}/#{fname}.in #{input_filename(dir,i)}")
+  system("cp #{importing_test_dir}/#{fname}.sol #{answer_filename(dir,i)}")
+end
+
+def process_options(options)
+  i = 4
+  while i<ARGV.length
+    if ARGV[i]=='-t'
+      options[:time_limit] = ARGV[i+1].to_f if ARGV.length>i+1
+      i += 1
+    end
+    if ARGV[i]=='-m'
+      options[:mem_limit] = ARGV[i+1].to_i if ARGV.length>i+1
+      i += 1
+    end
+    i += 1
+  end
+end
+
+SCRIPT_DIR = File.dirname(__FILE__)
+
+# print usage
+if (ARGV.length < 4) or (ARGV[3][0,1]=="-")
+  puts <<USAGE
+using: import_problem name dir num check [options]
+   where: name = problem_name (put '-' (dash) to use dir name)
+          dir = importing testcase directory
+          num = number of testruns
+          check = check script, which can be 
+                   'integer', 'text' (for standard script), 
+                   path_to_your_script, or
+                   'wrapper:(path_to_your_wrapped_script)'
+   options: -t time-limit (in seconds)
+            -m memory-limit (in megabytes)
+What it does:
+  * creates a directory for a problem in the current directory,
+  * copies testdata in the old format and create standard testcase config file
+  * copies a check script for grading
+  * creates a test_request template in the current directory + '/test_request'
+
+For wrapped checked script see comment in templates/check_wrapper for
+  information.
+USAGE
+  exit(127)
+end
+
+# processing arguments
+problem = ARGV[0]
+testcase_dir = ARGV[1]
+problem = File.basename(testcase_dir) if problem=="-"
+num_testruns = ARGV[2].to_i
+check_script = ARGV[3]
+options = {:time_limit => 1,  :mem_limit => 16}
+process_options(options)
+
+testrun_info = build_testrun_info_from_dir(num_testruns, testcase_dir)
+
+# start working
+puts "creating directories"
+
+system("mkdir #{problem}")
+system("mkdir #{problem}/script")
+system("mkdir #{problem}/test_cases")
+#system("cp #{GRADER_DIR}/std-script/* #{problem}/script")
+
+puts "copying testcases"
+
+tr_num = 0
+
+num_testcases = 0
+
+testrun_info.each do |testrun|
+  tr_num += 1
+  puts "testrun: #{tr_num}"
+
+  testrun.each do |testcase_info|
+    testcase_num, testcase_fname = testcase_info
+
+    puts "copy #{testcase_fname} to #{testcase_num}"
+
+    system("mkdir #{problem}/test_cases/#{testcase_num}")
+    copy_testcase("#{testcase_dir}",testcase_fname,"#{problem}/test_cases/#{testcase_num}",testcase_num)
+
+    num_testcases += 1
+  end
+end
+
+# generating all_tests.cfg
+puts "generating testcase config file"
+
+template = File.open(SCRIPT_DIR + "/templates/all_tests.cfg.erb").read
+all_test_cfg = ERB.new(template)
+
+cfg_file = File.open("#{problem}/test_cases/all_tests.cfg","w")
+cfg_file.puts all_test_cfg.result
+cfg_file.close
+
+
+# copy check script
+if res = /^wrapper:(.*)$/.match(check_script)
+  # wrapper script
+  check_script_fname = res[1]
+  script_name = File.basename(check_script_fname)
+  check_wrapper_template = File.open(SCRIPT_DIR + "/templates/check_wrapper").read
+  check_wrapper = ERB.new(check_wrapper_template)
+
+  check_file = File.open("#{problem}/script/check","w")
+  check_file.puts check_wrapper.result
+  check_file.close
+
+  File.chmod(0755,"#{problem}/script/check")
+
+  system("cp #{check_script_fname} #{problem}/script/#{script_name}")
+else
+  if File.exists?(SCRIPT_DIR + "/templates/check.#{check_script}")
+    check_script_fname = SCRIPT_DIR + "/templates/check.#{check_script}"
+  else
+    check_script_fname = check_script
+  end
+  system("cp #{check_script_fname} #{problem}/script/check")
+end
+
+# generating test_request directory
+puts "generating test_request template"
+FileUtils.mkdir_p("test_request/#{problem}/script")
+FileUtils.mkdir_p("test_request/#{problem}/test_cases/1")
+
+template = File.open(SCRIPT_DIR + "/templates/test_request_all_tests.cfg.erb").read
+test_request_all_test_cfg = ERB.new(template)
+
+cfg_file = File.open("test_request/#{problem}/test_cases/all_tests.cfg","w")
+cfg_file.puts test_request_all_test_cfg.result
+cfg_file.close
+
+system("cp #{SCRIPT_DIR}/templates/check_empty test_request/#{problem}/script/check")
+system("cp #{SCRIPT_DIR}/templates/answer-1.txt test_request/#{problem}/test_cases/1")
+
+puts "done"

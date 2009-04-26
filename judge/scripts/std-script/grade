@@ -1,0 +1,106 @@
+#!/usr/bin/ruby
+
+CORRECT_MARK = 'P'
+INCORRECT_MARK = '-'
+TIMEOUT_MARK = 'T'
+RUN_ERROR_MARK = 'x'
+
+def log(str='')
+  if ENV['TALKATIVE']!=nil
+    puts str
+  end
+  if ENV['GRADER_LOGGING']!=nil
+    log_fname = ENV['GRADER_LOGGING']
+    fp = File.open(log_fname,"a")
+    fp.puts("grade: #{Time.new.strftime("%H:%M")} #{str}")
+    fp.close
+  end
+end
+
+def char_comment(comment)
+  if comment =~ /[Ii]ncorrect/
+    INCORRECT_MARK
+  elsif comment =~ /[Cc]orrect/
+    CORRECT_MARK
+  elsif comment =~ /[Tt]ime/
+    TIMEOUT_MARK
+  elsif res = /^[Cc]omment:(.*)$/.match(comment)
+    res[1]
+  else
+    RUN_ERROR_MARK  # these are run time errors
+  end
+end
+
+problem_home = ENV['PROBLEM_HOME']
+require "#{problem_home}/script/test_dsl.rb"
+load "#{problem_home}/test_cases/all_tests.cfg"
+problem = Problem.get_instance
+
+if problem.well_formed? == false
+  log "The problem specification is not well formed."
+  exit(127)
+end
+
+all_score = 0
+all_comment = ''
+(1..(problem.runs.length-1)).each do |k|
+  log "grade run #{k}"
+  run = problem.runs[k]
+  run_score = nil
+  run_comment = ''
+  run_comment_short = ''
+  run.tests.each do |test_num|
+    result_file_name = "#{test_num}/result"
+    if not File.exists?(result_file_name)
+      run_comment += "result file for test #{test_num} not found\n"
+      run_comment_short += RUN_ERROR_MARK
+      log "Cannot find the file #{test_num}/result!"
+    else
+      result_file = File.new(result_file_name, "r")
+      result_file_lines = result_file.readlines
+      if result_file_lines.length>=2
+        current_run_score = result_file_lines[1].to_i
+        run_comment += result_file_lines[0]
+        run_comment_short += char_comment(result_file_lines[0].chomp)
+      else
+        current_run_score = 0
+        run_comment += "result file for test #{test_num} error\n"
+        run_comment_short += RUN_ERROR_MARK
+        log "Error in #{test_num}/result!"
+      end
+
+      # the score of this run should be the minimum of the score for
+      #   each test case
+      if (run_score==nil) or (run_score>current_run_score)
+        run_score = current_run_score
+      end
+      result_file.close
+    end
+  end
+
+  run_result_file = File.new("result-#{k}", "w")
+  run_result_file.write run_score
+  run_result_file.write "\n"
+  run_result_file.close
+
+  run_comment_file = File.new("comment-#{k}", "w")
+  run_comment_file.write "#{run_comment}\n"
+  run_comment_file.close
+
+  all_score = all_score + run_score
+
+  # append comment for test run with many test cases
+  if run.tests.length > 1 
+    run_comment_short = '[' + run_comment_short + ']'
+  end
+  all_comment += run_comment_short
+end
+
+result_file = File.new("result", "w")
+result_file.write all_score
+result_file.write "\n"
+result_file.close
+
+comment_file = File.new("comment", "w")
+comment_file.write "#{all_comment}\n"
+comment_file.close

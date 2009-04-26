@@ -1,0 +1,110 @@
+#!/usr/bin/ruby
+
+def talk(str)
+  if TALKATIVE
+    puts str
+  end
+end
+
+def execute(command, error_message="")
+  if not system(command)
+    puts "ERROR: #{error_message}"
+    exit(127)
+  end
+end
+
+def save_source(submission,dir,fname)
+  f = File.open("#{dir}/#{fname}","w")
+  f.write(submission.source)
+  f.close
+end
+
+def call_judge(problem_home,language,problem_out_dir,fname)
+  ENV['PROBLEM_HOME'] = problem_home
+  Dir.chdir problem_out_dir
+  cmd = "#{problem_home}/script/judge #{language} #{fname}"
+#  puts "CMD: #{cmd}"
+  system(cmd)
+end
+
+def read_result(test_result_dir)
+  cmp_msg_fname = "#{test_result_dir}/compiler_message"
+  cmp_msg = File.open(cmp_msg_fname).read
+
+  result_fname = "#{test_result_dir}/result"
+  comment_fname = "#{test_result_dir}/comment"  
+  if FileTest.exist?(result_fname)
+    result = File.open(result_fname).readline.to_i
+    comment = File.open(comment_fname).readline.chomp
+    return {:points => result, 
+      :comment => comment, 
+      :cmp_msg => cmp_msg}
+  else
+    return {:points => 0,
+      :comment => 'compile error',
+      :cmp_msg => cmp_msg}
+  end
+end
+
+def save_result(submission,result)
+  submission.graded_at = Time.now
+  submission.points = result[:points]
+  submission.grader_comment = report_comment(result[:comment])
+  submission.compiler_message = result[:cmp_msg]
+  submission.save
+end
+
+def grade(submission_id)
+  sub = Submission.find(submission_id)
+  user = sub.user
+  problem = sub.problem
+
+  language = sub.language.name
+  lang_ext = sub.language.ext
+  # FIX THIS
+  talk 'some hack on language'
+  if language == 'cpp'
+    language = 'c++'
+  end
+
+  user_dir = "#{USER_RESULT_DIR}/#{user.login}"
+  Dir.mkdir(user_dir) if !FileTest.exist?(user_dir)
+  
+  problem_out_dir = "#{user_dir}/#{problem.name}"
+  Dir.mkdir(problem_out_dir) if !FileTest.exist?(problem_out_dir)
+
+  problem_home = "#{PROBLEMS_DIR}/#{problem.name}"
+  source_name = "#{problem.name}.#{lang_ext}"
+
+  save_source(sub,problem_out_dir,source_name)
+  call_judge(problem_home,language,problem_out_dir,source_name)
+  save_result(sub,read_result("#{problem_out_dir}/test-result"))
+end
+
+def stop_grader
+  File.open(File.dirname(__FILE__) + '/stop','w')
+end
+
+def check_stopfile
+  FileTest.exist?(File.dirname(__FILE__) + '/stop')
+end
+
+def clear_stopfile
+  system("rm " + File.dirname(__FILE__) + '/stop')
+end
+
+# reading environment and options
+GRADER_ENV = 'exam'
+puts "environment: #{GRADER_ENV}"
+require File.dirname(__FILE__) + "/environment.rb"
+
+#main program
+talk 'Reading rails environment'
+
+RAILS_ENV = 'development'
+require RAILS_APP_DIR + '/config/environment'
+
+current_dir = `pwd`
+grade(ARGV[0].to_i)
+
+

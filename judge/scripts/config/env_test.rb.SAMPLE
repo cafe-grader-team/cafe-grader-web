@@ -1,0 +1,29 @@
+#
+# See documentation in lib/configuration.rb
+#
+Grader::Initializer.run do |config|
+  config.problems_dir = GRADER_ROOT + "/test/sandbox/ev"
+  config.user_result_dir = GRADER_ROOT + "/test/sandbox/result"
+  
+  config.talkative = false
+  
+  config.report_grader = false
+
+  config.rails_env = 'test'
+  
+  config.comment_report_style = :full
+
+  config.test_request_input_base_dir = GRADER_ROOT + "/test/data/test_request/input"
+  config.test_request_output_base_dir = GRADER_ROOT + "/test/sandbox/test_request/output"
+  config.test_request_problem_templates_dir = GRADER_ROOT + "/test/data/test_request/problems"
+
+  #
+  # These options are for testing
+  #
+  class << config
+    attr_accessor :test_data_dir, :test_sandbox_dir
+  end
+
+  config.test_data_dir = GRADER_ROOT + "/test/data"
+  config.test_sandbox_dir = GRADER_ROOT + "/test/sandbox"
+end

@@ -1,0 +1,10 @@
+# Rails app directory
+RAILS_ROOT = "/home/jittat/web_grader"
+
+GRADER_ROOT = "/home/jittat/grader/scripts"
+
+# This load all required codes
+require File.join(File.dirname(__FILE__),'../lib/boot')
+
+# load the required environment file
+require File.dirname(__FILE__) + "/env_#{GRADER_ENV}.rb"
