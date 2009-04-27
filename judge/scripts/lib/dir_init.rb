@@ -12,6 +12,25 @@ require 'ftools'
 # This library maintain a reference counter on the processes using the
 # directory.  It locks the dir to manage critical section when
 # updating the reference counter.
+#
+# Example usage:
+#
+#   dman = DirInit::Manager.new("mydir")
+#
+#   dman.setup do
+#     # do some initialization
+#   end
+#
+#   #... do anything you want
+#
+#   dman.teardown do
+#     # clean up
+#   end
+#
+# DirInit::Manager ensures that the block passed to <tt>setup</tt>
+# only runs once by the first process in the concurrent dir usage and
+# block passed to <tt>teardown</tt> runs once by the last process in
+# that concurrent activities leaving that dir.
 
 module DirInit
 
