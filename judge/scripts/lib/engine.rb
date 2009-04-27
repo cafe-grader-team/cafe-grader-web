@@ -1,4 +1,6 @@
 require 'fileutils'
+require 'ftools'
+require 'lib/dir_init'
 
 module Grader
 
@@ -63,13 +65,22 @@ module Grader
         # puts "GRADING DIR: #{grading_dir}"
         # puts "PROBLEM DIR: #{problem_home}"
 
-        copy_log = copy_script(problem_home)
+        dinit = DirInit::Manager.new(problem_home)
+
+        dinit.setup do
+          copy_log = copy_script(problem_home)
+          save_copy_log(problem_home,copy_log)
+        end
       
         call_judge(problem_home,language,grading_dir,source_name)
 
         @reporter.report(submission,"#{grading_dir}/test-result")
 
-        clear_script(copy_log,problem_home)
+        dinit.teardown do
+          copy_log = load_copy_log(problem_home)
+          clear_copy_log(problem_home)
+          clear_script(copy_log,problem_home)
+        end
 
       rescue RuntimeError => msg
         @reporter.report_error(submission,"Grading error: #{msg}")
@@ -122,7 +133,33 @@ module Grader
       
       return copied
     end
+
+    def copy_log_filename(problem_home)
+      return File.join(problem_home, '.scripts_copied')
+    end
+
+    def save_copy_log(problem_home, log)
+      f = File.new(copy_log_filename(problem_home),"w")
+      log.each do |fname|
+        f.write("#{fname}\n")
+      end
+      f.close
+    end
     
+    def load_copy_log(problem_home)
+      f = File.new(copy_log_filename(problem_home),"r")
+      log = []
+      f.readlines.each do |line|
+        log << line.strip
+      end
+      f.close
+      log
+    end
+
+    def clear_copy_log(problem_home)
+      File.delete(copy_log_filename(problem_home))
+    end
+
     def clear_script(log,problem_home)
       log.each do |s|
         system("rm #{problem_home}/script/#{s}")
