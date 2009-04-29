@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(:version => 20090429014554) do
     t.string   "options"
     t.integer  "target_id"
     t.boolean  "taken"
+    t.integer  "taken_grader_process_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

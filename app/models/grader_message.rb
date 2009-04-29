@@ -1,15 +1,17 @@
 class GraderMessage < ActiveRecord::Base
 
+  belongs_to :taken_grader_process, :class_name => :grader_process
+
   GRADE_SUBMISSION = 1
   GRADE_TEST_REQUEST = 2
   STOP = 3
 
+  RECIPIENT_ANY = -1
+
   def self.create_message(recipient, command, options=nil, target_id=nil)
     recipient_id = recipient
-    if recipient == :all
-      recipient_id = -1
-    elsif recipient == :any
-      recipient_id = 0
+    if recipient == :any
+      recipient_id = GraderMessage::RECIPIENT_ANY
     end
     
     GraderMessage.create(:grader_process_id => recipient_id,
@@ -42,7 +44,7 @@ class GraderMessage < ActiveRecord::Base
     command_conditions = 
       GraderMessage.build_command_conditions(accepting_commands)
     recp_conditions= "((`grader_process_id` = #{recipient_id.to_i})" +
-      " OR (`grader_process_id` = 0) OR (`grader_process_id` = -1))"
+      " OR (`grader_process_id` = #{GraderMessage::RECIPIENT_ANY}))"
 
     message = nil   # need this to bind message in do-block for transaction
     begin
@@ -50,12 +52,13 @@ class GraderMessage < ActiveRecord::Base
         message = GraderMessage.find(:first, 
                                      :order => "created_at", 
                                      :conditions => 
-                                     "(`taken`=0)" + 
-                                     "AND (#{recp_conditions})" + 
+                                     "(`taken` = 0)" + 
+                                     " AND (#{recp_conditions})" + 
                                      " AND (#{command_conditions})",
                                      :lock => true)
         if message!=nil
           message.taken = true
+          message.taken_grader_process_id = recipient_id
           message.save!
         end
       end
