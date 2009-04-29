@@ -1,7 +1,7 @@
 # Rails app directory
-RAILS_ROOT = "/home/jittat/web_grader"
+RAILS_ROOT = File.join(File.dirname(__FILE__),"../../..")
 
-GRADER_ROOT = "/home/jittat/grader/scripts"
+GRADER_ROOT = File.join(File.dirname(__FILE__),"..")
 
 # This load all required codes
 require File.join(File.dirname(__FILE__),'../lib/boot')
