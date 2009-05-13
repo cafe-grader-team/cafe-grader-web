@@ -71,7 +71,7 @@ module Grader
           copy_log = copy_script(problem_home)
           save_copy_log(problem_home,copy_log)
         end
-      
+
         call_judge(problem_home,language,grading_dir,source_name)
 
         @reporter.report(submission,"#{grading_dir}/test-result")
@@ -102,7 +102,7 @@ module Grader
     def call_judge(problem_home,language,grading_dir,fname)
       ENV['PROBLEM_HOME'] = problem_home
       
-      talk grading_dir
+      talk "Grading in #{grading_dir}"
       Dir.chdir grading_dir
       cmd = "#{problem_home}/script/judge #{language} #{fname}"
       talk "CMD: #{cmd}"

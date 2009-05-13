@@ -1,23 +1,6 @@
 #!/usr/bin/ruby
 
-def stop_grader(id)
-  if id==:all
-    File.open(File.dirname(__FILE__) + "/stop.all",'w').close
-  else
-    File.open(File.dirname(__FILE__) + "/stop.#{id}",'w').close
-  end
-end
-
-def check_stopfile
-  FileTest.exist?(File.dirname(__FILE__) + "/stop.all") or
-    FileTest.exist?(File.dirname(__FILE__) + "/stop.#{Process.pid}")
-end
-
-def clear_stopfile
-  if FileTest.exist?(File.dirname(__FILE__) + "/stop.#{Process.pid}")
-    system("rm " + File.dirname(__FILE__) + "/stop.#{Process.pid}")
-  end
-end
+require 'optparse'
 
 def config
   Grader::Configuration.get_instance
@@ -28,7 +11,7 @@ def log_file_name
     raise "Log directory does not exist: #{config.log_dir}"
   end
   config.log_dir + 
-    "/#{GRADER_ENV}_#{config.grader_mode}.#{Process.pid}"
+    "/#{GRADER_ENV}.#{Process.pid}"
 end
 
 def log(str)
@@ -42,73 +25,52 @@ def log(str)
   end
 end
 
-def display_manual
-  puts <<USAGE
-Grader.
-using: (1) grader 
-       (2) grader environment [mode]
-       (3) grader stop [all|pids-list]
-       (4) grader --help
-(1) call grader with environment = 'exam', mode = 'queue'
-(2) possible modes are: 'queue', 'prob', 'test_request'
-(3) create stop-file to stop running grader in queue mode
-(4) You are here.
-USAGE
+def parse_arguments(args)
+  options = {
+    :environment => 'grading',
+    :problems => [],
+    :submissions => []
+  }
+  opts = OptionParser.new do |opts|
+    opts.banner = <<BANNER
+grader-batch - the grader for batch grading..
+Usage: grader-batch [options]
+BANNER
+
+    opts.on("-e", "--env", "Set environment: grading (*), exam, etc.") do |env|
+      options[:environment] = env
+    end
+
+    opts.on("--prob p1,p2,p3", Array, "Grade problems p1, p2, and p3.") do |prob_list|
+      options[:problems] += prob_list
+    end
+    
+    opts.on("--sub s1,s2,s3", Array, "Grade submissions specified by ids") do |submission_list|
+      options[:submissions] += submission_list
+    end
+    
+    # help
+    opts.on_tail("-h", "--help", "Show this message") do
+      puts opts
+      exit
+    end
+  end
+
+  opts.parse!
+  return options
 end
+
 
 #########################################
 # main program
 #########################################
 
-# with --help
-if (ARGV.length==1) and (/help/.match(ARGV[0]))
-  display_manual
-  exit(0)
-end
+options = parse_arguments(ARGV)
 
 # reading environment and options
-if (ARGV.length >= 1) and (ARGV[0]=='stop')
-  if ARGV.length==1
-    puts "you should specify pid-list or 'all'"
-    display_manual
-  elsif (ARGV.length==2) and (ARGV[1]=='all')
-    stop_grader(:all)
-    puts "A global stop file ('stop.all') created."
-    puts "You should remove it manually later."
-  else
-    (1..ARGV.length-1).each do |i|
-      stop_grader(ARGV[i])
-    end
-    puts "stop file(s) created"
-  end
-  exit(0)
-end
-
-if check_stopfile
-  puts "Stop file exists.  Terminated."
-  clear_stopfile
-  exit(0)
-end
-
-grader_mode = 'queue'
-if ARGV.length >= 1
-  GRADER_ENV = ARGV[0]
-  if ARGV.length >=2
-    grader_mode = ARGV[1]
-  end
-else
-  GRADER_ENV = 'exam'
-end
-
+GRADER_ENV = options[:environment]
 puts "environment: #{GRADER_ENV}"
 require File.join(File.dirname(__FILE__),'config/environment')
-
-# add grader_mode to config
-# this is needed because method log needs it.  TODO: clean this up
-class << config
-  attr_accessor :grader_mode
-end
-config.grader_mode = grader_mode
 
 # reading rails environment
 log 'Reading rails environment'
@@ -120,7 +82,7 @@ require RAILS_ROOT + '/config/environment'
 if config.report_grader
   grader_proc = GraderProcess.register(config.grader_hostname,
                                        Process.pid,
-                                       grader_mode)
+                                       GRADER_ENV)
 else
   grader_proc = nil
 end
@@ -136,82 +98,38 @@ at_exit do
   end
 end
 
-#
-# MAIN LOOP
-#
+# grading
 
-case grader_mode
-when "queue", "test_request"
-  log "Grader: #{grader_mode}"
-  if grader_mode=="queue"
-    engine = Grader::Engine.new
+engine = Grader::Engine.new
+runner = Grader::Runner.new(engine, grader_proc)
+
+# grade problems
+options[:problems].each do |prob_name|
+  grader_proc.report_active if grader_proc!=nil
+  prob = Problem.find_by_name(prob_name)
+  if prob==nil
+    puts "cannot find problem: #{prob_name}"
   else
-    engine = Grader::Engine.new(Grader::TestRequestRoomMaker.new,
-                                Grader::TestRequestReporter.new)
+    runner.grade_problem(prob)
   end
-
-  runner = Grader::Runner.new(engine, grader_proc)
-  while true
-    
-    if check_stopfile    # created by calling grader stop
-      clear_stopfile
-      log "stopped (with stop file)"
-      break
-    end
-    
-    if grader_mode=="queue"
-      task = runner.grade_oldest_task
-    else
-      task = runner.grade_oldest_test_request
-    end
-    if task==nil
-      sleep(1)
-    end
-  end
-  
-when "prob"
-  engine = Grader::Engine.new
-  runner = Grader::Runner.new(engine, grader_proc)
-
-  grader_proc.report_active if grader_proc!=nil
-
-  ARGV.shift
-  ARGV.shift
-
-  ARGV.each do |prob_name|
-    prob = Problem.find_by_name(prob_name)
-    if prob==nil
-      puts "cannot find problem: #{prob_name}"
-    else
-      runner.grade_problem(prob)
-    end
-  end
-
-when "sub"
-  engine = Grader::Engine.new
-  runner = Grader::Runner.new(engine, grader_proc)
-
-  grader_proc.report_active if grader_proc!=nil
-
-  ARGV.shift
-  ARGV.shift
-
-  ARGV.each do |sub_id|
-    puts "Grading #{sub_id}"
-    begin
-      submission = Submission.find(sub_id.to_i)
-    rescue ActiveRecord::RecordNotFound
-      puts "Record not found"
-      submission = nil
-    end
-
-    if submission!=nil
-      runner.grade_submission(submission)
-    end
-  end
-
-else
-  display_manual
-  exit(0)
+  grader_proc.report_inactive if grader_proc!=nil
 end
 
+# grade submissions
+options[:submissions].each do |sub_id|
+  grader_proc.report_active if grader_proc!=nil
+  puts "Grading #{sub_id}"
+  begin
+    submission = Submission.find(sub_id.to_i)
+  rescue ActiveRecord::RecordNotFound
+    puts "Record not found"
+    submission = nil
+  end
+
+  if submission!=nil
+    runner.grade_submission(submission)
+  end
+  grader_proc.report_inactive if grader_proc!=nil
+end
+
+puts "Done."
