@@ -28,7 +28,7 @@ def log_file_name
     raise "Log directory does not exist: #{config.log_dir}"
   end
   config.log_dir + 
-    "/#{GRADER_ENV}_#{config.grader_mode}.#{Process.pid}"
+    "/#{GRADER_ENV}.#{Process.pid}"
 end
 
 def log(str)

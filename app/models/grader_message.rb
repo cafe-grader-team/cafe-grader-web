@@ -21,17 +21,19 @@ class GraderMessage < ActiveRecord::Base
                          :taken => false)
   end
 
-  def self.create_grade_submission(mode,submission)
+  def self.create_grade_submission(submission, 
+                                   grading_environment="grading")
     GraderMessage.create_message(:any,
                                  GraderMessage::GRADE_SUBMISSION,
-                                 mode,
+                                 grading_environment,
                                  submission.id)
   end
   
-  def self.create_grade_test_request(mode,test_request)
+  def self.create_grade_test_request(test_request, 
+                                     grading_environment="grading")
     GraderMessage.create_message(:any,
                                  GraderMessage::GRADE_TEST_REQUEST,
-                                 mode,
+                                 grading_environment,
                                  test_request.id)
   end
   
