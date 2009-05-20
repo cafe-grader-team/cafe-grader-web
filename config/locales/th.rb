@@ -1,3 +1,7 @@
+# Thai translation for Ruby on Rails
+# original by Prem Sichanugrist (s@sikachu.com/sikandsak@gmail.com)
+# activerecord keys fixed by Jittat Fakcharoenphol (jittat@gmail.com)
+
 { 
   :'th' => {
     :date => {
@@ -65,6 +69,22 @@
           :precision => 2,
           :format => '%n %u'
         }
+      },
+      :human => {
+        :format => {
+          :precision => 1,
+          :delimiter => ''
+        },
+       :storage_units => {
+         :format => "%n %u",
+         :units => {
+           :byte => "B",
+           :kb   => "KB",
+           :mb   => "MB",
+           :gb   => "GB",
+           :tb   => "TB",
+         }
+       }
       },
     },
 

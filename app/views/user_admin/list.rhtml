@@ -25,8 +25,14 @@
 <% form_tag({:action => 'import'}, :multipart => true) do %>
   File: <%= file_field_tag 'file' %> <%= submit_tag 'Import' %>
 <% end %>
+<br/>
+<b>What else: </b>
+<%= link_to '[New user]', :action => 'new' %>
+<%= link_to '[New list of users]', :action => 'new_list' %>
+<%= link_to '[View active users]', :action => 'active' %>
 
 </div>
+
 <table>
   <tr>
   <% for column in User.content_columns %>

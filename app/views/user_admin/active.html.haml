@@ -1,0 +1,19 @@
+%h1 Active users
+
+%i
+  I.e., those users that interacts with the system with in the last 60 minutes.
+%br/
+
+= link_to '[go back to index]', :action => 'index'
+
+%table
+  %tr
+    %th #
+    %th login
+    %th full name
+  - counter = 0
+  - for user in @users
+    %tr
+      %td= counter += 1
+      %td= user.login
+      %td= user.full_name

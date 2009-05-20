@@ -16,6 +16,16 @@ class UserAdminController < ApplicationController
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
   end
 
+  def active
+    sessions = ActiveRecord::SessionStore::Session.find(:all, :conditions => ["updated_at >= ?", 60.minutes.ago])
+    @users = []
+    sessions.each do |session|
+      if session.data[:user_id]
+        @users << User.find(session.data[:user_id])
+      end
+    end
+  end
+
   def show
     @user = User.find(params[:id])
   end

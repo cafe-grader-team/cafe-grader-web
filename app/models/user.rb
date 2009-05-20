@@ -125,6 +125,9 @@ class User < ActiveRecord::Base
       begin
         if self.site==nil
           self.site = Site.find_by_name('default')
+          if self.site==nil
+            self.site = Site.find(1)  # when 'default has be renamed'
+          end
         end
       rescue
       end

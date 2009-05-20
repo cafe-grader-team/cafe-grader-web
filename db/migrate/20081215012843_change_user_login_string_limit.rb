@@ -4,6 +4,6 @@ class ChangeUserLoginStringLimit < ActiveRecord::Migration
   end
 
   def self.down
-    execute "ALTER TABLE `users` CHANGE `login` `login` VARCHAR( 10 )"
+    # don't have to revert
   end
 end
