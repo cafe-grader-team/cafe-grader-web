@@ -1,0 +1,18 @@
+.contest-title
+  %h1
+    = "#{Configuration['contest.name']}: #{t 'registration.password_retrieval.header'}"
+
+- if flash[:notice]
+  %hr/
+  %b= flash[:notice]
+  %hr/
+
+%br/
+
+- form_tag :action => 'retrieve_password' do
+  =t 'registration.password_retrieval.instructions'
+  = text_field 'email', nil, :size => 20
+  %br/
+  = submit_tag(t 'registration.password_retrieval.button_label')
+
+= link_to "#{t 'go_back_to'}#{t 'home_page'}", :controller => 'main', :action => 'index'

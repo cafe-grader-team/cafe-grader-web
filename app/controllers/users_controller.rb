@@ -3,9 +3,16 @@ require 'net/smtp'
 
 class UsersController < ApplicationController
 
-  before_filter :authenticate, :except => [:new, :register, :confirm]
+  before_filter :authenticate, :except => [:new, 
+                                           :register, 
+                                           :confirm, 
+                                           :forget,
+                                           :retrieve_password]
 
-  before_filter :verify_online_registration, :only => [:new, :register]
+  before_filter :verify_online_registration, :only => [:new,
+                                                       :register,
+                                                       :forget,
+                                                       :retrieve_password]
 
   verify :method => :post, :only => [:chg_passwd],
          :redirect_to => { :action => :index }
@@ -77,6 +84,28 @@ class UsersController < ApplicationController
     render :action => 'confirm', :layout => 'empty'
   end
 
+  def forget
+    render :action => 'forget', :layout => 'empty'
+  end
+
+  def retrieve_password
+    email = params[:email]
+    user = User.find_by_email(email)
+    if user
+      last_updated_time = user.updated_at || user.created_at || (Time.now.gmtime - 1.hour)
+      if last_updated_time > Time.now.gmtime - 5.minutes
+        flash[:notice] = 'The account has recently created or new password has recently been requested.  Please wait for 5 minutes'
+      else
+        user.password = user.password_confirmation = User.random_password
+        send_new_password_email(user)
+        flash[:notice] = 'New password has been mailed to you.'
+      end
+    else
+      flash[:notice] = I18n.t 'registration.password_retrieval.no_email'
+    end
+    redirect_to :action => 'forget'
+  end
+
   protected
 
   def verify_online_registration
@@ -102,6 +131,37 @@ class UsersController < ApplicationController
                     :login => user.login,
                     :password => user.password,
                     :activation_url => activation_url,
+                    :admin_email => admin_email
+                  })
+
+    logger.info mail.body
+
+    smtp_server = Configuration['system.online_registration.smtp']
+
+    begin
+      Net::SMTP.start(smtp_server) do |smtp|
+        smtp.send_message(mail.to_s, mail.from, mail.to)
+      end
+      result = true
+    rescue
+      result = false
+    end
+
+    return result
+  end
+  
+  def send_new_password_email(user)
+    contest_name = Configuration['contest.name']
+    admin_email = Configuration['system.admin_email']
+    mail = TMail::Mail.new
+    mail.to = user.email
+    mail.from = Configuration['system.online_registration.from']
+    mail.subject = "[#{contest_name}] Confirmation"
+    mail.body = t('registration.password_retrieval.email_body', {
+                    :full_name => user.full_name,
+                    :contest_name => contest_name,
+                    :login => user.login,
+                    :password => user.password,
                     :admin_email => admin_email
                   })
 

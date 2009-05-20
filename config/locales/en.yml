@@ -35,6 +35,7 @@ en:
     participation: 'Want to participate?'
     please: 'Please'
     register: 'register'
+    forget_password: 'Forget password?'
 
   main:
     start_soon: "The contest at your site will start soon.  Please wait."
@@ -55,6 +56,9 @@ en:
 
   registration:
     title: "New user registration"
+
+    description: "Please enter your information below.  Please make sure your e-mail is correct, because you will have to confirm the registration through an e-mail we send to that e-mail address."
+
     successful_title: "Registration successful"
     
     login_guide: "Only a-z, A-Z, 0-9 and _.  Can be at most 20 characters long"
@@ -98,6 +102,23 @@ Maybe there's a problem in the configuration.  Please report the admin at {{emai
         email_exists: "A user with this E-mail exists."
         invalid: "Your activation code is invalid.  Please check again."
 
+    password_retrieval: 
+      header: "Password retrieval"
+      instructions: "Please enter the e-mail address that you used to register."
+      button_label: "Request new password"
+      no_email: "No user with that e-mail address."
+      email_body: "Hello {{full_name}},
+
+You have requested for new password for {{contest_name}}.  We have generated it for you:
+
+user name: {{login}}
+password: {{password}}
+
+If you didn't ask for new password or you're not the person who registered,
+please ignore this e-mail and inform {{admin_email}} of this mistake.
+
+Thanks!"
+ 
   help:
     how_to_submit: "How to submit"
     must_specify_language: "You <b>must</b> specify the language you are using in your program header.  You can optionally specify the task you are submitting to."
