@@ -97,6 +97,7 @@ class UsersController < ApplicationController
         flash[:notice] = 'The account has recently created or new password has recently been requested.  Please wait for 5 minutes'
       else
         user.password = user.password_confirmation = User.random_password
+        user.save
         send_new_password_email(user)
         flash[:notice] = 'New password has been mailed to you.'
       end
@@ -156,7 +157,7 @@ class UsersController < ApplicationController
     mail = TMail::Mail.new
     mail.to = user.email
     mail.from = Configuration['system.online_registration.from']
-    mail.subject = "[#{contest_name}] Confirmation"
+    mail.subject = "[#{contest_name}] Password recovery"
     mail.body = t('registration.password_retrieval.email_body', {
                     :full_name => user.full_name,
                     :contest_name => contest_name,
