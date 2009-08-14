@@ -237,16 +237,29 @@ div.announcement {
     padding: 1px;
     padding-left: 10px;
     padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
-div.announcement p {
+.announcement p {
     font-size: 12px;
+    margin: 2px;
 }
 
 div.pub-info, div.pub-info p {
     text-align: right;
     font-style: italic;
     font-size: 9px;
+}
+
+.announcement .toggles {
+    font-weight: normal;
+    float: right;
+    font-size: 80%;
+}
+
+.announcement .announcement-title {
+    font-weight: bold;
 }
 
 /******************

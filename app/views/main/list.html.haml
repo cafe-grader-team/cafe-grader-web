@@ -1,10 +1,15 @@
+- content_for :head do
+  = javascript_include_tag :defaults
+  %script{:type => 'text/javascript', :src => '/javascripts/announcement_refresh.js'}
+
 = user_title_bar(@user)
 
 - if @announcements.length!=0
   .announcementbox
     %span{:class => 'title'}
       Announcements
-    = render :partial => 'announcement', :collection => @announcements
+    #announcementbox-body
+      = render :partial => 'announcement', :collection => @announcements
 
 - if Configuration.show_submitbox_to?(@user)
   .submitbox
@@ -14,7 +19,8 @@
 
 %hr/
 
-- if (Configuration.contest_mode) and (@user.site!=nil) and (@user.site.started!=true)
+- if (Configuration.contest_mode) and (@user.site!=nil)  |
+  and (@user.site.started!=true)
   %p=t 'main.start_soon'
 
 - if Configuration.show_tasks_to?(@user)
@@ -27,4 +33,7 @@
     = render :partial => 'problem', :collection => @problems
 
 %hr/
+
+:javascript
+  Announcement.registerRefreshEventTimer();
 

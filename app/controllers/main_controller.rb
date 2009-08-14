@@ -163,7 +163,33 @@ class MainController < ApplicationController
     @user = User.find(session[:user_id])
   end
 
+  # announcement refreshing and hiding methods
+
+  def announcements
+    if params.has_key? 'recent'
+      prepare_announcements(params[:recent])
+    else
+      prepare_announcements
+    end
+    render(:partial => 'announcement', 
+           :collection => @announcements,
+           :locals => {:announcement_effect => true})
+  end
+
   protected
+
+  def prepare_announcements(recent=nil)
+    if Configuration.show_tasks_to?(@user)
+      @announcements = Announcement.find_published(true)
+    else
+      @announcements = Announcement.find_published
+    end
+    if recent!=nil
+      recent_id = recent.to_i
+      @announcements = @announcements.find_all { |a| a.id > recent_id }
+    end
+  end
+
   def prepare_list_information
     @problems = Problem.find_available_problems
     @prob_submissions = Array.new
@@ -176,11 +202,7 @@ class MainController < ApplicationController
         @prob_submissions << { :count => 0, :submission => nil }
       end
     end
-    if Configuration.show_tasks_to?(@user)
-      @announcements = Announcement.find_published(true)
-    else
-      @announcements = Announcement.find_published
-    end
+    prepare_announcements
   end
 
   def check_viewability
