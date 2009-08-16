@@ -1,17 +1,19 @@
-.announcement{:id => "announcement-#{announcement.id}", :style => "#{'opacity: 0;' if (defined? announcement_effect) and announcement_effect }"}
-  -# .announcement-title
-  -#  .toggles
-  -#    %a{:href => '#', :onclick => "$(\"announcement-body-#{announcement.id}\").hide(); return false;"}
-  -#      [hide]
-  -#    %a{:href => '#', :onclick => "$(\"announcement-body-#{announcement.id}\").show(); return false;"}
-  -#      [show]
-  -#  Announcement Title
-  .announcement-body{:id => "announcement-body-#{announcement.id}"}
-    = markdown(announcement.body)
-    -#.pub-info
-    -#  %p= "#{announcement.author}, #{announcement.created_at}"
-  :javascript
-    Announcement.updateRecentId(#{announcement.id});
-  - if (defined? announcement_effect) and announcement_effect
+.announcement{:id => "announcement-#{announcement.id}", :style => "#{'display: none; opacity: 0' if (defined? announcement_effect) and announcement_effect }"}
+  %div
+    .announcement-title
+      -# .toggles
+      -#  %a{:href => '#', :onclick => "$(\"announcement-body-#{announcement.id}\").blindUp({duration: 0.2}); return false;"}
+      -#    [hide]
+      -#  %a{:href => '#', :onclick => "$(\"announcement-body-#{announcement.id}\").blindDown({duration: 0.2}); return false;"}
+      -#   [show]
+      = announcement.title
+    .announcement-body{:id => "announcement-body-#{announcement.id}"}
+      = markdown(announcement.body)
+      -#.pub-info
+      -#  %p= "#{announcement.author}, #{announcement.created_at}"
     :javascript
-      $("announcement-#{announcement.id}").appear();
+      Announcement.updateRecentId(#{announcement.id});
+    - if (defined? announcement_effect) and announcement_effect
+      :javascript
+        $("announcement-#{announcement.id}").blindDown({duration: 0.2});
+        $("announcement-#{announcement.id}").appear({duration: 0.5, queue: 'end'});

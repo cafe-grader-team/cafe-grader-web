@@ -8,6 +8,7 @@
 
 <table>
   <tr>
+    <th>Title</th>
     <th>Body</th>
     <th>Author</th>
     <th>Published</th>
@@ -16,6 +17,7 @@
 <% for announcement in @announcements %>
   <tr>
     <% @announcement = announcement %>
+    <td><%=h announcement.title %></td>
     <td><%=h announcement.body %></td>
     <td><%=h announcement.author %></td>
     <td><%= in_place_editor_field :announcement, :published, {}, :rows => 1 %></td>

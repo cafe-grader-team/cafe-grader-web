@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090426131044) do
+ActiveRecord::Schema.define(:version => 20090815171610) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -19,6 +19,7 @@ ActiveRecord::Schema.define(:version => 20090426131044) do
     t.datetime "updated_at"
     t.boolean  "frontpage",    :default => false
     t.boolean  "contest_only", :default => false
+    t.string   "title"
   end
 
   create_table "configurations", :force => true do |t|
@@ -38,6 +39,18 @@ ActiveRecord::Schema.define(:version => 20090426131044) do
   create_table "descriptions", :force => true do |t|
     t.text     "body"
     t.boolean  "markdowned"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "grader_messages", :force => true do |t|
+    t.integer  "grader_process_id"
+    t.integer  "command"
+    t.string   "options"
+    t.integer  "target_id"
+    t.boolean  "accepted"
+    t.boolean  "completed"
+    t.integer  "accepting_grader_process_id"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
