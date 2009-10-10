@@ -214,7 +214,16 @@ class MainController < ApplicationController
   end
 
   def prepare_grading_result(submission)
-    grading_info = Configuration.task_grading_info[submission.problem.name]
+    if Configuration.task_grading_info.has_key? submission.problem.name
+      grading_info = Configuration.task_grading_info[submission.problem.name]
+    else
+      # guess task info from problem.full_score
+      cases = submission.problem.full_score / 10
+      grading_info = {
+        'testruns' => cases, 
+        'testcases' => cases
+      }
+    end
     @test_runs = []
     if grading_info['testruns'].is_a? Integer
       trun_count = grading_info['testruns']
