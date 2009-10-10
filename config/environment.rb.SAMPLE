@@ -80,7 +80,9 @@ TEST_REQUEST_OUTPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/output'
 # To use ANALYSIS MODE, provide the testcases/testruns breakdown,
 # and the directory of the grading result (usually in judge's dir).
 TASK_GRADING_INFO_FILENAME = RAILS_ROOT + '/config/tasks.yml'
-GRADING_RESULT_DIR = '/home/thailandoi/ytopc/judge/result'
+
+# TODO: change this to where results are kept.
+GRADING_RESULT_DIR = 'RESULT-DIR'
 
 # Uncomment so that configuration is read only once when the server is loaded
 # Configuration.enable_caching
