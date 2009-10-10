@@ -8,7 +8,9 @@ class UserAdminController < ApplicationController
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
+  verify :method => :post, :only => [ :destroy, 
+                                      :create, :create_from_list, 
+                                      :update ],
          :redirect_to => { :action => :list }
 
   def list
@@ -47,19 +49,43 @@ class UserAdminController < ApplicationController
 
   def create_from_list
     lines = params[:user_list]
+
+    note = []
+
     lines.split("\n").each do |line|
       items = line.chomp.split(',')
-      if items.length==4
-        user = User.new
-        user.login = items[0]
-        user.full_name = items[1]
-        user.alias = items[2]
-        user.password = items[3]
-        user.password_confirmation = items[3]
+      if items.length>=2
+        login = items[0]
+        full_name = items[1]
+
+        added_random_password = false
+        if items.length>=3
+          password = items[2]
+          user_alias = (items.length>=4) ? items[3] : login
+        else
+          password = random_password
+          user_alias = (items.length>=4) ? items[3] : login
+          added_random_password = true
+        end
+
+        user = User.new({:login => login,
+                          :full_name => full_name,
+                          :password => password,
+                          :password_confirmation => password,
+                          :alias => user_alias})
         user.activated = true
         user.save
+
+        if added_random_password
+          note << "'#{login}' (+)"
+        else
+          note << login
+        end
       end
     end
+    flash[:notice] = 'User(s) ' + note.join(', ') + 
+      ' were successfully created.  ' +
+      '( (+) - created with random passwords.)'   
     redirect_to :action => 'list'
   end
 
@@ -109,7 +135,30 @@ class UserAdminController < ApplicationController
     import_from_file(params[:file])
   end
 
+  def random_all_passwords
+    users = User.find(:all)
+    @prefix = params[:prefix] || ''
+    @non_admin_users = User.find_non_admin_with_prefix(@prefix)
+    @changed = false
+    if request.request_method == :post
+      @non_admin_users.each do |user|
+        password = random_password
+        user.password = password
+        user.password_confirmation = password
+        user.save
+      end
+      @changed = true
+    end
+  end
+
   protected
+
+  def random_password(length=5)
+    chars = 'abcdefghijkmnopqrstuvwxyz23456789'
+    newpass = ""
+    length.times { newpass << chars[rand(chars.size-1)] }
+    return newpass
+  end
 
   def import_from_file(f)
     data_hash = YAML.load(f)

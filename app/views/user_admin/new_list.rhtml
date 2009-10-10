@@ -1,12 +1,8 @@
 <h1>Adding list of users</h1>
 
-<div class="usermenu">
-<%= link_to 'User admin', :action => 'list' %>
-<%= link_to 'Main', :controller => 'main', :action => 'list' %>
-</div>
-
 <% form_tag :action => 'create_from_list' do %>
 <%= submit_tag 'create users' %><br/>
-List of user information: user_id,name,alias,passwd<br/>
+List of user information in this format: <tt>user_id,name(,passwd(,alias))</tt><br/>
+Note that <tt>passwd</tt> and <tt>alias</tt> is optional.<br/>
 <%= text_area_tag 'user_list', nil, :rows => 50, :cols => 80 %>
 <% end %>

@@ -113,6 +113,11 @@ class User < ActiveRecord::Base
     password
   end
 
+  def self.find_non_admin_with_prefix(prefix='')
+    users = User.find(:all)
+    return users.find_all { |u| !(u.admin?) and u.login.index(prefix)==0 }
+  end
+
   protected
     def encrypt_new_password
       return if password.blank?
