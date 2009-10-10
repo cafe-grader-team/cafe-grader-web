@@ -43,18 +43,6 @@ ActiveRecord::Schema.define(:version => 20090815171610) do
     t.datetime "updated_at"
   end
 
-  create_table "grader_messages", :force => true do |t|
-    t.integer  "grader_process_id"
-    t.integer  "command"
-    t.string   "options"
-    t.integer  "target_id"
-    t.boolean  "accepted"
-    t.boolean  "completed"
-    t.integer  "accepting_grader_process_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "grader_processes", :force => true do |t|
     t.string   "host",       :limit => 20
     t.integer  "pid"
