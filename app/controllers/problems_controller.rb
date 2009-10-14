@@ -12,7 +12,10 @@ class ProblemsController < ApplicationController
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, :create, :update ],
+  verify :method => :post, :only => [ :destroy, 
+                                      :create, :quick_create,
+                                      :do_manage,
+                                      :update ],
          :redirect_to => { :action => :list }
 
   def list
@@ -130,4 +133,42 @@ class ProblemsController < ApplicationController
       @submissions = Submission.find_all_last_by_problem(params[:id])
     end
   end
+
+  def manage
+    @problems = Problem.find(:all, :order => 'date_added DESC')
+  end
+
+  def do_manage
+    if params.has_key? 'change_date_added'
+      change_date_added
+    end
+    redirect_to :action => 'manage'
+  end
+
+  ##################################
+  protected
+
+  def change_date_added
+    problems = get_problems_from_params
+    year = params[:date_added][:year].to_i
+    month = params[:date_added][:month].to_i
+    day = params[:date_added][:day].to_i
+    date = Date.new(year,month,day)
+    problems.each do |p|
+      p.date_added = date
+      p.save
+    end
+  end
+
+  def get_problems_from_params
+    problems = []
+    params.keys.each do |k|
+      if k.index('prob-')==0
+        name, id = k.split('-')
+        problems << Problem.find(id)
+      end
+    end
+    problems
+  end
+
 end

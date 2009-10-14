@@ -1,0 +1,32 @@
+- content_for :head do
+  = stylesheet_link_tag 'problems'
+  = javascript_include_tag :defaults
+
+%h1 Manage problems
+
+%p= link_to '[Back to problem list]', :action => 'list'
+
+- form_tag :action=>'do_manage' do
+  .submitbox
+    What do you want to do?
+    %br/
+    %ul
+      %li
+        Change date added to
+        = select_date Date.current, :prefix => 'date_added'
+        &nbsp;&nbsp;&nbsp;
+        = submit_tag 'Change', :name => 'change_date_added'
+  %table
+    %tr
+      %th/
+      %th Name
+      %th Full name
+      %th Date added
+
+    - for problem in @problems
+      %tr{:id => "row-prob-#{problem.id}", :name=> "prob-#{problem.id}"}
+        %td= check_box_tag "prob-#{problem.id}"
+        %td= problem.name
+        %td= problem.full_name
+        %td= problem.date_added
+
