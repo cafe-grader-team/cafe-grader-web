@@ -61,4 +61,22 @@ class GradersController < ApplicationController
     @submission = Submission.find(params[:id])
   end
 
+  # various grader controls
+
+  def stop 
+    grader_proc = GraderProcess.find(params[:id])
+    stop_grader(grader_proc.pid)
+    redirect_to :action => 'list'
+  end
+
+
+  protected
+
+  def stop_grader(pid)
+    if GraderProcess.grader_control_enabled?
+      cmd = "#{GRADER_SCRIPT_DIR}/grader stop #{pid}"
+      system(cmd)
+    end
+  end
+
 end

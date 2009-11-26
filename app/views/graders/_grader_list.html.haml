@@ -15,7 +15,8 @@
       %tr{:class => c}        
         = render :partial => 'grader', :locals => {:grader => grader}
         - if not grader.terminated
-          %td= link_to 'stop', {:action => 'stop', :id => grader}
+          - if GraderProcess.grader_control_enabled?
+            %td= link_to 'stop', {:action => 'stop', :id => grader}
         - else
           %td= link_to 'clear', {:action => 'clear', :id => grader}
 - else

@@ -73,6 +73,10 @@ end
 
 # Include your application configuration below
 
+# If you want to manage graders through web interface, set the path to
+# script directory below
+GRADER_SCRIPT_DIR = ''
+
 # These are where inputs and outputs of test requests are stored
 TEST_REQUEST_INPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/input'
 TEST_REQUEST_OUTPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/output'

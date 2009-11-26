@@ -43,6 +43,14 @@ class GraderProcess < ActiveRecord::Base
                                        Time.now.gmtime - GraderProcess.stalled_time])
   end
   
+  def self.grader_control_enabled?
+    if defined? GRADER_SCRIPT_DIR
+      GRADER_SCRIPT_DIR != ''
+    else
+      false
+    end
+  end
+
   def report_active(task=nil)
     self.active = true
     if task!=nil
