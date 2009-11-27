@@ -2,7 +2,11 @@ class GradersController < ApplicationController
 
   before_filter :admin_authorization
 
-  verify :method => :post, :only => ['clear_all', 'clear_terminated'], 
+  verify :method => :post, :only => ['clear_all', 
+                                     'start_exam',
+                                     'start_grading',
+                                     'stop_all', 
+                                     'clear_terminated'], 
          :redirect_to => {:action => 'index'}
 
   def index
@@ -65,18 +69,28 @@ class GradersController < ApplicationController
 
   def stop 
     grader_proc = GraderProcess.find(params[:id])
-    stop_grader(grader_proc.pid)
+    GraderScript.stop_grader(grader_proc.pid)
+    flash[:notice] = 'Grader stopped.  It may not disappear now, but it should disappear shortly.'
     redirect_to :action => 'list'
   end
 
+  def stop_all
+    GraderScript.stop_graders(GraderProcess.find_running_graders + 
+                              GraderProcess.find_stalled_process)
+    flash[:notice] = 'Graders stopped.  They may not disappear now, but they should disappear shortly.'
+    redirect_to :action => 'list'
+  end
 
-  protected
+  def start_grading
+    GraderScript.start_grader('grading')
+    flash[:notice] = '2 graders in grading env started, one for grading queue tasks, another for grading test request'
+    redirect_to :action => 'list'
+  end
 
-  def stop_grader(pid)
-    if GraderProcess.grader_control_enabled?
-      cmd = "#{GRADER_SCRIPT_DIR}/grader stop #{pid}"
-      system(cmd)
-    end
+  def start_exam
+    GraderScript.start_grader('exam')
+    flash[:notice] = '2 graders in grading env started, one for grading queue tasks, another for grading test request'
+    redirect_to :action => 'list'
   end
 
 end

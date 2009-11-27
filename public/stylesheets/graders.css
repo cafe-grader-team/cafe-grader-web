@@ -10,3 +10,8 @@ table.graders tr.inactive {
     background: #ffcccc;
     text-align: center;
 }
+
+.submitbox .item {
+    padding-right: 5px;
+    float: left;
+}

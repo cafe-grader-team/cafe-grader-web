@@ -4,8 +4,22 @@
 
 %h1 Grader information
 
-- form_for :clear, nil, :url => {:action => 'clear_all'} do |f|
-  = submit_tag 'Clear all data'
+.submitbox
+  .item
+    Grader control:
+  .item
+    - form_for :clear, nil, :url => {:action => 'start_grading'} do |f|
+      = submit_tag 'Start graders in grading env'
+  .item
+    - form_for :clear, nil, :url => {:action => 'start_exam'} do |f|
+      = submit_tag 'Start graders in exam env'
+  .item
+    - form_for :clear, nil, :url => {:action => 'stop_all'} do |f|
+      = submit_tag 'Stop all running graders'
+  .item
+    - form_for :clear, nil, :url => {:action => 'clear_all'} do |f|
+      = submit_tag 'Clear all data'
+  %br{:style => 'clear:both'}/
 
 - if @last_task
   Last task:
