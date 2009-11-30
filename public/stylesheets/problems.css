@@ -6,3 +6,9 @@ tr.available {
 tr.not-available {
     background: #ffc0c0;
 }
+
+.import-log {
+    background: lightgray;
+    border: solid black 1px;
+    padding: 10px;
+}

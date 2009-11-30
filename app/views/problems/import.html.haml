@@ -1,0 +1,43 @@
+- content_for :head do
+  = stylesheet_link_tag 'problems'
+  = javascript_include_tag :defaults
+
+%h1 Import problems
+
+%p= link_to '[Back to problem list]', :action => 'list'
+
+- if @problem and @problem.errors
+  =error_messages_for 'problem'
+
+- form_tag({:action => 'do_import'}, :multipart => true)  do
+  .submitbox
+    %table
+      %tr
+        %td Name:
+        %td= text_field_tag 'name'
+      %tr
+        %td Full name:
+        %td
+          = text_field_tag 'full_name'
+          %span{:class => 'help'} Leave blank to use the same value as the name above.
+      %tr
+        %td Testdata file:
+        %td= file_field_tag 'file'
+      %tr
+        %td Time limit:
+        %td
+          = text_field_tag 'time_limit'
+          %span{:class => 'help'} In seconds. Leave blank to use 1 sec.
+      %tr
+        %td Memory limit:
+        %td
+          = text_field_tag 'memory_limit'
+          %span{:class => 'help'} In MB. Leave blank to use 32MB.
+      %tr
+        %td
+        %td= submit_tag 'Import problem'
+
+- if @log
+  %h3 Import log
+  %pre.import-log
+    = @log

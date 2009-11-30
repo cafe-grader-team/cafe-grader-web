@@ -15,6 +15,7 @@ class ProblemsController < ApplicationController
   verify :method => :post, :only => [ :destroy, 
                                       :create, :quick_create,
                                       :do_manage,
+                                      :do_import,
                                       :update ],
          :redirect_to => { :action => :list }
 
@@ -143,6 +144,20 @@ class ProblemsController < ApplicationController
       change_date_added
     end
     redirect_to :action => 'manage'
+  end
+
+  def import
+  end
+
+  def do_import
+    @problem, import_log = Problem.new_from_import_form_params(params)
+
+    if @problem.errors.length != 0
+      render :action => 'import' and return
+    end
+
+    @problem.save
+    @log = import_log
   end
 
   ##################################

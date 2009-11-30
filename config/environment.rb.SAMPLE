@@ -74,8 +74,10 @@ end
 # Include your application configuration below
 
 # If you want to manage graders through web interface, set the path to
-# script directory below
-GRADER_SCRIPT_DIR = ''
+# the grader directory below.  This dir is where raw, ev, ev-exam,
+# scripts reside.  All grader scripts will be in
+# #{GRADER_ROOT_DIR}/scripts.  
+GRADER_ROOT_DIR = ''
 
 # These are where inputs and outputs of test requests are stored
 TEST_REQUEST_INPUT_FILE_DIR = RAILS_ROOT + '/data/test_request/input'
