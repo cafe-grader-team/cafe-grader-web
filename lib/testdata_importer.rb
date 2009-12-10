@@ -42,7 +42,7 @@ class TestdataImporter
     elsif ext=='.tar'
       cmd = "tar -xvf #{testdata_filename} -C #{extract_dir}"
     elsif ext=='.zip'
-      cmd = "unzip #{testdata_filename} -d #{extract_dir}"
+      cmd = "unzip -o #{testdata_filename} -d #{extract_dir}"
     else
       return nil
     end

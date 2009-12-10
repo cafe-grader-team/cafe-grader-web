@@ -156,6 +156,14 @@ class ProblemsController < ApplicationController
       render :action => 'import' and return
     end
 
+    old_problem = Problem.find_by_name(@problem.name)
+    if old_problem!=nil
+      old_problem.full_name = @problem.full_name
+      @problem = old_problem
+      
+      flash[:notice] = "The test data has been replaced for problem #{@problem.name}"
+    end
+
     @problem.save
     @log = import_log
   end

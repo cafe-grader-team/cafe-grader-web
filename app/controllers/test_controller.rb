@@ -101,7 +101,7 @@ class TestController < ApplicationController
     end
     @test_requests = []
     @user.test_requests.each do |ts|
-      if ts.problem.available
+      if ts.problem and ts.problem.available
         @test_requests << ts
       end
     end
