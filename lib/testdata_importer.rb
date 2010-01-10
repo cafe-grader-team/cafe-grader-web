@@ -49,7 +49,7 @@ class TestdataImporter
 
     system(cmd)
 
-    files = Dir["#{extract_dir}/**/1*.in"]
+    files = Dir["#{extract_dir}/**/*1*.in"]
     return nil if files.length==0
 
     return File.dirname(files[0])
