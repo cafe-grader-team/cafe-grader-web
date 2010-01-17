@@ -1,6 +1,7 @@
 class Problem < ActiveRecord::Base
 
   belongs_to :description
+  has_many :test_pairs
 
   validates_presence_of :name
   validates_format_of :name, :with => /^\w+$/
