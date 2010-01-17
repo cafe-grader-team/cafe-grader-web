@@ -4,17 +4,33 @@ class TestdataImporter
 
   attr :log_msg
 
-  def import_from_file(problem_name, 
-                       tempfile, 
-                       time_limit, 
-                       memory_limit)
+  def initialize(problem)
+    @problem = problem
+  end
 
-    dirname = TestdataImporter.extract(problem_name, tempfile)
+  def import_from_file(tempfile, 
+                       time_limit, 
+                       memory_limit,
+                       import_to_db=false)
+
+    dirname = extract(tempfile)
     return false if not dirname
-    @log_msg = GraderScript.call_import_problem(problem_name,
-                                                dirname,
-                                                time_limit,
-                                                memory_limit)
+    if not import_to_db
+      @log_msg = GraderScript.call_import_problem(@problem.name,
+                                                  dirname,
+                                                  time_limit,
+                                                  memory_limit)
+    else
+      # Import test data to test pairs.
+
+      @problem.test_pairs.clear
+      if import_test_pairs(dirname)
+        test_pair_count = TestPair.count :conditions => "problem_id = #{@problem.id}"
+        @log_msg = "Importing test pair successful. (#{test_pair_count} test pairs imported)"
+      else
+        @log_msg = "Importing test pair failed. (0 test pairs imported)"
+      end
+    end
     return true
   end
 
@@ -26,12 +42,11 @@ class TestdataImporter
     return filename.slice(i..len)
   end
 
-  def self.extract(problem_name, tempfile)
-    testdata_filename = TestdataImporter.save_testdata_file(problem_name,
-                                                            tempfile)
+  def extract(tempfile)
+    testdata_filename = save_testdata_file(tempfile)
     ext = TestdataImporter.long_ext(tempfile.original_filename)
 
-    extract_dir = File.join(GraderScript.raw_dir, problem_name)
+    extract_dir = File.join(GraderScript.raw_dir, @problem.name)
     begin
       Dir.mkdir extract_dir
     rescue Errno::EEXIST
@@ -55,9 +70,9 @@ class TestdataImporter
     return File.dirname(files[0])
   end
 
-  def self.save_testdata_file(problem_name, tempfile)
+  def save_testdata_file(tempfile)
     ext = TestdataImporter.long_ext(tempfile.original_filename)
-    testdata_filename = File.join(Dir.tmpdir,"#{problem_name}#{ext}")
+    testdata_filename = File.join(Dir.tmpdir,"#{@problem.name}#{ext}")
 
     return nil if tempfile==""
     
@@ -71,6 +86,24 @@ class TestdataImporter
     end
 
     return testdata_filename
+  end
+
+  def import_test_pairs(dirname)
+    test_num = 1
+    while FileTest.exists? "#{dirname}/#{test_num}.in"
+      in_filename = "#{dirname}/#{test_num}.in"
+      sol_filename = "#{dirname}/#{test_num}.sol"
+
+      break if not FileTest.exists? sol_filename
+
+      test_pair = TestPair.new(:input => open(in_filename).read,
+                               :solution => open(sol_filename).read,
+                               :problem => @problem)
+      break if not test_pair.save
+
+      test_num += 1
+    end
+    return test_num > 1
   end
 
 end

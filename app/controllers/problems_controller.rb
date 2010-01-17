@@ -150,21 +150,17 @@ class ProblemsController < ApplicationController
   end
 
   def do_import
-    @problem, import_log = Problem.new_from_import_form_params(params)
+    old_problem = Problem.find_by_name(params[:name])
+    @problem, import_log = Problem.create_from_import_form_params(params,
+                                                                  old_problem)
 
     if @problem.errors.length != 0
       render :action => 'import' and return
     end
 
-    old_problem = Problem.find_by_name(@problem.name)
     if old_problem!=nil
-      old_problem.full_name = @problem.full_name
-      @problem = old_problem
-      
       flash[:notice] = "The test data has been replaced for problem #{@problem.name}"
     end
-
-    @problem.save
     @log = import_log
   end
 

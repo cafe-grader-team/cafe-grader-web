@@ -22,7 +22,13 @@
           %span{:class => 'help'} Leave blank to use the same value as the name above.
       %tr
         %td Testdata file:
-        %td= file_field_tag 'file'
+        %td
+          = file_field_tag 'file' 
+      %tr
+        %td
+        %td
+          = check_box_tag 'import_to_db'
+          Import test data to database (for a test-pair task)
       %tr
         %td Time limit:
         %td

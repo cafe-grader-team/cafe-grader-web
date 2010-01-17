@@ -1,7 +1,7 @@
 class Problem < ActiveRecord::Base
 
   belongs_to :description
-  has_many :test_pairs
+  has_many :test_pairs, :dependent => :delete_all
 
   validates_presence_of :name
   validates_format_of :name, :with => /^\w+$/
@@ -14,21 +14,12 @@ class Problem < ActiveRecord::Base
     find(:all, :conditions => {:available => true}, :order => "date_added DESC")
   end
 
-  def self.new_from_import_form_params(params)
-    problem = Problem.new
+  def self.create_from_import_form_params(params, old_problem=nil)
+    problem = old_problem || Problem.new
     import_params = Problem.extract_params_and_check(params, problem)
 
     if not problem.valid?
-      return problem
-    end
-
-    importer = TestdataImporter.new
-
-    if not importer.import_from_file(problem.name, 
-                                     import_params[:file], 
-                                     import_params[:time_limit], 
-                                     import_params[:memory_limit])
-      problem.errors.add_to_base('Import error.')
+      return problem, 'Error importing'
     end
 
     problem.full_score = 100
@@ -36,6 +27,22 @@ class Problem < ActiveRecord::Base
     problem.test_allowed = true
     problem.output_only = false
     problem.available = false
+
+    if not problem.save
+      return problem, 'Error importing'
+    end
+
+    import_to_db = params.has_key? :import_to_db
+
+    importer = TestdataImporter.new(problem)
+
+    if not importer.import_from_file(import_params[:file], 
+                                     import_params[:time_limit], 
+                                     import_params[:memory_limit],
+                                     import_to_db)
+      problem.errors.add_to_base('Import error.')
+    end
+
     return problem, importer.log_msg
   end
 
