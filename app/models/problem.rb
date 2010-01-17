@@ -5,6 +5,9 @@ class Problem < ActiveRecord::Base
   validates_presence_of :name
   validates_format_of :name, :with => /^\w+$/
   validates_presence_of :full_name
+
+  DEFAULT_TIME_LIMIT = 1
+  DEFAULT_MEMORY_LIMIT = 32
   
   def self.find_available_problems
     find(:all, :conditions => {:available => true}, :order => "date_added DESC")
@@ -12,17 +15,44 @@ class Problem < ActiveRecord::Base
 
   def self.new_from_import_form_params(params)
     problem = Problem.new
+    import_params = Problem.extract_params_and_check(params, problem)
 
-    # form error checking
+    if not problem.valid?
+      return problem
+    end
 
-    time_limit_s = params[:time_limit]
-    memory_limit_s = params[:memory_limit]
+    importer = TestdataImporter.new
 
-    time_limit_s = '1' if time_limit_s==''
-    memory_limit_s = '32' if memory_limit_s==''
+    if not importer.import_from_file(problem.name, 
+                                     import_params[:file], 
+                                     import_params[:time_limit], 
+                                     import_params[:memory_limit])
+      problem.errors.add_to_base('Import error.')
+    end
 
-    time_limit = time_limit_s.to_i
-    memory_limit = memory_limit_s.to_i
+    problem.full_score = 100
+    problem.date_added = Time.new
+    problem.test_allowed = true
+    problem.output_only = false
+    problem.available = false
+    return problem, importer.log_msg
+  end
+
+  protected
+
+  def self.to_i_or_default(st, default)
+    if st!=''
+      st.to_i
+    else
+      default
+    end
+  end
+
+  def self.extract_params_and_check(params, problem)
+    time_limit = Problem.to_i_or_default(params[:time_limit],
+                                         DEFAULT_TIME_LIMIT)
+    memory_limit = Problem.to_i_or_default(params[:memory_limit],
+                                           DEFAULT_MEMORY_LIMIT)
 
     if time_limit==0 and time_limit_s!='0'
       problem.errors.add_to_base('Time limit format errors.')
@@ -53,25 +83,11 @@ class Problem < ActiveRecord::Base
       problem.full_name = params[:name]
     end
 
-    if not problem.valid?
-      return problem
-    end
-
-    importer = TestdataImporter.new
-
-    if not importer.import_from_file(problem.name, 
-                                             file, 
-                                             time_limit, 
-                                             memory_limit)
-      problem.errors.add_to_base('Import error.')
-    end
-
-    problem.full_score = 100
-    problem.date_added = Time.new
-    problem.test_allowed = true
-    problem.output_only = false
-    problem.available = false
-    return problem, importer.log_msg
+    return {
+      :time_limit => time_limit,
+      :memory_limit => memory_limit,
+      :file => file
+    }      
   end
 
 end
