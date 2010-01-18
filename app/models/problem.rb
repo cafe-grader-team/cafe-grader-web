@@ -10,6 +10,21 @@ class Problem < ActiveRecord::Base
   DEFAULT_TIME_LIMIT = 1
   DEFAULT_MEMORY_LIMIT = 32
   
+  def test_pair_count
+    @test_pair_count ||= test_pairs.size
+  end
+
+  def uses_random_test_pair?
+    test_pair_count != 0
+  end
+
+  def random_test_pair(forbidden_numbers=nil)
+    begin
+      test_num = 1 + rand(test_pair_count)
+    end while forbidden_numbers!=nil and forbidden_numbers.include? test_num
+    test_pairs.find_by_number test_num
+  end
+
   def self.find_available_problems
     find(:all, :conditions => {:available => true}, :order => "date_added DESC")
   end

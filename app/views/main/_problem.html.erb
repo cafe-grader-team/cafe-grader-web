@@ -10,9 +10,17 @@
     <%= @prob_submissions[problem_counter][:count] %>
   </td>
   <td>
-    <%= render :partial => 'submission_short', 
-               :locals => { 
-                 :submission => @prob_submissions[problem_counter][:submission],
-                 :problem_name => problem.name }%>
+    <span id="problem-form-<%= problem.id %>">
+      <% form_tag "new_input/#{problem.id}", :method => :post do -%>
+	<input type="submit" value="New input"/>
+      <% end -%>
+      <% form_tag "download/#{problem.id}", :method => :post do -%>
+        <input type="submit" value="Download input"/>
+      <% end -%>
+      <% form_tag "submit_solution/#{problem.id}", :method => :post do -%>
+	<input type="file">
+	<input type="submit" value="Submit solution"/>
+      <% end -%>
+    </span>
   </td>
 </tr>

@@ -176,6 +176,37 @@ class MainController < ApplicationController
            :locals => {:announcement_effect => true})
   end
 
+  # actions for Code Jom
+  def new_input
+    problem = Problem.find(params[:id])
+    user = User.find(session[:user_id])
+    if user.can_request_new_test_pair_for? problem
+      assignment = user.get_new_test_pair_assignment_for problem
+      assignment.save
+
+      send_data(assignment.test_pair.input,
+                { :filename => "#{problem.name}-#{assignment.request_number}.in",
+                  :type => 'text/plain' })
+    else
+      flash[:notice] = 'You cannot request new input now.'
+      redirect_to :action => 'list'
+    end
+  end
+
+  def download
+    problem = Problem.find(params[:id])
+    user = User.find(session[:user_id])
+    recent_assignment = user.get_recent_test_pair_assignment_for problem
+    if recent_assignment != nil
+      send_data(recent_assignment.test_pair.input,
+                { :filename => "#{problem.name}-#{recent_assignment.request_number}.in",
+                  :type => 'text/plain' })
+    else
+      flash[:notice] = 'You have not request for any input data for this problem.'
+      redirect_to :action => 'list'
+    end
+  end
+
   protected
 
   def prepare_announcements(recent=nil)

@@ -16,6 +16,8 @@ class User < ActiveRecord::Base
            :foreign_key => "receiver_id", 
            :order => 'created_at DESC'
 
+  has_many :test_pair_assignments, :dependent => :delete_all
+
   belongs_to :site
   belongs_to :country
 
@@ -65,6 +67,48 @@ class User < ActiveRecord::Base
 
   def admin?
     self.roles.detect {|r| r.name == 'admin' }
+  end
+
+  # These are methods related to test pairs
+
+  def get_test_pair_assignments_for(problem)
+    test_pair_assignments.find_all { |a| a.problem_id == problem.id }
+  end
+
+  def get_recent_test_pair_assignment_for(problem)
+    assignments = get_test_pair_assignments_for problem
+    if assignments.length == 0
+      return nil
+    else
+      recent = assignments[0]
+      assignments.each do |a|
+        recent = a if a.request_number > recent.request_number
+      end
+      return recent
+    end
+  end
+
+  def can_request_new_test_pair_for?(problem)
+    recent = get_recent_test_pair_assignment_for problem
+    return (recent == nil or recent.submitted)
+  end
+
+  def get_new_test_pair_assignment_for(problem)
+    previous_assignment_numbers = 
+      get_test_pair_assignments_for(problem).collect {|a| a.test_pair_number }
+    test_pair = problem.random_test_pair(previous_assignment_numbers)
+    if test_pair
+      assignment = TestPairAssignment.new(:user => self,
+                                          :problem => problem,
+                                          :test_pair => test_pair,
+                                          :test_pair_number => test_pair.number,
+                                          :request_number =>
+                                          previous_assignment_numbers.length + 1,
+                                          :submitted => false)
+      return assignment
+    else
+      return nil
+    end
   end
 
   def email_for_editing
