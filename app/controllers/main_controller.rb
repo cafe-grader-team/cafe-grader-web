@@ -8,7 +8,7 @@ class MainController < ApplicationController
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
 
-  verify :method => :post, :only => [:submit],
+  verify :method => :post, :only => [:submit, :new_input, :download_input, :submit_solution],
          :redirect_to => { :action => :index }
 
   # COMMENT OUT: only need when having high load
@@ -187,13 +187,13 @@ class MainController < ApplicationController
       send_data(assignment.test_pair.input,
                 { :filename => "#{problem.name}-#{assignment.request_number}.in",
                   :type => 'text/plain' })
-    else
+    else 
       flash[:notice] = 'You cannot request new input now.'
       redirect_to :action => 'list'
     end
   end
 
-  def download
+  def download_input
     problem = Problem.find(params[:id])
     user = User.find(session[:user_id])
     recent_assignment = user.get_recent_test_pair_assignment_for problem
@@ -202,7 +202,39 @@ class MainController < ApplicationController
                 { :filename => "#{problem.name}-#{recent_assignment.request_number}.in",
                   :type => 'text/plain' })
     else
-      flash[:notice] = 'You have not request for any input data for this problem.'
+      flash[:notice] = 'You have not requested for any input data for this problem.'
+      redirect_to :action => 'list'
+    end
+  end
+  
+  def submit_solution
+    problem = Problem.find(params[:id])
+    user = User.find(session[:user_id])
+    recent_assignment = user.get_recent_test_pair_assignment_for problem
+    if recent_assignment != nil
+      submitted_solution = params[:file].read
+      test_pair = recent_assignment.test_pair
+      passed = test_pair.grade(submitted_solution)
+      points = passed ? 100 : 0
+      submission = Submission.new(:user => user,
+                                  :problem => problem,
+                                  :source => params[:file].read,
+                                  :source_filename => params['file'].original_filename,
+                                  :language_id => 0,
+                                  :submitted_at => Time.new.gmtime,
+                                  :graded_at => Time.new.gmtime,
+                                  :points => points)
+      submission.save
+      recent_assignment.submitted = true
+      recent_assignment.save
+      if passed
+        flash[:notice] = 'Correct solution'
+      else
+        flash[:notice] = 'Incorrect solution'
+      end
+      redirect_to :action => 'list'
+    else
+      flash[:notice] = 'You have not requested for any input data for this problem.'
       redirect_to :action => 'list'
     end
   end

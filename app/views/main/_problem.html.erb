@@ -11,14 +11,14 @@
   </td>
   <td>
     <span id="problem-form-<%= problem.id %>">
-      <% form_tag "new_input/#{problem.id}", :method => :post do -%>
+      <% form_tag({:action => 'new_input', :id => problem.id}, :method => :post) do -%>
 	<input type="submit" value="New input"/>
       <% end -%>
-      <% form_tag "download/#{problem.id}", :method => :post do -%>
+      <% form_tag({ :action => 'download_input', :id => problem.id }, :method => :post) do -%>
         <input type="submit" value="Download input"/>
       <% end -%>
-      <% form_tag "submit_solution/#{problem.id}", :method => :post do -%>
-	<input type="file">
+      <% form_tag({ :action => 'submit_solution', :id => problem.id }, :method => :post, :multipart => true) do -%>
+	<input type="file" name="file">
 	<input type="submit" value="Submit solution"/>
       <% end -%>
     </span>

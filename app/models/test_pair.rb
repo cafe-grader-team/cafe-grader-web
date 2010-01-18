@@ -6,4 +6,17 @@
 
 class TestPair < ActiveRecord::Base
   belongs_to :problem    
+
+  def grade(submitted_solution)
+    sols = solution.split
+    subs = submitted_solution.split
+    if sols.length == subs.length
+      subs.length.times do |i| 
+        return false if subs[i]!=sols[i]
+      end
+      return true
+    else
+      return false
+    end
+  end
 end
