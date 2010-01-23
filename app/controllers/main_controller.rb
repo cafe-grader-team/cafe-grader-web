@@ -8,7 +8,7 @@ class MainController < ApplicationController
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
 
-  verify :method => :post, :only => [:submit, :new_input, :download_input, :submit_solution],
+  verify :method => :post, :only => [:submit, :download_input, :submit_solution],
          :redirect_to => { :action => :index }
 
   # COMMENT OUT: only need when having high load
@@ -176,8 +176,10 @@ class MainController < ApplicationController
            :locals => {:announcement_effect => true})
   end
 
+  #
   # actions for Code Jom
-  def new_input
+  #
+  def download_input
     problem = Problem.find(params[:id])
     user = User.find(session[:user_id])
     if user.can_request_new_test_pair_for? problem
@@ -187,23 +189,11 @@ class MainController < ApplicationController
       send_data(assignment.test_pair.input,
                 { :filename => "#{problem.name}-#{assignment.request_number}.in",
                   :type => 'text/plain' })
-    else 
-      flash[:notice] = 'You cannot request new input now.'
-      redirect_to :action => 'list'
-    end
-  end
-
-  def download_input
-    problem = Problem.find(params[:id])
-    user = User.find(session[:user_id])
-    recent_assignment = user.get_recent_test_pair_assignment_for problem
-    if recent_assignment != nil
+    else
+      recent_assignment = user.get_recent_test_pair_assignment_for problem
       send_data(recent_assignment.test_pair.input,
                 { :filename => "#{problem.name}-#{recent_assignment.request_number}.in",
                   :type => 'text/plain' })
-    else
-      flash[:notice] = 'You have not requested for any input data for this problem.'
-      redirect_to :action => 'list'
     end
   end
   
@@ -211,32 +201,52 @@ class MainController < ApplicationController
     problem = Problem.find(params[:id])
     user = User.find(session[:user_id])
     recent_assignment = user.get_recent_test_pair_assignment_for problem
-    if recent_assignment != nil
-      submitted_solution = params[:file].read
-      test_pair = recent_assignment.test_pair
-      passed = test_pair.grade(submitted_solution)
-      points = passed ? 100 : 0
-      submission = Submission.new(:user => user,
-                                  :problem => problem,
-                                  :source => params[:file].read,
-                                  :source_filename => params['file'].original_filename,
-                                  :language_id => 0,
-                                  :submitted_at => Time.new.gmtime,
-                                  :graded_at => Time.new.gmtime,
-                                  :points => points)
-      submission.save
-      recent_assignment.submitted = true
-      recent_assignment.save
-      if passed
-        flash[:notice] = 'Correct solution'
-      else
-        flash[:notice] = 'Incorrect solution'
-      end
-      redirect_to :action => 'list'
-    else
-      flash[:notice] = 'You have not requested for any input data for this problem.'
-      redirect_to :action => 'list'
+    if recent_assignment == nil
+      flash[:notice] = 'You have not requested for any input data for this problem.  Please download an input first.'
+      redirect_to :action => 'list' and return
     end
+
+    if recent_assignment.submitted
+      flash[:notice] = 'You have already submitted an incorrect solution for this input.  Please download a new input data.'
+      redirect_to :action => 'list' and return
+    end
+
+    if params[:file] == nil
+      flash[:notice] = 'You have not submitted any output.'
+      redirect_to :action => 'list' and return
+    end
+
+    submitted_solution = params[:file].read
+    test_pair = recent_assignment.test_pair
+    passed = test_pair.grade(submitted_solution)
+    points = passed ? 100 : 0
+    submission = Submission.new(:user => user,
+                                :problem => problem,
+                                :source => submitted_solution,
+                                :source_filename => params['file'].original_filename,
+                                :language_id => 0,
+                                :submitted_at => Time.new.gmtime,
+                                :graded_at => Time.new.gmtime,
+                                :points => points)
+    submission.save
+    recent_assignment.submitted = true
+    recent_assignment.save
+
+    status = user.get_submission_status_for(problem)
+    if status == nil
+      status = SubmissionStatus.new :user => user, :problem => problem, :submission_count => 0
+    end
+
+    status.submission_count += 1
+    status.passed = passed
+    status.save
+    
+    if passed
+      flash[:notice] = 'Correct solution.'
+    else
+      flash[:notice] = 'Incorrect solution.'
+    end
+    redirect_to :action => 'list'
   end
 
   protected
@@ -254,15 +264,27 @@ class MainController < ApplicationController
   end
 
   def prepare_list_information
-    @problems = Problem.find_available_problems
-    @prob_submissions = Array.new
     @user = User.find(session[:user_id])
+
+    all_problems = Problem.find_available_problems
+
+    passed = {}
+    sub_count = {}
+    @user.submission_statuses.each do |status|
+      if status.passed
+        passed[status.problem_id] = true
+      end
+      sub_count[status.problem_id] = status.submission_count
+    end
+
+    @problems = all_problems.reject { |problem| passed.has_key? problem.id }
+
+    @prob_submissions = Array.new
     @problems.each do |p|
-      sub = Submission.find_last_by_user_and_problem(@user.id,p.id)
-      if sub!=nil
-        @prob_submissions << { :count => sub.number, :submission => sub }
+      if sub_count.has_key? p.id
+        @prob_submissions << { :count => sub_count[p.id] }
       else
-        @prob_submissions << { :count => 0, :submission => nil }
+        @prob_submissions << { :count => 0 }
       end
     end
     prepare_announcements

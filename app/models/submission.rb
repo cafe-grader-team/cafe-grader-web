@@ -11,7 +11,7 @@ class Submission < ActiveRecord::Base
   validates_length_of :source, :maximum => 100_000, :allow_blank => true, :message => 'too long'
   validates_length_of :source, :minimum => 1, :allow_blank => true, :message => 'too short'
   validate :must_have_valid_problem
-  validate :must_specify_language
+  #validate :must_specify_language
 
   before_save :assign_latest_number_if_new_recond
 

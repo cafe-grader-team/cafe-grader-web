@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  user_id: 1
+  problem_id: 1
+  passed: false
+  submission_count: 1
+
+two:
+  user_id: 1
+  problem_id: 1
+  passed: false
+  submission_count: 1

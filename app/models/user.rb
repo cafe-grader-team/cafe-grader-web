@@ -17,6 +17,7 @@ class User < ActiveRecord::Base
            :order => 'created_at DESC'
 
   has_many :test_pair_assignments, :dependent => :delete_all
+  has_many :submission_statuses
 
   belongs_to :site
   belongs_to :country
@@ -109,6 +110,14 @@ class User < ActiveRecord::Base
     else
       return nil
     end
+  end
+
+  def get_submission_status_for(problem)
+    SubmissionStatus.find(:first,
+                          :conditions => {
+                            :user_id => id,
+                            :problem_id => problem.id
+                          })
   end
 
   def email_for_editing
