@@ -11,12 +11,6 @@
     #announcementbox-body
       = render :partial => 'announcement', :collection => @announcements
 
-- if Configuration.show_submitbox_to?(@user)
-  .submitbox
-    = error_messages_for 'submission'
-    = render :partial => 'submission_box'
-
-
 %hr/
 
 - if (Configuration.contest_mode) and (@user.site!=nil)  |
@@ -24,14 +18,16 @@
   %p=t 'main.start_soon'
 
 - if Configuration.show_tasks_to?(@user)
-  %table.info
-    %tr.info-head
-      %th
-      %th Tasks
-      %th # of sub(s)
-      %th Results
+  .problem-list
+    = render :partial => 'problem_title', :collection => @problems, :as => :problem
+  .problem-content
+    %span{:id => "problem-panel-filler"}
+      %b Welcome to Code Jom
+      %br/
+      Choose problems from the list on the right.
     = render :partial => 'problem', :collection => @problems
 
+%br{:clear=>'both'}/
 %hr/
 
 :javascript

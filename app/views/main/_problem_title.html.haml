@@ -1,0 +1,8 @@
+.problem-bar{:id => "problem-bar-#{problem.id}"}
+  %a{:href => "#", :onclick => "$$('.problem-panel').each(function(elt) {elt.hide();});  $('problem-panel-#{problem.id}').show(); $('problem-panel-filler').hide(); return false;"}
+    %span{:class => 'problem-title'}
+      = "#{problem.full_name} (#{problem.name})"
+    - if @prob_submissions[problem_title_counter][:count] > 0
+      = "[#{@prob_submissions[problem_title_counter][:count]} trials(s)]"
+    - else
+      [No trials]
