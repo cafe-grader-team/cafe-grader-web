@@ -11,9 +11,7 @@
     <% if problem.description.markdowned %>
 <%= markdown(problem.description.body) %>
     <% else %>
-<pre>
 <%= problem.description.body %>
-</pre>
     <% end %>
   <% else %>
     (not available)

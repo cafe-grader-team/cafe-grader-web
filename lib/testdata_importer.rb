@@ -31,6 +31,9 @@ class TestdataImporter
         @log_msg = "Importing test pair failed. (0 test pairs imported)"
       end
     end
+
+    @log_msg << import_problem_description(dirname)
+
     return true
   end
 
@@ -104,6 +107,28 @@ class TestdataImporter
       test_num += 1
     end
     return test_num > 1
+  end
+
+  def import_problem_description(dirname)
+    html_files = Dir["#{dirname}/*.html"]
+    markdown_files = Dir["#{dirname}/*.md"] + Dir["#{dirname}/*.markdown"]
+    if (html_files.length != 0) or (markdown_files.length != 0)
+      description = @problem.description || Description.new
+
+      if html_files.length != 0
+        filename = html_files[0]
+        description.markdowned = false
+      else
+        filename = markdown_files[0]
+        description.markdowned = true
+      end
+
+      description.body = open(filename).read
+      description.save
+      @problem.description = description
+      @problem.save
+      return "\nProblem description imported from #{filename}."
+    end
   end
 
 end

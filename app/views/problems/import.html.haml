@@ -22,8 +22,17 @@
           %span{:class => 'help'} Leave blank to use the same value as the name above.
       %tr
         %td Testdata file:
+        %td= file_field_tag 'file'
+      %tr
         %td
-          = file_field_tag 'file' 
+        %td
+          %span{:class => 'help'}
+            In .zip, .tgz, tar.gz, .tar format.  
+            It should includes inputs (e.g., 1.in, 2a.in, 2b.in) 
+            and solutions (e.g., 1.sol, 2a.sol, 2b.sol).
+            %br/
+            You may put task description in *.html for raw html
+            and *.md or *.markdown for markdown.
       %tr
         %td
         %td
