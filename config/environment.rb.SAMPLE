@@ -90,8 +90,9 @@ TASK_GRADING_INFO_FILENAME = RAILS_ROOT + '/config/tasks.yml'
 # TODO: change this to where results are kept.
 GRADING_RESULT_DIR = 'RESULT-DIR'
 
-# Uncomment so that configuration is read only once when the server is loaded
-# Configuration.enable_caching
+# Change this to allow importing testdata into database as test-pairs.
+# This is mainly for Code Jom contest.
+ALLOW_TEST_PAIR_IMPORT = false
 
 # Uncomment so that the system validates user e-mails
 # VALIDATE_USER_EMAILS = true
@@ -99,3 +100,6 @@ GRADING_RESULT_DIR = 'RESULT-DIR'
 # Uncomment so that Apache X-Sendfile is used when delivering files
 # (e.g., in /tasks/view).
 # USE_APACHE_XSENDFILE = true
+
+# Uncomment so that configuration is read only once when the server is loaded
+# Configuration.enable_caching

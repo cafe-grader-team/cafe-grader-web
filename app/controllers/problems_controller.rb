@@ -147,10 +147,14 @@ class ProblemsController < ApplicationController
   end
 
   def import
+    @allow_test_pair_import = allow_test_pair_import?
   end
 
   def do_import
     old_problem = Problem.find_by_name(params[:name])
+    if !allow_test_pair_import? and params.has_key? :import_to_db
+      params.delete :import_to_db
+    end
     @problem, import_log = Problem.create_from_import_form_params(params,
                                                                   old_problem)
 
@@ -166,6 +170,14 @@ class ProblemsController < ApplicationController
 
   ##################################
   protected
+
+  def allow_test_pair_import?
+    if defined? ALLOW_TEST_PAIR_IMPORT
+      return ALLOW_TEST_PAIR_IMPORT
+    else
+      return false
+    end
+  end
 
   def change_date_added
     problems = get_problems_from_params

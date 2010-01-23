@@ -33,11 +33,12 @@
             %br/
             You may put task description in *.html for raw html
             and *.md or *.markdown for markdown.
-      %tr
-        %td
-        %td
-          = check_box_tag 'import_to_db'
-          Import test data to database (for a test-pair task)
+      - if @allow_test_pair_import
+        %tr
+          %td
+          %td
+            = check_box_tag 'import_to_db'
+            Import test data to database (for a test-pair task)
       %tr
         %td Time limit:
         %td
