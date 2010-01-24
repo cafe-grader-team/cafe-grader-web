@@ -1,0 +1,24 @@
+%h1 Individual Contest: User start time
+
+If you want to restart contest, you may want to
+%b
+  = link_to '[clear all start times]', {:action => 'clear_all_stat'}, {:confirm => 'Do you really want to clear all start time statistics?'}
+so that users can participate again.
+
+%table.info
+  %tr.info-head
+    %th Login
+    %th Start time
+    %th Time left
+    %th 
+  - @users.each_with_index do |user,i|
+    %tr{:class => 'info-' + cycle('even','odd')}
+      %td= user.login
+      %td
+        - if @start_times.has_key? user.id
+          = @start_times[user.id]
+        - else
+          n/a
+      %td= format_short_duration(user.contest_time_left)
+      %td 
+        = link_to '[reset]', {:action => 'clear_stat', :id => user.id}, :confirm => 'Are you sure?'

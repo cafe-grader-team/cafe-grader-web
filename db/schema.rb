@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100113094740) do
+ActiveRecord::Schema.define(:version => 20100124054458) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -28,6 +28,7 @@ ActiveRecord::Schema.define(:version => 20100113094740) do
     t.string   "value"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.text     "description"
   end
 
   create_table "countries", :force => true do |t|
@@ -129,6 +130,15 @@ ActiveRecord::Schema.define(:version => 20100113094740) do
     t.string   "password"
   end
 
+  create_table "submission_statuses", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.boolean  "passed"
+    t.integer  "submission_count"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "submissions", :force => true do |t|
     t.integer  "user_id"
     t.integer  "problem_id"
@@ -155,12 +165,24 @@ ActiveRecord::Schema.define(:version => 20100113094740) do
     t.datetime "updated_at"
   end
 
+  create_table "test_pair_assignments", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.integer  "test_pair_id"
+    t.integer  "test_pair_number"
+    t.integer  "request_number"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.boolean  "submitted"
+  end
+
   create_table "test_pairs", :force => true do |t|
     t.integer  "problem_id"
     t.text     "input"
     t.text     "solution"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "number"
   end
 
   create_table "test_requests", :force => true do |t|
@@ -184,6 +206,13 @@ ActiveRecord::Schema.define(:version => 20100113094740) do
   end
 
   add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
+
+  create_table "user_contest_stats", :force => true do |t|
+    t.integer  "user_id"
+    t.datetime "started_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "users", :force => true do |t|
     t.string   "login",           :limit => 50

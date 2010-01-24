@@ -16,6 +16,8 @@ class User < ActiveRecord::Base
            :foreign_key => "receiver_id", 
            :order => 'created_at DESC'
 
+  has_one :contest_stat, :class_name => "UserContestStat"
+
   belongs_to :site
   belongs_to :country
 
@@ -116,6 +118,54 @@ class User < ActiveRecord::Base
   def self.find_non_admin_with_prefix(prefix='')
     users = User.find(:all)
     return users.find_all { |u| !(u.admin?) and u.login.index(prefix)==0 }
+  end
+
+  # Contest information
+
+  def contest_time_left
+    if Configuration.contest_mode?
+      return nil if site==nil
+      return site.time_left
+    elsif Configuration.indv_contest_mode?
+      time_limit = Configuration.contest_time_limit
+      if contest_stat==nil
+        return (Time.now.gmtime + time_limit) - Time.now.gmtime
+      else
+        finish_time = contest_stat.started_at + time_limit
+        current_time = Time.now.gmtime
+        if current_time > finish_time
+          return 0
+        else
+          return finish_time - current_time
+        end
+      end
+    else
+      return nil
+    end
+  end
+
+  def contest_finished?
+    if Configuration.contest_mode?
+      return false if site==nil
+      return site.finished?
+    elsif Configuration.indv_contest_mode?
+      time_limit = Configuration.contest_time_limit
+
+      return false if contest_stat==nil
+
+      return contest_time_left == 0
+    else
+      return false
+    end
+  end
+
+  def contest_started?
+    if Configuration.contest_mode?
+      return true if site==nil
+      return site.started
+    else
+      return true
+    end
   end
 
   protected

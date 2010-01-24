@@ -1,8 +1,6 @@
 # Methods added to this helper will be available to all templates in the application.
 module ApplicationHelper
 
-  SYSTEM_MODE_CONF_KEY = 'system.mode'
-
   def user_header
     menu_items = ''
     user = User.find(session[:user_id])
@@ -12,10 +10,11 @@ module ApplicationHelper
       menu_items << "<b>Administrative task:</b> "
       append_to menu_items, '[Announcements]', 'announcements', 'index'
       append_to menu_items, '[Msg console]', 'messages', 'console'
-      append_to menu_items, '[Problem admin]', 'problems', 'index'
-      append_to menu_items, '[User admin]', 'user_admin', 'index'
+      append_to menu_items, '[Problems]', 'problems', 'index'
+      append_to menu_items, '[Users]', 'user_admin', 'index'
       append_to menu_items, '[Results]', 'user_admin', 'user_stat'
       append_to menu_items, '[Graders]', 'graders', 'list'
+      append_to menu_items, '[Contests]', 'contests', 'index'
       append_to menu_items, '[Sites]', 'sites', 'index'
       append_to menu_items, '[System config]', 'configurations', 'index'
       menu_items << "<br/>"
@@ -57,6 +56,12 @@ module ApplicationHelper
     st + time.strftime("%X")
   end
 
+  def format_short_duration(duration)
+    return '' if duration==nil
+    d = duration.to_f
+    return Time.at(d).gmtime.strftime("%X")
+  end
+
   def read_textfile(fname,max_size=2048)
     begin
       File.open(fname).read(max_size)
@@ -71,27 +76,25 @@ module ApplicationHelper
 
     #
     # if the contest is over
-    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' 
-      if user.site!=nil and user.site.finished?
+    if Configuration.time_limit_mode?
+      if user.contest_finished?
         header = <<CONTEST_OVER
 <tr><td colspan="2" align="center">
 <span class="contest-over-msg">THE CONTEST IS OVER</span>
 </td></tr>
 CONTEST_OVER
       end
-      if !user.site.started
+      if !user.contest_started?
         time_left = "&nbsp;&nbsp;" + (t 'title_bar.contest_not_started')
       else
-        if user.site!=nil
-          time_left = "&nbsp;&nbsp;" + (t 'title_bar.remaining_time') + 
-            " #{Time.at(user.site.time_left).gmtime.strftime("%X")}"
-        end
+        time_left = "&nbsp;&nbsp;" + (t 'title_bar.remaining_time') + 
+          " #{format_short_duration(user.contest_time_left)}"
       end
     end
     
     #
     # if the contest is in the anaysis mode
-    if Configuration[SYSTEM_MODE_CONF_KEY]=='analysis'
+    if Configuration.analysis_mode?
       header = <<ANALYSISMODE
 <tr><td colspan="2" align="center">
 <span class="contest-over-msg">ANALYSIS MODE</span>

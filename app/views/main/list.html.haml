@@ -19,8 +19,7 @@
 
 %hr/
 
-- if (Configuration.contest_mode) and (@user.site!=nil)  |
-  and (@user.site.started!=true)
+- if (Configuration.contest_mode?) and (@user.site!=nil) and (@user.site.started!=true)
   %p=t 'main.start_soon'
 
 - if Configuration.show_tasks_to?(@user)

@@ -1,7 +1,5 @@
 class MainController < ApplicationController
 
-  SYSTEM_MODE_CONF_KEY = 'system.mode'
-
   before_filter :authenticate, :except => [:index, :login]
   before_filter :check_viewability, :except => [:index, :login]
 
@@ -59,8 +57,7 @@ class MainController < ApplicationController
     end
     @submission.submitted_at = Time.new.gmtime
 
-    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest' and
-        user.site!=nil and user.site.finished?
+    if Configuration.time_limit_mode? and user.contest_finished?
       @submission.errors.add_to_base "The contest is over."
       prepare_list_information
       render :action => 'list' and return
