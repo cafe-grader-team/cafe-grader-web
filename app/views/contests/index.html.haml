@@ -1,0 +1,9 @@
+%h1 Contest management
+
+- if (not Configuration.contest_mode?) and (not Configuration.indv_contest_mode?)
+    Currently the system is not running in contest mode.
+- elsif Configuration.contest_mode?
+    System running in normal contest mode.
+- else
+    System running in individual contest mode.
+    = render :partial => 'indv_contest_mode_index'

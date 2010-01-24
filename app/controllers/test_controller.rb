@@ -1,7 +1,5 @@
 class TestController < ApplicationController
 
-  SYSTEM_MODE_CONF_KEY = 'system.mode'
-
   before_filter :authenticate, :check_viewability
 
 #
@@ -26,8 +24,8 @@ class TestController < ApplicationController
       render :action => 'index' and return
     end
 
-    if Configuration[SYSTEM_MODE_CONF_KEY]=='contest'
-      if @user.site!=nil and @user.site.finished?
+    if Configuration.time_limit_mode?
+      if @user.contest_finished?
         @submitted_test_request.errors.add_to_base('Contest is over.')
         prepare_index_information
         render :action => 'index' and return

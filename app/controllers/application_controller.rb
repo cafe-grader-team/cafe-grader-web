@@ -62,8 +62,8 @@ class ApplicationController < ActionController::Base
     return true if session[:user_id]==nil
     user = User.find(session[:user_id], :include => :site)
     return true if user==nil or user.site == nil
-    if user.site.finished?
-      flash[:notice] = 'Error: the contest on your site is over.'
+    if user.contest_finished?
+      flash[:notice] = 'Error: the contest you are participating is over.'
       redirect_to :back
       return false
     end

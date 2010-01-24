@@ -59,9 +59,8 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.show_tasks_to?(user)
-    mode = get(SYSTEM_MODE_CONF_KEY)
-    if (mode=='contest') 
-      return false if (user.site!=nil) and (user.site.started!=true)
+    if time_limit_mode?
+      return false if not user.contest_started?
     end
     return true
   end
@@ -89,8 +88,46 @@ class Configuration < ActiveRecord::Base
     return @@task_grading_info
   end
   
-  def self.contest_mode
+  def self.standard_mode?
+    return get(SYSTEM_MODE_CONF_KEY) == 'standard'
+  end
+
+  def self.contest_mode?
     return get(SYSTEM_MODE_CONF_KEY) == 'contest'
+  end
+
+  def self.indv_contest_mode?
+    return get(SYSTEM_MODE_CONF_KEY) == 'indv-contest'
+  end
+
+  def self.time_limit_mode?
+    mode = get(SYSTEM_MODE_CONF_KEY)
+    return ((mode == 'contest') or (mode == 'indv-contest')) 
+  end
+  
+  def self.analysis_mode?
+    return get(SYSTEM_MODE_CONF_KEY) == 'analysis'
+  end
+  
+  def self.contest_time_limit
+    contest_time_str = Configuration['contest.time_limit']
+
+    if not defined? @@contest_time_str
+      @@contest_time_str = nil
+    end
+
+    if @@contest_time_str != contest_time_str
+      @@contest_time_str = contest_time_str
+      if tmatch = /(\d+):(\d+)/.match(contest_time_str)
+        h = tmatch[1].to_i
+        m = tmatch[2].to_i
+        
+        @@contest_time = h.hour + m.minute
+      else
+        @@contest_time = nil
+      end
+    end  
+    return @@contest_time
   end
 
   protected
