@@ -29,6 +29,11 @@ class Problem < ActiveRecord::Base
     find(:all, :conditions => {:available => true}, :order => "date_added DESC")
   end
 
+  # TODO: may try to optimize this using cache
+  def self.available_problem_count
+    return Problem.find_available_problems.length
+  end
+
   def self.create_from_import_form_params(params, old_problem=nil)
     problem = old_problem || Problem.new
     import_params = Problem.extract_params_and_check(params, problem)

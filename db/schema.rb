@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100124054458) do
+ActiveRecord::Schema.define(:version => 20100124191250) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -20,6 +20,14 @@ ActiveRecord::Schema.define(:version => 20100124054458) do
     t.boolean  "frontpage",    :default => false
     t.boolean  "contest_only", :default => false
     t.string   "title"
+  end
+
+  create_table "codejom_statuses", :force => true do |t|
+    t.integer  "user_id"
+    t.boolean  "alive"
+    t.integer  "num_problems_passed"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "configurations", :force => true do |t|

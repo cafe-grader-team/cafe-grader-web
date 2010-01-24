@@ -103,3 +103,7 @@ ALLOW_TEST_PAIR_IMPORT = false
 
 # Uncomment so that configuration is read only once when the server is loaded
 # Configuration.enable_caching
+
+# OPTIONS FOR CODE JOM
+# --------------------
+CODEJOM_MAX_ALIVE_LEVEL = 10

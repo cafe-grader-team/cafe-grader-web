@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  user_id: 1
+  alive: false
+  num_problems_passed: 1
+
+two:
+  user_id: 1
+  alive: false
+  num_problems_passed: 1

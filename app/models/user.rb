@@ -24,6 +24,9 @@ class User < ActiveRecord::Base
   belongs_to :site
   belongs_to :country
 
+  # For Code Jom
+  has_one :codejom_status
+
   named_scope :activated_users, :conditions => {:activated => true}
 
   validates_presence_of :login
@@ -218,6 +221,24 @@ class User < ActiveRecord::Base
       return site.started
     else
       return true
+    end
+  end
+
+  # For Code Jom
+  def update_codejom_status
+    status = codejom_status || CodejomStatus.new(:user => self)
+    problem_count = Problem.available_problem_count
+    status.num_problems_passed = (self.submission_statuses.find_all {|s| s.passed}).length
+    status.alive = (problem_count - (status.num_problems_passed)) <= CODEJOM_MAX_ALIVE_LEVEL
+    status.save
+  end
+
+  def codejom_level
+    problem_count = Problem.available_problem_count
+    if codejom_status!=nil
+      return problem_count - codejom_status.num_problems_passed
+    else
+      return problem_count
     end
   end
 

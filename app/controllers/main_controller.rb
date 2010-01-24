@@ -240,6 +240,7 @@ class MainController < ApplicationController
     
     if passed
       flash[:notice] = 'Correct solution.'
+      user.update_codejom_status
     else
       flash[:notice] = 'Incorrect solution.'
     end
