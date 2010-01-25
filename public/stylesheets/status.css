@@ -4,6 +4,10 @@ h1 {
     text-align: center;
 }
 
+#status-content {
+    background: black;
+}
+
 #dead-status {
     float: right;
     width: 200px;
