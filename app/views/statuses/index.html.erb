@@ -1,0 +1,17 @@
+<h1>Thailand Code Jom</h1>
+
+<div id="dead-status">
+  <h2>Bye bye</h2>
+  <% @dead_users.each do |user| %>
+    <span class="user-label user-level-dead"><%= user.login %></span>
+  <% end %>
+</div>
+<div id="alive-status">
+  <% @levels.each do |level| %>
+    <div class="region region-level-<%= level %>">
+      <% @level_users[level].each do |user| %>
+        <span class="user-label user-level-<%= level %>"><%= user.login %></span>
+      <% end %>
+    </div>
+  <% end %>
+</div>

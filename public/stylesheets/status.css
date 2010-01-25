@@ -1,0 +1,79 @@
+h1 {
+    height: 25px;
+    color: black;
+    text-align: center;
+}
+
+#dead-status {
+    float: right;
+    width: 200px;
+    background: black;
+    color: white;
+    height: 1000px;
+    padding: 10px;
+    line-height: 30px;
+}
+
+.region {
+    padding: 10px;
+    text-align: center;
+    line-height: 30px;
+}
+
+.region-level-0 { 
+    background: #f7f7ff; 
+}
+.region-level-1 {  
+    background: #f0f0ff; 
+}
+.region-level-2 {   
+    background: #e0e0f0; 
+}
+.region-level-3 { 
+    background: #d0d0f0; 
+}
+.region-level-4 { 
+    background: #c0c0d0; 
+}
+.region-level-5 { 
+    background: #b0b0c0; 
+}
+.region-level-6 { 
+    background: #a0a0b0; 
+}
+.region-level-7 { 
+    background: #808090; 
+}
+.region-level-8 { 
+    background: #606080; 
+}
+.region-level-9 { 
+    background: #404080; 
+}
+.region-level-10 { 
+    background: #202060; 
+}
+
+.user-label {
+    -moz-border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin: 2px;
+}
+
+.user-level-dead { background: #707070; color: black; }
+.user-level-0 { background: #a0a0ff; }
+.user-level-1 { background: #7070ff; }
+.user-level-2 { background: #6060ff; }
+.user-level-3 { background: #5050ff; }
+.user-level-4 { background: #5050e0; }
+.user-level-5 { background: #5050d0; }
+.user-level-6 { background: #4040d0; }
+.user-level-7 { background: #4040c0; }
+.user-level-8 { background: #4040b0; }
+.user-level-9 { background: #2020a0; }
+.user-level-10 { background: #202070; }
