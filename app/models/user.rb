@@ -1,3 +1,4 @@
+# -*- coding: undecided -*-
 require 'digest/sha1'
 
 class User < ActiveRecord::Base
@@ -32,10 +33,13 @@ class User < ActiveRecord::Base
   validates_presence_of :login
   validates_uniqueness_of :login
   validates_format_of :login, :with => /^[\_A-Za-z0-9]+$/
-  validates_length_of :login, :within => 3..30
+  validates_length_of :login, :within => 3..20
 
   validates_presence_of :full_name
   validates_length_of :full_name, :minimum => 1
+
+  validates_presence_of :member1_full_name
+  validates_length_of :member1_full_name, :minimum => 1
   
   validates_presence_of :password, :if => :password_required?
   validates_length_of :password, :within => 4..20, :if => :password_required?
@@ -48,6 +52,8 @@ class User < ActiveRecord::Base
            :if => :email_validation?
   validate :enough_time_interval_between_same_email_registrations, 
            :if => :email_validation?
+
+  validate :school_names_for_high_school_users
 
   # these are for ytopc
   # disable for now
@@ -293,6 +299,17 @@ class User < ActiveRecord::Base
         return VALIDATE_USER_EMAILS
       rescue
         return false
+      end
+    end
+
+
+    def school_names_for_high_school_users
+      if self.high_school
+        if (self.member1_school_name=='' or 
+            (self.member2_full_name!='' and self.member2_school_name=='') or 
+            (self.member3_full_name!='' and self.member3_school_name==''))
+          self.errors.add_to_base("โปรดระบุชื่อโรงเรียนสำหรับสมาชิกในทีมทุกคน")
+        end
       end
     end
 end

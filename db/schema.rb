@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100124191250) do
+ActiveRecord::Schema.define(:version => 20100126170609) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -223,17 +223,24 @@ ActiveRecord::Schema.define(:version => 20100124191250) do
   end
 
   create_table "users", :force => true do |t|
-    t.string   "login",           :limit => 50
+    t.string   "login",               :limit => 50
     t.string   "full_name"
     t.string   "hashed_password"
-    t.string   "salt",            :limit => 5
+    t.string   "salt",                :limit => 5
     t.string   "alias"
     t.string   "email"
     t.integer  "site_id"
     t.integer  "country_id"
-    t.boolean  "activated",                     :default => false
+    t.boolean  "activated",                         :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "member1_full_name"
+    t.string   "member2_full_name"
+    t.string   "member3_full_name"
+    t.boolean  "high_school"
+    t.string   "member1_school_name"
+    t.string   "member2_school_name"
+    t.string   "member3_school_name"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

@@ -32,6 +32,39 @@
         %small
           =t 'registration.email_guide'
     %tr
+      %td{:align => "right"}
+        ประเภทการสมัคร:
+      %td
+        =select :user, :high_school, [['ระดับมัธยมศึกษา',true], ['บุคคลทั่วไป',false]]
+    %tr
+      %td{:align => "right"}
+        ชื่อ-นามสกุลสมาชิกคนแรก:
+      %td
+        = f.text_field :member1_full_name
+        &nbsp;&nbsp;โรงเรียน:
+        = f.text_field :member1_school_name
+    %tr
+      %td{:align => "right"}
+        ชื่อ-นามสกุลสมาชิกคนที่สอง:
+      %td
+        = f.text_field :member2_full_name
+        &nbsp;&nbsp;โรงเรียน:
+        = f.text_field :member2_school_name
+    %tr
+      %td{:align => "right"}
+        ชื่อ-นามสกุลสมาชิกคนที่สาม:
+      %td
+        = f.text_field :member3_full_name
+        &nbsp;&nbsp;โรงเรียน:
+        = f.text_field :member3_school_name
+    %tr
+      %td
+      %td 
+        %small
+          ภายในทีมไม่จำเป็นต้องมีสมาชิกครบ 3 คน
+
+
+    %tr
       %td/
       %td
         = submit_tag((t 'registration.register'), :name => 'commit')
