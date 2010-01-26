@@ -3,6 +3,7 @@
     - form_tag({ :action => 'download_input', :id => problem.id }, :method => :post) do
       %b Input:
       %input{:type => "submit", :value => "Download input"}
+      = "After downloading, you have #{TEST_ASSIGNMENT_EXPIRATION_DURATION/60} minutes to submit."
     - form_tag({ :action => 'submit_solution', :id => problem.id }, :method => :post, :multipart => true) do
       %b Submit output:
       %input{:type => "file", :name => "file"}

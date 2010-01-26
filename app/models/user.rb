@@ -96,7 +96,7 @@ class User < ActiveRecord::Base
 
   def can_request_new_test_pair_for?(problem)
     recent = get_recent_test_pair_assignment_for problem
-    return (recent == nil or recent.submitted)
+    return (recent == nil or recent.submitted or recent.expired?)
   end
 
   def get_new_test_pair_assignment_for(problem)

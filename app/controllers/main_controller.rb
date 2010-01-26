@@ -203,6 +203,11 @@ class MainController < ApplicationController
       redirect_to :action => 'list' and return
     end
 
+    if recent_assignment.expired?
+      flash[:notice] = 'The current input is expired.  Please download a new input data.'
+      redirect_to :action => 'list' and return
+    end
+
     if recent_assignment.submitted
       flash[:notice] = 'You have already submitted an incorrect solution for this input.  Please download a new input data.'
       redirect_to :action => 'list' and return
