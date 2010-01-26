@@ -19,9 +19,13 @@ class Problem < ActiveRecord::Base
   end
 
   def random_test_pair(forbidden_numbers=nil)
-    begin
+    if forbidden_numbers.length < test_pair_count
+      begin
+        test_num = 1 + rand(test_pair_count)
+      end while forbidden_numbers!=nil and forbidden_numbers.include? test_num
+    else
       test_num = 1 + rand(test_pair_count)
-    end while forbidden_numbers!=nil and forbidden_numbers.include? test_num
+    end
     test_pairs.find_by_number test_num
   end
 

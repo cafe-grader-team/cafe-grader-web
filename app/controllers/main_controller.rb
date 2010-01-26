@@ -198,23 +198,28 @@ class MainController < ApplicationController
     problem = Problem.find(params[:id])
     user = User.find(session[:user_id])
     recent_assignment = user.get_recent_test_pair_assignment_for problem
+
     if recent_assignment == nil
       flash[:notice] = 'You have not requested for any input data for this problem.  Please download an input first.'
+      session[:current_problem_id] = problem.id
       redirect_to :action => 'list' and return
     end
 
     if recent_assignment.expired?
       flash[:notice] = 'The current input is expired.  Please download a new input data.'
+      session[:current_problem_id] = problem.id
       redirect_to :action => 'list' and return
     end
 
     if recent_assignment.submitted
       flash[:notice] = 'You have already submitted an incorrect solution for this input.  Please download a new input data.'
+      session[:current_problem_id] = problem.id
       redirect_to :action => 'list' and return
     end
 
     if params[:file] == nil
       flash[:notice] = 'You have not submitted any output.'
+      session[:current_problem_id] = problem.id
       redirect_to :action => 'list' and return
     end
 
@@ -247,6 +252,7 @@ class MainController < ApplicationController
       flash[:notice] = 'Correct solution.'
       user.update_codejom_status
     else
+      session[:current_problem_id] = problem.id
       flash[:notice] = 'Incorrect solution.'
     end
     redirect_to :action => 'list'
@@ -278,6 +284,13 @@ class MainController < ApplicationController
         passed[status.problem_id] = true
       end
       sub_count[status.problem_id] = status.submission_count
+    end
+
+    if session.has_key? :current_problem_id
+      @current_problem_id = session[:current_problem_id]
+      session.delete(:current_problem_id)
+    else
+      @current_problem_id = nil
     end
 
     @problems = all_problems.reject { |problem| passed.has_key? problem.id }

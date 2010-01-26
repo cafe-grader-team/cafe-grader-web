@@ -20,10 +20,11 @@
   .problem-list
     = render :partial => 'problem_title', :collection => @problems, :as => :problem
   .problem-content
-    %span{:id => "problem-panel-filler"}
-      %b Welcome to Code Jom
-      %br/
-      Choose problems from the list on the right.
+    - if @current_problem_id==nil
+      %span{:id => "problem-panel-filler"}
+        %b Welcome to Code Jom
+        %br/
+        Choose problems from the list on the right.
     = render :partial => 'problem', :collection => @problems
 
 %br{:clear=>'both'}/
