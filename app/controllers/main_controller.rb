@@ -279,7 +279,7 @@ class MainController < ApplicationController
       if assignment == nil
         timeout = nil
       else
-        if assignment.expired?
+        if (assignment.expired?) or (assignment.submitted)
           timeout = 0
         else
           timeout = assignment.created_at + TEST_ASSIGNMENT_EXPIRATION_DURATION - Time.new.gmtime

@@ -8,6 +8,8 @@ var CodejomTimeout = {
 
     updateProblemMessages: function() {
 	CodejomTimeout.timeouts.each(function(data) {
+	    if(data==null)
+		return;
 	    if(data.timeout==null) {
 		$("problem-submission-form-" + data.problem).hide();
 	    } else if(data.timeout==0) {
@@ -26,6 +28,8 @@ var CodejomTimeout = {
 	var timeElapsed = ((new Date()).getTime() - CodejomTimeout.timeStarted)/1000;
 	// update timeout info
 	CodejomTimeout.timeouts.each(function(data) {
+	    if(data==null)
+		return;
 	    if(data.timeout > timeElapsed) {
 		data.timeout -= timeElapsed;
 	    } else if(data.timeout > 0) {
@@ -46,7 +50,7 @@ var CodejomTimeout = {
 
     updateTimeoutAfterDownloadClick: function(problem) {
 	CodejomTimeout.timeouts
-	    .filter(function(data) { return data.problem==problem; })
+	    .filter(function(data) { return (data!=null) && (data.problem==problem); })
 	    .each(function(data) {
 		if(data.timeout==0 || data.timeout==null) {
 		    // TODO: use value from rails app.
