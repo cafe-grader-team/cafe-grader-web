@@ -26,10 +26,10 @@ module ApplicationHelper
 
     if (user!=nil) and (Configuration.show_tasks_to?(user))
       append_to menu_items, "[#{I18n.t 'menu.tasks'}]", 'tasks', 'list'
-      append_to menu_items, "[#{I18n.t 'menu.submissions'}]", 'main', 'submission'
-      append_to menu_items, "[#{I18n.t 'menu.test'}]", 'test', 'index'
+      #append_to menu_items, "[#{I18n.t 'menu.submissions'}]", 'main', 'submission'
+      #append_to menu_items, "[#{I18n.t 'menu.test'}]", 'test', 'index'
     end
-    append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'
+    #append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'
 
     if Configuration['system.user_setting_enabled']
       append_to menu_items, "[#{I18n.t 'menu.settings'}]", 'users', 'index'
