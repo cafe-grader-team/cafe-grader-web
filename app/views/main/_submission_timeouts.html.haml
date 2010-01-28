@@ -1,0 +1,7 @@
+CodejomTimeout.timeouts = [
+- @submission_timeouts.each_pair do |id, t|
+  - if t!=nil
+    = "{problem: #{id}, timeout: #{t}},"
+  - else
+    = "{problem: #{id}, timeout: null},"
+];

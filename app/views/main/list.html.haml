@@ -1,6 +1,7 @@
 - content_for :head do
   = javascript_include_tag :defaults
   = javascript_include_tag 'announcement_refresh.js'
+  = javascript_include_tag 'codejom_timeout.js'
 
 = user_title_bar(@user)
 
@@ -28,6 +29,9 @@
 %br{:clear=>'both'}/
 %hr/
 
-:javascript
+%script{:type => "text/javascript"}
   Announcement.registerRefreshEventTimer();
+  = render :partial => 'submission_timeouts'
+  CodejomTimeout.updateProblemMessages();
+  CodejomTimeout.registerRefreshEvent();
 

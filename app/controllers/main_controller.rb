@@ -272,6 +272,24 @@ class MainController < ApplicationController
     end
   end
 
+  def prepare_timeout_information(problems)
+    @submission_timeouts = {}
+    problems.each do |problem|
+      assignment = @user.get_recent_test_pair_assignment_for(problem)
+      if assignment == nil
+        timeout = nil
+      else
+        if assignment.expired?
+          timeout = 0
+        else
+          timeout = assignment.created_at + TEST_ASSIGNMENT_EXPIRATION_DURATION - Time.new.gmtime
+        end
+      end
+      @submission_timeouts[problem.id] = timeout
+    end
+    @submission_timeouts.each_pair {|k,v| puts "#{k} => #{v}"}
+  end
+
   def prepare_list_information
     @user = User.find(session[:user_id])
 
@@ -295,6 +313,8 @@ class MainController < ApplicationController
 
     @problems = all_problems.reject { |problem| passed.has_key? problem.id }
 
+    prepare_timeout_information(@problems)
+    
     @prob_submissions = Array.new
     @problems.each do |p|
       if sub_count.has_key? p.id
