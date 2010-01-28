@@ -21,7 +21,7 @@ class MainController < ApplicationController
   def login
     saved_notice = flash[:notice]
     reset_session
-    flash[:notice] = saved_notice
+    flash.now[:notice] = saved_notice
 
     # EXPERIMENT:
     # Hide login if in single user mode and the url does not
