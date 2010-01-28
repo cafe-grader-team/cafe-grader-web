@@ -1,0 +1,25 @@
+%h1 Administrators
+
+%table
+  %tr
+    %th #
+    %th Login
+    %th Full name
+    %th 
+  - @admins.each_with_index do |user, i|
+    %tr
+      %td= i+1
+      %td= user.login
+      %td= user.full_name
+      %td
+        - if user.login!='root'
+          = link_to '[revoke]', :action => 'revoke_admin', :id => user.id
+%hr
+
+- form_tag :action => 'grant_admin' do
+  Grant admin permission to:
+  = text_field_tag 'login'
+  = submit_tag 'Grant'
+
+%hr/
+= link_to '[go back to index]', :action => 'index'

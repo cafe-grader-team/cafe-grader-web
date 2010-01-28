@@ -151,6 +151,41 @@ class UserAdminController < ApplicationController
     end
   end
 
+  # admin management
+
+  def admin
+    @admins = User.find(:all).find_all {|user| user.admin? }
+  end
+
+  def grant_admin
+    login = params[:login]
+    user = User.find_by_login(login)
+    if user!=nil
+      admin_role = Role.find_by_name('admin')
+      user.roles << admin_role
+    else
+      flash[:notice] = 'Unknown user'
+    end
+    flash[:notice] = 'User added as admins'
+    redirect_to :action => 'admin'
+  end
+
+  def revoke_admin
+    user = User.find(params[:id])
+    if user==nil
+      flash[:notice] = 'Unknown user'
+      redirect_to :action => 'admin' and return
+    elsif user.login == 'root'
+      flash[:notice] = 'You cannot revoke admisnistrator permission from root.'
+      redirect_to :action => 'admin' and return
+    end
+
+    admin_role = Role.find_by_name('admin')
+    user.roles.delete(admin_role)
+    flash[:notice] = 'User permission revoked'
+    redirect_to :action => 'admin'
+  end
+
   protected
 
   def random_password(length=5)
