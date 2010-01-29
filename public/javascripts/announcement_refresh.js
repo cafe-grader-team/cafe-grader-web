@@ -3,6 +3,8 @@ var Announcement = {
 
     mostRecentId: 0,
 
+    refreshUrl: '/main/announcements',
+
     setMostRecentId: function(id) {
 	Announcement.mostRecentId = id;
     },
@@ -13,7 +15,7 @@ var Announcement = {
     },
 
     refreshAnnouncement: function() {
-	var url = '/main/announcements';
+	var url = Announcement.refreshUrl;
 	new Ajax.Request(url, {
 	    method: 'get',
 	    parameters: { recent: Announcement.mostRecentId },
