@@ -30,7 +30,8 @@
 %br{:clear=>'both'}/
 %hr/
 
-%script{:type => "text/javascript"}
+%script{:type => 'text/javascript'}
+  = "Announcement.refreshUrl = '#{url_for :controller => 'main', :action => 'announcements'}';"
   Announcement.registerRefreshEventTimer();
   = render :partial => 'submission_timeouts'
   CodejomTimeout.updateProblemMessages();
