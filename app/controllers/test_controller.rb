@@ -1,5 +1,8 @@
 class TestController < ApplicationController
 
+  # this page is unavailable in Code Jom
+  before_filter :admin_authorization 
+
   before_filter :authenticate, :check_viewability
 
 #

@@ -100,6 +100,9 @@ class MainController < ApplicationController
   end
 
   def submission
+    # protect the action for Code Jom
+    redirect_to :action => 'list'
+
     @user = User.find(session[:user_id])
     @problems = Problem.find_available_problems
     if params[:id]==nil

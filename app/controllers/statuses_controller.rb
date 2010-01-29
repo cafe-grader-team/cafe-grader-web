@@ -1,5 +1,8 @@
 class StatusesController < ApplicationController
 
+  # protect the statuses, for now
+  before_filter :admin_authorization
+
   def index
     problem_count = Problem.available_problem_count
 
