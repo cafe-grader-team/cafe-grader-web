@@ -180,8 +180,13 @@ class MainController < ApplicationController
   # actions for Code Jom
   #
   def download_input
-    problem = Problem.find(params[:id])
     user = User.find(session[:user_id])
+
+    if Configuration.time_limit_mode? and user.contest_finished?
+      redirect_to :action => 'list' and return
+    end
+
+    problem = Problem.find(params[:id])
     if user.can_request_new_test_pair_for? problem
       assignment = user.get_new_test_pair_assignment_for problem
       assignment.save
@@ -201,6 +206,10 @@ class MainController < ApplicationController
     problem = Problem.find(params[:id])
     user = User.find(session[:user_id])
     recent_assignment = user.get_recent_test_pair_assignment_for problem
+
+    if Configuration.time_limit_mode? and user.contest_finished?
+      redirect_to :action => 'list' and return
+    end
 
     if recent_assignment == nil
       flash[:notice] = 'You have not requested for any input data for this problem.  Please download an input first.'

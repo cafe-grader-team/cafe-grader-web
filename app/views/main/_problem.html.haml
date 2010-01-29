@@ -1,15 +1,20 @@
 .problem-panel{:id => "problem-panel-#{problem.id}", :style => "#{(problem.id != @current_problem_id) ? "display:none" : ""}"}
-  .problem-form{:id => "problem-form-#{problem.id}"}
-    - form_tag({ :action => 'download_input', :id => problem.id }, :method => :post) do
-      %b Input:
-      %input{:type => "submit", :value => "Download input", :onclick => "CodejomTimeout.updateTimeoutAfterDownloadClick(#{problem.id}); return true;"}
-      %span{:id => "problem-timing-message-#{problem.id}"}
-        = "After downloading, you have #{TEST_ASSIGNMENT_EXPIRATION_DURATION/60} minutes to submit."
-    %div{:id => "problem-submission-form-#{problem.id}"}
-      - form_tag({ :action => 'submit_solution', :id => problem.id }, :method => :post, :multipart => true) do
-        %b Submit output:
-        %input{:type => "file", :name => "file"}
-        %input{:type => "submit", :value => "Submit solution"}
+  - if (not Configuration.time_limit_mode?) or (not @user.contest_finished?)
+    .problem-form{:id => "problem-form-#{problem.id}"}
+      - form_tag({ :action => 'download_input', :id => problem.id }, :method => :post) do
+        %b Input:
+        %input{:type => "submit", :value => "Download input", :onclick => "CodejomTimeout.updateTimeoutAfterDownloadClick(#{problem.id}); return true;"}
+        %span{:id => "problem-timing-message-#{problem.id}"}
+          = "After downloading, you have #{TEST_ASSIGNMENT_EXPIRATION_DURATION/60} minutes to submit."
+      %div{:id => "problem-submission-form-#{problem.id}"}
+        - form_tag({ :action => 'submit_solution', :id => problem.id }, :method => :post, :multipart => true) do
+          %b Submit output:
+          %input{:type => "file", :name => "file"}
+          %input{:type => "submit", :value => "Submit solution"}
+  - else
+    .problem-form
+      %p
+        The contest is over, you can view the tasks, but you can no longer submit.
 
   .problem-description
     - if problem.description!=nil
