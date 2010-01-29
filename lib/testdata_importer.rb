@@ -131,6 +131,8 @@ class TestdataImporter
       @problem.description = description
       @problem.save
       return "\nProblem description imported from #{filename}."
+    else
+      return ''
     end
   end
 
