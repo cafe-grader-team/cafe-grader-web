@@ -99,8 +99,6 @@ class TestdataImporter
 
       break if not FileTest.exists? sol_filename
 
-      puts "#{dirname}"
-
       test_pair = TestPair.new(:input => open(in_filename).read,
                                :solution => open(sol_filename).read,
                                :number => test_num,
