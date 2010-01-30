@@ -1,4 +1,4 @@
-# -*- coding: undecided -*-
+# -*- coding: utf-8 -*-
 require 'digest/sha1'
 
 class User < ActiveRecord::Base
@@ -234,7 +234,7 @@ class User < ActiveRecord::Base
   def update_codejom_status
     status = codejom_status || CodejomStatus.new(:user => self)
     problem_count = Problem.available_problem_count
-    status.num_problems_passed = (self.submission_statuses.find_all {|s| s.passed}).length
+    status.num_problems_passed = (self.submission_statuses.find_all {|s| s.passed and s.problem.available }).length
     status.alive = (problem_count - (status.num_problems_passed)) <= CODEJOM_MAX_ALIVE_LEVEL
     status.save
   end
