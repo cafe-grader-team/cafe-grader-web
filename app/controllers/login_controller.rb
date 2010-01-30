@@ -10,7 +10,6 @@ class LoginController < ApplicationController
     if user = User.authenticate(params[:login], params[:password])
       session[:user_id] = user.id
       session[:admin] = user.admin?
-      UserContestStat.update_user_start_time(user)
       redirect_to :controller => 'main', :action => 'list'
     else
       flash[:notice] = 'Wrong password'

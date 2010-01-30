@@ -16,7 +16,7 @@ class User < ActiveRecord::Base
            :foreign_key => "receiver_id", 
            :order => 'created_at DESC'
 
-  has_one :contest_stat, :class_name => "UserContestStat"
+  has_one :contest_stat, :class_name => "UserContestStat", :dependent => :destroy
 
   belongs_to :site
   belongs_to :country
