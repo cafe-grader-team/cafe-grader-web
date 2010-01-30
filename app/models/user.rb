@@ -20,7 +20,7 @@ class User < ActiveRecord::Base
   has_many :test_pair_assignments, :dependent => :delete_all
   has_many :submission_statuses
 
-  has_one :contest_stat, :class_name => "UserContestStat"
+  has_one :contest_stat, :class_name => "UserContestStat", :dependent => :destroy
 
   belongs_to :site
   belongs_to :country
