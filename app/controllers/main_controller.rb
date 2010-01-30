@@ -3,6 +3,8 @@ class MainController < ApplicationController
   before_filter :authenticate, :except => [:index, :login]
   before_filter :check_viewability, :except => [:index, :login]
 
+  append_before_filter :update_user_start_time, :except => [:index, :login]
+
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
 
@@ -453,6 +455,11 @@ class MainController < ApplicationController
       :exit_status => run_stat,
       :memory_usage => memory_used
     }
+  end
+
+  def update_user_start_time
+    user = User.find(session[:user_id])
+    UserContestStat.update_user_start_time(user)
   end
 
 end
