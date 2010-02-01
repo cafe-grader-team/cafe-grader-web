@@ -5,6 +5,10 @@ class MainController < ApplicationController
 
   append_before_filter :update_user_start_time, :except => [:index, :login]
 
+  # to prevent log in box to be shown when user logged out of the
+  # system only in some tab
+  prepend_before_filter :reject_announcement_refresh_when_logged_out, :only => [:announcements]
+
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
 
@@ -324,6 +328,12 @@ class MainController < ApplicationController
   def update_user_start_time
     user = User.find(session[:user_id])
     UserContestStat.update_user_start_time(user)
+  end
+
+  def reject_announcement_refresh_when_logged_out
+    if not session[:user_id]
+      render :text => 'Access forbidden', :status => 403
+    end
   end
 
 end
