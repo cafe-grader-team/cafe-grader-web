@@ -1,9 +1,10 @@
 class StatusesController < ApplicationController
 
-  # protect the statuses, for now
-  before_filter :admin_authorization
-
   def index
+    if not SHOW_CONTEST_STATUS
+      render :status => 403 and return
+    end
+
     problem_count = Problem.available_problem_count
 
     @dead_users = []
@@ -20,6 +21,16 @@ class StatusesController < ApplicationController
         @dead_users << user
       else
         @level_users[user.codejom_level] << user
+      end
+    end
+
+    respond_to do |format|
+      format.html 
+      format.xml do 
+        render :xml => {
+          :levels => @level_users,
+          :dead_users => @dead_users 
+        } 
       end
     end
   end

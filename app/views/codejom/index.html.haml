@@ -1,0 +1,11 @@
+%h1 Code Jom Control Panel
+
+%h2= "Available problems (#{@available_problems.length})"
+%ul
+  - @available_problems.each do |problem|
+    %li= problem.name
+
+%h2= "Activated problems (#{@activated_problems.length})"
+- @activated_problems.each do |problem|
+  = problem.name
+
