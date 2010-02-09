@@ -3,6 +3,13 @@ class Problem < ActiveRecord::Base
   belongs_to :description
   has_many :test_pairs, :dependent => :delete_all
 
+  named_scope :level, lambda { |level|
+    { :conditions => { :level => level }}
+  }
+
+  named_scope :unavailable, { :conditions => { :available => false }}
+
+
   validates_presence_of :name
   validates_format_of :name, :with => /^\w+$/
   validates_presence_of :full_name

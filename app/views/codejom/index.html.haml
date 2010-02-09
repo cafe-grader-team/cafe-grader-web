@@ -1,9 +1,21 @@
 %h1 Code Jom Control Panel
 
-%h2= "Available problems (#{@available_problems.length})"
-%ul
-  - @available_problems.each do |problem|
-    %li= problem.name
+%h2 Available problems
+%table{:class => "codejom-problems"}
+  %tr
+    - @levels.each do |level|
+      %th= "Level #{level} (#{@available_problems[level].length})"
+  %tr
+    - @levels.each do |level|
+      %td
+        - @available_problems[level].each do |problem|
+          = problem.name
+          %br/
+  %tr
+    - @levels.each do |level|
+      %td{:class => 'random-button'}
+        - form_tag :action => 'random_problem', :id => level do
+          = submit_tag 'Random'
 
 %h2= "Activated problems (#{@activated_problems.length})"
 - @activated_problems.each do |problem|

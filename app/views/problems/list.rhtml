@@ -28,6 +28,7 @@
   <tr>
     <th>Name</th>
     <th>Full name</th>
+    <th>Level</th>
     <th>Full score</th>
     <th>Date added</th>
     <th>Avail?</th>
@@ -39,6 +40,7 @@
     <% @problem=problem %>
     <td><%= in_place_editor_field :problem, :name, {}, :rows=>1 %></td>
     <td><%= in_place_editor_field :problem, :full_name, {}, :rows=>1 %></td>
+    <td><%= in_place_editor_field :problem, :level, {}, :rows=>1 %></td>
     <td><%= in_place_editor_field :problem, :full_score, {}, :rows=>1 %></td>
     <td><%= problem.date_added %></td>
     <td id="prob-<%= problem.id %>-avail"><%= problem.available %></td>

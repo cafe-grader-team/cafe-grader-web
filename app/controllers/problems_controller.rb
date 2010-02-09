@@ -6,6 +6,9 @@ class ProblemsController < ApplicationController
   in_place_edit_for :problem, :full_name
   in_place_edit_for :problem, :full_score
 
+  # for codejom
+  in_place_edit_for :problem, :level
+
   def index
     list
     render :action => 'list'

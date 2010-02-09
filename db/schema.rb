@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100129041917) do
+ActiveRecord::Schema.define(:version => 20100209145331) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -93,6 +93,7 @@ ActiveRecord::Schema.define(:version => 20100129041917) do
     t.integer "description_id"
     t.boolean "test_allowed"
     t.boolean "output_only"
+    t.integer "level",                        :default => 0
   end
 
   create_table "rights", :force => true do |t|
