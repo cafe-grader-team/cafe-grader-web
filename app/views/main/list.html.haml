@@ -17,7 +17,7 @@
   %p=t 'main.start_soon'
 
 - if Configuration.show_tasks_to?(@user)
-  .problem-list
+  .problem-list{:id => 'problem-list'}
     = render :partial => 'problem_title', :collection => @problems, :as => :problem
   .problem-content
     %span{:id => "problem-panel-filler", :style => (@current_problem_id!=nil) ? "display:none" : ""}
@@ -36,4 +36,7 @@
   = render :partial => 'submission_timeouts'
   CodejomTimeout.updateProblemMessages();
   CodejomTimeout.registerRefreshEvent();
+
+= periodically_call_remote(:url => { :action => 'problems' }, :update => 'problem-list')
+
 

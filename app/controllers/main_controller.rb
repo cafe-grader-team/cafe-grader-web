@@ -276,6 +276,15 @@ class MainController < ApplicationController
     redirect_to :action => 'list'
   end
 
+  def problems
+    prepare_list_information
+    render :partial => 'problem_title', :collection => @problems, :as => :problem
+  end
+
+  def splash
+    render :text => '<div class="notice">Most recent task:</span>'
+  end
+
   protected
 
   def prepare_announcements(recent=nil)
