@@ -278,6 +278,7 @@ class MainController < ApplicationController
 
   def problems
     prepare_list_information
+    @page_reload_when_view_problem = true
     render :partial => 'problem_title', :collection => @problems, :as => :problem
   end
 
@@ -335,7 +336,11 @@ class MainController < ApplicationController
       @current_problem_id = session[:current_problem_id]
       session.delete(:current_problem_id)
     else
-      @current_problem_id = nil
+      if params.has_key? :id
+        @current_problem_id = params[:id].to_i
+      else
+        @current_problem_id = nil
+      end
     end
 
     @problems = all_problems.reject { |problem| passed.has_key? problem.id }
