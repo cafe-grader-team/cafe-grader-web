@@ -315,7 +315,6 @@ class MainController < ApplicationController
       end
       @submission_timeouts[problem.id] = timeout
     end
-    @submission_timeouts.each_pair {|k,v| puts "#{k} => #{v}"}
   end
 
   def prepare_list_information
@@ -343,7 +342,11 @@ class MainController < ApplicationController
       end
     end
 
-    @problems = all_problems.reject { |problem| passed.has_key? problem.id }
+    if (not defined? HIDE_PASSED_TASKS) or HIDE_PASSED_TASKS
+      @problems = all_problems.reject { |problem| passed.has_key? problem.id }
+    else
+      @problems = all_problems
+    end
 
     prepare_timeout_information(@problems)
     
