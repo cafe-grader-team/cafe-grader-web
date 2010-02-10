@@ -37,6 +37,6 @@
   CodejomTimeout.updateProblemMessages();
   CodejomTimeout.registerRefreshEvent();
 
-= periodically_call_remote(:url => { :action => 'problems' }, :update => 'problem-list')
+= periodically_call_remote(:url => { :action => 'problems' }, :update => 'problem-list', :frequency => '3')
 
 

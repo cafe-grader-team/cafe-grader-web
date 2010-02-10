@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100209145331) do
+ActiveRecord::Schema.define(:version => 20100210012432) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -84,16 +84,17 @@ ActiveRecord::Schema.define(:version => 20100209145331) do
   end
 
   create_table "problems", :force => true do |t|
-    t.string  "name",           :limit => 30
-    t.string  "full_name"
-    t.integer "full_score"
-    t.date    "date_added"
-    t.boolean "available"
-    t.string  "url"
-    t.integer "description_id"
-    t.boolean "test_allowed"
-    t.boolean "output_only"
-    t.integer "level",                        :default => 0
+    t.string   "name",           :limit => 30
+    t.string   "full_name"
+    t.integer  "full_score"
+    t.date     "date_added"
+    t.boolean  "available"
+    t.string   "url"
+    t.integer  "description_id"
+    t.boolean  "test_allowed"
+    t.boolean  "output_only"
+    t.integer  "level",                        :default => 0
+    t.datetime "updated_at"
   end
 
   create_table "rights", :force => true do |t|

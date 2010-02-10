@@ -37,7 +37,9 @@ class Problem < ActiveRecord::Base
   end
 
   def self.find_available_problems
-    find(:all, :conditions => {:available => true}, :order => "date_added DESC")
+    find(:all, 
+         :conditions => {:available => true}, 
+         :order => "updated_at DESC")
   end
 
   # TODO: may try to optimize this using cache
