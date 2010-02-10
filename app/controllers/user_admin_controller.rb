@@ -38,6 +38,7 @@ class UserAdminController < ApplicationController
 
   def create
     @user = User.new(params[:user])
+    @user.member1_full_name = @user.full_name
     @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'

@@ -92,7 +92,7 @@ GRADING_RESULT_DIR = 'RESULT-DIR'
 
 # Change this to allow importing testdata into database as test-pairs.
 # This is mainly for Code Jom contest.
-ALLOW_TEST_PAIR_IMPORT = false
+ALLOW_TEST_PAIR_IMPORT = true
 
 # Uncomment so that the system validates user e-mails
 # VALIDATE_USER_EMAILS = true
