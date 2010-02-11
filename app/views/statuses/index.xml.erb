@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<codejom>
+  <% @dead_users.each do |user| %>
+    <node>
+      <name><%= user.login %></name>
+      <depth>100</depth>
+    </node>
+  <% end %>
+  <% @levels.each do |level| %>
+    <% @level_users[level].each do |user| %>
+      <node>
+	<name><%= user.login %></name>
+	<depth><%= level %></depth>
+      </node>
+    <% end %>
+  <% end %>
+</codejom>      

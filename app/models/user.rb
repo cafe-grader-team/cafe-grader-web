@@ -209,7 +209,13 @@ class User < ActiveRecord::Base
   def contest_finished?
     if Configuration.contest_mode?
       return false if site==nil
-      return site.finished?
+      if site.finished?
+        return true
+      elsif codejom_status!=nil
+        return (not codejom_status.alive)
+      else
+        return false
+      end
     elsif Configuration.indv_contest_mode?
       time_limit = Configuration.contest_time_limit
 

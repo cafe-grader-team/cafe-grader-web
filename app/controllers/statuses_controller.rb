@@ -12,10 +12,8 @@ class StatusesController < ApplicationController
     @levels = (0..CODEJOM_MAX_ALIVE_LEVEL)
     @levels.each { |l| @level_users[l] = [] }
     User.find(:all).find_all{|user| not user.admin? }.each do |user|
-      if user.codejom_status==nil
-        user.update_codejom_status
-        user.codejom_status(true)  # reload
-      end
+      user.update_codejom_status
+      user.codejom_status(true)  # reload
 
       if not user.codejom_status.alive
         @dead_users << user
@@ -27,10 +25,7 @@ class StatusesController < ApplicationController
     respond_to do |format|
       format.html 
       format.xml do 
-        render :xml => {
-          :levels => @level_users,
-          :dead_users => @dead_users 
-        } 
+        render :template => 'statuses/index.xml.erb'
       end
     end
   end

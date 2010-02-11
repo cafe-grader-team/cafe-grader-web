@@ -78,11 +78,19 @@ module ApplicationHelper
     # if the contest is over
     if Configuration.time_limit_mode?
       if user.contest_finished?
-        header = <<CONTEST_OVER
+        if (user.codejom_status) and (not user.codejom_status.alive)
+          header = <<CONTEST_OVER
+<tr><td colspan="2" align="center">
+<span class="contest-over-msg">BYE-BYE. YOU ARE DEAD</span>
+</td></tr>
+CONTEST_OVER
+        else
+          header = <<CONTEST_OVER
 <tr><td colspan="2" align="center">
 <span class="contest-over-msg">THE CONTEST IS OVER</span>
 </td></tr>
 CONTEST_OVER
+        end
       end
       if !user.contest_started?
         time_left = "&nbsp;&nbsp;" + (t 'title_bar.contest_not_started')
