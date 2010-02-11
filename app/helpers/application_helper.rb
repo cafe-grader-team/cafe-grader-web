@@ -8,6 +8,7 @@ module ApplicationHelper
     if (user!=nil) and (session[:admin]) 
       # admin menu
       menu_items << "<b>Administrative task:</b> "
+      append_to menu_items, '[CODEJOM]', 'codejom', 'index'
       append_to menu_items, '[Announcements]', 'announcements', 'index'
       append_to menu_items, '[Msg console]', 'messages', 'console'
       append_to menu_items, '[Problems]', 'problems', 'index'
