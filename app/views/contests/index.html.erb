@@ -1,19 +1,24 @@
+<% content_for :head do %>
+<%= javascript_include_tag :defaults %>
+<% end %>
+
 <h1>Listing contests</h1>
 
-<div class="submitbox">
-  <b>Go back</b> to [<%= link_to 'contest management', :controller => 'contest_management', :action => 'index' %>]
+<div class="infobox">
+  <b>Go back to:</b> [<%= link_to 'contest management', :controller => 'contest_management', :action => 'index' %>]
 </div>
 
 <table>
   <tr>
     <th>Title</th>
-    <th>Enabled</th>
+    <th>Enabled</th> 
   </tr>
 
 <% @contests.each do |contest| %>
+  <% @contest = contest %>
   <tr>
-    <td><%=h contest.title %></td>
-    <td><%=h contest.enabled %></td>
+    <td><%= in_place_editor_field :contest, :title, {}, :rows => 1 %></td>
+    <td><%= in_place_editor_field :contest, :enabled, {}, :rows => 1 %></td>
     <td><%= link_to 'Show', contest %></td>
     <td><%= link_to 'Edit', edit_contest_path(contest) %></td>
     <td><%= link_to 'Destroy', contest, :confirm => 'Are you sure?', :method => :delete %></td>

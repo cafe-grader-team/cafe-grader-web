@@ -3,6 +3,7 @@ class ContestManagementController < ApplicationController
   before_filter :admin_authorization
 
   def index
+    @num_contests = Contest.count()
   end
 
   def user_stat
@@ -32,6 +33,17 @@ class ContestManagementController < ApplicationController
 
     UserContestStat.delete_all()
     flash[:notice] = 'All start time statistic cleared.'
+    redirect_to :action => 'index'
+  end
+
+  def change_contest_mode
+    if ['standard', 'contest', 'indv-contest'].include? params[:id]
+      config = Configuration.find_by_key('system.mode')
+      config.value = params[:id]
+      config.save
+    else
+      flash[:notice] = 'Wrong contest mode value'
+    end
     redirect_to :action => 'index'
   end
 

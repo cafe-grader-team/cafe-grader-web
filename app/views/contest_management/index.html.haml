@@ -1,20 +1,30 @@
 %h1 Contest management
 
-.submitbox
+.infobox
 
-  %b Multiple contests:
-  = "There are #{Contest.count} contests running."
-  = "[#{link_to 'Create/Update/Delete contests', :controller => 'contests', :action => 'index'}]"
+  - if @num_contests>1
+    %b Multiple contests:
+    = "There are #{@num_contests} contests running."
+  - else
+    %b Single contest:
+  = "[#{link_to 'Add/remove contests', :controller => 'contests', :action => 'index'}]"
 
+.infobox
+  %b Web interface mode:
+  - if (not Configuration.contest_mode?) and (not Configuration.indv_contest_mode?)
+    standard mode
+  - elsif Configuration.contest_mode?
+    normal contest mode.
+  - else
+    individual contest mode.
 
-%b Contest mode:
+  %br/
+  Change mode to:
+  = "[#{link_to 'standard', :action => 'change_contest_mode', :id => 'standard'}]"
+  = "[#{link_to 'contest', :action => 'change_contest_mode', :id => 'contest'}]"
+  = "[#{link_to 'individual contest', :action => 'change_contest_mode', :id => 'indv-contest'}]"
 
-- if (not Configuration.contest_mode?) and (not Configuration.indv_contest_mode?)
-  Currently the system is not running in contest mode.
-- elsif Configuration.contest_mode?
-  System running in normal contest mode.
-- else
-  System running in individual contest mode.
+- if Configuration.indv_contest_mode?
   = render :partial => 'indv_contest_mode_index'
 
 %br/

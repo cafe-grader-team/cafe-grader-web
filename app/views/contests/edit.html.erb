@@ -3,14 +3,19 @@
 <% form_for(@contest) do |f| %>
   <%= f.error_messages %>
 
-  <p>
-    <%= f.label :title %><br />
-    <%= f.text_field :title %>
-  </p>
-  <p>
-    <%= f.label :enabled %><br />
-    <%= f.check_box :enabled %>
-  </p>
+  <table>
+    <tr>
+      <td><%= f.label :title %></td>
+      <td><%= f.text_field :title %></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+	<%= f.check_box :enabled %>
+	<%= f.label :enabled %>
+      </td>
+    </tr>
+  </table>
   <p>
     <%= f.submit 'Update' %>
   </p>

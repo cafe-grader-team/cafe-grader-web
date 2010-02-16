@@ -1,38 +1,38 @@
 <h1>Listing users</h1>
 
 <div class="submitbox">
-<b>Quick add</b>
-<% form_tag :action => 'create' do %>
-  <table border="0">
-  <tr>
-  <td><label for="user_login">Login</label></td>
-  <td><label for="user_full_name">Full name</label></td>
-  <td><label for="user_password">Password</label></td>
-  <td><label for="user_password_confirmation">Confirm</label></td>
-  <td><label for="user_email">Email</label></td>
-  </tr>
-  <tr>
-  <td><%= text_field 'user', 'login', :size => 10  %></td>
-  <td><%= text_field 'user', 'full_name', :size => 30  %></td>
-  <td><%= password_field 'user', 'password', :size => 10  %></td>
-  <td><%= password_field 'user', 'password_confirmation', :size => 10 %></td>
-  <td><%= text_field 'user', 'email', :size => 15 %></td>
-  <td><%= submit_tag "Create" %></td>
-  </tr></table>
-<% end %>
-<br/>
-<b>Import from site management</b>
-<% form_tag({:action => 'import'}, :multipart => true) do %>
-  File: <%= file_field_tag 'file' %> <%= submit_tag 'Import' %>
-<% end %>
-<br/>
-<b>What else: </b>
-<%= link_to '[New user]', :action => 'new' %>
-<%= link_to '[New list of users]', :action => 'new_list' %>
-<%= link_to '[View administrators]', :action => 'admin' %>
-<%= link_to '[Random passwords]', :action => 'random_all_passwords' %>
-<%= link_to '[View active users]', :action => 'active' %>
-
+  <b>Quick add</b>
+  <% form_tag :action => 'create' do %>
+    <table border="0">
+      <tr>
+	<td><label for="user_login">Login</label></td>
+	<td><label for="user_full_name">Full name</label></td>
+	<td><label for="user_password">Password</label></td>
+	<td><label for="user_password_confirmation">Confirm</label></td>
+	<td><label for="user_email">Email</label></td>
+      </tr>
+      <tr>
+	<td><%= text_field 'user', 'login', :size => 10  %></td>
+	<td><%= text_field 'user', 'full_name', :size => 30  %></td>
+	<td><%= password_field 'user', 'password', :size => 10  %></td>
+	<td><%= password_field 'user', 'password_confirmation', :size => 10 %></td>
+	<td><%= text_field 'user', 'email', :size => 15 %></td>
+	<td><%= submit_tag "Create" %></td>
+    </tr>
+    </table>
+  <% end %>
+  <br/>
+  <b>Import from site management</b>
+  <% form_tag({:action => 'import'}, :multipart => true) do %>
+    File: <%= file_field_tag 'file' %> <%= submit_tag 'Import' %>
+  <% end %>
+  <br/>
+  <b>What else: </b>
+  <%= link_to '[New user]', :action => 'new' %>
+  <%= link_to '[New list of users]', :action => 'new_list' %>
+  <%= link_to '[View administrators]', :action => 'admin' %>
+  <%= link_to '[Random passwords]', :action => 'random_all_passwords' %>
+  <%= link_to '[View active users]', :action => 'active' %>
 </div>
 
 <table>

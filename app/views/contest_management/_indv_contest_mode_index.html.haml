@@ -1,4 +1,9 @@
-.submitbox
-  %b Menu:
+%h2 Individual contest mode
+
+In this mode, each individual user can log in and participate in the
+contest at any time.  The contest timer starts as soon as the user log
+in.
+
+.infobox
   = link_to '[View user start time]', :action => 'user_stat'
   = link_to '[Clear all start times]', {:action => 'clear_all_stat'}, {:confirm => 'Do you really want to clear all start time statistics?'}

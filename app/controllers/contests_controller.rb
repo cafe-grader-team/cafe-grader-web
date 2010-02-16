@@ -2,6 +2,9 @@ class ContestsController < ApplicationController
 
   before_filter :admin_authorization
 
+  in_place_edit_for :contest, :title
+  in_place_edit_for :contest, :enabled
+
   # GET /contests
   # GET /contests.xml
   def index

@@ -1,7 +1,8 @@
-<p>
-  <b>Title:</b>
-  <%=h @contest.title %>
-</p>
+<h1>Contest: <%=h @contest.title %></h1>
+
+<div class="infobox">
+  <b>Go back to:</b> [<%= link_to 'contest management', :controller => 'contest_management', :action => 'index' %>]
+</div>
 
 <p>
   <b>Enabled:</b>
