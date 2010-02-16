@@ -8,16 +8,17 @@
     %th Key
     %th Type
     %th Value
-
+    %th Description
   - @configurations.each do |conf|
     - @configuration = conf
-    %tr
+    %tr{:class => cycle("info-odd", "info-even")}
       %td
         = in_place_editor_field :configuration, :key, {}, :rows=>1
       %td
         = in_place_editor_field :configuration, :value_type, {}, :rows=>1
       %td
         = in_place_editor_field :configuration, :value, {}, :rows=>1
+      %td= conf.description
 
 - if Configuration.cache?
   %br/
