@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100124054458) do
+ActiveRecord::Schema.define(:version => 20100216105730) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -22,6 +22,14 @@ ActiveRecord::Schema.define(:version => 20100124054458) do
     t.string   "title"
   end
 
+  create_table "codejom_statuses", :force => true do |t|
+    t.integer  "user_id"
+    t.boolean  "alive"
+    t.integer  "num_problems_passed"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "configurations", :force => true do |t|
     t.string   "key"
     t.string   "value_type"
@@ -29,6 +37,13 @@ ActiveRecord::Schema.define(:version => 20100124054458) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text     "description"
+  end
+
+  create_table "contests", :force => true do |t|
+    t.string   "title"
+    t.boolean  "enabled"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "countries", :force => true do |t|
@@ -76,15 +91,17 @@ ActiveRecord::Schema.define(:version => 20100124054458) do
   end
 
   create_table "problems", :force => true do |t|
-    t.string  "name",           :limit => 30
-    t.string  "full_name"
-    t.integer "full_score"
-    t.date    "date_added"
-    t.boolean "available"
-    t.string  "url"
-    t.integer "description_id"
-    t.boolean "test_allowed"
-    t.boolean "output_only"
+    t.string   "name",           :limit => 30
+    t.string   "full_name"
+    t.integer  "full_score"
+    t.date     "date_added"
+    t.boolean  "available"
+    t.string   "url"
+    t.integer  "description_id"
+    t.boolean  "test_allowed"
+    t.boolean  "output_only"
+    t.integer  "level",                        :default => 0
+    t.datetime "updated_at"
   end
 
   create_table "rights", :force => true do |t|
@@ -178,8 +195,8 @@ ActiveRecord::Schema.define(:version => 20100124054458) do
 
   create_table "test_pairs", :force => true do |t|
     t.integer  "problem_id"
-    t.text     "input"
-    t.text     "solution"
+    t.text     "input",      :limit => 16777215
+    t.text     "solution",   :limit => 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "number"
@@ -215,17 +232,27 @@ ActiveRecord::Schema.define(:version => 20100124054458) do
   end
 
   create_table "users", :force => true do |t|
-    t.string   "login",           :limit => 50
+    t.string   "login",               :limit => 50
     t.string   "full_name"
     t.string   "hashed_password"
-    t.string   "salt",            :limit => 5
+    t.string   "salt",                :limit => 5
     t.string   "alias"
     t.string   "email"
     t.integer  "site_id"
     t.integer  "country_id"
-    t.boolean  "activated",                     :default => false
+    t.boolean  "activated",                         :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "member1_full_name"
+    t.string   "member2_full_name"
+    t.string   "member3_full_name"
+    t.boolean  "high_school"
+    t.string   "member1_school_name"
+    t.string   "member2_school_name"
+    t.string   "member3_school_name"
+    t.string   "school_name"
+    t.string   "province"
+    t.integer  "year"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

@@ -1,0 +1,26 @@
+<h1>Listing contests</h1>
+
+<div class="submitbox">
+  <b>Go back</b> to [<%= link_to 'contest management', :controller => 'contest_management', :action => 'index' %>]
+</div>
+
+<table>
+  <tr>
+    <th>Title</th>
+    <th>Enabled</th>
+  </tr>
+
+<% @contests.each do |contest| %>
+  <tr>
+    <td><%=h contest.title %></td>
+    <td><%=h contest.enabled %></td>
+    <td><%= link_to 'Show', contest %></td>
+    <td><%= link_to 'Edit', edit_contest_path(contest) %></td>
+    <td><%= link_to 'Destroy', contest, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New contest', new_contest_path %>

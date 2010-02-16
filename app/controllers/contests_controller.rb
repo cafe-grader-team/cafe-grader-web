@@ -2,37 +2,88 @@ class ContestsController < ApplicationController
 
   before_filter :admin_authorization
 
+  # GET /contests
+  # GET /contests.xml
   def index
-  end
+    @contests = Contest.all
 
-  def user_stat
-    if not Configuration.indv_contest_mode?
-      redirect_to :action => 'index' and return
-    end
-
-    @users = User.find(:all)
-    @start_times = {}
-    UserContestStat.find(:all).each do |stat|
-      @start_times[stat.user_id] = stat.started_at
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @contests }
     end
   end
 
-  def clear_stat
-    user = User.find(params[:id])
-    if user.contest_stat!=nil
-      user.contest_stat.destroy
+  # GET /contests/1
+  # GET /contests/1.xml
+  def show
+    @contest = Contest.find(params[:id])
+
+    respond_to do |format|
+      format.html # show.html.erb
+      format.xml  { render :xml => @contest }
     end
-    redirect_to :action => 'user_stat'
   end
 
-  def clear_all_stat
-    if not Configuration.indv_contest_mode?
-      redirect_to :action => 'index' and return
-    end
+  # GET /contests/new
+  # GET /contests/new.xml
+  def new
+    @contest = Contest.new
 
-    UserContestStat.delete_all()
-    flash[:notice] = 'All start time statistic cleared.'
-    redirect_to :action => 'index'
+    respond_to do |format|
+      format.html # new.html.erb
+      format.xml  { render :xml => @contest }
+    end
+  end
+
+  # GET /contests/1/edit
+  def edit
+    @contest = Contest.find(params[:id])
+  end
+
+  # POST /contests
+  # POST /contests.xml
+  def create
+    @contest = Contest.new(params[:contest])
+
+    respond_to do |format|
+      if @contest.save
+        flash[:notice] = 'Contest was successfully created.'
+        format.html { redirect_to(@contest) }
+        format.xml  { render :xml => @contest, :status => :created, :location => @contest }
+      else
+        format.html { render :action => "new" }
+        format.xml  { render :xml => @contest.errors, :status => :unprocessable_entity }
+      end
+    end
+  end
+
+  # PUT /contests/1
+  # PUT /contests/1.xml
+  def update
+    @contest = Contest.find(params[:id])
+
+    respond_to do |format|
+      if @contest.update_attributes(params[:contest])
+        flash[:notice] = 'Contest was successfully updated.'
+        format.html { redirect_to(@contest) }
+        format.xml  { head :ok }
+      else
+        format.html { render :action => "edit" }
+        format.xml  { render :xml => @contest.errors, :status => :unprocessable_entity }
+      end
+    end
+  end
+
+  # DELETE /contests/1
+  # DELETE /contests/1.xml
+  def destroy
+    @contest = Contest.find(params[:id])
+    @contest.destroy
+
+    respond_to do |format|
+      format.html { redirect_to(contests_url) }
+      format.xml  { head :ok }
+    end
   end
 
 end

@@ -1,0 +1,2 @@
+module ContestManagementHelper
+end
