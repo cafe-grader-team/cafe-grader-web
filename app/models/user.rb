@@ -21,6 +21,8 @@ class User < ActiveRecord::Base
   belongs_to :site
   belongs_to :country
 
+  has_and_belongs_to_many :contests
+
   named_scope :activated_users, :conditions => {:activated => true}
 
   validates_presence_of :login

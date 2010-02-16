@@ -1,6 +1,7 @@
 class Problem < ActiveRecord::Base
 
   belongs_to :description
+  has_and_belongs_to_many :contests
   has_many :test_pairs, :dependent => :delete_all
 
   validates_presence_of :name
