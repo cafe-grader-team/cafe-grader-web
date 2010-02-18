@@ -70,6 +70,8 @@ class TestdataImporter
     files = Dir["#{extract_dir}/**/*1*.in"]
     return nil if files.length==0
 
+    File.delete(testdata_filename)
+
     return File.dirname(files[0])
   end
 
