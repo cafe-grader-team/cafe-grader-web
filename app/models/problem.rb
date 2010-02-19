@@ -10,7 +10,7 @@ class Problem < ActiveRecord::Base
 
   DEFAULT_TIME_LIMIT = 1
   DEFAULT_MEMORY_LIMIT = 32
-  
+
   def self.find_available_problems
     find(:all, :conditions => {:available => true}, :order => "date_added DESC")
   end
@@ -47,6 +47,10 @@ class Problem < ActiveRecord::Base
     return problem, importer.log_msg
   end
 
+  def self.download_file_basedir
+    return "#{RAILS_ROOT}/data/tasks"
+  end
+  
   protected
 
   def self.to_i_or_default(st, default)

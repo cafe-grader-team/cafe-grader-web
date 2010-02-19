@@ -12,11 +12,15 @@ class TasksController < ApplicationController
   end
 
   def view
-    base_filename = File.basename("#{params[:file]}.#{params[:ext]}")
-    filename = "#{RAILS_ROOT}/data/tasks/#{base_filename}"
-    #filename = "/home/ioi/web_grader/data/tasks/#{base_filename}"
-    #filename = "/home/ioi/web_grader/public/images/rails.png"
-    if !FileTest.exists?(filename)
+    base_name = params[:file]
+    if !check_user_viewability(base_name)
+      redirect_to :action => 'index' and return
+    end
+
+    base_filename = File.basename("#{base_name}.#{params[:ext]}")
+    filename = "#{Problem.download_file_basedir}/#{base_filename}"
+
+    if !check_user_viewability(base_name) or !FileTest.exists?(filename)
       redirect_to :action => 'index' and return
     end
 
@@ -34,11 +38,17 @@ class TasksController < ApplicationController
   protected
 
   def check_viewability
-    user = User.find(session[:user_id])
-    if user==nil or !Configuration.show_tasks_to?(user)
+    @user = User.find(session[:user_id])
+    if @user==nil or !Configuration.show_tasks_to?(@user)
       redirect_to :controller => 'main', :action => 'list'
       return false
     end
+  end
+
+  def check_user_viewability(filename)
+    # individual file access control shall be added here
+    return false if not @user
+    return Configuration.show_tasks_to?(@user)
   end
 
 end

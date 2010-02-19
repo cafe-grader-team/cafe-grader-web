@@ -1,7 +1,7 @@
 require 'tmpdir'
 
 class TestdataImporter
-
+  
   attr :log_msg
 
   def initialize(problem)
@@ -33,6 +33,7 @@ class TestdataImporter
     end
 
     @log_msg << import_problem_description(dirname)
+    @log_msg << import_problem_pdf(dirname)
 
     return true
   end
@@ -132,6 +133,18 @@ class TestdataImporter
       return "\nProblem description imported from #{filename}."
     else
       return ''
+    end
+  end
+
+  def import_problem_pdf(dirname)
+    pdf_files = Dir["#{dirname}/*.pdf"]
+    if pdf_files.length != 0
+      filename = pdf_files[0]
+      out_filename = "#{Problem.download_file_basedir}/#{@problem.name}.pdf"
+      File.rename(filename, out_filename)
+      @problem.description_filename = "#{@problem.name}.pdf"
+      @problem.save
+      return "\nProblem pdf imported from #{filename}."
     end
   end
 
