@@ -16,60 +16,60 @@ CONFIGURATIONS =
    { 
      :key => 'system.single_user_mode',
      :value_type => 'boolean',
-     :value => 'false',
+     :default_value => 'false',
      :description => 'Only admins can log in to the system when running under single user mode.'
    },
 
    { 
      :key => 'ui.front.title',
      :value_type => 'string',
-     :value => 'Grader' 
+     :default_value => 'Grader' 
    },
 
    { 
      :key => 'ui.front.welcome_message',
      :value_type => 'string',
-     :value => 'Welcome!' 
+     :default_value => 'Welcome!' 
    },
 
    { 
      :key => 'ui.show_score',
      :value_type => 'boolean',
-     :value => 'true' 
+     :default_value => 'true' 
    },
    
    { 
      :key => 'contest.time_limit',
      :value_type => 'string',
-     :value => 'unlimited',
+     :default_value => 'unlimited',
      :description => 'Time limit in format hh:mm, or "unlimited" for contests with no time limits.'
    },
 
    { 
      :key => 'system.mode',
      :value_type => 'string',
-     :value => 'standard',
+     :default_value => 'standard',
      :description => 'Current modes are "standard", "contest", "indv-contest", and "analysis".'
    },
 
    { 
      :key => 'contest.name',
      :value_type => 'string',
-     :value => 'Grader',
+     :default_value => 'Grader',
      :description => 'This name will be shown on the user header bar.'
    },
 
    {
      :key => 'contest.multisites',
      :value_type => 'boolean',
-     :value => 'false',
+     :default_value => 'false',
      :description => 'If the server is in contest mode and this option is true, on the log in of the admin a menu for site selections is shown.'
    },
 
    {
      :key => 'system.online_registration',
      :value_type => 'boolean',
-     :value => 'false',
+     :default_value => 'false',
      :description => 'This option enables online registration.'
    },
 
@@ -79,25 +79,25 @@ CONFIGURATIONS =
    {
      :key => 'system.online_registration.smtp',
      :value_type => 'string',
-     :value => 'smtp.somehost.com' 
+     :default_value => 'smtp.somehost.com' 
    },
 
    {
      :key => 'system.online_registration.from',
      :value_type => 'string',
-     :value => 'your.email@address'
+     :default_value => 'your.email@address'
    },
 
    {
      :key => 'system.admin_email',
      :value_type => 'string',
-     :value => 'admin@admin.email'
+     :default_value => 'admin@admin.email'
    },
    
    { 
      :key => 'system.user_setting_enabled',
      :value_type => 'boolean',
-     :value => 'true',
+     :default_value => 'true',
      :description => 'If this option is true, users can change their settings'
    },
    
@@ -107,7 +107,7 @@ CONFIGURATIONS =
    {
      :key => 'contest.test_request.early_timeout',
      :value_type => 'boolean',
-     :value => 'false'
+     :default_value => 'false'
    }
   ]
 
