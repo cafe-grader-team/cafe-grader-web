@@ -31,7 +31,13 @@ class TasksController < ApplicationController
       response.headers['Content-length'] = File.size(filename)
       render :nothing => true
     else
-      send_file filename, :stream => false, :filename => base_filename
+      if params[:ext]=='pdf'
+        content_type = 'application/pdf'
+      else
+        content_type = 'application/octet-stream'
+      end
+
+      send_file filename, :stream => false, :filename => base_filename, :type => content_type
     end
   end
 
