@@ -145,6 +145,8 @@ class TestdataImporter
       @problem.description_filename = "#{@problem.name}.pdf"
       @problem.save
       return "\nProblem pdf imported from #{filename}."
+    else
+      return ""
     end
   end
 
