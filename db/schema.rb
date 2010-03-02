@@ -22,14 +22,6 @@ ActiveRecord::Schema.define(:version => 20100219014840) do
     t.string   "title"
   end
 
-  create_table "codejom_statuses", :force => true do |t|
-    t.integer  "user_id"
-    t.boolean  "alive"
-    t.integer  "num_problems_passed"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "configurations", :force => true do |t|
     t.string   "key"
     t.string   "value_type"
@@ -156,15 +148,6 @@ ActiveRecord::Schema.define(:version => 20100219014840) do
     t.string   "password"
   end
 
-  create_table "submission_statuses", :force => true do |t|
-    t.integer  "user_id"
-    t.integer  "problem_id"
-    t.boolean  "passed"
-    t.integer  "submission_count"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "submissions", :force => true do |t|
     t.integer  "user_id"
     t.integer  "problem_id"
@@ -189,17 +172,6 @@ ActiveRecord::Schema.define(:version => 20100219014840) do
     t.datetime "created_at"
     t.integer  "status"
     t.datetime "updated_at"
-  end
-
-  create_table "test_pair_assignments", :force => true do |t|
-    t.integer  "user_id"
-    t.integer  "problem_id"
-    t.integer  "test_pair_id"
-    t.integer  "test_pair_number"
-    t.integer  "request_number"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.boolean  "submitted"
   end
 
   create_table "test_pairs", :force => true do |t|

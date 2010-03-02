@@ -1,9 +1,13 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 
-one:
-  title: MyString
-  enabled: false
+contest_a:
+  title: Contest A
+  enabled: true
 
-two:
-  title: MyString
+contest_b:
+  title: Contest B
+  enabled: true
+
+contest_c:
+  title: Contest C
   enabled: false
