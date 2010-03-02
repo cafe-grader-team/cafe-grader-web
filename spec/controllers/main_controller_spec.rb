@@ -25,6 +25,7 @@ describe MainController do
   it "should let user sees her own source" do
     Submission.should_receive(:find).with(@submission.id.to_s).and_return(@submission)
     User.should_receive(:find).with(1).and_return(@user)
+    @user.should_receive(:update_start_time)
     get 'source', {:id => @submission.id}, {:user_id => 1}
     response.should be_success
   end

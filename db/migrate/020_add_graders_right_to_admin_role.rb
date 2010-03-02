@@ -12,6 +12,6 @@ class AddGradersRightToAdminRole < ActiveRecord::Migration
 
   def self.down
     graders_right = Right.find_by_name('graders_admin')
-    graders_right.destroy
+    graders_right.destroy if graders_right
   end
 end

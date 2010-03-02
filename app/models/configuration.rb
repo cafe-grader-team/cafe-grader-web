@@ -8,18 +8,24 @@ class Configuration < ActiveRecord::Base
   SYSTEM_MODE_CONF_KEY = 'system.mode'
   TEST_REQUEST_EARLY_TIMEOUT_KEY = 'contest.test_request.early_timeout'
 
-  # set @@cache = true to only reload once.
-  @@cache = false
+  cattr_accessor :cache
+  cattr_accessor :config_cache
+  cattr_accessor :task_grading_info
+  cattr_accessor :contest_time_str
+  cattr_accessor :contest_time
 
-  @@configurations = nil
-  @@task_grading_info = nil
+  # set @@cache = true to only reload once.
+  Configuration.cache = false
+
+  Configuration.config_cache = nil
+  Configuration.task_grading_info = nil
 
   def self.get(key)
-    if @@cache
-      if @@configurations == nil
+    if Configuration.cache
+      if Configuration.config_cache == nil
         self.read_config
       end
-      return @@configurations[key]
+      return Configuration.config_cache[key]
     else
       return Configuration.read_one_key(key)
     end
@@ -34,15 +40,15 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.clear
-    @@configurations = nil
+    Configuration.config_cache = nil
   end
 
   def self.cache?
-    @@cache
+    Configuration.cache
   end
 
   def self.enable_caching
-    @@cache = true
+    Configuration.cache = true
   end
 
   #
@@ -82,10 +88,10 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.task_grading_info
-    if @@task_grading_info==nil
+    if Configuration.task_grading_info==nil
       read_grading_info
     end
-    return @@task_grading_info
+    return Configuration.task_grading_info
   end
   
   def self.standard_mode?
@@ -112,22 +118,22 @@ class Configuration < ActiveRecord::Base
   def self.contest_time_limit
     contest_time_str = Configuration['contest.time_limit']
 
-    if not defined? @@contest_time_str
-      @@contest_time_str = nil
+    if not defined? Configuration.contest_time_str
+      Configuration.contest_time_str = nil
     end
 
-    if @@contest_time_str != contest_time_str
-      @@contest_time_str = contest_time_str
+    if Configuration.contest_time_str != contest_time_str
+      Configuration.contest_time_str = contest_time_str
       if tmatch = /(\d+):(\d+)/.match(contest_time_str)
         h = tmatch[1].to_i
         m = tmatch[2].to_i
         
-        @@contest_time = h.hour + m.minute
+        Configuration.contest_time = h.hour + m.minute
       else
-        @@contest_time = nil
+        Configuration.contest_time = nil
       end
     end  
-    return @@contest_time
+    return Configuration.contest_time
   end
 
   protected
@@ -146,11 +152,11 @@ class Configuration < ActiveRecord::Base
   end    
 
   def self.read_config
-    @@configurations = {}
+    Configuration.config_cache = {}
     Configuration.find(:all).each do |conf|
       key = conf.key
       val = conf.value
-      @@configurations[key] = Configuration.convert_type(val,conf.value_type)
+      Configuration.config_cache[key] = Configuration.convert_type(val,conf.value_type)
     end
   end
 
@@ -165,7 +171,7 @@ class Configuration < ActiveRecord::Base
 
   def self.read_grading_info
     f = File.open(TASK_GRADING_INFO_FILENAME)
-    @@task_grading_info = YAML.load(f)
+    Configuration.task_grading_info = YAML.load(f)
     f.close
   end
   

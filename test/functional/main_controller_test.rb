@@ -1,24 +1,12 @@
-require File.dirname(__FILE__) + '/../test_helper'
-require 'main_controller'
+require File.dirname(__FILE__) +  '/../test_helper'
 
-# Re-raise errors caught by the controller.
-class MainController; def rescue_action(e) raise e end; end
-
-class MainControllerTest < Test::Unit::TestCase
-
-  fixtures :problems
+class MainControllerTest < ActionController::TestCase
   fixtures :users
+  fixtures :problems
 
-  def setup
-    @controller = MainController.new
-    @request    = ActionController::TestRequest.new
-    @response   = ActionController::TestResponse.new
-  end
-
-  # Replace this with your real tests.
   def test_should_redirect_new_user_to_login
     get :list
-    assert_redirected_to :action => 'login'
+    assert_redirected_to :controller => 'main', :action => 'login'
   end
 
   def test_should_list_available_problems_if_logged_in

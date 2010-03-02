@@ -24,6 +24,6 @@ class AddSiteToUserAndAddDefaultSite < ActiveRecord::Migration
     remove_column :users, :site_id
 
     default_site = Site.find_by_name('default')
-    default_site.destroy
+    default_site.destroy if default_site
   end
 end

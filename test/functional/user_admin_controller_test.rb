@@ -4,7 +4,7 @@ require 'user_admin_controller'
 # Re-raise errors caught by the controller.
 class UserAdminController; def rescue_action(e) raise e end; end
 
-class UserAdminControllerTest < Test::Unit::TestCase
+class UserAdminControllerTest < ActionController::TestCase
   fixtures :users
   fixtures :roles
   fixtures :rights

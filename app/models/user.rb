@@ -130,6 +130,9 @@ class User < ActiveRecord::Base
       return site.time_left
     elsif Configuration.indv_contest_mode?
       time_limit = Configuration.contest_time_limit
+      if time_limit == nil
+        return nil
+      end
       if contest_stat==nil
         return (Time.now.gmtime + time_limit) - Time.now.gmtime
       else
@@ -167,6 +170,15 @@ class User < ActiveRecord::Base
       return site.started
     else
       return true
+    end
+  end
+
+  def update_start_time
+    stat = self.contest_stat
+    if stat == nil
+      stat = UserContestStat.new(:user => self,
+                                 :started_at => Time.now.gmtime)
+      stat.save
     end
   end
 

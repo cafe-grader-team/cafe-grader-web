@@ -327,7 +327,7 @@ class MainController < ApplicationController
 
   def update_user_start_time
     user = User.find(session[:user_id])
-    UserContestStat.update_user_start_time(user)
+    user.update_start_time
   end
 
   def reject_announcement_refresh_when_logged_out

@@ -101,18 +101,16 @@ ActiveRecord::Schema.define(:version => 20100219014840) do
   end
 
   create_table "problems", :force => true do |t|
-    t.string   "name",                 :limit => 30
-    t.string   "full_name"
-    t.integer  "full_score"
-    t.date     "date_added"
-    t.boolean  "available"
-    t.string   "url"
-    t.integer  "description_id"
-    t.boolean  "test_allowed"
-    t.boolean  "output_only"
-    t.integer  "level",                              :default => 0
-    t.datetime "updated_at"
-    t.string   "description_filename"
+    t.string  "name",                 :limit => 30
+    t.string  "full_name"
+    t.integer "full_score"
+    t.date    "date_added"
+    t.boolean "available"
+    t.string  "url"
+    t.integer "description_id"
+    t.boolean "test_allowed"
+    t.boolean "output_only"
+    t.string  "description_filename"
   end
 
   create_table "rights", :force => true do |t|
@@ -210,7 +208,6 @@ ActiveRecord::Schema.define(:version => 20100219014840) do
     t.text     "solution",   :limit => 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "number"
   end
 
   create_table "test_requests", :force => true do |t|
@@ -243,27 +240,17 @@ ActiveRecord::Schema.define(:version => 20100219014840) do
   end
 
   create_table "users", :force => true do |t|
-    t.string   "login",               :limit => 50
+    t.string   "login",           :limit => 50
     t.string   "full_name"
     t.string   "hashed_password"
-    t.string   "salt",                :limit => 5
+    t.string   "salt",            :limit => 5
     t.string   "alias"
     t.string   "email"
     t.integer  "site_id"
     t.integer  "country_id"
-    t.boolean  "activated",                         :default => false
+    t.boolean  "activated",                     :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "member1_full_name"
-    t.string   "member2_full_name"
-    t.string   "member3_full_name"
-    t.boolean  "high_school"
-    t.string   "member1_school_name"
-    t.string   "member2_school_name"
-    t.string   "member3_school_name"
-    t.string   "school_name"
-    t.string   "province"
-    t.integer  "year"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true
