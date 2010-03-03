@@ -8,11 +8,13 @@ class Problem < ActiveRecord::Base
   validates_format_of :name, :with => /^\w+$/
   validates_presence_of :full_name
 
+  named_scope :available, :conditions => {:available => true}
+
   DEFAULT_TIME_LIMIT = 1
   DEFAULT_MEMORY_LIMIT = 32
 
   def self.find_available_problems
-    find(:all, :conditions => {:available => true}, :order => "date_added DESC")
+    Problem.available.all(:order => "date_added DESC")
   end
 
   def self.create_from_import_form_params(params, old_problem=nil)

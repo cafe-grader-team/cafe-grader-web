@@ -106,6 +106,10 @@ class Configuration < ActiveRecord::Base
     return get(SYSTEM_MODE_CONF_KEY) == 'indv-contest'
   end
 
+  def self.multicontests?
+    return get('system.multicontests') == true
+  end
+
   def self.time_limit_mode?
     mode = get(SYSTEM_MODE_CONF_KEY)
     return ((mode == 'contest') or (mode == 'indv-contest')) 

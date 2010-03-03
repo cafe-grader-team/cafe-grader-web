@@ -193,16 +193,62 @@ class MainController < ApplicationController
     end
   end
 
+  def problem_list_by_user_contests(user)
+    contest_problems = []
+    pin = {}
+    user.contests.each do |contest|
+      available_problems = contest.problems.available
+      contest_problems << {
+        :contest => contest,
+        :problems => available_problems
+      }
+      available_problems.each {|p| pin[p.id] = true}
+    end
+    other_avaiable_problems = Problem.available.find_all {|p| pin[p.id]==nil and p.contests.length==0}
+    contest_problems << {
+      :contest => nil,
+      :problems => other_avaiable_problems
+    }
+    return contest_problems
+  end
+
+  def problem_list_for_user(user, contest_problems=nil)
+    if not Configuration.multicontests?
+      return Problem.find_available_problems
+    else
+      if contest_problems==nil
+        contest_problems = problem_list_by_user_contests(user)
+      end
+
+      problems = []
+      collected = {}
+      contest_problems.each do |cp|
+        cp[:problems].each do |problem|
+          if not collected[problem.id]
+            problems << problem
+            collected[problem.id] = true
+          end
+        end
+      end
+      return problems
+    end
+  end
+
   def prepare_list_information
-    @problems = Problem.find_available_problems
-    @prob_submissions = Array.new
     @user = User.find(session[:user_id])
+    if not Configuration.multicontests?
+      @problems = problem_list_for_user(@user)
+    else
+      @contest_problems = problem_list_by_user_contests(@user)
+      @problems = problem_list_for_user(@user, @contest_problems)
+    end
+    @prob_submissions = {}
     @problems.each do |p|
       sub = Submission.find_last_by_user_and_problem(@user.id,p.id)
       if sub!=nil
-        @prob_submissions << { :count => sub.number, :submission => sub }
+        @prob_submissions[p.id] = { :count => sub.number, :submission => sub }
       else
-        @prob_submissions << { :count => 0, :submission => nil }
+        @prob_submissions[p.id] = { :count => 0, :submission => nil }
       end
     end
     prepare_announcements

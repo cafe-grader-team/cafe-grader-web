@@ -4,8 +4,21 @@ one:
   name: add
   full_name: add_full_name
   available: true
+
 two:
   id: 2
   name: subtract
   full_name: subtract_full_name
   available: false
+
+easy:
+  name: easy_problem
+  full_name: Easy Problem
+  available: true
+  contests: contest_a, contest_b
+
+hard:
+  name: hard_problem
+  full_name: Hard Problem
+  available: true
+  contests: contest_b
