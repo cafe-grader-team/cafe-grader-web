@@ -32,15 +32,16 @@
       = render :partial => 'problem', :collection => @problems
   - else
     - @contest_problems.each do |cp|
-      %h2{:class =>'contest-title'}
-        = "#{cp[:contest] ? cp[:contest].title : 'Public problems'}"
-      %table.info
-        %tr.info-head
-          %th
-          %th Tasks
-          %th # of sub(s)
-          %th Results
-        = render :partial => 'problem', :collection => cp[:problems]
+      - if cp[:problems].length > 0
+        %h2{:class =>'contest-title'}
+          = "#{cp[:contest] ? cp[:contest].title : 'Public problems'}"
+        %table.info
+          %tr.info-head
+            %th
+            %th Tasks
+            %th # of sub(s)
+            %th Results
+          = render :partial => 'problem', :collection => cp[:problems]
 
 
 %hr/

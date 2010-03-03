@@ -16,6 +16,7 @@ class UserAdminController < ApplicationController
   def list
     @users = User.find(:all)
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
+    @contests = Contest.all(:conditions => {:enabled => true})
   end
 
   def active
@@ -149,6 +150,68 @@ class UserAdminController < ApplicationController
       end
       @changed = true
     end
+  end
+  
+  # contest management
+
+  def add_to_contest
+    user = User.find(params[:id])
+    contest = Contest.find(params[:contest_id])
+    if user and contest
+      user.contests << contest
+    end
+    redirect_to :action => 'list'
+  end
+
+  def remove_from_contest
+    user = User.find(params[:id])
+    contest = Contest.find(params[:contest_id])
+    if user and contest
+      user.contests.delete(contest)
+    end
+    redirect_to :action => 'list'
+  end
+
+  def contest_management
+  end
+
+  def manage_contest
+    contest = Contest.find(params[:contest][:id])
+    if !contest
+      flash[:notice] = 'You did not choose the contest.'
+      redirect_to :action => 'contest_management' and return
+    end
+
+    operation = params[:operation]
+
+    if operation!='add' and operation!='remove'
+      flash[:notice] = 'You did not choose the operation to perform.'
+      redirect_to :action => 'contest_management' and return
+    end
+
+    lines = params[:login_list]
+    if !lines or lines.blank?
+      flash[:notice] = 'You entered an empty list.'
+      redirect_to :action => 'contest_management' and return
+    end
+
+    note = []
+    lines.split("\n").each do |line|
+      puts line
+      user = User.find_by_login(line.chomp)
+      puts user
+      if user
+        if operation=='add'
+          user.contests << contest
+        else
+          user.contests.delete(contest)
+        end
+        note << user.login
+      end
+    end
+    flash[:notice] = 'User(s) ' + note.join(', ') + 
+      ' were successfully modified.  ' 
+    redirect_to :action => 'contest_management'    
   end
 
   # admin management

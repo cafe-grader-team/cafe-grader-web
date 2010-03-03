@@ -33,27 +33,51 @@
   <%= link_to '[View administrators]', :action => 'admin' %>
   <%= link_to '[Random passwords]', :action => 'random_all_passwords' %>
   <%= link_to '[View active users]', :action => 'active' %>
+  <% if Configuration.multicontests? %>
+    <%= link_to '[Manage bulk users in contests]', :action => 'contest_management' %>
+  <% end %>
 </div>
 
-<table>
-  <tr>
-  <% for column in User.content_columns %>
-    <% if !@hidden_columns.index(column.name) %>
-      <th><%= column.human_name %></th>
+<table class="info">
+  <tr class="info-head">
+    <% for column in User.content_columns %>
+      <% if !@hidden_columns.index(column.name) %>
+        <th><%= column.human_name %></th>
+      <% end %>
     <% end %>
-  <% end %>
+    <th></th>
+    <th></th>
+    <th></th>
+    <% if Configuration.multicontests? %>
+      <th>Contests</th>
+      <th>Other enabled contests</th>
+    <% end %>
   </tr>
   
 <% for user in @users %>
-  <tr>
-  <% for column in User.content_columns %>
-    <% if !@hidden_columns.index(column.name) %>
-      <td><%=h user.send(column.name) %></td>
+  <tr class="info-<%= cycle("odd","even") %>">
+    <% for column in User.content_columns %>
+      <% if !@hidden_columns.index(column.name) %>
+        <td><%=h user.send(column.name) %></td>
+      <% end %>
     <% end %>
-  <% end %>
     <td><%= link_to 'Show', :action => 'show', :id => user %></td>
     <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>
     <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post %></td>
+    <% if Configuration.multicontests? %>
+      <td>
+        <% user.contests.each do |contest| %>
+	  <%= contest.name %> [<%= link_to 'x', :action => 'remove_from_contest', :id => user.id, :contest_id => contest.id %>]
+        <% end %>
+      </td>
+      <td>	
+	<% @contests.each do |contest| %>
+	  <% if not user.contests.all.find {|c| c.id==contest.id } %>
+  	    <%= contest.name %> [<%= link_to '+', :action => 'add_to_contest', :id => user.id, :contest_id => contest.id %>]
+          <% end %>
+	<% end %>  
+      </td>
+    <% end %>
   </tr>
 <% end %>
 </table>

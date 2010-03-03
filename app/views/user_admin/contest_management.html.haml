@@ -1,0 +1,16 @@
+%h1 Bulk edit users in contests
+
+- form_tag :action => 'manage_contest' do
+  List users' login below; one per line.
+  %br/
+  = text_area_tag 'login_list', nil, :rows => 25, :cols => 80
+  %br/
+  You want to
+  = select(nil,"operation",[['add users to','add'],['remove users from','remove']])
+  contest
+  = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  = submit_tag "Perform action", :confirm => 'Are you sure?'
+
+%hr/
+= link_to '[go back to index]', :action => 'index'
