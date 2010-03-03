@@ -10,6 +10,7 @@
 
 <table>
   <tr>
+    <th>Name</th>
     <th>Title</th>
     <th>Enabled</th> 
   </tr>
@@ -17,6 +18,7 @@
 <% @contests.each do |contest| %>
   <% @contest = contest %>
   <tr>
+    <td><%= in_place_editor_field :contest, :name, {}, :rows => 1 %></td>
     <td><%= in_place_editor_field :contest, :title, {}, :rows => 1 %></td>
     <td><%= in_place_editor_field :contest, :enabled, {}, :rows => 1 %></td>
     <td><%= link_to 'Show', contest %></td>

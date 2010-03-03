@@ -95,6 +95,12 @@ CONFIGURATIONS =
      :key => 'contest.test_request.early_timeout',
      :value_type => 'boolean',
      :default_value => 'false'
+   },
+
+   {
+     :key => 'system.multicontests',
+     :value_type => 'boolean',
+     :default_value => 'false'
    }
   ]
 

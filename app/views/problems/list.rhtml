@@ -32,6 +32,9 @@
     <th>Date added</th>
     <th>Avail?</th>
     <th>Test?</th>
+    <% if Configuration.multicontests? %>
+      <th>Contests</th>
+    <% end %>
   </tr>
   
 <% for problem in @problems %>
@@ -43,6 +46,12 @@
     <td><%= problem.date_added %></td>
     <td id="prob-<%= problem.id %>-avail"><%= problem.available %></td>
     <td><%= problem.test_allowed %></td>
+
+    <% if Configuration.multicontests? %>
+      <td>
+        <%= problem.contests.collect { |c| c.name }.join(', ') %>
+      </td>
+    <% end %>
 
     <td><%= link_to_remote '[Toggle]', :url => {:action => 'toggle', :id => problem.id } %></td>
     <td><%= link_to '[Stat]', :action => 'stat', :id => problem.id %></td>

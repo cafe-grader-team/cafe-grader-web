@@ -1,13 +1,16 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 
 contest_a:
+  name: contest_a
   title: Contest A
   enabled: true
 
 contest_b:
+  name: contest_b
   title: Contest B
   enabled: true
 
 contest_c:
+  name: contest_c
   title: Contest C
   enabled: false

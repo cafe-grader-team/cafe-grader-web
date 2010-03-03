@@ -142,6 +142,8 @@ class ProblemsController < ApplicationController
   def do_manage
     if params.has_key? 'change_date_added'
       change_date_added
+    else params.has_key? 'add_to_contest'
+      add_to_contest
     end
     redirect_to :action => 'manage'
   end
@@ -168,6 +170,15 @@ class ProblemsController < ApplicationController
     @log = import_log
   end
 
+  def remove_contest
+    problem = Problem.find(params[:id])
+    contest = Contest.find(params[:contest_id])
+    if problem!=nil and contest!=nil
+      problem.contests.delete(contest)
+    end
+    redirect_to :action => 'manage'
+  end
+
   ##################################
   protected
 
@@ -188,6 +199,16 @@ class ProblemsController < ApplicationController
     problems.each do |p|
       p.date_added = date
       p.save
+    end
+  end
+
+  def add_to_contest
+    problems = get_problems_from_params
+    contest = Contest.find(params[:contest][:id])
+    if contest!=nil and contest.enabled
+      problems.each do |p|
+        p.contests << contest
+      end
     end
   end
 
