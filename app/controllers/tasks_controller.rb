@@ -8,22 +8,45 @@ class TasksController < ApplicationController
 
   def list
     @problems = Problem.find_available_problems
-    @user = User.find(session[:user_id])
   end
 
+  # this has contest-wide access control
   def view
     base_name = params[:file]
-    if !check_user_viewability(base_name)
-      redirect_to :action => 'index' and return
-    end
-
     base_filename = File.basename("#{base_name}.#{params[:ext]}")
     filename = "#{Problem.download_file_basedir}/#{base_filename}"
 
-    if !check_user_viewability(base_name) or !FileTest.exists?(filename)
+    if !FileTest.exists?(filename)
       redirect_to :action => 'index' and return
     end
 
+    send_file_to_user(filename, base_filename)
+  end
+
+  # this has problem-level access control
+  def download
+    problem = Problem.find(params[:id])
+    if !problem or !problem.available or !@user.can_view_problem? problem
+      redirect_to :action => 'index' and return
+    end
+
+    base_name = params[:file]
+    base_filename = File.basename("#{base_name}.#{params[:ext]}")
+    filename = "#{Problem.download_file_basedir}/#{params[:id]}/#{base_filename}"
+    puts "SENDING: #{filename}"
+
+    if !FileTest.exists?(filename)
+      redirect_to :action => 'index' and return
+    end
+
+    puts "SENDING: #{filename}"
+
+    send_file_to_user(filename, base_filename)
+  end
+
+  protected
+
+  def send_file_to_user(filename, base_filename)
     if defined?(USE_APACHE_XSENDFILE) and USE_APACHE_XSENDFILE
       response.headers['Content-Type'] = "application/force-download" 
       response.headers['Content-Disposition'] = "attachment; filename=\"#{File.basename(filename)}\"" 
@@ -41,20 +64,12 @@ class TasksController < ApplicationController
     end
   end
 
-  protected
-
   def check_viewability
     @user = User.find(session[:user_id])
     if @user==nil or !Configuration.show_tasks_to?(@user)
       redirect_to :controller => 'main', :action => 'list'
       return false
     end
-  end
-
-  def check_user_viewability(filename)
-    # individual file access control shall be added here
-    return false if not @user
-    return Configuration.show_tasks_to?(@user)
   end
 
 end

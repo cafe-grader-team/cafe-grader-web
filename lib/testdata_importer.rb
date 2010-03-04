@@ -51,10 +51,15 @@ class TestdataImporter
     ext = TestdataImporter.long_ext(tempfile.original_filename)
 
     extract_dir = File.join(GraderScript.raw_dir, @problem.name)
-    begin
-      Dir.mkdir extract_dir
-    rescue Errno::EEXIST
+    if File.exists? extract_dir
+      backup_count = 0
+      begin
+        backup_count += 1
+        backup_dirname = "#{extract_dir}.backup.#{backup_count}"
+      end while File.exists? backup_dirname
+      File.rename(extract_dir, backup_dirname)
     end
+    Dir.mkdir extract_dir
 
     if ext=='.tar.gz' or ext=='.tgz'
       cmd = "tar -zxvf #{testdata_filename} -C #{extract_dir}"
@@ -138,9 +143,23 @@ class TestdataImporter
 
   def import_problem_pdf(dirname)
     pdf_files = Dir["#{dirname}/*.pdf"]
+    puts "CHECKING... #{dirname}"
     if pdf_files.length != 0
+      puts "HAS PDF FILE"
       filename = pdf_files[0]
-      out_filename = "#{Problem.download_file_basedir}/#{@problem.name}.pdf"
+
+      @problem.save if not @problem.id
+      out_dirname = "#{Problem.download_file_basedir}/#{@problem.id}"
+      if not FileTest.exists? out_dirname
+        Dir.mkdir out_dirname
+      end
+
+      out_filename = "#{out_dirname}/#{@problem.name}.pdf"
+
+      if FileTest.exists? out_filename
+        File.delete out_filename
+      end
+
       File.rename(filename, out_filename)
       @problem.description_filename = "#{@problem.name}.pdf"
       @problem.save

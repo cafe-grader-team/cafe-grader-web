@@ -6,7 +6,8 @@ module MainHelper
     elsif !problem.description_filename.blank?
       basename, ext = problem.description_filename.split('.')
       options[:controller] = 'tasks'
-      options[:action] = 'view'
+      options[:action] = 'download'
+      options[:id] = problem.id
       options[:file] = basename
       options[:ext] = ext
       return link_to name, options

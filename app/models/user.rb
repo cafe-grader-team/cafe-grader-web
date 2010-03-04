@@ -182,6 +182,29 @@ class User < ActiveRecord::Base
     end
   end
 
+  def problem_in_user_contests?(problem)
+    problem_contests = problem.contests.all
+
+    if problem_contests.length == 0   # this is public contest
+      return true
+    end
+
+    contests.each do |contest|
+      if problem_contests.find {|c| c.id == contest.id }
+        return true
+      end
+    end
+    return false
+  end
+
+  def can_view_problem?(problem)
+    if not Configuration.multicontests?
+      return problem.available
+    else
+      return problem_in_user_contests? problem
+    end
+  end
+
   protected
     def encrypt_new_password
       return if password.blank?
