@@ -6,7 +6,7 @@
   = text_area_tag 'login_list', nil, :rows => 25, :cols => 80
   %br/
   You want to
-  = select(nil,"operation",[['add users to','add'],['remove users from','remove']])
+  = select(nil,"operation",[['assign users to','assign'],['add users to','add'],['remove users from','remove']])
   contest
   = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
   &nbsp;&nbsp;&nbsp;&nbsp;

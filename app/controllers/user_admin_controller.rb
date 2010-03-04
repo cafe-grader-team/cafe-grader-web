@@ -184,7 +184,7 @@ class UserAdminController < ApplicationController
 
     operation = params[:operation]
 
-    if operation!='add' and operation!='remove'
+    if not ['add','remove','assign'].include? operation
       flash[:notice] = 'You did not choose the operation to perform.'
       redirect_to :action => 'contest_management' and return
     end
@@ -203,8 +203,10 @@ class UserAdminController < ApplicationController
       if user
         if operation=='add'
           user.contests << contest
-        else
+        elsif operation=='remove'
           user.contests.delete(contest)
+        else
+          user.contests = [contest]
         end
         note << user.login
       end

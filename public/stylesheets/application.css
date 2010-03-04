@@ -160,16 +160,17 @@ table.taskdesc {
     padding-left: 20px;
     background: #feeefe; }
 
-div.announcementbox {
+.announcementbox {
   margin: 10px 0px;
   background: #bbddee;
   padding: 1px; }
-  div.announcementbox span.title {
+  .announcementbox span.title {
     font-weight: bold;
     color: #224455;
     padding-left: 10px;
     line-height: 1.6em; }
-div.announcement {
+
+.announcement {
   margin: 2px;
   background: white;
   padding: 1px;
@@ -182,11 +183,11 @@ div.announcement {
   font-size: 12px;
   margin: 2px; }
 
-div.pub-info {
+.pub-info {
   text-align: right;
   font-style: italic;
   font-size: 9px; }
-  div.pub-info p {
+  .pub-info p {
     text-align: right;
     font-style: italic;
     font-size: 9px; }
@@ -235,3 +236,7 @@ div.registration-desc, div.test-desc {
   margin: 10px 0;
   font-size: 12px;
   line-height: 1.5em; }
+
+h2.contest-title {
+  margin-top: 5px;
+  margin-bottom: 5px; }
