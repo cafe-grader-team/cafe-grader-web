@@ -102,3 +102,68 @@ describe User, "as a class" do
   end
   
 end
+
+describe User, "when requesting problem description," do
+  
+  fixtures :users
+  fixtures :problems
+
+  before(:each) do
+    @james = users(:james)
+    @john = users(:john)
+    @jack = users(:jack)
+    @add = problems(:one)
+    @easy = problems(:easy)
+    @hard = problems(:hard)
+  end
+
+  it "should check if a problem is in user's contests" do
+    @james.problem_in_user_contests?(@easy).should be_true
+    @james.problem_in_user_contests?(@hard).should be_false
+
+    @john.problem_in_user_contests?(@easy).should be_false
+    @john.problem_in_user_contests?(@hard).should be_false
+  end
+
+  it "should be able to view problem in user's contests, when multicontests is on" do
+    enable_multicontest
+    @james.can_view_problem?(@easy).should be_true
+    @jack.can_view_problem?(@easy).should be_true
+    @jack.can_view_problem?(@hard).should be_true
+  end
+
+  it "should not be able to view problem not in user's contests, when multicontests is on" do
+    enable_multicontest
+    @john.can_view_problem?(@easy).should be_false
+    @john.can_view_problem?(@hard).should be_false
+    @james.can_view_problem?(@hard).should be_false
+  end
+
+  it "should be able to view all available problems, when multicontests is off" do
+    disable_multicontest
+    @john.can_view_problem?(@easy).should be_true
+    @john.can_view_problem?(@hard).should be_true
+    @james.can_view_problem?(@easy).should be_true
+    @james.can_view_problem?(@hard).should be_true
+  end
+
+  it "should be able to view public problems, when multicontests is on" do
+    enable_multicontest
+    @john.can_view_problem?(@add).should be_true
+    @james.can_view_problem?(@add).should be_true
+  end
+
+  def enable_multicontest
+    c = Configuration.new(:key => 'system.multicontests',
+                          :value_type => 'boolean',
+                          :value => 'true')
+    c.save
+  end
+
+  def disable_multicontest
+    c = Configuration.new(:key => 'system.multicontests',
+                          :value_type => 'boolean',
+                          :value => 'false')
+    c.save
+  end
+end
