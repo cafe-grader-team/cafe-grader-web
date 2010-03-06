@@ -33,7 +33,7 @@ class ApplicationController < ActionController::Base
     # check if run in single user mode
     if (Configuration[SINGLE_USER_MODE_CONF_KEY])
       user = User.find(session[:user_id])
-      if user==nil or user.login != 'root'
+      if user==nil or (not user.admin?)
         redirect_to :controller => 'main', :action => 'login'
         return false
       end
