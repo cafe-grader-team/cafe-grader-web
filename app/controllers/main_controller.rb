@@ -196,7 +196,7 @@ class MainController < ApplicationController
   def problem_list_by_user_contests(user)
     contest_problems = []
     pin = {}
-    user.contests.each do |contest|
+    user.contests.enabled.each do |contest|
       available_problems = contest.problems.available
       contest_problems << {
         :contest => contest,

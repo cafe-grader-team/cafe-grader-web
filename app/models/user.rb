@@ -21,7 +21,7 @@ class User < ActiveRecord::Base
   belongs_to :site
   belongs_to :country
 
-  has_and_belongs_to_many :contests, :uniq => true
+  has_and_belongs_to_many :contests, :uniq => true, :order => 'name'
 
   named_scope :activated_users, :conditions => {:activated => true}
 
