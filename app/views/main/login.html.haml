@@ -1,42 +1,12 @@
 %h1= Configuration['ui.front.title']
 
-- if @announcements.length!=0
-  .announcementbox
-    %span{:class => 'title'}
-      Announcements
-    = render :partial => 'announcement', :collection => @announcements
-
-%b= Configuration['ui.front.welcome_message']
-%br/
-
-- if !@hidelogin
-  =t 'login.message'
-  %br/
-  %br/
-
-  - if flash[:notice]
-    %hr/
-    %b= flash[:notice]
-    %hr/
-
-  %div{ :style => "border: solid 1px gray; padding: 4px; background: #eeeeff;"}
-    - form_tag :controller => 'login', :action => 'login' do
-      %table
-        %tr
-          %td{:align => "right"} 
-            ="#{t 'login_label'}:"
-          %td= text_field_tag 'login'
-        %tr
-          %td{:align => "right"} 
-            ="#{t 'password_label'}:"
-          %td= password_field_tag
-      = submit_tag t('login.login_submit')
-%br/
-
-- if Configuration['system.online_registration']
-  =t 'login.participation'
-  %b
-    = "#{t 'login.please'} "
-    = link_to "#{t 'login.register'}", :controller => :users, :action => :new
-  %br/
-  = link_to "#{t 'login.forget_password'}", :controller => :users, :action => :forget
+%table
+  %tr
+    %td
+      - if @announcements.length!=0
+        .announcementbox{:style => 'margin-top: 0px'}
+          %span{:class => 'title'}
+            Announcements
+          = render :partial => 'announcement', :collection => @announcements
+    %td{:style => 'vertical-align: top; width: 40%; padding-left: 20px;'}
+      = render :partial => 'login_box'
