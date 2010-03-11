@@ -197,6 +197,44 @@ class User < ActiveRecord::Base
     return false
   end
 
+  def available_problems_group_by_contests
+    contest_problems = []
+    pin = {}
+    contests.enabled.each do |contest|
+      available_problems = contest.problems.available
+      contest_problems << {
+        :contest => contest,
+        :problems => available_problems
+      }
+      available_problems.each {|p| pin[p.id] = true}
+    end
+    other_avaiable_problems = Problem.available.find_all {|p| pin[p.id]==nil and p.contests.length==0}
+    contest_problems << {
+      :contest => nil,
+      :problems => other_avaiable_problems
+    }
+    return contest_problems
+  end
+
+  def available_problems
+    if not Configuration.multicontests?
+      return Problem.find_available_problems
+    else
+      contest_problems = []
+      pin = {}
+      contests.enabled.each do |contest|
+        contest.problems.available.each do |problem|
+          if not pin.has_key? problem.id
+            contest_problems << problem
+          end
+          pin[problem.id] = true
+        end
+      end
+      other_avaiable_problems = Problem.available.find_all {|p| pin[p.id]==nil and p.contests.length==0}
+      return contest_problems + other_avaiable_problems
+    end
+  end
+
   def can_view_problem?(problem)
     if not Configuration.multicontests?
       return problem.available

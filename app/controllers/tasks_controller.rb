@@ -7,7 +7,7 @@ class TasksController < ApplicationController
   end
 
   def list
-    @problems = Problem.find_available_problems
+    @problems = @user.available_problems
   end
 
   # this has contest-wide access control
