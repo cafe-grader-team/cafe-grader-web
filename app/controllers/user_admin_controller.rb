@@ -208,6 +208,9 @@ class UserAdminController < ApplicationController
         else
           user.contests = [contest]
         end
+        
+        user.contest_stat.destroy if params[:reset_timer]
+
         note << user.login
       end
     end

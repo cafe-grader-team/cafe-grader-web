@@ -3,14 +3,17 @@
 - form_tag :action => 'manage_contest' do
   List users' login below; one per line.
   %br/
-  = text_area_tag 'login_list', nil, :rows => 25, :cols => 80
+  = text_area_tag 'login_list', nil, :rows => 23, :cols => 80
   %br/
   You want to
   = select(nil,"operation",[['assign users to','assign'],['add users to','add'],['remove users from','remove']])
   contest
   = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  = submit_tag "Perform action", :confirm => 'Are you sure?'
+  = check_box_tag 'reset_timer'
+  Auto-reset current contest timer.
+  %br/
+
+  = submit_tag "Perform action!", :confirm => 'Are you sure?'
 
 %hr/
 = link_to '[go back to index]', :action => 'index'
