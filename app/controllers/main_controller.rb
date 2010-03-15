@@ -155,11 +155,15 @@ class MainController < ApplicationController
       redirect_to :action => 'list' and return
     end
 
-    response.headers['Content-Type'] = "application/force-download"
-    response.headers['Content-Disposition'] = "attachment; filename=\"output-#{case_num}.txt\""
-    response.headers["X-Sendfile"] = out_filename
-    response.headers['Content-length'] = File.size(out_filename)
-    render :nothing => true
+    if defined?(USE_APACHE_XSENDFILE) and USE_APACHE_XSENDFILE
+      response.headers['Content-Type'] = "application/force-download"
+      response.headers['Content-Disposition'] = "attachment; filename=\"output-#{case_num}.txt\""
+      response.headers["X-Sendfile"] = out_filename
+      response.headers['Content-length'] = File.size(out_filename)
+      render :nothing => true
+    else
+      send_file out_filename, :stream => false, :filename => "output-#{case_num}.txt", :type => "text/plain"
+    end
   end
 
   def error
