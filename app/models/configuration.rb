@@ -10,7 +10,7 @@ class Configuration < ActiveRecord::Base
 
   cattr_accessor :cache
   cattr_accessor :config_cache
-  cattr_accessor :task_grading_info
+  cattr_accessor :task_grading_info_cache
   cattr_accessor :contest_time_str
   cattr_accessor :contest_time
 
@@ -18,7 +18,7 @@ class Configuration < ActiveRecord::Base
   Configuration.cache = false
 
   Configuration.config_cache = nil
-  Configuration.task_grading_info = nil
+  Configuration.task_grading_info_cache = nil
 
   def self.get(key)
     if Configuration.cache
@@ -88,10 +88,10 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.task_grading_info
-    if Configuration.task_grading_info==nil
+    if Configuration.task_grading_info_cache==nil
       read_grading_info
     end
-    return Configuration.task_grading_info
+    return Configuration.task_grading_info_cache
   end
   
   def self.standard_mode?
@@ -175,7 +175,7 @@ class Configuration < ActiveRecord::Base
 
   def self.read_grading_info
     f = File.open(TASK_GRADING_INFO_FILENAME)
-    Configuration.task_grading_info = YAML.load(f)
+    Configuration.task_grading_info_cache = YAML.load(f)
     f.close
   end
   
