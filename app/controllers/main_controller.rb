@@ -200,7 +200,7 @@ class MainController < ApplicationController
   def prepare_list_information
     @user = User.find(session[:user_id])
     if not Configuration.multicontests?
-      @problems = problem_list_for_user(@user)
+      @problems = @user.available_problems
     else
       @contest_problems = @user.available_problems_group_by_contests
       @problems = @user.available_problems
