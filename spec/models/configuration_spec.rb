@@ -1,14 +1,10 @@
 
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe Configuration do
-
-  # only work with cached configuration
-  class Configuration
-    @@cache = true
-  end
+describe Configuration, "when using cache" do
 
   before(:each) do
+    Configuration.cache = true
     @int_config = mock(Configuration,
                        :id => 1,
                        :key => 'mode',
@@ -26,6 +22,10 @@ describe Configuration do
                            :key => 'single_user_mode',
                            :value_type => 'boolean',
                            :value => 'true')
+  end
+
+  after(:each) do
+    Configuration.cache = false
   end
   
   it "should retrieve int config" do

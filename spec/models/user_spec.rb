@@ -1,5 +1,5 @@
-
 require File.dirname(__FILE__) + '/../spec_helper'
+require File.dirname(__FILE__) + '/../config_spec_helper'
 
 describe User do
 
@@ -104,6 +104,8 @@ describe User, "as a class" do
 end
 
 describe User, "when requesting problem description," do
+
+  include ConfigSpecHelperMethods
   
   fixtures :users
   fixtures :problems
@@ -134,9 +136,14 @@ describe User, "when requesting problem description," do
 
   it "should not be able to view problem not in user's contests, when multicontests is on" do
     enable_multicontest
+    @james.can_view_problem?(@hard).should be_false
+  end
+
+  it "with no assigned contest should not be able to view problem in contests when multicontests is on" do
+    enable_multicontest
+    @john.can_view_problem?(@add).should be_true
     @john.can_view_problem?(@easy).should be_false
     @john.can_view_problem?(@hard).should be_false
-    @james.can_view_problem?(@hard).should be_false
   end
 
   it "should be able to view all available problems, when multicontests is off" do
@@ -153,17 +160,4 @@ describe User, "when requesting problem description," do
     @james.can_view_problem?(@add).should be_true
   end
 
-  def enable_multicontest
-    c = Configuration.new(:key => 'system.multicontests',
-                          :value_type => 'boolean',
-                          :value => 'true')
-    c.save
-  end
-
-  def disable_multicontest
-    c = Configuration.new(:key => 'system.multicontests',
-                          :value_type => 'boolean',
-                          :value => 'false')
-    c.save
-  end
 end

@@ -107,6 +107,7 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.multicontests?
+    g = get('system.multicontests')
     return get('system.multicontests') == true
   end
 

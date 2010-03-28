@@ -17,6 +17,10 @@ describe UsersController, "when a new user registers" do
       any_number_of_times.
       and_return(@john_activation_key)
 
+    Configuration.new(:key => 'system.online_registration',
+                      :value_type => 'boolean',
+                      :value => 'true').save
+
     get :new
     response.should render_template('users/new')
   end

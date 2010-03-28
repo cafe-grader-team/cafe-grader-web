@@ -1,20 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-
-module ConfigHelperMethods
-  def enable_multicontest
-    c = Configuration.new(:key => 'system.multicontests',
-                          :value_type => 'boolean',
-                          :value => 'true')
-    c.save
-  end
-
-  def disable_multicontest
-    c = Configuration.new(:key => 'system.multicontests',
-                          :value_type => 'boolean',
-                          :value => 'false')
-    c.save
-  end
-end
+require File.dirname(__FILE__) + '/../config_spec_helper'
 
 describe MainController, "when a user comes to list page" do
 
@@ -28,7 +13,7 @@ end
 describe MainController, "when a logged in user comes to list page, with multicontests off" do
   integrate_views
 
-  include ConfigHelperMethods
+  include ConfigSpecHelperMethods
 
   fixtures :users
   fixtures :problems
@@ -53,7 +38,7 @@ end
 describe MainController, "when a logged in user comes to list page, with multicontests on" do
   integrate_views
 
-  include ConfigHelperMethods
+  include ConfigSpecHelperMethods
 
   fixtures :users
   fixtures :problems
