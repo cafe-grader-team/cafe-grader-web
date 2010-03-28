@@ -196,24 +196,31 @@ class UserAdminController < ApplicationController
     end
 
     note = []
+    user_ids = {}
     lines.split("\n").each do |line|
-      puts line
       user = User.find_by_login(line.chomp)
-      puts user
       if user
         if operation=='add'
-          user.contests << contest
+          if ! user.contests.include? contest
+            user.contests << contest
+          end
         elsif operation=='remove'
           user.contests.delete(contest)
         else
           user.contests = [contest]
         end
-        
+
         user.contest_stat.destroy if params[:reset_timer]
 
         note << user.login
+        user_ids[user.id] = true
       end
     end
+
+    if params[:reset_timer]
+      logout_users(user_ids)
+    end
+
     flash[:notice] = 'User(s) ' + note.join(', ') + 
       ' were successfully modified.  ' 
     redirect_to :action => 'contest_management'    
@@ -322,6 +329,15 @@ class UserAdminController < ApplicationController
       end
     end
 
+  end
+
+  def logout_users(user_ids)
+    sessions = ActiveRecord::SessionStore::Session.find(:all, :conditions => ["updated_at >= ?", 60.minutes.ago])
+    sessions.each do |session|
+      if user_ids.has_key? session.data[:user_id]
+        session.destroy
+      end
+    end
   end
 
 end

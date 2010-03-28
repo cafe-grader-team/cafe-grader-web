@@ -29,7 +29,7 @@ CONFIGURATIONS =
      :key => 'contest.time_limit',
      :value_type => 'string',
      :default_value => 'unlimited',
-     :description => 'Time limit in format hh:mm, or "unlimited" for contests with no time limits.'
+     :description => 'Time limit in format hh:mm, or "unlimited" for contests with no time limits.  This config is CACHED.  Restart the server before the change can take effect.'
    },
    
    { 

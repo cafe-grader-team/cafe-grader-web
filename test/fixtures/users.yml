@@ -11,6 +11,7 @@ john:
   full_name: john
   hashed_password: <%= User.encrypt("hello",salt) %>
   salt: <%= salt %>
+  activated: true
 
 mary:
   login: mary
@@ -18,6 +19,7 @@ mary:
   hashed_password: <%= User.encrypt("goodbye",salt) %>
   salt: <%= salt %>
   roles: admin
+  activated: true
 
 james:
   login: james
@@ -25,6 +27,7 @@ james:
   hashed_password: <%= User.encrypt("morning",salt) %>
   salt: <%= salt %>
   contests: contest_a
+  activated: true
 
 jack:
   login: jack
@@ -32,3 +35,4 @@ jack:
   hashed_password: <%= User.encrypt("morning",salt) %>
   salt: <%= salt %>
   contests: contest_a, contest_b
+  activated: true

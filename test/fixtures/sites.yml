@@ -1,11 +1,11 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 
-one:
-  name: MyString
+first_site:
+  name: First site
   started: false
   start_time: 2008-04-09 14:08:28
 
-two:
-  name: MyString
+second_site:
+  name: Second site
   started: false
   start_time: 2008-04-09 14:08:28

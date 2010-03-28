@@ -1,3 +1,4 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 admin:
+  name: admin
   rights: graders_right, user_admin_right, problems_right

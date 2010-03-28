@@ -154,10 +154,7 @@ class User < ActiveRecord::Base
       return false if site==nil
       return site.finished?
     elsif Configuration.indv_contest_mode?
-      time_limit = Configuration.contest_time_limit
-
-      return false if contest_stat==nil
-
+      return false if self.contest_stat(true)==nil
       return contest_time_left == 0
     else
       return false

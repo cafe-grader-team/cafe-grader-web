@@ -7,6 +7,8 @@ class Configuration < ActiveRecord::Base
 
   SYSTEM_MODE_CONF_KEY = 'system.mode'
   TEST_REQUEST_EARLY_TIMEOUT_KEY = 'contest.test_request.early_timeout'
+  MULTICONTESTS_KEY = 'system.multicontests'
+  CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
 
   cattr_accessor :cache
   cattr_accessor :config_cache
@@ -107,8 +109,7 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.multicontests?
-    g = get('system.multicontests')
-    return get('system.multicontests') == true
+    return get(MULTICONTESTS_KEY) == true
   end
 
   def self.time_limit_mode?
@@ -121,7 +122,7 @@ class Configuration < ActiveRecord::Base
   end
   
   def self.contest_time_limit
-    contest_time_str = Configuration['contest.time_limit']
+    contest_time_str = Configuration[CONTEST_TIME_LIMIT_KEY]
 
     if not defined? Configuration.contest_time_str
       Configuration.contest_time_str = nil

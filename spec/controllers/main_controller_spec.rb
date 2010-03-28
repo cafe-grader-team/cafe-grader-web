@@ -1,3 +1,5 @@
+require 'delorean'
+
 require File.dirname(__FILE__) + '/../spec_helper'
 require File.dirname(__FILE__) + '/../config_spec_helper'
 
@@ -141,4 +143,51 @@ describe MainController, "when a user loads sources and compiler messages" do
 
 end
 
+
+describe MainController, "during individual contest mode" do
+
+  integrate_views
+
+  include ConfigSpecHelperMethods
+
+  fixtures :users
+  fixtures :problems
+  fixtures :contests
+
+  before(:each) do
+    set_contest_time_limit('3:00')   # 3 hours
+    set_indv_contest_mode
+  end  
+
+  it "should allow newly login user to see problem list" do
+    john = users(:john)
+    get "list", {}, {:user_id => john.id}
+
+    response.should render_template 'main/list'
+    response.should have_text(/add/)
+    response.should have_text(/easy_problem/)
+    response.should have_text(/hard_problem/)
+  end
+
+  it "should not show 'contest over' sign before the contest ends" do
+    john = users(:john)
+    get "list", {}, {:user_id => john.id}
+
+    Delorean.time_travel_to(179.minutes.since) do
+      get "list", {}, {:user_id => john.id}
+      response.should_not have_text(/OVER/)
+    end
+  end
+
+  it "should show 'contest over' sign after the contest ends" do
+    john = users(:john)
+    get "list", {}, {:user_id => john.id}
+
+    Delorean.time_travel_to(181.minutes.since) do
+      get "list", {}, {:user_id => john.id}
+      response.should have_text(/OVER/)
+    end
+  end
+
+end
 
