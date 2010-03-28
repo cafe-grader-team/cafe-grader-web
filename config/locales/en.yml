@@ -119,6 +119,18 @@ please ignore this e-mail and inform {{admin_email}} of this mistake.
 
 Thanks!"
  
+  contest:
+    notification:
+      email_subject: "[{{contest_title_name}}] You have been upgraded to {{contest_name}}"
+      email_body: "Congratulations {{full_name}},
+
+You have advanced to contest {{contest_name}} in {{contest_title_name}}.
+
+You can now log-in and start participating in that contest.
+
+Cheers!
+-{{contest_title_name}} Admin"
+
   help:
     how_to_submit: "How to submit"
     must_specify_language: "You <b>must</b> specify the language you are using in your program header.  You can optionally specify the task you are submitting to."

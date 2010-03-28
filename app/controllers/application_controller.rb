@@ -41,6 +41,7 @@ class ApplicationController < ActionController::Base
 
     if Configuration.multicontests? 
       user = User.find(session[:user_id])
+      return true if user.admin?
       begin
         if user.contest_stat(true).forced_logout
           flash[:notice] = 'You have been automatically logged out.'

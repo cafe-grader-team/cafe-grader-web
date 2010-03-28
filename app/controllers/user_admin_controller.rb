@@ -1,5 +1,7 @@
 class UserAdminController < ApplicationController
 
+  include MailHelperMethods
+
   before_filter :admin_authorization
 
   def index
@@ -215,6 +217,10 @@ class UserAdminController < ApplicationController
           user.contest_stat.reset_timer_and_save
         end
 
+        if params[:notification_emails]
+          send_contest_update_notification_email(user, contest) 
+        end
+
         note << user.login
         users << user
       end
@@ -344,4 +350,19 @@ class UserAdminController < ApplicationController
     end
   end
 
+  def send_contest_update_notification_email(user, contest)
+    contest_title_name = Configuration['contest.name']
+    contest_name = contest.name
+    subject = t('contest.notification.email_subject', {
+                  :contest_title_name => contest_title_name,
+                  :contest_name => contest_name })
+    body = t('contest.notification.email_body', {
+               :full_name => user.full_name,
+               :contest_title_name => contest_title_name,
+               :contest_name => contest.name,
+             })
+
+    logger.info body
+    send_mail(user.email, subject, body)
+  end
 end

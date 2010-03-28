@@ -5,13 +5,20 @@
   %br/
   = text_area_tag 'login_list', nil, :rows => 23, :cols => 80
   %br/
-  You want to
-  = select(nil,"operation",[['assign users to','assign'],['add users to','add'],['remove users from','remove']])
-  contest
-  = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
-  = check_box_tag 'reset_timer'
-  Auto-reset current contest timer.
-  %br/
+  %table
+    %tr
+      %td{:valign => 'top'}
+        You want to
+        = select(nil,"operation",[['assign users to','assign'],['add users to','add'],['remove users from','remove']])
+        contest
+        = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
+        and also
+      %td
+        = check_box_tag 'reset_timer'
+        Auto-reset current contest timer.
+        %br/
+        = check_box_tag 'notification_emails'
+        Send notification email(s).
 
   = submit_tag "Perform action!", :confirm => 'Are you sure?'
 

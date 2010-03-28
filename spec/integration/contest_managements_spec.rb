@@ -22,48 +22,67 @@ describe "ContestManagements" do
   end
 
   it "should reset users' timer when their contests change" do
-    james_session = open_session
-    james_session.extend(MainSessionMethods)
+    session = open_session
+    session.extend(MainSessionMethods)
 
-    james_login_and_get_main_list(james_session)
-    james_session.response.should_not have_text(/OVER/)
+    james_login_and_get_main_list(session)
+    session.response.should_not have_text(/OVER/)
 
     Delorean.time_travel_to(190.minutes.since) do
-      james_session.get_main_list
-      james_session.response.should have_text(/OVER/)
+      session.get_main_list
+      session.response.should have_text(/OVER/)
 
-      james_session.get '/'                   # logout
-      james_session.get '/main/list'          # clearly log out
-      james_session.response.should_not render_template 'main/list'
+      session.get '/'                   # logout
+      session.get '/main/list'          # clearly log out
+      session.response.should_not render_template 'main/list'
 
       admin_change_users_contest_to("james", @contest_b, true)
 
-      james_login_and_get_main_list(james_session)
-      james_session.response.should_not have_text(/OVER/)
+      james_login_and_get_main_list(session)
+      session.response.should_not have_text(/OVER/)
     end
   end
 
   it "should force users to log out when their contests change" do
-    james_session = open_session
-    james_session.extend(MainSessionMethods)
+    session = open_session
+    session.extend(MainSessionMethods)
 
-    james_login_and_get_main_list(james_session)
-    james_session.response.should_not have_text(/OVER/)
+    james_login_and_get_main_list(session)
+    session.response.should_not have_text(/OVER/)
 
     Delorean.time_travel_to(190.minutes.since) do
-      james_session.get_main_list
-      james_session.response.should have_text(/OVER/)
+      session.get_main_list
+      session.response.should have_text(/OVER/)
 
       admin_change_users_contest_to("james", @contest_b, true)
 
-      james_session.get '/main/list'
-      james_session.response.should_not render_template 'main/list'
-      james_session.should be_redirect
+      session.get '/main/list'
+      session.response.should_not render_template 'main/list'
+      session.should be_redirect
 
       Delorean.time_travel_to(200.minutes.since) do
-        james_login_and_get_main_list(james_session)
-        james_session.response.should_not have_text(/OVER/)
+        james_login_and_get_main_list(session)
+        session.response.should_not have_text(/OVER/)
       end
+    end
+  end
+
+  it "should maintain admin logged-in sessions even when their contests change" do
+    session = open_session
+    session.extend(MainSessionMethods)
+
+    session.login('mary', 'goodbye')
+    session.get_main_list
+    session.response.should_not have_text(/OVER/)
+
+    Delorean.time_travel_to(190.minutes.since) do
+      session.get_main_list
+      session.response.should have_text(/OVER/)
+
+      admin_change_users_contest_to("mary", @contest_b, true)
+
+      session.get '/main/list'
+      session.response.should render_template 'main/list'
     end
   end
 

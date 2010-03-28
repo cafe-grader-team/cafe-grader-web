@@ -3,6 +3,8 @@ require 'net/smtp'
 
 class UsersController < ApplicationController
 
+  include MailHelperMethods
+
   before_filter :authenticate, :except => [:new, 
                                            :register, 
                                            :confirm, 
@@ -122,64 +124,35 @@ class UsersController < ApplicationController
                              :login => user.login, 
                              :activation => user.activation_key)
     home_url = url_for(:controller => 'main', :action => 'index')
-    mail = TMail::Mail.new
-    mail.to = user.email
-    mail.from = Configuration['system.online_registration.from']
-    mail.subject = "[#{contest_name}] Confirmation"
-    mail.body = t('registration.email_body', {
-                    :full_name => user.full_name,
-                    :contest_name => contest_name,
-                    :login => user.login,
-                    :password => user.password,
-                    :activation_url => activation_url,
-                    :admin_email => admin_email
-                  })
+    subject = "[#{contest_name}] Confirmation"
+    body = t('registration.email_body', {
+               :full_name => user.full_name,
+               :contest_name => contest_name,
+               :login => user.login,
+               :password => user.password,
+               :activation_url => activation_url,
+               :admin_email => admin_email
+             })
 
-    logger.info mail.body
+    logger.info body
 
-    smtp_server = Configuration['system.online_registration.smtp']
-
-    begin
-      Net::SMTP.start(smtp_server) do |smtp|
-        smtp.send_message(mail.to_s, mail.from, mail.to)
-      end
-      result = true
-    rescue
-      result = false
-    end
-
-    return result
+    send_mail(user.email, subject, body)
   end
   
   def send_new_password_email(user)
     contest_name = Configuration['contest.name']
     admin_email = Configuration['system.admin_email']
-    mail = TMail::Mail.new
-    mail.to = user.email
-    mail.from = Configuration['system.online_registration.from']
-    mail.subject = "[#{contest_name}] Password recovery"
-    mail.body = t('registration.password_retrieval.email_body', {
-                    :full_name => user.full_name,
-                    :contest_name => contest_name,
-                    :login => user.login,
-                    :password => user.password,
-                    :admin_email => admin_email
-                  })
+    subject = "[#{contest_name}] Password recovery"
+    body = t('registration.password_retrieval.email_body', {
+               :full_name => user.full_name,
+               :contest_name => contest_name,
+               :login => user.login,
+               :password => user.password,
+               :admin_email => admin_email
+             })
 
-    logger.info mail.body
-
-    smtp_server = Configuration['system.online_registration.smtp']
-
-    begin
-      Net::SMTP.start(smtp_server) do |smtp|
-        smtp.send_message(mail.to_s, mail.from, mail.to)
-      end
-      result = true
-    rescue
-      result = false
-    end
-
-    return result
+    logger.info body
+    send_mail(user.email, subject, body)
   end
   
 end
