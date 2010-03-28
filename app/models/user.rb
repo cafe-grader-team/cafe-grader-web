@@ -133,7 +133,7 @@ class User < ActiveRecord::Base
       if time_limit == nil
         return nil
       end
-      if contest_stat==nil
+      if contest_stat==nil or contest_stat.started_at==nil
         return (Time.now.gmtime + time_limit) - Time.now.gmtime
       else
         finish_time = contest_stat.started_at + time_limit
@@ -172,9 +172,9 @@ class User < ActiveRecord::Base
 
   def update_start_time
     stat = self.contest_stat
-    if stat == nil
-      stat = UserContestStat.new(:user => self,
-                                 :started_at => Time.now.gmtime)
+    if stat == nil or stat.started_at == nil
+      stat ||= UserContestStat.new(:user => self)
+      stat.started_at = Time.now.gmtime
       stat.save
     end
   end

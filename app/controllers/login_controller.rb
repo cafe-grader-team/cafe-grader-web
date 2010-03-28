@@ -10,6 +10,18 @@ class LoginController < ApplicationController
     if user = User.authenticate(params[:login], params[:password])
       session[:user_id] = user.id
       session[:admin] = user.admin?
+
+      # clear forced logout flag for multicontests contest change
+      if Configuration.multicontests?
+        contest_stat = user.contest_stat
+        if contest_stat.respond_to? :forced_logout
+          if contest_stat.forced_logout
+            contest_stat.forced_logout = false
+            contest_stat.save
+          end
+        end
+      end
+
       redirect_to :controller => 'main', :action => 'list'
     else
       flash[:notice] = 'Wrong password'

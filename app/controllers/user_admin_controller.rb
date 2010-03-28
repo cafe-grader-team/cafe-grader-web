@@ -196,7 +196,7 @@ class UserAdminController < ApplicationController
     end
 
     note = []
-    user_ids = {}
+    users = []
     lines.split("\n").each do |line|
       user = User.find_by_login(line.chomp)
       if user
@@ -210,15 +210,18 @@ class UserAdminController < ApplicationController
           user.contests = [contest]
         end
 
-        user.contest_stat.destroy if params[:reset_timer]
+        if params[:reset_timer]
+          user.contest_stat.forced_logout = true
+          user.contest_stat.reset_timer_and_save
+        end
 
         note << user.login
-        user_ids[user.id] = true
+        users << user
       end
     end
 
     if params[:reset_timer]
-      logout_users(user_ids)
+      logout_users(users)
     end
 
     flash[:notice] = 'User(s) ' + note.join(', ') + 
@@ -331,11 +334,12 @@ class UserAdminController < ApplicationController
 
   end
 
-  def logout_users(user_ids)
-    sessions = ActiveRecord::SessionStore::Session.find(:all, :conditions => ["updated_at >= ?", 60.minutes.ago])
-    sessions.each do |session|
-      if user_ids.has_key? session.data[:user_id]
-        session.destroy
+  def logout_users(users)
+    users.each do |user|
+      contest_stat = user.contest_stat(true)
+      if contest_stat and !contest_stat.forced_logout
+        contest_stat.forced_logout = true
+        contest_stat.save
       end
     end
   end

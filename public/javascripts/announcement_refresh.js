@@ -20,16 +20,17 @@ var Announcement = {
 	    method: 'get',
 	    parameters: { recent: Announcement.mostRecentId },
 	    onSuccess: function(transport) {
-		if(transport.responseText.match(/\S/)!=null) {
+		if((transport.status == 200) && 
+		   (transport.responseText.match(/\S/)!=null)) {
  		    var announcementBody = $("announcementbox-body");
 		    announcementBody.insert({ top: transport.responseText });
 		    var announcementBoxes = $$(".announcementbox");
 		    if(announcementBoxes.length!=0)
 			announcementBoxes[0].show();
+		    Announcement.registerRefreshEventTimer();
 		}
 	    }
 	});
-	Announcement.registerRefreshEventTimer();
     },
 
     registerRefreshEventTimer: function() {

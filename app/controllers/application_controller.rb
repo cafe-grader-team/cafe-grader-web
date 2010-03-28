@@ -29,16 +29,26 @@ class ApplicationController < ActionController::Base
       return false
     end
 
-    #Configuration.reload
     # check if run in single user mode
-    if (Configuration[SINGLE_USER_MODE_CONF_KEY])
+    if Configuration[SINGLE_USER_MODE_CONF_KEY]
       user = User.find(session[:user_id])
       if user==nil or (not user.admin?)
         redirect_to :controller => 'main', :action => 'login'
         return false
       end
+      return true
     end
 
+    if Configuration.multicontests? 
+      user = User.find(session[:user_id])
+      begin
+        if user.contest_stat(true).forced_logout
+          flash[:notice] = 'You have been automatically logged out.'
+          redirect_to :controller => 'main', :action => 'index'
+        end
+      rescue
+      end
+    end
     return true
   end
 

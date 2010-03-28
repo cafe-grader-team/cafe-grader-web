@@ -343,6 +343,13 @@ class MainController < ApplicationController
     if not session[:user_id]
       render :text => 'Access forbidden', :status => 403
     end
+
+    if Configuration.multicontests?
+      user = User.find(session[:user_id])
+      if user.contest_stat.forced_logout
+        render :text => 'Access forbidden', :status => 403
+      end
+    end
   end
 
 end
