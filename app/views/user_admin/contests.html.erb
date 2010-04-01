@@ -1,0 +1,65 @@
+<h1>
+  List users in <% if @contest %><%= @contest.title %>
+  <% else %>Users not in any contests<% end %>
+</h1>
+
+<div class="submitbox">
+  <%= link_to '[View all users]', :action => 'list' %>
+  <% if Configuration.multicontests? %>
+    <%= link_to '[Manage bulk users in contests]', :action => 'contest_management' %>
+    <br/>
+    View users in:
+    <% @contests.each do |contest| %>
+      <%= link_to "[#{contest.name}]", :action => 'contests', :id => contest.id %>
+    <% end %>
+    <%= link_to "[no contest]", :action => 'contests', :id => 'none' %>
+  <% end %>
+</div>
+
+<table class="info">
+  <tr class="info-head">
+    <th>Login</th>
+    <th>Full name</th>
+    <th>Email</th>
+    <th>Activated?</th>
+    <th></th>
+    <th></th>
+    <th></th>
+    <% if Configuration.multicontests? %>
+      <th>Contests</th>
+      <th>Other enabled contests</th>
+    <% end %>
+  </tr>
+  
+<% for user in @users %>
+  <tr class="info-<%= cycle("odd","even") %>">
+    <td><%=h user.login %></td>
+    <td><%=h user.full_name %></td>
+    <td><%=h user.email %></td>
+    <td><%=h user.activated %></td>
+    <td><%= link_to 'Show', :action => 'show', :id => user %></td>
+    <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>
+    <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post %></td>
+    <% if Configuration.multicontests? %>
+      <td>
+        <% user.contests.each do |contest| %>
+	  <%= contest.name %> [<%= link_to 'x', :action => 'remove_from_contest', :id => user.id, :contest_id => contest.id %>]
+        <% end %>
+      </td>
+      <td>	
+	<% @contests.each do |contest| %>
+	  <% if not user.contests.all.find {|c| c.id==contest.id } %>
+  	    <%= contest.name %> [<%= link_to '+', :action => 'add_to_contest', :id => user.id, :contest_id => contest.id %>]
+          <% end %>
+	<% end %>  
+      </td>
+    <% end %>
+  </tr>
+<% end %>
+</table>
+
+
+<br />
+
+<%= link_to 'New user', :action => 'new' %>
+<%= link_to 'New list of users', :action => 'new_list' %>

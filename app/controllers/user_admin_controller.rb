@@ -18,7 +18,7 @@ class UserAdminController < ApplicationController
   def list
     @users = User.find(:all)
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
-    @contests = Contest.all(:conditions => {:enabled => true})
+    @contests = Contest.enabled
   end
 
   def active
@@ -155,6 +155,20 @@ class UserAdminController < ApplicationController
   end
   
   # contest management
+
+  def contests
+    if params[:id]!='none'
+      @contest = Contest.find(params[:id])
+    else
+      @contest = nil
+    end
+    if @contest
+      @users = @contest.users
+    else
+      @users = User.find_users_with_no_contest
+    end
+    @contests = Contest.enabled
+  end
 
   def add_to_contest
     user = User.find(params[:id])

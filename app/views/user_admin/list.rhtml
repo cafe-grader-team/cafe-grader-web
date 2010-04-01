@@ -34,7 +34,13 @@
   <%= link_to '[Random passwords]', :action => 'random_all_passwords' %>
   <%= link_to '[View active users]', :action => 'active' %>
   <% if Configuration.multicontests? %>
+    <br/><b>Multi-contest:</b>
     <%= link_to '[Manage bulk users in contests]', :action => 'contest_management' %>
+    View users in:
+    <% @contests.each do |contest| %>
+      <%= link_to "[#{contest.name}]", :action => 'contests', :id => contest.id %>
+    <% end %>
+    <%= link_to "[no contest]", :action => 'contests', :id => 'none' %>
   <% end %>
 </div>
 
@@ -48,10 +54,6 @@
     <th></th>
     <th></th>
     <th></th>
-    <% if Configuration.multicontests? %>
-      <th>Contests</th>
-      <th>Other enabled contests</th>
-    <% end %>
   </tr>
   
 <% for user in @users %>
@@ -64,20 +66,6 @@
     <td><%= link_to 'Show', :action => 'show', :id => user %></td>
     <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>
     <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post %></td>
-    <% if Configuration.multicontests? %>
-      <td>
-        <% user.contests.each do |contest| %>
-	  <%= contest.name %> [<%= link_to 'x', :action => 'remove_from_contest', :id => user.id, :contest_id => contest.id %>]
-        <% end %>
-      </td>
-      <td>	
-	<% @contests.each do |contest| %>
-	  <% if not user.contests.all.find {|c| c.id==contest.id } %>
-  	    <%= contest.name %> [<%= link_to '+', :action => 'add_to_contest', :id => user.id, :contest_id => contest.id %>]
-          <% end %>
-	<% end %>  
-      </td>
-    <% end %>
   </tr>
 <% end %>
 </table>

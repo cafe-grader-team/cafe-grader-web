@@ -124,6 +124,12 @@ class User < ActiveRecord::Base
 
   # Contest information
 
+  def self.find_users_with_no_contest()
+    users = User.find(:all)
+    return users.find_all { |u| u.contests.length == 0 }
+  end
+
+
   def contest_time_left
     if Configuration.contest_mode?
       return nil if site==nil
