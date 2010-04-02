@@ -14,6 +14,13 @@
     <% end %>
     <%= link_to "[no contest]", :action => 'contests', :id => 'none' %>
   <% end %>
+  <br/>
+  <% form_tag :action => 'assign_from_list' do %>
+    <%= hidden_field_tag 'users_contest_id', (@contest ? @contest.id : 'none') %>
+    Assign all to 
+    <%= select("new_contest","id",Contest.all.collect {|c| [c.title, c.id]}) %>
+    <%= submit_tag "Assign", :confirm => 'Are you sure?' %>
+  <% end %>
 </div>
 
 <table class="info">
@@ -57,9 +64,3 @@
   </tr>
 <% end %>
 </table>
-
-
-<br />
-
-<%= link_to 'New user', :action => 'new' %>
-<%= link_to 'New list of users', :action => 'new_list' %>

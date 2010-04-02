@@ -157,17 +157,27 @@ class UserAdminController < ApplicationController
   # contest management
 
   def contests
-    if params[:id]!='none'
-      @contest = Contest.find(params[:id])
-    else
-      @contest = nil
-    end
-    if @contest
-      @users = @contest.users
-    else
-      @users = User.find_users_with_no_contest
-    end
+    @contest, @users = find_contest_and_user_from_contest_id(params[:id])
     @contests = Contest.enabled
+  end
+
+  def assign_from_list
+    contest_id = params[:users_contest_id]
+    org_contest, users = find_contest_and_user_from_contest_id(contest_id)
+    contest = Contest.find(params[:new_contest][:id])
+    if !contest
+      flash[:notice] = 'Error: no contest'
+      redirect_to :action => 'contests', :id =>contest_id
+    end
+
+    note = []
+    users.each do |u|
+      u.contests = [contest]
+      note << u.login
+    end
+    flash[:notice] = 'User(s) ' + note.join(', ') + 
+      " were successfully reassigned to #{contest.title}." 
+    redirect_to :action => 'contests', :id =>contest.id
   end
 
   def add_to_contest
@@ -378,5 +388,19 @@ class UserAdminController < ApplicationController
 
     logger.info body
     send_mail(user.email, subject, body)
+  end
+
+  def find_contest_and_user_from_contest_id(id)
+    if id!='none'
+      @contest = Contest.find(id)
+    else
+      @contest = nil
+    end
+    if @contest
+      @users = @contest.users
+    else
+      @users = User.find_users_with_no_contest
+    end
+    return [@contest, @users]
   end
 end
