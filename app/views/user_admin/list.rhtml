@@ -44,6 +44,7 @@
   <% end %>
 </div>
 
+Total <%= @user_count %> users | <%= will_paginate @users, :container => false %>
 <table class="info">
   <tr class="info-head">
     <% for column in User.content_columns %>
@@ -70,8 +71,7 @@
 <% end %>
 </table>
 
-
 <br />
 
-<%= link_to 'New user', :action => 'new' %>
-<%= link_to 'New list of users', :action => 'new_list' %>
+<%= link_to '[New user]', :action => 'new' %>
+<%= link_to '[New list of users]', :action => 'new_list' %>

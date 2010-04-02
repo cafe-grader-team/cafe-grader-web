@@ -16,7 +16,8 @@ class UserAdminController < ApplicationController
          :redirect_to => { :action => :list }
 
   def list
-    @users = User.find(:all)
+    @user_count = User.count
+    @users = User.paginate :page => params[:page]
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
     @contests = Contest.enabled
   end

@@ -54,6 +54,10 @@ class User < ActiveRecord::Base
   before_save :encrypt_new_password
   before_save :assign_default_site
 
+  # this is for will_paginate
+  cattr_reader :per_page
+  @@per_page = 50
+
   def self.authenticate(login, password)
     user = find_by_login(login)
     return user if user && user.authenticated?(password)
