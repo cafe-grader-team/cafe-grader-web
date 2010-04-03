@@ -44,7 +44,15 @@
   <% end %>
 </div>
 
-Total <%= @user_count %> users | <%= will_paginate @users, :container => false %>
+Total <%= @user_count %> users |
+<% if !@paginated %>
+  Display all users. 
+  <%= link_to '[show in pages]', :action => 'list', :page => '1' %>
+<% else %>
+  Display in pages.
+  <%= link_to '[display all]', :action => 'list', :page => 'all' %> |
+  <%= will_paginate @users, :container => false %>
+<% end %>
 <table class="info">
   <tr class="info-head">
     <% for column in User.content_columns %>
