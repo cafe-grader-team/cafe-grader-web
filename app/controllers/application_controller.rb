@@ -33,6 +33,7 @@ class ApplicationController < ActionController::Base
     if Configuration[SINGLE_USER_MODE_CONF_KEY]
       user = User.find(session[:user_id])
       if user==nil or (not user.admin?)
+        flash[:notice] = 'You cannot log in at this time'
         redirect_to :controller => 'main', :action => 'login'
         return false
       end
