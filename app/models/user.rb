@@ -172,7 +172,10 @@ class User < ActiveRecord::Base
   end
 
   def contest_started?
-    if Configuration.contest_mode?
+    if Configuration.indv_contest_mode?
+      stat = self.contest_stat
+      return ((stat != nil) and (stat.started_at != nil))
+    elsif Configuration.contest_mode?
       return true if site==nil
       return site.started
     else

@@ -101,6 +101,12 @@ CONFIGURATIONS =
      :key => 'system.multicontests',
      :value_type => 'boolean',
      :default_value => 'false'
+   },
+
+   {
+     :key => 'contest.confirm_indv_contest_start',
+     :value_type => 'boolean',
+     :default_value => 'false'
    }
   ]
 

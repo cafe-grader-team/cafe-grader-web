@@ -3,11 +3,15 @@ class MainController < ApplicationController
   before_filter :authenticate, :except => [:index, :login]
   before_filter :check_viewability, :except => [:index, :login]
 
-  append_before_filter :update_user_start_time, :except => [:index, :login]
+  append_before_filter :confirm_and_update_start_time, 
+                       :except => [:index, 
+                                   :login, 
+                                   :confirm_contest_start]
 
   # to prevent log in box to be shown when user logged out of the
   # system only in some tab
-  prepend_before_filter :reject_announcement_refresh_when_logged_out, :only => [:announcements]
+  prepend_before_filter :reject_announcement_refresh_when_logged_out, 
+                        :only => [:announcements]
 
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
@@ -183,6 +187,17 @@ class MainController < ApplicationController
            :locals => {:announcement_effect => true})
   end
 
+  def confirm_contest_start
+    user = User.find(session[:user_id])
+    if request.method == :post
+      user.update_start_time
+      redirect_to :action => 'list'
+    else
+      @contests = user.contests
+      @user = user
+    end
+  end
+  
   protected
 
   def prepare_announcements(recent=nil)
@@ -334,8 +349,13 @@ class MainController < ApplicationController
     }
   end
 
-  def update_user_start_time
+  def confirm_and_update_start_time
     user = User.find(session[:user_id])
+    if (Configuration.indv_contest_mode? and 
+        Configuration['contest.confirm_indv_contest_start'] and
+        !user.contest_started?)
+      redirect_to :action => 'confirm_contest_start' and return
+    end
     user.update_start_time
   end
 
