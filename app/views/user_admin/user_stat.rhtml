@@ -5,6 +5,8 @@
   <th>User</th>
   <th>Name</th>
   <th>Activated?</th>
+  <th>Logged in</th>
+  <th>Contest(s)</th>
 <% @problems.each do |p| %>
   <th><%= p.name %></th>
 <% end %>
@@ -21,6 +23,12 @@
         <td><%= sc[i].login %></td>
         <td><%= sc[i].full_name %></td>
         <td><%= sc[i].activated %></td>
+        <td>
+          <%= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no' %>
+	</td>
+        <td>
+          <%= sc[i].contests.collect {|c| c.name}.join(', ') %>
+        </td>
       <% else %>  
         <td><%= sc[i][0] %></td>
         <% total += sc[i][0] %>

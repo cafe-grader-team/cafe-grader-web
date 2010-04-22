@@ -120,7 +120,7 @@ class UserAdminController < ApplicationController
 
   def user_stat
     @problems = Problem.find_available_problems
-    @users = User.find(:all)
+    @users = User.find(:all, :include => [:contests, :contest_stat])
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
