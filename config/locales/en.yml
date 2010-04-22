@@ -49,6 +49,13 @@ en:
     src_link: "src"
     submissions_link: "submissions"
 
+    confirm_contest_start:
+      box_title: "Contest confirmation"
+      contest_list: "You will participate in contest:"
+      timer_starts_after_click: "The timer will start after you click the start button."
+      start_button: "Start!"
+      start_button_confirm: "Are you sure?"
+
   test:
     title: "Test Interface"
     intro: "You can test your submission with your own test data on the grading environment using this test interface."

@@ -1,12 +1,16 @@
 = user_title_bar(@user)
 
-%center
-  You will participate in contest:
-  - @contests.each do |contest|
-    = contest.title
-  %br
+.announcementbox
+  %span{:class => 'title'}
+    =t 'main.confirm_contest_start.box_title'
+  .announcement
+    %center
+      =t 'main.confirm_contest_start.contest_list'
+      - @contests.each do |contest|
+        = contest.title
+      %br
 
-  The timer will start after you click the start button.
+      =t 'main.confirm_contest_start.timer_starts_after_click'
 
-  - form_tag :action => 'confirm_contest_start', :method => 'post' do
-    = submit_tag 'Start!', :confirm => 'Are you sure?'
+      - form_tag :action => 'confirm_contest_start', :method => 'post' do
+        = submit_tag t('main.confirm_contest_start.start_button'), :confirm => t('main.confirm_contest_start.start_button_confirm')
