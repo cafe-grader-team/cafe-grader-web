@@ -89,7 +89,9 @@ class MainController < ApplicationController
 
   def source
     submission = Submission.find(params[:id])
-    if submission.user_id == session[:user_id]
+    if ((submission.user_id == session[:user_id]) and 
+        (submission.problem != nil) and 
+        (submission.problem.available))
       send_data(submission.source, 
 		{:filename => submission.download_filename, 
                   :type => 'text/plain'})
