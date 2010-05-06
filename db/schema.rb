@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100328123325) do
+ActiveRecord::Schema.define(:version => 20100506163112) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -20,6 +20,7 @@ ActiveRecord::Schema.define(:version => 20100328123325) do
     t.boolean  "frontpage",    :default => false
     t.boolean  "contest_only", :default => false
     t.string   "title"
+    t.string   "notes"
   end
 
   create_table "configurations", :force => true do |t|
