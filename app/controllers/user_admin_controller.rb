@@ -70,7 +70,7 @@ class UserAdminController < ApplicationController
 
         added_random_password = false
         if items.length>=3
-          password = items[2]
+          password = items[2].chomp(" ")
           user_alias = (items.length>=4) ? items[3] : login
         else
           password = random_password
