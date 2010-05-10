@@ -53,6 +53,7 @@ class User < ActiveRecord::Base
 
   before_save :encrypt_new_password
   before_save :assign_default_site
+  before_save :assign_default_contest
 
   # this is for will_paginate
   cattr_reader :per_page
@@ -267,6 +268,19 @@ class User < ActiveRecord::Base
           self.site = Site.find_by_name('default')
           if self.site==nil
             self.site = Site.find(1)  # when 'default has be renamed'
+          end
+        end
+      rescue
+      end
+    end
+
+    def assign_default_contest
+      # have to catch error when migrating (because self.site is not available).
+      begin
+        if self.contests.length == 0
+          default_contest = Contest.find_by_name(Configuration['contest.default_contest_name'])
+          if default_contest
+            self.contests = [default_contest]
           end
         end
       rescue

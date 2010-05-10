@@ -107,7 +107,15 @@ CONFIGURATIONS =
      :key => 'contest.confirm_indv_contest_start',
      :value_type => 'boolean',
      :default_value => 'false'
+   },
+
+   {
+     :key => 'contest.default_contest_name',
+     :value_type => 'string',
+     :default_value => 'none',
+     :description => "New user will be assigned to this contest automatically, if it exists.  Set to 'none' if there is no default contest."
    }
+   
   ]
 
 

@@ -54,7 +54,7 @@ class UserAdminController < ApplicationController
       redirect_to :action => 'list'
     else
       render :action => 'new'
-    end
+    end    
   end
 
   def create_from_list
