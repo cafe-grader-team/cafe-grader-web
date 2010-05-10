@@ -33,6 +33,7 @@
   <%= link_to '[View administrators]', :action => 'admin' %>
   <%= link_to '[Random passwords]', :action => 'random_all_passwords' %>
   <%= link_to '[View active users]', :action => 'active' %>
+  <%= link_to '[Mass mailing]', :action => 'mass_mailing' %>
   <% if Configuration.multicontests? %>
     <br/><b>Multi-contest:</b>
     <%= link_to '[Manage bulk users in contests]', :action => 'contest_management' %>

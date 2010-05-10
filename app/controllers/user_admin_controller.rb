@@ -12,7 +12,10 @@ class UserAdminController < ApplicationController
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, 
                                       :create, :create_from_list, 
-                                      :update ],
+                                      :update, 
+                                      :manage_contest, 
+                                      :bulk_mail 
+                                    ],
          :redirect_to => { :action => :list }
 
   def list
@@ -299,6 +302,45 @@ class UserAdminController < ApplicationController
     user.roles.delete(admin_role)
     flash[:notice] = 'User permission revoked'
     redirect_to :action => 'admin'
+  end
+
+  # mass mailing
+
+  def mass_mailing
+  end
+
+  def bulk_mail
+    lines = params[:login_list]
+    if !lines or lines.blank?
+      flash[:notice] = 'You entered an empty list.'
+      redirect_to :action => 'mass_mailing' and return
+    end
+
+    subject = params[:subject]
+    if !subject or subject.blank?
+      flash[:notice] = 'You entered an empty mail subject.'
+      redirect_to :action => 'mass_mailing' and return
+    end
+
+    body = params[:email_body]
+    if !body or body.blank?
+      flash[:notice] = 'You entered an empty mail body.'
+      redirect_to :action => 'mass_mailing' and return
+    end
+
+    note = []
+    users = []
+    lines.split("\n").each do |line|
+      user = User.find_by_login(line.chomp)
+      if user
+        send_mail(user.email, subject, body)
+        note << user.login
+      end
+    end
+    
+    flash[:notice] = 'User(s) ' + note.join(', ') + 
+      ' were successfully modified.  ' 
+    redirect_to :action => 'mass_mailing'
   end
 
   protected

@@ -1,0 +1,19 @@
+%h1 Send mass e-mails
+
+- form_tag :action => 'bulk_mail' do
+  %b List recipients' login below; one per line.
+  %br/
+  = text_area_tag 'login_list', nil, :rows => 7, :cols => 80
+  %br/
+  %b Subject:
+  = text_field_tag 'subject', '', :size => 60
+  %br/
+  %b Email body:
+  %br/
+  = text_area_tag 'email_body', nil, :rows => 11, :cols => 80
+  %br/
+
+  = submit_tag "Send mails", :confirm => 'Are you sure?'
+
+%hr/
+= link_to '[go back to index]', :action => 'index'
