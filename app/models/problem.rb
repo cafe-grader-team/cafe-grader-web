@@ -18,10 +18,11 @@ class Problem < ActiveRecord::Base
   end
 
   def self.create_from_import_form_params(params, old_problem=nil)
-    problem = old_problem || Problem.new
-    import_params = Problem.extract_params_and_check(params, problem)
+    org_problem = old_problem || Problem.new
+    import_params, problem = Problem.extract_params_and_check(params, 
+                                                              org_problem)
 
-    if not problem.valid?
+    if problem.errors.length!=0
       return problem, 'Error importing'
     end
 
@@ -57,25 +58,29 @@ class Problem < ActiveRecord::Base
 
   def self.to_i_or_default(st, default)
     if st!=''
-      st.to_i
-    else
-      default
+      result = st.to_i
     end
+    result ||= default 
+  end
+
+  def self.to_f_or_default(st, default)
+    if st!=''
+      result = st.to_f
+    end
+    result ||= default
   end
 
   def self.extract_params_and_check(params, problem)
-    time_limit = Problem.to_i_or_default(params[:time_limit],
+    time_limit = Problem.to_f_or_default(params[:time_limit],
                                          DEFAULT_TIME_LIMIT)
     memory_limit = Problem.to_i_or_default(params[:memory_limit],
                                            DEFAULT_MEMORY_LIMIT)
 
-    if time_limit==0 and time_limit_s!='0'
-      problem.errors.add_to_base('Time limit format errors.')
-    elsif time_limit<=0 or time_limit >60
+    if time_limit<=0 or time_limit >60
       problem.errors.add_to_base('Time limit out of range.')
     end
 
-    if memory_limit==0 and memory_limit_s!='0'
+    if memory_limit==0 and params[:memory_limit]!='0'
       problem.errors.add_to_base('Memory limit format errors.')
     elsif memory_limit<=0 or memory_limit >512
       problem.errors.add_to_base('Memory limit out of range.')
@@ -88,7 +93,7 @@ class Problem < ActiveRecord::Base
     file = params[:file]
 
     if problem.errors.length!=0
-      return problem
+      return nil, problem
     end
 
     problem.name = params[:name]
@@ -98,11 +103,12 @@ class Problem < ActiveRecord::Base
       problem.full_name = params[:name]
     end
 
-    return {
-      :time_limit => time_limit,
-      :memory_limit => memory_limit,
-      :file => file
-    }      
+    return [{
+              :time_limit => time_limit,
+              :memory_limit => memory_limit,
+              :file => file
+            },
+            problem]
   end
 
 end
