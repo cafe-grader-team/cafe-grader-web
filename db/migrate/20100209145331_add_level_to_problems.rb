@@ -4,6 +4,6 @@ class AddLevelToProblems < ActiveRecord::Migration
   end
 
   def self.down
-    remove_column :problems, :level, :integer
+    remove_column :problems, :level
   end
 end
