@@ -102,4 +102,4 @@ ALLOW_TEST_PAIR_IMPORT = false
 # USE_APACHE_XSENDFILE = true
 
 # Uncomment so that configuration is read only once when the server is loaded
-# Configuration.enable_caching
+# CONFIGURATION_CACHE_ENABLED = true

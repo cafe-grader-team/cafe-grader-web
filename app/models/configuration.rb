@@ -10,20 +10,16 @@ class Configuration < ActiveRecord::Base
   MULTICONTESTS_KEY = 'system.multicontests'
   CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
 
-  cattr_accessor :cache
   cattr_accessor :config_cache
   cattr_accessor :task_grading_info_cache
   cattr_accessor :contest_time_str
   cattr_accessor :contest_time
 
-  # set @@cache = true to only reload once.
-  Configuration.cache = false
-
   Configuration.config_cache = nil
   Configuration.task_grading_info_cache = nil
 
   def self.get(key)
-    if Configuration.cache
+    if Configuration.config_cached?
       if Configuration.config_cache == nil
         self.read_config
       end
@@ -43,14 +39,6 @@ class Configuration < ActiveRecord::Base
 
   def self.clear
     Configuration.config_cache = nil
-  end
-
-  def self.cache?
-    Configuration.cache
-  end
-
-  def self.enable_caching
-    Configuration.cache = true
   end
 
   #
@@ -143,6 +131,10 @@ class Configuration < ActiveRecord::Base
   end
 
   protected
+
+  def self.config_cached?
+    (defined? CONFIGURATION_CACHE_ENABLED) and (CONFIGURATION_CACHE_ENABLED)
+  end
 
   def self.convert_type(val,type)
     case type
