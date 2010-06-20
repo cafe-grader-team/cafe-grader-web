@@ -20,6 +20,8 @@
 
 require 'visitor_curl_cli'
 
+TEMP_DIR = './tmp'
+
 def show_usage
   puts <<USAGE
 using: ruby runner.rb <visitor_file> [<type> <number>] [<type> <number>] ... [options]
@@ -31,6 +33,12 @@ using: ruby runner.rb <visitor_file> [<type> <number>] [<type> <number>] ... [op
 USAGE
 end
 
+def initialize_temp_dir
+  if !FileTest.exists? TEMP_DIR
+    Dir.mkdir TEMP_DIR
+  end
+end
+
 def runner(visitor_lists, load_time=60, options={})
   visitors = []
   vcount = 0
@@ -40,7 +48,7 @@ def runner(visitor_lists, load_time=60, options={})
       c = Kernel.const_get(cname)
 
       num.times do
-        visitors[vcount] = c.new(vcount+1)
+        visitors[vcount] = c.new(vcount+1, TEMP_DIR)
         visitors[vcount].talkative = true
         vcount += 1
       end
@@ -144,5 +152,6 @@ while ARGV.length>0
   end
 end
 
+initialize_temp_dir
 runner visitor_list, load_time, {:dry_run => dry_run}
 

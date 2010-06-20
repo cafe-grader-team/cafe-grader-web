@@ -32,23 +32,24 @@ class Visitor
   end
 
   def get_cookie_fname
-    "cookies.#{@id}"
+    "#{@base_dir}/cookies.#{@id}"
   end
 
   def get_output_fname
-    "output.#{@id}"
+    "#{@base_dir}/output.#{@id}"
   end
 
   def id
     @id
   end
 
-  def initialize(id=0)
+  def initialize(id=0, base_dir='.')
     # initialize nil class variable
     self.class.base_url = "" if (self.class.base_url) == nil
     self.class.cookies_stored = false if self.class.cookies_stored == nil
 
     @id = id
+    @base_dir = base_dir
     @cookies_fname = get_cookie_fname
     @output_fname = get_output_fname
     @statistics = Array.new

@@ -1,0 +1,7 @@
+How to call
+===========
+
+Load test for front page:
+
+  ruby runner.rb common_visitors.rb FirstPageViewer 10 -t 10
+
