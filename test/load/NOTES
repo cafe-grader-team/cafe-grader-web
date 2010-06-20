@@ -3,5 +3,5 @@ How to call
 
 Load test for front page:
 
-  ruby runner.rb common_visitors.rb FirstPageViewer 10 -t 10
+  ruby runner.rb common_visitors.rb FirstPageViewer 20 -t 10 --site_url=http://localhost/cafe
 

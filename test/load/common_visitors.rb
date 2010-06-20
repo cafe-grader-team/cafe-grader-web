@@ -1,7 +1,8 @@
-visitor "FirstPageViewer" do
+if !defined? VISITOR_OPTION_LIST
+  VISITOR_OPTION_LIST = {}
+end
+
+visitor "FirstPageViewer", VISITOR_OPTION_LIST do
   stores_cookies
-
-  site_url "http://localhost:3000"
-
   get "/"
 end

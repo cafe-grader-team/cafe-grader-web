@@ -130,13 +130,13 @@ if ARGV.length==0
 end
 
 visitor_file = ARGV.shift
-require visitor_file
 
 load_time = 60
 dry_run = false
 
-#build visitor list
+#build visitor/option list
 visitor_list = {}
+visitor_option_list = {}
 while ARGV.length>0
   key = ARGV.shift
 
@@ -147,10 +147,20 @@ while ARGV.length>0
     num = ARGV.shift.to_i
     load_time = num
   else
-    num = ARGV.shift.to_i
-    visitor_list[key] = num
+    if key =~ /--(\w+)=(.*)/
+      # options
+      lm = Regexp.last_match
+      visitor_option_list[lm[1]] = lm[2]
+    else
+      # new visitor
+      num = ARGV.shift.to_i
+      visitor_list[key] = num
+    end
   end
 end
+
+VISITOR_OPTION_LIST = visitor_option_list
+require visitor_file
 
 initialize_temp_dir
 runner visitor_list, load_time, {:dry_run => dry_run}

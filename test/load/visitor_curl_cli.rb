@@ -120,6 +120,12 @@ class Visitor
       :options => options }
   end
 
+  def self.process_options(options)
+    if options.has_key? "site_url"
+      self.base_url = options["site_url"]
+    end
+  end
+
   def substitute_id(st)
     return st if !(st.is_a? String)
     st.gsub(/(()|(\$))\$\{id\}/) do |s|
@@ -270,7 +276,7 @@ class Visitor
   end
 end
 
-def visitor(cname,&blk)
+def visitor(cname,options={},&blk)
   c = Class.new(Visitor)
   begin
     Object.const_set(cname,c)
@@ -281,5 +287,6 @@ Type name should be capitalized and follow Ruby constant naming rule.
 ERROR
     exit(0)
   end
+  c.process_options(options)
   c.instance_eval(&blk)
 end
