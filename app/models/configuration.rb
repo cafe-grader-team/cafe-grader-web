@@ -18,6 +18,10 @@ class Configuration < ActiveRecord::Base
   Configuration.config_cache = nil
   Configuration.task_grading_info_cache = nil
 
+  def self.config_cached?
+    (defined? CONFIGURATION_CACHE_ENABLED) and (CONFIGURATION_CACHE_ENABLED)
+  end
+
   def self.get(key)
     if Configuration.config_cached?
       if Configuration.config_cache == nil
@@ -131,10 +135,6 @@ class Configuration < ActiveRecord::Base
   end
 
   protected
-
-  def self.config_cached?
-    (defined? CONFIGURATION_CACHE_ENABLED) and (CONFIGURATION_CACHE_ENABLED)
-  end
 
   def self.convert_type(val,type)
     case type
