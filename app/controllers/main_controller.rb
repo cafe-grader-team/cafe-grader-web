@@ -358,7 +358,9 @@ class MainController < ApplicationController
         !user.contest_started?)
       redirect_to :action => 'confirm_contest_start' and return
     end
-    user.update_start_time
+    if not Configuration.analysis_mode?
+      user.update_start_time
+    end
   end
 
   def reject_announcement_refresh_when_logged_out
