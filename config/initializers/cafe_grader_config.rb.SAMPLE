@@ -1,0 +1,30 @@
+# If you want to manage graders through web interface, set the path to
+# the grader directory below.  This dir is where raw, ev, ev-exam,
+# scripts reside.  All grader scripts will be in
+# #{GRADER_ROOT_DIR}/scripts.  
+GRADER_ROOT_DIR = ''
+
+# These are where inputs and outputs of test requests are stored
+TEST_REQUEST_INPUT_FILE_DIR = Rails.root + '/data/test_request/input'
+TEST_REQUEST_OUTPUT_FILE_DIR = Rails.root + '/data/test_request/output'
+
+# To use ANALYSIS MODE, provide the testcases/testruns breakdown,
+# and the directory of the grading result (usually in judge's dir).
+TASK_GRADING_INFO_FILENAME = Rails.root + '/config/tasks.yml'
+
+# TODO: change this to where results are kept.
+GRADING_RESULT_DIR = 'RESULT-DIR'
+
+# Change this to allow importing testdata into database as test-pairs.
+# This is mainly for Code Jom contest.
+ALLOW_TEST_PAIR_IMPORT = false
+
+# Uncomment so that the system validates user e-mails
+# VALIDATE_USER_EMAILS = true
+
+# Uncomment so that Apache X-Sendfile is used when delivering files
+# (e.g., in /tasks/view).
+# USE_APACHE_XSENDFILE = true
+
+# Uncomment so that configuration is read only once when the server is loaded
+# CONFIGURATION_CACHE_ENABLED = true

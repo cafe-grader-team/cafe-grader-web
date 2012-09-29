@@ -51,7 +51,7 @@ class Problem < ActiveRecord::Base
   end
 
   def self.download_file_basedir
-    return "#{RAILS_ROOT}/data/tasks"
+    return "#{Rails.root}/data/tasks"
   end
   
   protected

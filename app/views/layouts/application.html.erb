@@ -1,22 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-  <title><%= Configuration['contest.name'] %></title>
-  <%= stylesheet_link_tag 'application' %>
-  <%= yield :head %>
+  <title>CafeGraderWeb</title>
+  <%= stylesheet_link_tag    "application", :media => "all" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
 </head>
 <body>
 
-<div class="userbar">
-<%= user_header %>
-</div>
-
-<%= content_tag(:p,flash[:notice],:style => "color:green") if flash[:notice]!=nil %>
-
-<%= yield  %>
+<%= yield %>
 
 </body>
 </html>
