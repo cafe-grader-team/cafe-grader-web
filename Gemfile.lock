@@ -45,6 +45,7 @@ GEM
     haml (3.1.7)
     hike (1.2.1)
     i18n (0.6.1)
+    in_place_editing (1.2.0)
     journey (1.0.4)
     json (1.7.5)
     mail (2.4.4)
@@ -125,6 +126,7 @@ DEPENDENCIES
   coffee-rails (~> 3.2.1)
   dynamic_form
   haml
+  in_place_editing
   mysql2
   prototype-rails
   rails (= 3.2.8)
