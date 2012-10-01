@@ -1,3 +1,11 @@
+GIT
+  remote: git://github.com/sikachu/verification.git
+  revision: 344ad2535da3dc9671872628ff9c79d6f59af9da
+  specs:
+    verification (1.0.3)
+      actionpack (>= 3.0.0, < 3.3.0)
+      activesupport (>= 3.0.0, < 3.3.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -136,4 +144,5 @@ DEPENDENCIES
   test-unit
   tmail
   uglifier (>= 1.0.3)
+  verification!
   will_paginate (~> 3.0.0)

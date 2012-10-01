@@ -43,6 +43,7 @@ gem "test-unit"
 gem 'will_paginate', '~> 3.0.0'
 gem 'dynamic_form'
 gem 'in_place_editing'
+gem 'verification', :git => 'git://github.com/sikachu/verification.git'
 
 group :test, :development do
   gem "rspec-rails", "~> 2.0"
