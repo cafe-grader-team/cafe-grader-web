@@ -3,7 +3,7 @@ require 'net/smtp'
 
 class UsersController < ApplicationController
 
-  include MailHelperMethods
+  #include MailHelperMethods
 
   before_filter :authenticate, :except => [:new, 
                                            :register, 
@@ -23,7 +23,7 @@ class UsersController < ApplicationController
   #in_place_edit_for :user, :email_for_editing
 
   def index
-    if !Configuration['system.user_setting_enabled']
+    if !GraderConfiguration['system.user_setting_enabled']
       redirect_to :controller => 'main', :action => 'list'
     else
       @user = User.find(session[:user_id])
@@ -59,7 +59,7 @@ class UsersController < ApplicationController
       if send_confirmation_email(@user)
         render :action => 'new_splash', :layout => 'empty'
       else
-        @admin_email = Configuration['system.admin_email']
+        @admin_email = GraderConfiguration['system.admin_email']
         render :action => 'email_error', :layout => 'empty'
       end
     else
@@ -112,14 +112,14 @@ class UsersController < ApplicationController
   protected
 
   def verify_online_registration
-    if !Configuration['system.online_registration']
+    if !GraderConfiguration['system.online_registration']
       redirect_to :controller => 'main', :action => 'login'
     end
   end
 
   def send_confirmation_email(user)
-    contest_name = Configuration['contest.name']
-    admin_email = Configuration['system.admin_email']
+    contest_name = GraderConfiguration['contest.name']
+    admin_email = GraderConfiguration['system.admin_email']
     activation_url = url_for(:action => 'confirm', 
                              :login => user.login, 
                              :activation => user.activation_key)
@@ -140,8 +140,8 @@ class UsersController < ApplicationController
   end
   
   def send_new_password_email(user)
-    contest_name = Configuration['contest.name']
-    admin_email = Configuration['system.admin_email']
+    contest_name = GraderConfiguration['contest.name']
+    admin_email = GraderConfiguration['system.admin_email']
     subject = "[#{contest_name}] Password recovery"
     body = t('registration.password_retrieval.email_body', {
                :full_name => user.full_name,

@@ -1,4 +1,4 @@
-%b= Configuration['ui.front.welcome_message']
+%b= GraderConfiguration['ui.front.welcome_message']
 %br/
 
 - if !@hidelogin
@@ -25,7 +25,7 @@
       = submit_tag t('login.login_submit')
 %br/
 
-- if Configuration['system.online_registration']
+- if GraderConfiguration['system.online_registration']
   =t 'login.participation'
   %b
     = "#{t 'login.please'} "

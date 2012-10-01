@@ -32,7 +32,7 @@
     <th>Date added</th>
     <th>Avail?</th>
     <th>Test?</th>
-    <% if Configuration.multicontests? %>
+    <% if GraderConfiguration.multicontests? %>
       <th>Contests</th>
     <% end %>
   </tr>
@@ -47,7 +47,7 @@
     <td id="prob-<%= problem.id %>-avail"><%= problem.available %></td>
     <td><%= problem.test_allowed %></td>
 
-    <% if Configuration.multicontests? %>
+    <% if GraderConfiguration.multicontests? %>
       <td>
         <%= problem.contests.collect { |c| c.name }.join(', ') %>
       </td>

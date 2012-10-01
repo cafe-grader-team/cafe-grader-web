@@ -24,19 +24,19 @@ module ApplicationHelper
     append_to menu_items, "[#{I18n.t 'menu.main'}]", 'main', 'list'
     append_to menu_items, "[#{I18n.t 'menu.messages'}]", 'messages', 'list'
 
-    if (user!=nil) and (Configuration.show_tasks_to?(user))
+    if (user!=nil) and (GraderConfiguration.show_tasks_to?(user))
       append_to menu_items, "[#{I18n.t 'menu.tasks'}]", 'tasks', 'list'
       append_to menu_items, "[#{I18n.t 'menu.submissions'}]", 'main', 'submission'
       append_to menu_items, "[#{I18n.t 'menu.test'}]", 'test', 'index'
     end
     append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'
 
-    if Configuration['system.user_setting_enabled']
+    if GraderConfiguration['system.user_setting_enabled']
       append_to menu_items, "[#{I18n.t 'menu.settings'}]", 'users', 'index'
     end
     append_to menu_items, "[#{I18n.t 'menu.log_out'}]", 'main', 'login'
 
-    menu_items
+    menu_items.html_safe
   end
 
   def append_to(option,label, controller, action)
@@ -76,7 +76,7 @@ module ApplicationHelper
 
     #
     # if the contest is over
-    if Configuration.time_limit_mode?
+    if GraderConfiguration.time_limit_mode?
       if user.contest_finished?
         header = <<CONTEST_OVER
 <tr><td colspan="2" align="center">
@@ -94,7 +94,7 @@ CONTEST_OVER
     
     #
     # if the contest is in the anaysis mode
-    if Configuration.analysis_mode?
+    if GraderConfiguration.analysis_mode?
       header = <<ANALYSISMODE
 <tr><td colspan="2" align="center">
 <span class="contest-over-msg">ANALYSIS MODE</span>
@@ -102,11 +102,11 @@ CONTEST_OVER
 ANALYSISMODE
     end
 
-    contest_name = Configuration['contest.name']
+    contest_name = GraderConfiguration['contest.name']
 
     #
     # build real title bar
-    <<TITLEBAR
+    result = <<TITLEBAR
 <div class="title">
 <table>
 #{header}
@@ -122,6 +122,7 @@ ANALYSISMODE
 </table>
 </div>
 TITLEBAR
+    result.html_safe
   end
 
 end

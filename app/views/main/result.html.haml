@@ -11,7 +11,7 @@
   %br/
   = "Graded at #{format_short_time(@submission.graded_at)} "
   %br/
-  = "score: #{(@submission.points*100/@submission.problem.full_score).to_i} " if Configuration['ui.show_score']
+  = "score: #{(@submission.points*100/@submission.problem.full_score).to_i} " if GraderConfiguration['ui.show_score']
   = " ["
   %tt
     = @submission.grader_comment

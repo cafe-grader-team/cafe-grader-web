@@ -1,15 +1,17 @@
-# This file is auto-generated from the current state of the database. Instead of editing this file, 
-# please use the migrations feature of Active Record to incrementally modify your database, and
-# then regenerate this schema definition.
+# encoding: UTF-8
+# This file is auto-generated from the current state of the database. Instead
+# of editing this file, please use the migrations feature of Active Record to
+# incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your database schema. If you need
-# to create the application database on another system, you should be using db:schema:load, not running
-# all the migrations from scratch. The latter is a flawed and unsustainable approach (the more migrations
+# Note that this schema.rb definition is the authoritative source for your
+# database schema. If you need to create the application database on another
+# system, you should be using db:schema:load, not running all the migrations
+# from scratch. The latter is a flawed and unsustainable approach (the more migrations
 # you'll amass, the slower it'll run and the greater likelihood for issues).
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100506163112) do
+ActiveRecord::Schema.define(:version => 20121001033508) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -23,13 +25,12 @@ ActiveRecord::Schema.define(:version => 20100506163112) do
     t.string   "notes"
   end
 
-  create_table "configurations", :force => true do |t|
-    t.string   "key"
-    t.string   "value_type"
-    t.string   "value"
+  create_table "codejom_statuses", :force => true do |t|
+    t.integer  "user_id"
+    t.boolean  "alive"
+    t.integer  "num_problems_passed"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.text     "description"
   end
 
   create_table "contests", :force => true do |t|
@@ -61,6 +62,15 @@ ActiveRecord::Schema.define(:version => 20100506163112) do
     t.boolean  "markdowned"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "grader_configurations", :force => true do |t|
+    t.string   "key"
+    t.string   "value_type"
+    t.string   "value"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.text     "description"
   end
 
   create_table "grader_processes", :force => true do |t|
@@ -95,16 +105,18 @@ ActiveRecord::Schema.define(:version => 20100506163112) do
   end
 
   create_table "problems", :force => true do |t|
-    t.string  "name",                 :limit => 30
-    t.string  "full_name"
-    t.integer "full_score"
-    t.date    "date_added"
-    t.boolean "available"
-    t.string  "url"
-    t.integer "description_id"
-    t.boolean "test_allowed"
-    t.boolean "output_only"
-    t.string  "description_filename"
+    t.string   "name",                 :limit => 30
+    t.string   "full_name"
+    t.integer  "full_score"
+    t.date     "date_added"
+    t.boolean  "available"
+    t.string   "url"
+    t.integer  "description_id"
+    t.boolean  "test_allowed"
+    t.boolean  "output_only"
+    t.integer  "level",                              :default => 0
+    t.datetime "updated_at"
+    t.string   "description_filename"
   end
 
   create_table "rights", :force => true do |t|
@@ -150,6 +162,15 @@ ActiveRecord::Schema.define(:version => 20100506163112) do
     t.string   "password"
   end
 
+  create_table "submission_statuses", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.boolean  "passed"
+    t.integer  "submission_count"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "submissions", :force => true do |t|
     t.integer  "user_id"
     t.integer  "problem_id"
@@ -176,12 +197,24 @@ ActiveRecord::Schema.define(:version => 20100506163112) do
     t.datetime "updated_at"
   end
 
+  create_table "test_pair_assignments", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "problem_id"
+    t.integer  "test_pair_id"
+    t.integer  "test_pair_number"
+    t.integer  "request_number"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.boolean  "submitted"
+  end
+
   create_table "test_pairs", :force => true do |t|
     t.integer  "problem_id"
     t.text     "input",      :limit => 16777215
     t.text     "solution",   :limit => 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "number"
   end
 
   create_table "test_requests", :force => true do |t|
@@ -215,17 +248,24 @@ ActiveRecord::Schema.define(:version => 20100506163112) do
   end
 
   create_table "users", :force => true do |t|
-    t.string   "login",           :limit => 50
+    t.string   "login",               :limit => 50
     t.string   "full_name"
     t.string   "hashed_password"
-    t.string   "salt",            :limit => 5
+    t.string   "salt",                :limit => 5
     t.string   "alias"
     t.string   "email"
     t.integer  "site_id"
     t.integer  "country_id"
-    t.boolean  "activated",                     :default => false
+    t.boolean  "activated",                         :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "member1_full_name"
+    t.string   "member2_full_name"
+    t.string   "member3_full_name"
+    t.boolean  "high_school"
+    t.string   "member1_school_name"
+    t.string   "member2_school_name"
+    t.string   "member3_school_name"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

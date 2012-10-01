@@ -136,11 +136,11 @@ class User < ActiveRecord::Base
 
 
   def contest_time_left
-    if Configuration.contest_mode?
+    if GraderConfiguration.contest_mode?
       return nil if site==nil
       return site.time_left
-    elsif Configuration.indv_contest_mode?
-      time_limit = Configuration.contest_time_limit
+    elsif GraderConfiguration.indv_contest_mode?
+      time_limit = GraderConfiguration.contest_time_limit
       if time_limit == nil
         return nil
       end
@@ -161,10 +161,10 @@ class User < ActiveRecord::Base
   end
 
   def contest_finished?
-    if Configuration.contest_mode?
+    if GraderConfiguration.contest_mode?
       return false if site==nil
       return site.finished?
-    elsif Configuration.indv_contest_mode?
+    elsif GraderConfiguration.indv_contest_mode?
       return false if self.contest_stat(true)==nil
       return contest_time_left == 0
     else
@@ -173,10 +173,10 @@ class User < ActiveRecord::Base
   end
 
   def contest_started?
-    if Configuration.indv_contest_mode?
+    if GraderConfiguration.indv_contest_mode?
       stat = self.contest_stat
       return ((stat != nil) and (stat.started_at != nil))
-    elsif Configuration.contest_mode?
+    elsif GraderConfiguration.contest_mode?
       return true if site==nil
       return site.started
     else
@@ -228,7 +228,7 @@ class User < ActiveRecord::Base
   end
 
   def available_problems
-    if not Configuration.multicontests?
+    if not GraderConfiguration.multicontests?
       return Problem.find_available_problems
     else
       contest_problems = []
@@ -247,7 +247,7 @@ class User < ActiveRecord::Base
   end
 
   def can_view_problem?(problem)
-    if not Configuration.multicontests?
+    if not GraderConfiguration.multicontests?
       return problem.available
     else
       return problem_in_user_contests? problem
@@ -278,7 +278,7 @@ class User < ActiveRecord::Base
       # have to catch error when migrating (because self.site is not available).
       begin
         if self.contests.length == 0
-          default_contest = Contest.find_by_name(Configuration['contest.default_contest_name'])
+          default_contest = Contest.find_by_name(GraderConfiguration['contest.default_contest_name'])
           if default_contest
             self.contests = [default_contest]
           end

@@ -66,7 +66,7 @@ class TasksController < ApplicationController
 
   def check_viewability
     @user = User.find(session[:user_id])
-    if @user==nil or !Configuration.show_tasks_to?(@user)
+    if @user==nil or !GraderConfiguration.show_tasks_to?(@user)
       redirect_to :controller => 'main', :action => 'list'
       return false
     end

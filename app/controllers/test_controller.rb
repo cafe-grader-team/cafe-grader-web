@@ -24,14 +24,14 @@ class TestController < ApplicationController
       render :action => 'index' and return
     end
 
-    if Configuration.time_limit_mode?
+    if GraderConfiguration.time_limit_mode?
       if @user.contest_finished?
         @submitted_test_request.errors.add_to_base('Contest is over.')
         prepare_index_information
         render :action => 'index' and return
       end
 
-      if !Configuration.allow_test_request(@user)
+      if !GraderConfiguration.allow_test_request(@user)
         prepare_index_information
         flash[:notice] = 'Test request is not allowed during the last 30 minutes'
         redirect_to :action => 'index' and return
@@ -107,10 +107,10 @@ class TestController < ApplicationController
 
   def check_viewability
     user = User.find(session[:user_id])
-    if !Configuration.show_tasks_to?(user)
+    if !GraderConfiguration.show_tasks_to?(user)
       redirect_to :controller => 'main', :action => 'list'
     end
-    if (!Configuration.show_submitbox_to?(user)) and (action_name=='submit')
+    if (!GraderConfiguration.show_submitbox_to?(user)) and (action_name=='submit')
       redirect_to :controller => 'test', :action => 'index'
     end
   end

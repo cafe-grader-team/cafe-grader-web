@@ -10,7 +10,7 @@ class Site < ActiveRecord::Base
   end
 
   def time_left
-    contest_time = Configuration.contest_time_limit
+    contest_time = GraderConfiguration.contest_time_limit
 
     return nil if contest_time == nil
 
@@ -35,7 +35,7 @@ class Site < ActiveRecord::Base
       return false
     end
 
-    contest_time = Configuration.contest_time_limit
+    contest_time = GraderConfiguration.contest_time_limit
     if contest_time!=nil
       return Time.now.gmtime > (self.start_time + contest_time)
     else

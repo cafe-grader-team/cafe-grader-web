@@ -123,8 +123,8 @@ def create_configuration_key(key,
                              value_type, 
                              default_value, 
                              description='')
-  conf = (Configuration.find_by_key(key) || 
-          Configuration.new(:key => key,
+  conf = (GraderConfiguration.find_by_key(key) || 
+          GraderConfiguration.new(:key => key,
                             :value_type => value_type,
                             :value => default_value))
   conf.description = description

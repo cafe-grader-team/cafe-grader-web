@@ -2,13 +2,13 @@
 
 .announcementbox
   %span{:class => 'title'}
-    =t 'help.how_to_submit'
+    =raw t 'help.how_to_submit'
   .announcement
     %p
-      =t 'help.must_specify_language'
+      =raw t 'help.must_specify_language'
 
     %p
-      =t 'help.list_available_language'
+      =raw t 'help.list_available_language'
 
     %table{:border => '1'}
       %tr
@@ -16,18 +16,18 @@
         %th{:width => '150px'} C++
         %th{:width => '150px'} Pascal
       %tr
-        %td= "<tt>/*<br/>LANG: C<br/>*/</tt>"
-        %td= "<tt>/*<br/>LANG: C++<br/>*/</tt>"
-        %td= "<tt>{<br/>LANG: Pascal<br/>}</tt>"
+        %td=raw "<tt>/*<br/>LANG: C<br/>*/</tt>"
+        %td=raw "<tt>/*<br/>LANG: C++<br/>*/</tt>"
+        %td=raw "<tt>{<br/>LANG: Pascal<br/>}</tt>"
 
     %p
-      =t 'help.accept_only_language_specified'
+      =raw t 'help.accept_only_language_specified'
 
     %p
-      =t 'help.specifying_task'
+      =raw t 'help.specifying_task'
 
     %p 
-      =t 'help.example_cpp'
+      =raw t 'help.example_cpp'
 
     %table{:border => '1'}
       %tr
@@ -35,7 +35,7 @@
           %tt <tt>/*<br/>LANG: C++<br/>TASK: mobiles<br/>*/</tt>
     
     %p
-      =t 'help.example_pas'
+      =raw t 'help.example_pas'
  
     %table{:border => '1'}
       %tr
@@ -43,5 +43,5 @@
           %tt <tt>{<br/>LANG: Pascal<br/>TASK: mobiles<br/>}</tt>
     
     %p
-      = (t('help.ask_questions_at_messages',:message_link_name => (t 'menu.messages'),:url => url_for(:controller => 'messages', :action => 'list')))
+      = raw(t('help.ask_questions_at_messages',:message_link_name => (t 'menu.messages'),:url => url_for(:controller => 'messages', :action => 'list')))
 

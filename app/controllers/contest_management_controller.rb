@@ -7,7 +7,7 @@ class ContestManagementController < ApplicationController
   end
 
   def user_stat
-    if not Configuration.indv_contest_mode?
+    if not GraderConfiguration.indv_contest_mode?
       redirect_to :action => 'index' and return
     end
 
@@ -27,7 +27,7 @@ class ContestManagementController < ApplicationController
   end
 
   def clear_all_stat
-    if not Configuration.indv_contest_mode?
+    if not GraderConfiguration.indv_contest_mode?
       redirect_to :action => 'index' and return
     end
 
@@ -38,7 +38,7 @@ class ContestManagementController < ApplicationController
 
   def change_contest_mode
     if ['standard', 'contest', 'indv-contest'].include? params[:id]
-      config = Configuration.find_by_key('system.mode')
+      config = GraderConfiguration.find_by_key('system.mode')
       config.value = params[:id]
       config.save
     else

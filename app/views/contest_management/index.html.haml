@@ -11,9 +11,9 @@
 
 .infobox
   %b Web interface mode:
-  - if (not Configuration.contest_mode?) and (not Configuration.indv_contest_mode?)
+  - if (not GraderConfiguration.contest_mode?) and (not GraderConfiguration.indv_contest_mode?)
     standard mode
-  - elsif Configuration.contest_mode?
+  - elsif GraderConfiguration.contest_mode?
     normal contest mode.
   - else
     individual contest mode.
@@ -24,7 +24,7 @@
   = "[#{link_to 'contest', :action => 'change_contest_mode', :id => 'contest'}]"
   = "[#{link_to 'individual contest', :action => 'change_contest_mode', :id => 'indv-contest'}]"
 
-- if Configuration.indv_contest_mode?
+- if GraderConfiguration.indv_contest_mode?
   = render :partial => 'indv_contest_mode_index'
 
 %br/

@@ -17,7 +17,7 @@
         &nbsp;&nbsp;&nbsp;
         = submit_tag 'Change', :name => 'change_date_added'
 
-      - if Configuration.multicontests?
+      - if GraderConfiguration.multicontests?
         %li
           Add to 
           = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
@@ -29,7 +29,7 @@
       %th Name
       %th Full name
       %th Date added
-      - if Configuration.multicontests?
+      - if GraderConfiguration.multicontests?
         %th Contests
 
     - for problem in @problems
@@ -38,7 +38,7 @@
         %td= problem.name
         %td= problem.full_name
         %td= problem.date_added
-        - if Configuration.multicontests?
+        - if GraderConfiguration.multicontests?
           %td
             - problem.contests.each do |contest|
               = "(#{contest.name} [#{link_to 'x', :action => 'remove_contest', :id => problem.id, :contest_id => contest.id }])"

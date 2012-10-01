@@ -4,7 +4,7 @@
 
 <div class="test-desc">
   <%=t 'test.intro' %><br/>
-  <% if Configuration['contest.test_request.early_timeout'] %>
+  <% if GraderConfiguration['contest.test_request.early_timeout'] %>
     <%=t 'test.disabled_at_end_announcement' %>
   <% end %>
 </div>
@@ -37,7 +37,7 @@ function updateSubmissionList() {
 }
 </script>
 
-<% if Configuration.show_submitbox_to?(@user) and Configuration.allow_test_request(@user) %>
+<% if GraderConfiguration.show_submitbox_to?(@user) and GraderConfiguration.allow_test_request(@user) %>
   <div class="submitbox">
   <%= error_messages_for 'submitted_test_request' %>
   <% form_for :test_request, nil, 

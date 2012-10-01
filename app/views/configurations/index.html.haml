@@ -20,7 +20,7 @@
         = in_place_editor_field :configuration, :value, {}, :rows=>1
       %td= conf.description
 
-- if Configuration.config_cached?
+- if GraderConfiguration.config_cached?
   %br/
   Your config is saved, but it does not automatically take effect.
   %br/

@@ -12,7 +12,7 @@ class LoginController < ApplicationController
       session[:admin] = user.admin?
 
       # clear forced logout flag for multicontests contest change
-      if Configuration.multicontests?
+      if GraderConfiguration.multicontests?
         contest_stat = user.contest_stat
         if contest_stat.respond_to? :forced_logout
           if contest_stat.forced_logout

@@ -38,7 +38,7 @@ class MainController < ApplicationController
     # explicitly specify /login
     #
     # logger.info "PATH: #{request.path}"
-    # if Configuration['system.single_user_mode'] and 
+    # if GraderConfiguration['system.single_user_mode'] and 
     #     request.path!='/main/login'
     #   @hidelogin = true
     # end
@@ -67,7 +67,7 @@ class MainController < ApplicationController
     end
     @submission.submitted_at = Time.new.gmtime
 
-    if Configuration.time_limit_mode? and user.contest_finished?
+    if GraderConfiguration.time_limit_mode? and user.contest_finished?
       @submission.errors.add_to_base "The contest is over."
       prepare_list_information
       render :action => 'list' and return
@@ -129,7 +129,7 @@ class MainController < ApplicationController
   end
 
   def result
-    if !Configuration.show_grading_result
+    if !GraderConfiguration.show_grading_result
       redirect_to :action => 'list' and return
     end
     @user = User.find(session[:user_id])
@@ -142,7 +142,7 @@ class MainController < ApplicationController
   end
 
   def load_output
-    if !Configuration.show_grading_result or params[:num]==nil
+    if !GraderConfiguration.show_grading_result or params[:num]==nil
       redirect_to :action => 'list' and return
     end
     @user = User.find(session[:user_id])
@@ -203,7 +203,7 @@ class MainController < ApplicationController
   protected
 
   def prepare_announcements(recent=nil)
-    if Configuration.show_tasks_to?(@user)
+    if GraderConfiguration.show_tasks_to?(@user)
       @announcements = Announcement.find_published(true)
     else
       @announcements = Announcement.find_published
@@ -216,7 +216,7 @@ class MainController < ApplicationController
 
   def prepare_list_information
     @user = User.find(session[:user_id])
-    if not Configuration.multicontests?
+    if not GraderConfiguration.multicontests?
       @problems = @user.available_problems
     else
       @contest_problems = @user.available_problems_group_by_contests
@@ -236,15 +236,15 @@ class MainController < ApplicationController
 
   def check_viewability
     @user = User.find(session[:user_id])
-    if (!Configuration.show_tasks_to?(@user)) and
+    if (!GraderConfiguration.show_tasks_to?(@user)) and
         ((action_name=='submission') or (action_name=='submit'))
       redirect_to :action => 'list' and return
     end
   end
 
   def prepare_grading_result(submission)
-    if Configuration.task_grading_info.has_key? submission.problem.name
-      grading_info = Configuration.task_grading_info[submission.problem.name]
+    if GraderConfiguration.task_grading_info.has_key? submission.problem.name
+      grading_info = GraderConfiguration.task_grading_info[submission.problem.name]
     else
       # guess task info from problem.full_score
       cases = submission.problem.full_score / 10
@@ -353,12 +353,12 @@ class MainController < ApplicationController
 
   def confirm_and_update_start_time
     user = User.find(session[:user_id])
-    if (Configuration.indv_contest_mode? and 
-        Configuration['contest.confirm_indv_contest_start'] and
+    if (GraderConfiguration.indv_contest_mode? and 
+        GraderConfiguration['contest.confirm_indv_contest_start'] and
         !user.contest_started?)
       redirect_to :action => 'confirm_contest_start' and return
     end
-    if not Configuration.analysis_mode?
+    if not GraderConfiguration.analysis_mode?
       user.update_start_time
     end
   end
@@ -368,7 +368,7 @@ class MainController < ApplicationController
       render :text => 'Access forbidden', :status => 403
     end
 
-    if Configuration.multicontests?
+    if GraderConfiguration.multicontests?
       user = User.find(session[:user_id])
       if user.contest_stat.forced_logout
         render :text => 'Access forbidden', :status => 403

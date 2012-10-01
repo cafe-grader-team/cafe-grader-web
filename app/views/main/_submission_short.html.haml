@@ -8,14 +8,14 @@
   - else
     = t 'main.graded_at'
     = "#{format_short_time(submission.graded_at.localtime)}, " 
-    - if Configuration['ui.show_score']
+    - if GraderConfiguration['ui.show_score']
       = t 'main.score'
       = "#{(submission.points*100/submission.problem.full_score).to_i} "
     = " [" 
     %tt
       = submission.grader_comment
     = "]"
-    - if Configuration.show_grading_result
+    - if GraderConfiguration.show_grading_result
       = " | "
       = link_to '[detailed result]', :action => 'result', :id => submission.id
     = " | "

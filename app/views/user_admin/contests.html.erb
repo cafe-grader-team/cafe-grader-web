@@ -5,7 +5,7 @@
 
 <div class="submitbox">
   <%= link_to '[View all users]', :action => 'list' %>
-  <% if Configuration.multicontests? %>
+  <% if GraderConfiguration.multicontests? %>
     <%= link_to '[Manage bulk users in contests]', :action => 'contest_management' %>
     <br/>
     View users in:
@@ -32,7 +32,7 @@
     <th></th>
     <th></th>
     <th></th>
-    <% if Configuration.multicontests? %>
+    <% if GraderConfiguration.multicontests? %>
       <th>Contests</th>
       <th>Other enabled contests</th>
     <% end %>
@@ -47,7 +47,7 @@
     <td><%= link_to 'Show', :action => 'show', :id => user %></td>
     <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>
     <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post %></td>
-    <% if Configuration.multicontests? %>
+    <% if GraderConfiguration.multicontests? %>
       <td>
         <% user.contests.each do |contest| %>
 	  <%= contest.name %> [<%= link_to 'x', :action => 'remove_from_contest', :id => user.id, :contest_id => contest.id %>]

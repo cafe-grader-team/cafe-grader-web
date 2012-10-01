@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
     end
 
     # check if run in single user mode
-    if Configuration[SINGLE_USER_MODE_CONF_KEY]
+    if GraderConfiguration[SINGLE_USER_MODE_CONF_KEY]
       user = User.find(session[:user_id])
       if user==nil or (not user.admin?)
         flash[:notice] = 'You cannot log in at this time'
@@ -38,7 +38,7 @@ class ApplicationController < ActionController::Base
       return true
     end
 
-    if Configuration.multicontests? 
+    if GraderConfiguration.multicontests? 
       user = User.find(session[:user_id])
       return true if user.admin?
       begin

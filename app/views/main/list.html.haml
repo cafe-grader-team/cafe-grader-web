@@ -10,7 +10,7 @@
   #announcementbox-body
     = render :partial => 'announcement', :collection => @announcements
 
-- if Configuration.show_submitbox_to?(@user)
+- if GraderConfiguration.show_submitbox_to?(@user)
   .submitbox
     = error_messages_for 'submission'
     = render :partial => 'submission_box'
@@ -18,11 +18,11 @@
 
 %hr/
 
-- if (Configuration.contest_mode?) and (@user.site!=nil) and (@user.site.started!=true)
+- if (GraderConfiguration.contest_mode?) and (@user.site!=nil) and (@user.site.started!=true)
   %p=t 'main.start_soon'
 
-- if Configuration.show_tasks_to?(@user)
-  - if not Configuration.multicontests?
+- if GraderConfiguration.show_tasks_to?(@user)
+  - if not GraderConfiguration.multicontests?
     %table.info
       %tr.info-head
         %th

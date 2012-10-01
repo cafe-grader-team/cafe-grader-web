@@ -1,13 +1,8 @@
 class UserAdminController < ApplicationController
 
-  include MailHelperMethods
+  #include MailHelperMethods
 
   before_filter :admin_authorization
-
-  def index
-    list
-    render :action => 'list'
-  end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
   verify :method => :post, :only => [ :destroy, 
@@ -17,6 +12,11 @@ class UserAdminController < ApplicationController
                                       :bulk_mail 
                                     ],
          :redirect_to => { :action => :list }
+
+  def index
+    list
+    render :action => 'list'
+  end
 
   def list
     @user_count = User.count
@@ -424,7 +424,7 @@ class UserAdminController < ApplicationController
   end
 
   def send_contest_update_notification_email(user, contest)
-    contest_title_name = Configuration['contest.name']
+    contest_title_name = GraderConfiguration['contest.name']
     contest_name = contest.name
     subject = t('contest.notification.email_subject', {
                   :contest_title_name => contest_title_name,

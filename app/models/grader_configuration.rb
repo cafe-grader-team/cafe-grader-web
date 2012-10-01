@@ -3,7 +3,7 @@ require 'yaml'
 #
 # This class also contains various login of the system.
 #
-class Configuration < ActiveRecord::Base
+class GraderConfiguration < ActiveRecord::Base
 
   SYSTEM_MODE_CONF_KEY = 'system.mode'
   TEST_REQUEST_EARLY_TIMEOUT_KEY = 'contest.test_request.early_timeout'
@@ -15,21 +15,21 @@ class Configuration < ActiveRecord::Base
   cattr_accessor :contest_time_str
   cattr_accessor :contest_time
 
-  Configuration.config_cache = nil
-  Configuration.task_grading_info_cache = nil
+  GraderConfiguration.config_cache = nil
+  GraderConfiguration.task_grading_info_cache = nil
 
   def self.config_cached?
     (defined? CONFIGURATION_CACHE_ENABLED) and (CONFIGURATION_CACHE_ENABLED)
   end
 
   def self.get(key)
-    if Configuration.config_cached?
-      if Configuration.config_cache == nil
+    if GraderConfiguration.config_cached?
+      if GraderConfiguration.config_cache == nil
         self.read_config
       end
-      return Configuration.config_cache[key]
+      return GraderConfiguration.config_cache[key]
     else
-      return Configuration.read_one_key(key)
+      return GraderConfiguration.read_one_key(key)
     end
   end
 
@@ -42,7 +42,7 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.clear
-    Configuration.config_cache = nil
+    GraderConfiguration.config_cache = nil
   end
 
   #
@@ -82,10 +82,10 @@ class Configuration < ActiveRecord::Base
   end
 
   def self.task_grading_info
-    if Configuration.task_grading_info_cache==nil
+    if GraderConfiguration.task_grading_info_cache==nil
       read_grading_info
     end
-    return Configuration.task_grading_info_cache
+    return GraderConfiguration.task_grading_info_cache
   end
   
   def self.standard_mode?
@@ -114,24 +114,24 @@ class Configuration < ActiveRecord::Base
   end
   
   def self.contest_time_limit
-    contest_time_str = Configuration[CONTEST_TIME_LIMIT_KEY]
+    contest_time_str = GraderConfiguration[CONTEST_TIME_LIMIT_KEY]
 
-    if not defined? Configuration.contest_time_str
-      Configuration.contest_time_str = nil
+    if not defined? GraderConfiguration.contest_time_str
+      GraderConfiguration.contest_time_str = nil
     end
 
-    if Configuration.contest_time_str != contest_time_str
-      Configuration.contest_time_str = contest_time_str
+    if GraderConfiguration.contest_time_str != contest_time_str
+      GraderConfiguration.contest_time_str = contest_time_str
       if tmatch = /(\d+):(\d+)/.match(contest_time_str)
         h = tmatch[1].to_i
         m = tmatch[2].to_i
         
-        Configuration.contest_time = h.hour + m.minute
+        GraderConfiguration.contest_time = h.hour + m.minute
       else
-        Configuration.contest_time = nil
+        GraderConfiguration.contest_time = nil
       end
     end  
-    return Configuration.contest_time
+    return GraderConfiguration.contest_time
   end
 
   protected
@@ -150,18 +150,18 @@ class Configuration < ActiveRecord::Base
   end    
 
   def self.read_config
-    Configuration.config_cache = {}
-    Configuration.find(:all).each do |conf|
+    GraderConfiguration.config_cache = {}
+    GraderConfiguration.find(:all).each do |conf|
       key = conf.key
       val = conf.value
-      Configuration.config_cache[key] = Configuration.convert_type(val,conf.value_type)
+      GraderConfiguration.config_cache[key] = GraderConfiguration.convert_type(val,conf.value_type)
     end
   end
 
   def self.read_one_key(key)
-    conf = Configuration.find_by_key(key)
+    conf = GraderConfiguration.find_by_key(key)
     if conf
-      return Configuration.convert_type(conf.value,conf.value_type)
+      return GraderConfiguration.convert_type(conf.value,conf.value_type)
     else
       return nil
     end
@@ -169,7 +169,7 @@ class Configuration < ActiveRecord::Base
 
   def self.read_grading_info
     f = File.open(TASK_GRADING_INFO_FILENAME)
-    Configuration.task_grading_info_cache = YAML.load(f)
+    GraderConfiguration.task_grading_info_cache = YAML.load(f)
     f.close
   end
   

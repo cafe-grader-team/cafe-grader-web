@@ -8,12 +8,12 @@ class ConfigurationsController < ApplicationController
   in_place_edit_for :configuration, :value
 
   def index
-    @configurations = Configuration.find(:all,
+    @configurations = GraderConfiguration.find(:all,
                                          :order => '`key`')
   end
 
   def reload
-    Configuration.reload
+    GraderConfiguration.reload
     redirect_to :action => 'index'
   end
 
