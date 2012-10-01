@@ -14,7 +14,7 @@
         (4) **INVALID QUESTION**, and
         (5) **NO COMMENT**.
 
-= form_for 'message', nil, :url => { :action => 'create'} do |f|
+= form_for 'message', :url => { :action => 'create'} do |f|
   %p 
     %b New clarification request
     = submit_tag "Post"

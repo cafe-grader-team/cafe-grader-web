@@ -38,7 +38,7 @@ gem 'prototype-rails'
 
 gem "haml"
 gem "tmail"
-gem "rdiscount", :require => "rdiscount"
+gem "rdiscount"
 gem "test-unit"
 gem 'will_paginate', '~> 3.0.0'
 gem 'dynamic_form'

@@ -125,4 +125,9 @@ TITLEBAR
     result.html_safe
   end
 
+  def markdown(text)
+    markdown = RDiscount.new(text)
+    markdown.to_html.html_safe
+  end
+
 end

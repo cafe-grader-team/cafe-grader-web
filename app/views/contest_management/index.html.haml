@@ -7,7 +7,7 @@
     = "There are #{@num_contests} contests running."
   - else
     %b Single contest:
-  = "[#{link_to 'Add/remove contests', :controller => 'contests', :action => 'index'}]"
+  =raw "[#{link_to 'Add/remove contests', :controller => 'contests', :action => 'index'}]"
 
 .infobox
   %b Web interface mode:
@@ -20,9 +20,9 @@
 
   %br/
   Change mode to:
-  = "[#{link_to 'standard', :action => 'change_contest_mode', :id => 'standard'}]"
-  = "[#{link_to 'contest', :action => 'change_contest_mode', :id => 'contest'}]"
-  = "[#{link_to 'individual contest', :action => 'change_contest_mode', :id => 'indv-contest'}]"
+  =raw "[#{link_to 'standard', :action => 'change_contest_mode', :id => 'standard'}]"
+  =raw "[#{link_to 'contest', :action => 'change_contest_mode', :id => 'contest'}]"
+  =raw "[#{link_to 'individual contest', :action => 'change_contest_mode', :id => 'indv-contest'}]"
 
 - if GraderConfiguration.indv_contest_mode?
   = render :partial => 'indv_contest_mode_index'

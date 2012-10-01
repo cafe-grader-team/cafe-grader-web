@@ -1,6 +1,5 @@
 <% content_for :head do %>
   <%= stylesheet_link_tag 'problems' %>
-  <%= javascript_include_tag :defaults %>
 <% end %>
 
 <h1>Listing problems</h1>
@@ -53,7 +52,7 @@
       </td>
     <% end %>
 
-    <td><%= link_to_remote '[Toggle]', :url => {:action => 'toggle', :id => problem.id } %></td>
+    <td><%= link_to '[Toggle]', {:action => 'toggle', :id => problem.id }, :remote => true %></td>
     <td><%= link_to '[Stat]', :action => 'stat', :id => problem.id %></td>
     <td><%= link_to '[Show]', :action => 'show', :id => problem %></td>
     <td><%= link_to '[Edit]', :action => 'edit', :id => problem %></td>
