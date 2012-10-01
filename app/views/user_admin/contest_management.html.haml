@@ -1,6 +1,6 @@
 %h1 Bulk edit users in contests
 
-- form_tag :action => 'manage_contest' do
+= form_tag :action => 'manage_contest' do
   List users' login below; one per line.
   %br/
   = text_area_tag 'login_list', nil, :rows => 23, :cols => 80

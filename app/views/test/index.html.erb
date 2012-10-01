@@ -40,7 +40,7 @@ function updateSubmissionList() {
 <% if GraderConfiguration.show_submitbox_to?(@user) and GraderConfiguration.allow_test_request(@user) %>
   <div class="submitbox">
   <%= error_messages_for 'submitted_test_request' %>
-  <% form_for :test_request, nil, 
+  <%= form_for :test_request, nil, 
               :url => { :action => 'submit'}, 
               :html => { :multipart => true } do |f| %>
     <table>

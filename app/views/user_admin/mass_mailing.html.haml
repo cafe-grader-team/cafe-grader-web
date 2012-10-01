@@ -1,6 +1,6 @@
 %h1 Send mass e-mails
 
-- form_tag :action => 'bulk_mail' do
+= form_tag :action => 'bulk_mail' do
   %b List recipients' login below; one per line.
   %br/
   = text_area_tag 'login_list', nil, :rows => 7, :cols => 80

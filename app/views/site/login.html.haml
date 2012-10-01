@@ -15,7 +15,7 @@
   %h2 For Site Administrator.
 
   - if @default_site
-    - form_for :login, nil, :url => {:controller => 'login', :action => 'site_login'} do |f|
+    = form_for :login, nil, :url => {:controller => 'login', :action => 'site_login'} do |f|
       %b Log in for default site.
       = f.hidden_field :site_id, :value => @default_site.id
       %br/
@@ -25,7 +25,7 @@
  
   - else
     Please select your country and site and login.
-    - form_for :login, nil, :url => {:controller => 'login', :action => 'site_login'} do |f|
+    = form_for :login, nil, :url => {:controller => 'login', :action => 'site_login'} do |f|
       Country:
       = select :site_country, :id, @country_select_with_all, {}, {:onchange => "updateSiteList();", :onclick => "updateSiteList();" }
       Site: 

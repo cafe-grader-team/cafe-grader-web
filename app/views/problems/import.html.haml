@@ -9,7 +9,7 @@
 - if @problem and @problem.errors
   =error_messages_for 'problem'
 
-- form_tag({:action => 'do_import'}, :multipart => true)  do
+= form_tag({:action => 'do_import'}, :multipart => true)  do
   .submitbox
     %table
       %tr

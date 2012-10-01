@@ -58,7 +58,8 @@ class MainController < ApplicationController
   def submit
     user = User.find(session[:user_id])
 
-    @submission = Submission.new(params[:submission])
+    @submission = Submission.new
+    @submission.problem_id = params[:submission][:problem_id]
     @submission.user = user
     @submission.language_id = 0
     if (params['file']) and (params['file']!='')

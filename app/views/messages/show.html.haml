@@ -6,7 +6,7 @@
   .body= simple_format(@message.body)
 
 %h3 Your reply:
-- form_for 'r_message', nil, :url => { :action => 'reply'} do |f|
+= form_for 'r_message', nil, :url => { :action => 'reply'} do |f|
   = f.text_area :body, :rows => 5, :cols => 100
   = f.hidden_field :receiver_id, {:value => @message.sender_id }
   = f.hidden_field :replying_message_id, {:value => @message.id }

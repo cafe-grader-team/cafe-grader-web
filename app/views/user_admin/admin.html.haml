@@ -16,7 +16,7 @@
           = link_to '[revoke]', :action => 'revoke_admin', :id => user.id
 %hr
 
-- form_tag :action => 'grant_admin' do
+= form_tag :action => 'grant_admin' do
   Grant admin permission to:
   = text_field_tag 'login'
   = submit_tag 'Grant'

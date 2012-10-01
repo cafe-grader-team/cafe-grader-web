@@ -24,7 +24,7 @@
   %tr
     %th.uinfo Password
     %td.uinfo
-      - form_tag :action => 'chg_passwd', :method => 'post' do
+      = form_tag :action => 'chg_passwd', :method => 'post' do
         %table
           %tr
             %td= password_field_tag 'passwd'
