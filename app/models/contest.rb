@@ -3,6 +3,6 @@ class Contest < ActiveRecord::Base
   has_and_belongs_to_many :users
   has_and_belongs_to_many :problems
 
-  named_scope :enabled, :conditions => {:enabled => true}
+  scope :enabled, :conditions => {:enabled => true}
 
 end

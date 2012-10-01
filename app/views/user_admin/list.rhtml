@@ -2,7 +2,7 @@
 
 <div class="submitbox">
   <b>Quick add</b>
-  <% form_tag :action => 'create' do %>
+  <%= form_tag :action => 'create' do %>
     <table border="0">
       <tr>
 	<td><label for="user_login">Login</label></td>
@@ -23,7 +23,7 @@
   <% end %>
   <br/>
   <b>Import from site management</b>
-  <% form_tag({:action => 'import'}, :multipart => true) do %>
+  <%= form_tag({:action => 'import'}, :multipart => true) do %>
     File: <%= file_field_tag 'file' %> <%= submit_tag 'Import' %>
   <% end %>
   <br/>

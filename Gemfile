@@ -41,3 +41,7 @@ gem "tmail"
 gem "rdiscount", :require => "rdiscount"
 gem "test-unit"
 gem 'will_paginate', '~> 3.0.0'
+
+group :test, :development do
+  gem "rspec-rails", "~> 2.0"
+end

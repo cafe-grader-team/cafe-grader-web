@@ -2,7 +2,7 @@
 
 <%= error_messages_for :announcement %>
 
-<% form_for(@announcement) do |f| %>
+<%= form_for(@announcement) do |f| %>
   <p>
     <b>Title</b><br />
     <%= f.text_field :title %>

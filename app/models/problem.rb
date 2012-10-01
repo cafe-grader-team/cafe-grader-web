@@ -8,7 +8,7 @@ class Problem < ActiveRecord::Base
   validates_format_of :name, :with => /^\w+$/
   validates_presence_of :full_name
 
-  named_scope :available, :conditions => {:available => true}
+  scope :available, :conditions => {:available => true}
 
   DEFAULT_TIME_LIMIT = 1
   DEFAULT_MEMORY_LIMIT = 32

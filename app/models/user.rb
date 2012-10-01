@@ -23,7 +23,7 @@ class User < ActiveRecord::Base
 
   has_and_belongs_to_many :contests, :uniq => true, :order => 'name'
 
-  named_scope :activated_users, :conditions => {:activated => true}
+  scope :activated_users, :conditions => {:activated => true}
 
   validates_presence_of :login
   validates_uniqueness_of :login

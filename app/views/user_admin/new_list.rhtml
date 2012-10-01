@@ -1,6 +1,6 @@
 <h1>Adding list of users</h1>
 
-<% form_tag :action => 'create_from_list' do %>
+<%= form_tag :action => 'create_from_list' do %>
 <%= submit_tag 'create users' %><br/>
 List of user information in this format: <tt>user_id,name(,passwd(,alias))</tt><br/>
 Note that <tt>passwd</tt> and <tt>alias</tt> is optional.<br/>
