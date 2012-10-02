@@ -72,27 +72,27 @@ en:
     email_guide: "Please make sure that your e-mail is correct.<br/>You'll need to verify your account by email."
     register: "Register"
 
-    email_body: "Hello {{full_name}},
+    email_body: "Hello %{full_name},
 
-You have registered for {{contest_name}}
+You have registered for %{contest_name}
 
-Your login is: {{login}}
+Your login is: %{login}
 
-Your password is: {{password}}
+Your password is: %{password}
 
 Please follow the link:
 
-{{activation_url}}
+%{activation_url}
 
 to activate your user account.
 
 If you did not register, please ignore this e-mail 
-and report this event to {{admin_email}}.
+and report this event to %{admin_email}.
 
 Thanks!"
 
     email_sent: "We have sent a confimation message to your e-mail.  (Please also check the Junk mail box."
-    email_verify_at: "Please check at {{email}} and confirm."
+    email_verify_at: "Please check at %{email} and confirm."
 
     activation_sucessful_title: "User activated"
     account_activated: "Your account has been activated."
@@ -104,7 +104,7 @@ Thanks!"
       email:
         title: "Errors in sending registration confirmation"
         expl: "<h2>Your user account has been created, but the system cannot send you the confirmation e-mail.</h2>
-Maybe there's a problem in the configuration.  Please report the admin at {{email}}.<br/>Thank you!"
+Maybe there's a problem in the configuration.  Please report the admin at %{email}.<br/>Thank you!"
       activation:
         email_exists: "A user with this E-mail exists."
         invalid: "Your activation code is invalid.  Please check again."
@@ -114,29 +114,29 @@ Maybe there's a problem in the configuration.  Please report the admin at {{emai
       instructions: "Please enter the e-mail address that you used to register."
       button_label: "Request new password"
       no_email: "No user with that e-mail address."
-      email_body: "Hello {{full_name}},
+      email_body: "Hello %{full_name},
 
-You have requested for new password for {{contest_name}}.  We have generated it for you:
+You have requested for new password for %{contest_name}.  We have generated it for you:
 
-user name: {{login}}
-password: {{password}}
+user name: %{login}
+password: %{password}
 
 If you didn't ask for new password or you're not the person who registered,
-please ignore this e-mail and inform {{admin_email}} of this mistake.
+please ignore this e-mail and inform %{admin_email} of this mistake.
 
 Thanks!"
  
   contest:
     notification:
-      email_subject: "[{{contest_title_name}}] You have been upgraded to {{contest_name}}"
-      email_body: "Congratulations {{full_name}},
+      email_subject: "[%{contest_title_name}] You have been upgraded to %{contest_name}"
+      email_body: "Congratulations %{full_name},
 
-You have advanced to contest {{contest_name}} in {{contest_title_name}}.
+You have advanced to contest %{contest_name} in %{contest_title_name}.
 
 You can now log-in and start participating in that contest.
 
 Cheers!
--{{contest_title_name}} Admin"
+-%{contest_title_name} Admin"
 
   help:
     how_to_submit: "How to submit"
@@ -146,7 +146,7 @@ Cheers!
     specifying_task: "Optionally, you can also specify the task with <tt>TASK:</tt> <i>taskname</i>.  On the first page, the taskname for each task is shown in parentheses."
     example_cpp: "For example, suppose you are using <tt>C++</tt> to write task <b>mobiles</b>, you put the following on top of your source code."
     example_pas: "If you are using <tt>Pascal</tt> to write the same task, you'll use"
-    ask_questions_at_messages: "If you have any problems, you can ask at [<a href=\"{{url}}\">{{message_link_name}}</a>]."
+    ask_questions_at_messages: "If you have any problems, you can ask at [<a href=\"%{url}\">%{message_link_name}</a>]."
 
   activerecord:
     attributes:
