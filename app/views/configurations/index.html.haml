@@ -7,14 +7,14 @@
     %th Value
     %th Description
   - @configurations.each do |conf|
-    - @configuration = conf
+    - @grader_configuration = conf
     %tr{:class => cycle("info-odd", "info-even")}
       %td
-        = in_place_editor_field :configuration, :key, {}, :rows=>1
+        = in_place_editor_field :grader_configuration, :key, {}, :rows=>1
       %td
-        = in_place_editor_field :configuration, :value_type, {}, :rows=>1
+        = in_place_editor_field :grader_configuration, :value_type, {}, :rows=>1
       %td
-        = in_place_editor_field :configuration, :value, {}, :rows=>1
+        = in_place_editor_field :grader_configuration, :value, {}, :rows=>1
       %td= conf.description
 
 - if GraderConfiguration.config_cached?
