@@ -37,7 +37,7 @@ gem 'prototype-rails'
 # gem 'debugger'
 
 gem "haml"
-gem "tmail"
+gem "mail"
 gem "rdiscount"
 gem "test-unit"
 gem 'will_paginate', '~> 3.0.0'

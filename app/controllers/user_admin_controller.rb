@@ -1,7 +1,5 @@
 class UserAdminController < ApplicationController
 
-  #include MailHelperMethods
-
   before_filter :admin_authorization
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -316,24 +314,31 @@ class UserAdminController < ApplicationController
       redirect_to :action => 'mass_mailing' and return
     end
 
-    subject = params[:subject]
-    if !subject or subject.blank?
+    mail_subject = params[:subject]
+    if !mail_subject or mail_subject.blank?
       flash[:notice] = 'You entered an empty mail subject.'
       redirect_to :action => 'mass_mailing' and return
     end
-
-    body = params[:email_body]
-    if !body or body.blank?
+    
+    mail_body = params[:email_body]
+    if !mail_body or mail_body.blank?
       flash[:notice] = 'You entered an empty mail body.'
       redirect_to :action => 'mass_mailing' and return
     end
+
+    admin_email = GraderConfiguration['system.admin_email']
 
     note = []
     users = []
     lines.split("\n").each do |line|
       user = User.find_by_login(line.chomp)
       if user
-        send_mail(user.email, subject, body)
+        Mail.deliver do
+          from admin_email
+          to user.email
+          subject mail_subject
+          body mail_body
+        end
         note << user.login
       end
     end
@@ -426,17 +431,24 @@ class UserAdminController < ApplicationController
   def send_contest_update_notification_email(user, contest)
     contest_title_name = GraderConfiguration['contest.name']
     contest_name = contest.name
-    subject = t('contest.notification.email_subject', {
-                  :contest_title_name => contest_title_name,
-                  :contest_name => contest_name })
-    body = t('contest.notification.email_body', {
-               :full_name => user.full_name,
-               :contest_title_name => contest_title_name,
-               :contest_name => contest.name,
-             })
+    mail_subject = t('contest.notification.email_subject', {
+                       :contest_title_name => contest_title_name,
+                       :contest_name => contest_name })
+    mail_body = t('contest.notification.email_body', {
+                    :full_name => user.full_name,
+                    :contest_title_name => contest_title_name,
+                    :contest_name => contest.name,
+                  })
 
-    logger.info body
-    send_mail(user.email, subject, body)
+    admin_email = GraderConfiguration['system.admin_email']
+
+    logger.info mail_body
+    Mail.deliver do
+      from admin_email
+      to user.email
+      subject mail_subject
+      body mail_body
+    end
   end
 
   def find_contest_and_user_from_contest_id(id)
