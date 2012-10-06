@@ -1,35 +1,29 @@
 module MailHelperMethods
 
-  def send_mail(to, subject, body)
-    mail = TMail::Mail.new
-    mail.to = to
-    mail.from = Configuration['system.online_registration.from']
-    mail.subject = subject
-    mail.body = body
-
-    smtp_server = Configuration['system.online_registration.smtp']
+  def send_mail(mail_to, mail_subject, mail_body)
+    mail_from = GraderConfiguration['system.online_registration.from']
+    smtp_server = GraderConfiguration['system.online_registration.smtp']
 
     if ['fake', 'debug'].include? smtp_server
       puts "-------------------------
-To: #{mail.to}
-From: #{mail.from}
-Subject: #{mail.subject}
-#{mail.body}
+To: #{mail_to}
+From: #{mail_from}
+Subject: #{mail_subject}
+#{mail_body}
 --------------------------
 "
       return true
     end
 
-    begin
-      Net::SMTP.start(smtp_server) do |smtp|
-        smtp.send_message(mail.to_s, mail.from, mail.to)
-      end
-      result = true
-    rescue
-      result = false
+    mail = Mail.new do
+      from mail_from
+      to mail_to
+      subject mail_subject
+      body mail_body
     end
 
-    result
+    mail.delivery_settings = { :address => smtp_server }
+    mail.deliver
   end
 
 end

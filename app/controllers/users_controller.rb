@@ -2,6 +2,8 @@ require 'net/smtp'
 
 class UsersController < ApplicationController
 
+  include MailHelperMethods
+
   before_filter :authenticate, :except => [:new, 
                                            :register, 
                                            :confirm, 
@@ -116,7 +118,6 @@ class UsersController < ApplicationController
 
   def send_confirmation_email(user)
     contest_name = GraderConfiguration['contest.name']
-    admin_email = GraderConfiguration['system.admin_email']
     activation_url = url_for(:action => 'confirm', 
                              :login => user.login, 
                              :activation => user.activation_key)
@@ -133,17 +134,11 @@ class UsersController < ApplicationController
 
     logger.info mail_body
 
-    Mail.deliver do
-      from admin_email
-      to user.email
-      subject mail_subject
-      body mail_body
-    end
+    send_mail(user.email, mail_subject, mail_body)
   end
   
   def send_new_password_email(user)
     contest_name = GraderConfiguration['contest.name']
-    admin_email = GraderConfiguration['system.admin_email']
     mail_subject = "[#{contest_name}] Password recovery"
     mail_body = t('registration.password_retrieval.email_body', {
                     :full_name => user.full_name,
@@ -155,12 +150,7 @@ class UsersController < ApplicationController
 
     logger.info mail_body
 
-    Mail.deliver do
-      from admin_email
-      to user.email
-      subject mail_subject
-      body mail_body
-    end
+    send_mail(user.email, mail_subject, mail_body)
   end
   
 end

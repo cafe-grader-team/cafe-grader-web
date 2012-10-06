@@ -1,5 +1,7 @@
 class UserAdminController < ApplicationController
 
+  include MailHelperMethods
+
   before_filter :admin_authorization
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -326,19 +328,12 @@ class UserAdminController < ApplicationController
       redirect_to :action => 'mass_mailing' and return
     end
 
-    admin_email = GraderConfiguration['system.admin_email']
-
     note = []
     users = []
     lines.split("\n").each do |line|
       user = User.find_by_login(line.chomp)
       if user
-        Mail.deliver do
-          from admin_email
-          to user.email
-          subject mail_subject
-          body mail_body
-        end
+        send_mail(user.email, mail_subject, mail_body)
         note << user.login
       end
     end
@@ -440,15 +435,8 @@ class UserAdminController < ApplicationController
                     :contest_name => contest.name,
                   })
 
-    admin_email = GraderConfiguration['system.admin_email']
-
     logger.info mail_body
-    Mail.deliver do
-      from admin_email
-      to user.email
-      subject mail_subject
-      body mail_body
-    end
+    send_mail(user.email, mail_subject, mail_body)
   end
 
   def find_contest_and_user_from_contest_id(id)
