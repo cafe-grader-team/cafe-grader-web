@@ -22,7 +22,7 @@ class Problem < ActiveRecord::Base
     import_params, problem = Problem.extract_params_and_check(params, 
                                                               org_problem)
 
-    if problem.errors.length!=0
+    if !problem.errors.empty?
       return problem, 'Error importing'
     end
 
@@ -92,7 +92,7 @@ class Problem < ActiveRecord::Base
 
     file = params[:file]
 
-    if problem.errors.length!=0
+    if !problem.errors.empty?
       return nil, problem
     end
 

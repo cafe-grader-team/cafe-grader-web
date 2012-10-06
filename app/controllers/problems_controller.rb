@@ -160,7 +160,7 @@ class ProblemsController < ApplicationController
     @problem, import_log = Problem.create_from_import_form_params(params,
                                                                   old_problem)
 
-    if @problem.errors.length != 0
+    if !@problem.errors.empty?
       render :action => 'import' and return
     end
 
