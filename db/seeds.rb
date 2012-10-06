@@ -176,7 +176,7 @@ def seed_root
   
   class << root
     public :encrypt_new_password
-    def valid?
+    def valid?(context=nil)
       true
     end
   end
