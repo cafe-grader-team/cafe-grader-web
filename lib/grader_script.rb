@@ -24,7 +24,7 @@ module GraderScript
   end
 
   def self.stop_graders(pids)
-    pid_str = (pids.map { |process| process.pid.to_a }).join ' '
+    pid_str = (pids.map { |process| process.pid.to_s }).join ' '
     GraderScript.call_grader "stop #{pid_str}"
   end
 
