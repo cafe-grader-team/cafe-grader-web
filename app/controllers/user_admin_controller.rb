@@ -153,7 +153,7 @@ class UserAdminController < ApplicationController
     @prefix = params[:prefix] || ''
     @non_admin_users = User.find_non_admin_with_prefix(@prefix)
     @changed = false
-    if request.request_method == :post
+    if request.request_method == 'POST'
       @non_admin_users.each do |user|
         password = random_password
         user.password = password
