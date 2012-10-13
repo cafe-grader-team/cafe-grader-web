@@ -19,7 +19,7 @@ class TestController < ApplicationController
 
     @submitted_test_request = TestRequest.new_from_form_params(@user,params[:test_request])
 
-    if @submitted_test_request.errors.length != 0
+    if ! @submitted_test_request.errors.empty?
       prepare_index_information
       render :action => 'index' and return
     end

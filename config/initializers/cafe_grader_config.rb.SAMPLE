@@ -5,12 +5,12 @@
 GRADER_ROOT_DIR = ''
 
 # These are where inputs and outputs of test requests are stored
-TEST_REQUEST_INPUT_FILE_DIR = Rails.root + '/data/test_request/input'
-TEST_REQUEST_OUTPUT_FILE_DIR = Rails.root + '/data/test_request/output'
+TEST_REQUEST_INPUT_FILE_DIR = (Rails.root + 'data/test_request/input').to_s
+TEST_REQUEST_OUTPUT_FILE_DIR = (Rails.root + 'data/test_request/output').to_s
 
 # To use ANALYSIS MODE, provide the testcases/testruns breakdown,
 # and the directory of the grading result (usually in judge's dir).
-TASK_GRADING_INFO_FILENAME = Rails.root + '/config/tasks.yml'
+TASK_GRADING_INFO_FILENAME = Rails.root + 'config/tasks.yml'
 
 # TODO: change this to where results are kept.
 GRADING_RESULT_DIR = 'RESULT-DIR'
