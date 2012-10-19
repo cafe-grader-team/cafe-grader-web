@@ -18,5 +18,5 @@
 %div{:style => "border: 1px solid black; background: lightgrey"}
   - if @submission.source
     %pre
-      =h truncate(@submission.source,10240)
+      =h truncate @submission.source, :length => 10240
 
