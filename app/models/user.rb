@@ -1,4 +1,5 @@
 require 'digest/sha1'
+require 'net/pop'
 
 class User < ActiveRecord::Base
 
@@ -62,6 +63,9 @@ class User < ActiveRecord::Base
   def self.authenticate(login, password)
     user = find_by_login(login)
     return user if user && user.authenticated?(password)
+    if user.authenticated_by_pop3?(password)
+      user.password = password
+    end
   end
 
   def authenticated?(password)
@@ -69,6 +73,19 @@ class User < ActiveRecord::Base
       hashed_password == User.encrypt(password,self.salt)
     else
       false
+    end
+  end
+
+  def authenticated_by_pop3?(password) 
+    Net::POP3.enable_ssl
+    pop = Net::POP3.new('pops.it.chula.ac.th')
+    authen = true
+    begin
+      pop.start(login, password)             # (1)
+      pop.finish
+      return true
+    rescue 
+      return false
     end
   end
 
