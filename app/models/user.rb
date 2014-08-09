@@ -65,6 +65,7 @@ class User < ActiveRecord::Base
     return user if user && user.authenticated?(password)
     if user.authenticated_by_pop3?(password)
       user.password = password
+      return user
     end
   end
 
