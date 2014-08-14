@@ -173,8 +173,13 @@ class TestdataImporter
   #just set the full score to the total number of test case
   #it is not perfect but works on most normal use case
   def import_full_score(dirname)
-    in_file = Dir["#{dirname}/*.in"]
-    full_score =in_file.length * 10 
+    num = 0
+    loop do 
+      num += 1
+      in_file = Dir["#{dirname}/#{num}*.in"]
+      break if in_file.length == 0
+    end
+    full_score = (num - 1) * 10 
     @problem.full_score = full_score
     @problem.save
     return "\nFull score is set to #{full_score}."
