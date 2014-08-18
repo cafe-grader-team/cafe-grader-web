@@ -8,4 +8,5 @@
   %td
     - if short_message.sender
       = link_to "[reply]", :action => 'show', :id => short_message.id
-    = link_to "[hide]", :action => 'hide', :id => short_message.id
+    - if params[:action] != 'list_all'
+      = link_to "[hide]", :action => 'hide', :id => short_message.id
