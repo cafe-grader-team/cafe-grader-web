@@ -34,6 +34,7 @@ class TestdataImporter
 
     @log_msg << import_problem_description(dirname)
     @log_msg << import_problem_pdf(dirname)
+    @log_msg << import_full_score(dirname)
 
     return true
   end
@@ -167,6 +168,21 @@ class TestdataImporter
     else
       return ""
     end
+  end
+
+  #just set the full score to the total number of test case
+  #it is not perfect but works on most normal use case
+  def import_full_score(dirname)
+    num = 0
+    loop do 
+      num += 1
+      in_file = Dir["#{dirname}/#{num}*.in"]
+      break if in_file.length == 0
+    end
+    full_score = (num - 1) * 10 
+    @problem.full_score = full_score
+    @problem.save
+    return "\nFull score is set to #{full_score}."
   end
 
 end
