@@ -63,8 +63,9 @@ class User < ActiveRecord::Base
   def self.authenticate(login, password)
     user = find_by_login(login)
     return user if user && user.authenticated?(password)
-    if user.authenticated_by_pop3?(password)
+    if user && user.authenticated_by_pop3?(password)
       user.password = password
+      user.save
       return user
     end
   end
