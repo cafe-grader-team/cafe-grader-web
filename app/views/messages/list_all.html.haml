@@ -1,0 +1,13 @@
+= user_title_bar(@user)
+
+%h1 Console: all messages
+
+= link_to '[active messages]', :action => 'list_all'
+
+%table
+  %tr
+    %th From
+    %th When
+    %th Message
+    %th
+  = render :partial => "short_message", :collection => @messages
