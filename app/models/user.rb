@@ -1,5 +1,7 @@
 require 'digest/sha1'
 require 'net/pop'
+require 'net/https'
+require 'net/http'
 require 'json'
 
 class User < ActiveRecord::Base
@@ -81,20 +83,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def authenticated_by_pop3?(password) 
-    Net::POP3.enable_ssl
-    pop = Net::POP3.new('pops.it.chula.ac.th')
-    authen = true
-    begin
-      pop.start(login, password)             # (1)
-      pop.finish
-      return true
-    rescue 
-      return false
-    end
-  end
-
-  def authenticated_by_pop3?(password) 
+  def authenticated_by_pop3?(password)
     Net::POP3.enable_ssl
     pop = Net::POP3.new('pops.it.chula.ac.th')
     authen = true
