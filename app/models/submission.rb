@@ -34,6 +34,13 @@ class Submission < ActiveRecord::Base
                            "ORDER BY user_id")
   end
 
+  def self.find_in_range_by_user_and_problem(user_id, problem_id,since_id,until_id)
+    records = Submission.where(problem_id: problem_id,user_id: user_id)
+    records = records.where('id >= ?',since_id) if since_id > 0
+    records = records.where('id <= ?',until_id) if until_id > 0
+    records.all
+  end
+
   def self.find_last_for_all_available_problems(user_id)
     submissions = Array.new
     problems = Problem.find_available_problems
