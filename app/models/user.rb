@@ -298,7 +298,7 @@ class User < ActiveRecord::Base
     def uniqueness_of_email_from_activated_users
       user = User.activated_users.find_by_email(self.email)
       if user and (user.login != self.login)
-        self.errors.add_to_base("Email has already been taken")
+        self.errors.add(:base,"Email has already been taken")
       end
     end
     
@@ -309,7 +309,7 @@ class User < ActiveRecord::Base
                                      :order => 'created_at DESC')
       if open_user and open_user.created_at and 
           (open_user.created_at > Time.now.gmtime - 5.minutes)
-        self.errors.add_to_base("There are already unactivated registrations with this e-mail address (please wait for 5 minutes)")
+        self.errors.add(:base,"There are already unactivated registrations with this e-mail address (please wait for 5 minutes)")
       end
     end
 

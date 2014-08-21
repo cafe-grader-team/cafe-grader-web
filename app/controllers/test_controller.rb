@@ -26,7 +26,7 @@ class TestController < ApplicationController
 
     if GraderConfiguration.time_limit_mode?
       if @user.contest_finished?
-        @submitted_test_request.errors.add_to_base('Contest is over.')
+        @submitted_test_request.errors.add(:base,'Contest is over.')
         prepare_index_information
         render :action => 'index' and return
       end
