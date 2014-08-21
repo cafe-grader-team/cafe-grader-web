@@ -129,7 +129,7 @@ class UsersController < ApplicationController
                     :login => user.login,
                     :password => user.password,
                     :activation_url => activation_url,
-                    :admin_email => admin_email
+                    :admin_email => GraderConfiguration['system.admin_email']
                   })
 
     logger.info mail_body
@@ -145,7 +145,7 @@ class UsersController < ApplicationController
                     :contest_name => contest_name,
                     :login => user.login,
                     :password => user.password,
-                    :admin_email => admin_email
+                    :admin_email => GraderConfiguration['system.admin_email']
                   })
 
     logger.info mail_body
