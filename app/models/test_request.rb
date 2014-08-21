@@ -70,12 +70,12 @@ class TestRequest < Task
 
     # checks if the user submits any input file
     if params[:input_file]==nil or params[:input_file]==""
-      test_request.errors.add_to_base("No input submitted.")
+      test_request.errors.add(:base,"No input submitted.")
       test_request.input_file_name = nil
     else
       test_request.input_file_name = save_input_file(params[:input_file], user, problem)
       if test_request.input_file_name == nil
-        test_request.errors.add_to_base("No input submitted.")
+        test_request.errors.adds(:base,"No input submitted.")
       end
       if params[:additional_file]!=nil and params[:additional_file]!=""
         save_additional_file(params[:additional_file], 

@@ -62,7 +62,7 @@ class UsersController < ApplicationController
         render :action => 'email_error', :layout => 'empty'
       end
     else
-      @user.errors.add_to_base("Email cannot be blank") if @user.email==''
+      @user.errors.add(:base,"Email cannot be blank") if @user.email==''
       render :action => 'new', :layout => 'empty'
     end
   end

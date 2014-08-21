@@ -44,7 +44,7 @@ class Problem < ActiveRecord::Base
                                      import_params[:time_limit], 
                                      import_params[:memory_limit],
                                      import_to_db)
-      problem.errors.add_to_base('Import error.')
+      problem.errors.add(:base,'Import error.')
     end
 
     return problem, importer.log_msg
@@ -77,17 +77,17 @@ class Problem < ActiveRecord::Base
                                            DEFAULT_MEMORY_LIMIT)
 
     if time_limit<=0 or time_limit >60
-      problem.errors.add_to_base('Time limit out of range.')
+      problem.errors.add(:base,'Time limit out of range.')
     end
 
     if memory_limit==0 and params[:memory_limit]!='0'
-      problem.errors.add_to_base('Memory limit format errors.')
+      problem.errors.add(:base,'Memory limit format errors.')
     elsif memory_limit<=0 or memory_limit >512
-      problem.errors.add_to_base('Memory limit out of range.')
+      problem.errors.add(:base,'Memory limit out of range.')
     end
 
     if params[:file]==nil or params[:file]==''
-      problem.errors.add_to_base('No testdata file.')
+      problem.errors.add(:base,'No testdata file.')
     end
 
     file = params[:file]

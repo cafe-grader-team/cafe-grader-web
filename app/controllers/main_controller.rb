@@ -69,7 +69,7 @@ class MainController < ApplicationController
     @submission.submitted_at = Time.new.gmtime
 
     if GraderConfiguration.time_limit_mode? and user.contest_finished?
-      @submission.errors.add_to_base "The contest is over."
+      @submission.errors.add(:base,"The contest is over.")
       prepare_list_information
       render :action => 'list' and return
     end
