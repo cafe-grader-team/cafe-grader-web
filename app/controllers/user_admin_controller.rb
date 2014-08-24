@@ -129,12 +129,33 @@ class UserAdminController < ApplicationController
       ustat = Array.new
       ustat[0] = u
       @problems.each do |p|
-	sub = Submission.find_last_by_user_and_problem(u.id,p.id)
-	if (sub!=nil) and (sub.points!=nil) 
-	  ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
-	else
-	  ustat << [0,false]
-	end
+        sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+        if (sub!=nil) and (sub.points!=nil) 
+          ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
+        else
+          ustat << [0,false]
+        end
+      end
+      @scorearray << ustat
+    end
+  end
+
+  def user_stat_max
+    @problems = Problem.find_available_problems
+    @users = User.find(:all, :include => [:contests, :contest_stat])
+    @scorearray = Array.new
+    #set up range from param
+    since_id = params.fetch(:since_id, 0).to_i
+    until_id = params.fetch(:until_id, 0).to_i
+    @users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      @problems.each do |p|
+        max_points = 0
+        Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
+          max_points = sub.points if sub and sub.points and (sub.points > max_points)
+        end
+        ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
       end
       @scorearray << ustat
     end

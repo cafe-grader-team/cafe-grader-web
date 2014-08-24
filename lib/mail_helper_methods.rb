@@ -22,7 +22,18 @@ Subject: #{mail_subject}
       body mail_body
     end
 
-    mail.delivery_settings = { :address => smtp_server }
+    mail_option = {
+      :address => smtp_server,
+#      :domain => nil,
+#      :port => 25,
+#      :user_name => nil,
+#      :password => nil,
+#      :authentication=>'plain',
+#      :enable_starttls_auto => true
+    }
+
+    mail.delivery_method :smtp, mail_option
+
     mail.deliver
   end
 

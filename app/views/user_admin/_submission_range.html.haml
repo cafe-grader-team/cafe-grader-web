@@ -1,0 +1,18 @@
+
+
+= form_tag({action: :user_stat_max })  do
+  .submitbox
+    %table
+      %tr
+        %td{colspan: 6, style: 'font-weight: bold'} Query maximum score in submission range
+      %tr
+        %td{style: 'width: 120px; font-weight: bold'} Submission ID:
+        %td{align: 'right'} From:
+        %td= text_field_tag 'since_id', params[:since_id], style: 'width:40px'
+        %td To:
+        %td= text_field_tag 'until_id', params[:until_id], style: 'width:40px'
+        %td= submit_tag 'query'
+      %tr
+        %td 
+        %td{colspan: 5} Leave blank for uncondition
+
