@@ -14,7 +14,7 @@ class Problem < ActiveRecord::Base
   DEFAULT_MEMORY_LIMIT = 32
 
   def self.find_available_problems
-    Problem.available.all(:order => "date_added DESC")
+    Problem.available.all(:order => "date_added DESC, name ASC")
   end
 
   def self.create_from_import_form_params(params, old_problem=nil)
