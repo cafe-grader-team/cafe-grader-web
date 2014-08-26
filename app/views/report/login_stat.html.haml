@@ -1,0 +1,26 @@
+%h1 Login status
+
+
+.task-menu
+  Reports
+  %br/
+  = link_to '[Submission]', :action => 'submit_stat'
+  = link_to '[Login]', :action => 'login_stat'
+
+%table.info
+  %thead
+    %tr.info-head
+      %th login
+      %th full name
+      %th login count
+      %th earliest
+      %th latest
+  %tbody
+    - @logins.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= l[:login]
+        %td= l[:full_name]
+        %td= l[:count]
+        %td= l[:min]
+        %td= l[:max]
+      
