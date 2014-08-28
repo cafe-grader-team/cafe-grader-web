@@ -6,8 +6,6 @@ CafeGrader::Application.routes.draw do
   resources :announcements
   resources :sites
 
-  resources :problems, only: [:show]
-
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
