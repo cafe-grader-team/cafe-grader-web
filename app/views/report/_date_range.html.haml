@@ -3,7 +3,7 @@
   .submitbox
     %table
       %tr
-        %td{colspan: 6, style: 'font-weight: bold'} Query maximum score in submission range
+        %td{colspan: 6, style: 'font-weight: bold'}= title
       %tr
         %td{style: 'width: 120px; font-weight: bold'}= param_text
         %td{align: 'right'} since:
@@ -12,6 +12,10 @@
         %td
         %td{align: 'right'} until:
         %td= text_field_tag 'until_datetime'
+      %tr
+        %td
+        %td
+        %td Blank mean no condition
       %tr
         %td
         %td

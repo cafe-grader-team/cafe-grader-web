@@ -173,6 +173,9 @@ ActiveRecord::Schema.define(:version => 20140826095949) do
     t.text     "grader_comment"
     t.integer  "number"
     t.string   "source_filename"
+    t.float    "max_runtime"
+    t.integer  "peak_memory"
+    t.integer  "effective_code_length"
   end
 
   add_index "submissions", ["user_id", "problem_id", "number"], :name => "index_submissions_on_user_id_and_problem_id_and_number", :unique => true

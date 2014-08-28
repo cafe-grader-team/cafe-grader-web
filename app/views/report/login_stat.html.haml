@@ -11,19 +11,8 @@
 %h1 Login status
 
 
-
-.task-menu
-  Reports
-  %br/
-  = link_to '[Submission]', :action => 'submit_stat'
-  = link_to '[Login]', :action => 'login_stat'
-
-
-=render partial: 'date_range', locals: {param_text: 'Submission range:'  }
-
-hahaha
-
-=params[:since_datetime]
+=render partial: 'report_menu'
+=render partial: 'date_range', locals: {param_text: 'Login date range:', title: 'Query login stat in the range'  }
 
 %table.info
   %thead
@@ -39,6 +28,6 @@ hahaha
         %td= l[:login]
         %td= l[:full_name]
         %td= l[:count]
-        %td= l[:min]
-        %td= l[:max]
+        %td= l[:min] ? l[:min].in_time_zone.strftime('%Y-%m-%d %H:%M') : ''
+        %td= l[:max] ? l[:max].in_time_zone.strftime('%Y-%m-%d %H:%M') : ''
       
