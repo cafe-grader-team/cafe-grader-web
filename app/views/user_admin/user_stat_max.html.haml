@@ -1,0 +1,44 @@
+%h1 User grading results
+%h2 Show max scores in submission range
+
+- if @problem and @problem.errors
+  =error_messages_for 'problem'
+
+= render partial: 'submission_range'
+
+- if @log
+  %h3 Import log
+  %pre.import-log
+    = @log
+
+%p= link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
+
+%table.info
+  %thead
+    %tr.info-head
+      %th User
+      %th Name
+      %th Activated?
+      %th Logged in
+      %th Contest(s)
+      - @problems.each do |p|
+        %th= p.name
+      %th Total
+      %th Passed
+  %tbody
+    - @scorearray.each do |sc|
+      %tr{class: cycle('info-even','info-odd')}
+        - total,num_passed = 0,0
+        - sc.each_index do |i|
+          - if i == 0
+            %td= sc[i].login
+            %td= sc[i].full_name
+            %td= sc[i].activated
+            %td= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no'
+            %td= sc[i].contests.collect {|c| c.name}.join(', ') 
+          - else
+            %td= sc[i][0]
+            - total += sc[i][0]
+            - num_passed += 1 if sc[i][1]
+        %td= total 
+        %td= num_passed
