@@ -35,6 +35,12 @@ gem 'prototype-rails'
 
 # To use debugger
 # gem 'debugger'
+#
+
+gem 'jquery-rails'
+gem 'jquery-ui-sass-rails'
+gem 'jquery-timepicker-addon-rails'
+
 
 gem "haml"
 gem "mail"

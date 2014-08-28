@@ -1,4 +1,15 @@
+- content_for :header do
+  = javascript_include_tag 'new'
+
+%script{:type=>"text/javascript"}
+  $(function () {
+  $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  });
+
+
 %h1 Login status
+
 
 
 .task-menu
@@ -7,7 +18,12 @@
   = link_to '[Submission]', :action => 'submit_stat'
   = link_to '[Login]', :action => 'login_stat'
 
-=render partial: 'date_range'
+
+=render partial: 'date_range', locals: {param_text: 'Submission range:'  }
+
+hahaha
+
+=params[:since_datetime]
 
 %table.info
   %thead

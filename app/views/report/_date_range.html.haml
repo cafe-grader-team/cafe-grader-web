@@ -1,18 +1,19 @@
 
-= form_tag({action: :user_stat_max })  do
+= form_tag({session: :url })  do
   .submitbox
     %table
       %tr
         %td{colspan: 6, style: 'font-weight: bold'} Query maximum score in submission range
       %tr
-        %td{style: 'width: 120px; font-weight: bold'} Submission ID:
-        %td{align: 'right'} From date:
-        %td= text_field_tag 'start_date', params[:start_date]
-        %td Time:
-        %td= text_field_tag 'start_time', params[:start_time], style: 'width:40px'
-        %td= submit_tag 'query'
+        %td{style: 'width: 120px; font-weight: bold'}= param_text
+        %td{align: 'right'} since:
+        %td= text_field_tag 'since_datetime'
       %tr
-        %td 
-          %td{colspan: 5} Leave blank date and/or time for no condition
-          %br/
+        %td
+        %td{align: 'right'} until:
+        %td= text_field_tag 'until_datetime'
+      %tr
+        %td
+        %td
+        %td= submit_tag 'query'
 
