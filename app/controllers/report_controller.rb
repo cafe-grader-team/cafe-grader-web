@@ -51,20 +51,22 @@ class ReportController < ApplicationController
     end
 
     Submission.where("submitted_at >= ? AND submitted_at <= ?",@since_time,@until_time).find_each do |s|
-      if not @submissions[s.user_id][:sub].has_key?(s.problem_id)
-        a = nil
-        begin
-          a = Problem.find(s.problem_id)
-        rescue
+      if @submissions[s.user_id]
+        if not @submissions[s.user_id][:sub].has_key?(s.problem_id)
           a = nil
+          begin
+            a = Problem.find(s.problem_id)
+          rescue
+            a = nil
+          end
+          @submissions[s.user_id][:sub][s.problem_id] = 
+            { prob_name: (a ? a.full_name : '(NULL)'),
+              sub_ids: [s.id] } 
+        else
+          @submissions[s.user_id][:sub][s.problem_id][:sub_ids] << s.id
         end
-        @submissions[s.user_id][:sub][s.problem_id] = 
-          { prob_name: (a ? a.full_name : '(NULL)'),
-            sub_ids: [s.id] } 
-      else
-        @submissions[s.user_id][:sub][s.problem_id][:sub_ids] << s.id
+        @submissions[s.user_id][:count] += 1
       end
-      @submissions[s.user_id][:count] += 1
     end
   end
 end
