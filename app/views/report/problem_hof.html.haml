@@ -1,0 +1,65 @@
+%h1 Tasks Hall of Fame
+
+.task-menu
+  Tasks
+  %br/
+  - @problems.each do |prob|
+    = link_to( "[#{prob.name}]", {id: prob.id})
+
+
+
+
+%h2 Overall
+
+- if @best
+  %b Best Runtime:
+  = " by #{@best[:runtime][:user]} with #{@best[:runtime][:value] * 1000} milliseconds at submission " \
+  = link_to("#" + @best[:runtime][:sub_id].to_s, controller: 'graders', action: 'submission', id:@best[:runtime][:sub_id])
+  %br/
+  %b Best Memory Usage:
+  = " by #{@best[:memory][:user]} with #{@best[:memory][:value]} kbytes at submission "
+  = link_to("#" + @best[:memory][:sub_id].to_s, controller: 'graders' , action: 'submission', id:@best[:memory][:sub_id])
+  %br/
+  %b Shortest Code: 
+  = " by #{@best[:length][:user]} with #{@best[:length][:value]} at submission "
+  = link_to("#" + @best[:length][:sub_id].to_s, controller: 'graders' , action: 'submission', id: @best[:length][:sub_id])
+  %br/
+  %b First solver: 
+  = " by #{@best[:first][:user]} is the first solver on #{@best[:first][:value]} at submission " 
+  = link_to("#" + @best[:first][:sub_id].to_s, controller: 'graders' , action: 'submission', id: @best[:first][:sub_id])
+  %br/
+
+
+  %p
+    This counts only for submission with 100% score <br/>
+    Right now, java is excluded from memory usage competition. (Because it always uses 2GB memory...)
+
+  %h2 By language
+
+  %table.info
+    %thead
+      %tr.info-head
+        %th Language
+        %th Best runtime (ms)
+        %th Best memory (kbytes)
+        %th Shortest Code (bytes)
+        %th First solver
+    %tbody
+      - @by_lang.each do |lang,value|
+        %tr{class: cycle('info-even','info-odd')}
+          %td= lang
+          %td
+            = "#{value[:runtime][:user]} (#{(value[:runtime][:value] * 1000).to_i} @"
+            = "#{link_to("#" + value[:runtime][:sub_id].to_s, controller: 'graders' , action: 'submission', id: value[:runtime][:sub_id])} )".html_safe
+          %td
+            = "#{value[:memory][:user]} (#{value[:memory][:value]} @"
+            = "#{link_to("#" + value[:memory][:sub_id].to_s, controller: 'graders' , action: 'submission', id: value[:memory][:sub_id])} )".html_safe
+          %td
+            = "#{value[:length][:user]} (#{value[:length][:value]} @"
+            = "#{link_to("#" + value[:length][:sub_id].to_s, controller: 'graders' , action: 'submission', id: value[:length][:sub_id])} )".html_safe
+          %td
+            = "#{value[:first][:user]} (#{value[:first][:value]} @"
+            = "#{link_to("#" + value[:first][:sub_id].to_s, controller: 'graders' , action: 'submission', id: value[:first][:sub_id])} )".html_safe
+
+- else
+  %h3 No submissions
