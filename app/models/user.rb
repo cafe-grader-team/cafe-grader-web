@@ -1,5 +1,7 @@
 require 'digest/sha1'
 require 'net/pop'
+require 'net/https'
+require 'net/http'
 require 'json'
 
 class User < ActiveRecord::Base
@@ -81,7 +83,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def authenticated_by_pop3?(password) 
+  def authenticated_by_pop3?(password)
     Net::POP3.enable_ssl
     pop = Net::POP3.new('pops.it.chula.ac.th')
     authen = true
@@ -107,8 +109,15 @@ class User < ActiveRecord::Base
 
     #simple call
     begin
-      resp = Net::HTTP.post_form(url, post_args)
-      result = JSON.parse resp.body
+      http = Net::HTTP.new('www.cas.chula.ac.th', 443)
+      http.use_ssl = true
+      result = [ ]
+      http.start do |http|
+        req = Net::HTTP::Post.new('/cas/api/?q=studentAuthenticate')
+        param = "appid=#{appid}&appsecret=#{appsecret}&username=#{login}&password=#{password}"
+        resp = http.request(req,param)
+        result = JSON.parse resp.body
+      end
       return true if result["type"] == "beanStudent"
     rescue
       return false

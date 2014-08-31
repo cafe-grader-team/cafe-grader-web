@@ -32,6 +32,19 @@
             %br/
             You may put task description in *.html for raw html
             and *.md or *.markdown for markdown.
+            %br/
+            You may also put a pdf file for the task description
+      %tr
+        %td Checker:
+        %td= select_tag 'checker', options_for_select([['Text checker','text'],['Float checker','float']], 'text')
+      %tr
+        %td
+        %td
+          %span{:class => 'help'}
+            "Text" checker checks if the text (including numbers) is the same, ignoring any whitespace
+            %br/
+            "Float" checker checks if all numbers is within EPSILON error using formula |a-b| < EPSILON * max(|a|,|b|)
+
       - if @allow_test_pair_import
         %tr
           %td

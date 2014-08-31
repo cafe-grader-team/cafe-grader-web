@@ -11,6 +11,7 @@ class TestdataImporter
   def import_from_file(tempfile, 
                        time_limit, 
                        memory_limit,
+                       checker_name='text',
                        import_to_db=false)
 
     dirname = extract(tempfile)
@@ -19,7 +20,8 @@ class TestdataImporter
       @log_msg = GraderScript.call_import_problem(@problem.name,
                                                   dirname,
                                                   time_limit,
-                                                  memory_limit)
+                                                  memory_limit,
+                                                  checker_name)
     else
       # Import test data to test pairs.
 

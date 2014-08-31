@@ -14,7 +14,7 @@ class Problem < ActiveRecord::Base
   DEFAULT_MEMORY_LIMIT = 32
 
   def self.find_available_problems
-    Problem.available.all(:order => "date_added DESC")
+    Problem.available.all(:order => "date_added DESC, name ASC")
   end
 
   def self.create_from_import_form_params(params, old_problem=nil)
@@ -43,6 +43,7 @@ class Problem < ActiveRecord::Base
     if not importer.import_from_file(import_params[:file], 
                                      import_params[:time_limit], 
                                      import_params[:memory_limit],
+                                     import_params[:checker_name],
                                      import_to_db)
       problem.errors.add_to_base('Import error.')
     end
@@ -90,6 +91,11 @@ class Problem < ActiveRecord::Base
       problem.errors.add_to_base('No testdata file.')
     end
 
+    checker_name = 'text'
+    if ['text','float'].include? params[:checker]
+      checker_name = params[:checker]
+    end
+
     file = params[:file]
 
     if !problem.errors.empty?
@@ -106,7 +112,8 @@ class Problem < ActiveRecord::Base
     return [{
               :time_limit => time_limit,
               :memory_limit => memory_limit,
-              :file => file
+              :file => file,
+              :checker_name => checker_name
             },
             problem]
   end

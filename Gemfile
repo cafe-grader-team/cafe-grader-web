@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails', '3.2.8'
+gem 'rails', '3.2.19'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
@@ -35,6 +35,12 @@ gem 'prototype-rails'
 
 # To use debugger
 # gem 'debugger'
+#
+
+gem 'jquery-rails'
+gem 'jquery-ui-sass-rails'
+gem 'jquery-timepicker-addon-rails'
+
 
 gem "haml"
 gem "mail"

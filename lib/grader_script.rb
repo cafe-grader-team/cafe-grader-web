@@ -50,7 +50,7 @@ module GraderScript
 
       Dir.chdir(cur_dir)
       
-      return output
+      return "import CMD: #{cmd}\n" + output
     end
     return ''
   end

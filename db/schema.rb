@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140823031747) do
+ActiveRecord::Schema.define(:version => 20140826095949) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -84,6 +84,13 @@ ActiveRecord::Schema.define(:version => 20140823031747) do
     t.string "pretty_name"
     t.string "ext",         :limit => 10
     t.string "common_ext"
+  end
+
+  create_table "logins", :force => true do |t|
+    t.string   "user_id"
+    t.string   "ip_address"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "messages", :force => true do |t|

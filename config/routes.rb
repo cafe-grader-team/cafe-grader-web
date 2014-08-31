@@ -1,4 +1,6 @@
 CafeGrader::Application.routes.draw do
+  get "report/login"
+
   resources :contests
 
   resources :announcements
