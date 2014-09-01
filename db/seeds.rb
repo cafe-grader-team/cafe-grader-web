@@ -189,6 +189,11 @@ def seed_root
   root.save
 end
 
+def seed_users_and_roles
+  seed_roles
+  seed_root
+end
+
 def seed_more_languages
   Language.delete_all
   Language.create( name: 'c', pretty_name: 'C', ext: 'c', common_ext: 'c' )
