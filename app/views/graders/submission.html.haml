@@ -1,3 +1,6 @@
+%style{type: "text/css"}
+  = @css_style
+
 %h1= "Submission: #{@submission.id}"
 
 %p
@@ -13,10 +16,12 @@
   = "Number: #{@submission.number}"
   %br/
   = "Submitted at: #{format_short_time(@submission.submitted_at)}"
+  %br/
+  = "Points : #{@submission.points}/#{@submission.problem.full_score}"
+  %br/
+  = "Comment : #{@submission.grader_comment}"
 
 %b Source code (first 10kb)
-%div{:style => "border: 1px solid black; background: lightgrey"}
-  - if @submission.source
-    %pre
-      =h truncate @submission.source, :length => 10240
+//%div.highlight{:style => "border: 1px solid black;"}
+=@formatted_code.html_safe
 

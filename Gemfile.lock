@@ -104,6 +104,7 @@ GEM
     rdiscount (2.1.7.1)
     rdoc (3.12.2)
       json (~> 1.4)
+    rouge (1.6.2)
     rspec-collection_matchers (1.0.0)
       rspec-expectations (>= 2.99.0.beta1)
     rspec-core (2.99.2)
@@ -158,6 +159,7 @@ DEPENDENCIES
   prototype-rails
   rails (= 3.2.19)
   rdiscount
+  rouge
   rspec-rails (~> 2.0)
   sass-rails (~> 3.2.3)
   test-unit

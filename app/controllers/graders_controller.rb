@@ -63,6 +63,18 @@ class GradersController < ApplicationController
 
   def submission
     @submission = Submission.find(params[:id])
+    formatter = Rouge::Formatters::HTML.new(css_class: 'highlight', line_numbers: true )
+    lexer = case @submission.language.name
+      when "c"      then Rouge::Lexers::C.new
+      when "cpp"    then Rouge::Lexers::Cpp.new
+      when "pas"    then Rouge::Lexers::Pas.new
+      when "ruby"   then Rouge::Lexers::Ruby.new
+      when "python" then Rouge::Lexers::Python.new
+      when "java"   then Rouge::Lexers::Java.new
+    end
+    @formatted_code = formatter.format(lexer.lex(@submission.source))
+    @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
+
   end
 
   # various grader controls
