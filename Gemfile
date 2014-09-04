@@ -41,6 +41,8 @@ gem 'jquery-rails'
 gem 'jquery-ui-sass-rails'
 gem 'jquery-timepicker-addon-rails'
 
+#syntax highlighter
+gem 'rouge'
 
 gem "haml"
 gem "mail"
