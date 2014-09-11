@@ -23,6 +23,10 @@ class ApplicationController < ActionController::Base
 
   def authenticate
     unless session[:user_id]
+      flash[:notice] = 'You need to login'
+      if GraderConfiguration[SINGLE_USER_MODE_CONF_KEY]
+        flash[:notice] = 'You need to login but you cannot log in at this time'
+      end
       redirect_to :controller => 'main', :action => 'login'
       return false
     end
