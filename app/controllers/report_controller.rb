@@ -1,10 +1,10 @@
 class ReportController < ApplicationController
 
   before_filter :admin_authorization, only: [:login_stat,:submission_stat]
-  before_filter { |c|
+  before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
-    if GraderConfiguration["system.hall_of_fame_available"]
+    if GraderConfiguration["right.user_view_submission"]
       return true;
     end
 
@@ -156,7 +156,7 @@ class ReportController < ApplicationController
       #process user_id
       @by_lang.each do |lang,prop|
         prop.each do |k,v|
-          v[:user] = User.exists?(v[:user_id]) ? User.find(v[:user_id]).login : "(NULL)"
+          v[:user] = User.exists?(v[:user_id]) ? User.find(v[:user_id]).full_name : "(NULL)"
         end
       end
 
@@ -164,19 +164,19 @@ class ReportController < ApplicationController
       if @by_lang and @by_lang.first
         @best = @by_lang.first[1]
         @by_lang.each do |lang,prop|
-          if @best[:runtime][:value] > prop[:runtime][:value]
+          if @best[:runtime][:value] >= prop[:runtime][:value]
             @best[:runtime] = prop[:runtime]
             @best[:runtime][:lang] = lang
           end
-          if @best[:memory][:value] > prop[:memory][:value]
+          if @best[:memory][:value] >= prop[:memory][:value]
             @best[:memory] = prop[:memory]
             @best[:memory][:lang] = lang
           end
-          if @best[:length][:value] > prop[:length][:value]
+          if @best[:length][:value] >= prop[:length][:value]
             @best[:length] = prop[:length]
             @best[:length][:lang] = lang
           end
-          if @best[:first][:value] > prop[:first][:value]
+          if @best[:first][:value] >= prop[:first][:value]
             @best[:first] = prop[:first]
             @best[:first][:lang] = lang
           end

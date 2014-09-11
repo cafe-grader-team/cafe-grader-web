@@ -5,7 +5,7 @@
 
 %p
   User:
-  = "#{@submission.user.login}"
+  = "(#{@submission.user.login}) #{@submission.user.full_name}"
   %br/
   Problem: 
   - if @submission.problem!=nil

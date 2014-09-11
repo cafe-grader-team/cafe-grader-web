@@ -31,7 +31,7 @@ module ApplicationHelper
       append_to menu_items, "[#{I18n.t 'menu.test'}]", 'test', 'index'
     end
 
-    if GraderConfiguration['system.hall_of_fame_available']
+    if GraderConfiguration['right.user_hall_of_fame']
       append_to menu_items, "[#{I18n.t 'menu.hall_of_fame'}]", 'report', 'problem_hof'
     end
     append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'

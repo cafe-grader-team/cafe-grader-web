@@ -54,10 +54,17 @@ CONFIGURATIONS =
    },
 
    {
-     :key => 'system.hall_of_fame_available',
+     :key => 'right.user_hall_of_fame',
      :value_type => 'boolean',
      :default_value => 'false',
      :description => 'If true, any user can access hall of fame page.'
+   },
+
+   {
+     :key => 'right.user_view_submission',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'If true, any user can view submissions of every one.'
    },
 
    # If Configuration['system.online_registration'] is true, the

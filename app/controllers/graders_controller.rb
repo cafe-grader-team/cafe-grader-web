@@ -1,6 +1,15 @@
 class GradersController < ApplicationController
 
-  before_filter :admin_authorization
+  before_filter :admin_authorization, except: [ :submission ]
+  before_filter(only: [:submission]) {
+    return false unless authenticate
+
+    if GraderConfiguration["right.user_view_submission"]
+      return true;
+    end
+
+    admin_authorization
+  }
 
   verify :method => :post, :only => ['clear_all', 
                                      'start_exam',
