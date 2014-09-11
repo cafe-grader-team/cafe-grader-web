@@ -1,6 +1,19 @@
 class ReportController < ApplicationController
 
   before_filter :admin_authorization, only: [:login_stat,:submission_stat]
+  before_filter(only: :problem_hof) { |c| 
+    user = User.find(session[:user_id]) if session[:user_id]
+    if user==nil 
+      flash[:notice] = 'You have to login first'
+      redirect_to :controller => 'main', :action => 'login' 
+      return false
+    end
+  
+    unless GraderConfiguration["hall_of_fame_available"] 
+      flash[:notice] = 'You are not authorized to view the page you requested'
+      redirect_to :controller => 'main', :action => 'login' unless GraderConfiguration[ "hall_of_fame_available" ]
+    end
+  }
 
   def login_stat
     @logins = Array.new
