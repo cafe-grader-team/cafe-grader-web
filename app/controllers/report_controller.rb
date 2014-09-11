@@ -134,8 +134,8 @@ class ReportController < ApplicationController
           }
         end
 
-        if sub.user.admin? == false and
-           sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value]
+        if sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value] and
+           !sub.user.admin?
           @by_lang[lang.pretty_name][:first] = {
             avail: true,
             user_id: sub.user_id,
