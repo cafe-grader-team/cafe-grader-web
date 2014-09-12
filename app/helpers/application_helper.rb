@@ -30,6 +30,10 @@ module ApplicationHelper
       append_to menu_items, "[#{I18n.t 'menu.submissions'}]", 'main', 'submission'
       append_to menu_items, "[#{I18n.t 'menu.test'}]", 'test', 'index'
     end
+
+    if GraderConfiguration['right.user_hall_of_fame']
+      append_to menu_items, "[#{I18n.t 'menu.hall_of_fame'}]", 'report', 'problem_hof'
+    end
     append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'
 
     if GraderConfiguration['system.user_setting_enabled']

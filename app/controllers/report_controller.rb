@@ -1,4 +1,16 @@
 class ReportController < ApplicationController
+
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat]
+  before_filter(only: [:problem_hof]) { |c|
+    return false unless authenticate
+
+    if GraderConfiguration["right.user_view_submission"]
+      return true;
+    end
+
+    admin_authorization
+  }
+
   def login_stat
     @logins = Array.new
 
@@ -66,6 +78,110 @@ class ReportController < ApplicationController
           @submissions[s.user_id][:sub][s.problem_id][:sub_ids] << s.id
         end
         @submissions[s.user_id][:count] += 1
+      end
+    end
+  end
+
+  def problem_hof
+    # gen problem list
+    @user = User.find(session[:user_id])
+    @problems = @user.available_problems
+
+    # get selected problems or the default
+    if params[:id]
+      begin
+        @problem = Problem.available.find(params[:id])
+      rescue
+        redirect_to action: :problem_hof
+        flash[:notice] = 'Error: submissions for that problem are not viewable.'
+        return
+      end
+    end
+
+    if @problem
+      #aggregrate by language
+      @by_lang = {}
+      Submission.where(problem_id: @problem.id).find_each do |sub|
+        lang = Language.find_by_id(sub.language_id)
+        next unless lang
+        next unless sub.points >= @problem.full_score
+
+        #initialize
+        unless @by_lang.has_key?(lang.pretty_name)
+          @by_lang[lang.pretty_name] = {
+            runtime: { avail: false, value: 2**30-1 },
+            memory: { avail: false, value: 2**30-1 },
+            length: { avail: false, value: 2**30-1 },
+            first: { avail: false, value: DateTime.new(3000,1,1) }
+          }
+        end
+
+        if sub.max_runtime and sub.max_runtime < @by_lang[lang.pretty_name][:runtime][:value]
+          @by_lang[lang.pretty_name][:runtime] = {
+            avail: true,
+            user_id: sub.user_id,
+            value: sub.max_runtime,
+            sub_id: sub.id
+          }
+        end
+
+        if sub.peak_memory and sub.peak_memory < @by_lang[lang.pretty_name][:memory][:value]
+          @by_lang[lang.pretty_name][:memory] = {
+            avail: true,
+            user_id: sub.user_id,
+            value: sub.peak_memory,
+            sub_id: sub.id
+          }
+        end
+
+        if sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value] and
+           !sub.user.admin?
+          @by_lang[lang.pretty_name][:first] = {
+            avail: true,
+            user_id: sub.user_id,
+            value: sub.submitted_at,
+            sub_id: sub.id
+          }
+        end
+
+        if @by_lang[lang.pretty_name][:length][:value] > sub.effective_code_length
+          @by_lang[lang.pretty_name][:length] = {
+            avail: true,
+            user_id: sub.user_id,
+            value: sub.effective_code_length,
+            sub_id: sub.id
+          }
+        end
+      end
+      
+      #process user_id
+      @by_lang.each do |lang,prop|
+        prop.each do |k,v|
+          v[:user] = User.exists?(v[:user_id]) ? User.find(v[:user_id]).full_name : "(NULL)"
+        end
+      end
+
+      #sum into best
+      if @by_lang and @by_lang.first
+        @best = @by_lang.first[1]
+        @by_lang.each do |lang,prop|
+          if @best[:runtime][:value] >= prop[:runtime][:value]
+            @best[:runtime] = prop[:runtime]
+            @best[:runtime][:lang] = lang
+          end
+          if @best[:memory][:value] >= prop[:memory][:value]
+            @best[:memory] = prop[:memory]
+            @best[:memory][:lang] = lang
+          end
+          if @best[:length][:value] >= prop[:length][:value]
+            @best[:length] = prop[:length]
+            @best[:length][:lang] = lang
+          end
+          if @best[:first][:value] >= prop[:first][:value]
+            @best[:first] = prop[:first]
+            @best[:first][:lang] = lang
+          end
+        end
       end
     end
   end
