@@ -10,16 +10,20 @@
   });
 
 %h1 User grading results
-%h2 Show max scores in submission range
+%h2= params[:action] == 'user_stat' ? "Show scores from latest submission" : "Show max scores in submission range"
+
 
 - if @problem and @problem.errors
   =error_messages_for 'problem'
 
 = render partial: 'submission_range'
 
-%p= link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
+- if params[:action] == 'user_stat' 
+  = "latest score" 
+- else
+  = link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
 
-%table.tablesorter-cafe#my_table{style: 'width:auto;'}
+%table.tablesorter-cafe#my_table
   %thead
     %tr
       %th User
