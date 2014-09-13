@@ -25,7 +25,7 @@
   %tbody
     - @logins.each do |l|
       %tr{class: cycle('info-even','info-odd')}
-        %td= l[:login]
+        %td= link_to l[:login], controller: 'users', action: 'profile', id: l[:id]
         %td= l[:full_name]
         %td= l[:count]
         %td= l[:min] ? l[:min].in_time_zone.strftime('%Y-%m-%d %H:%M') : ''

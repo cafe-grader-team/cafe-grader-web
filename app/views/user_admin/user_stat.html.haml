@@ -41,7 +41,7 @@
         - total,num_passed = 0,0
         - sc.each_index do |i|
           - if i == 0
-            %td= sc[i].login
+            %td= link_to sc[i].login, controller: 'users', action: 'profile', id: sc[i]
             %td= sc[i].full_name
             %td= sc[i].activated
             %td= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no'
