@@ -13,6 +13,7 @@
   </tr>
   <% count = 0 %>
   <% @submissions.each do |sub| %>
+    <% next unless sub.user %>
     <tr class="<%= (count % 2 ==0) ? "info-even" : "info-odd" %>">
     <td><%= sub.user.login %></td>
     <td><%= sub.user.full_name if sub.user %></td>
