@@ -60,5 +60,6 @@ module CafeGrader
     config.assets.version = '1.0'
 
     config.assets.precompile += ['announcement_refresh.js','effects.js','site_update.js','graders.css','problems.css']
+    config.assets.precompile += ['new.js','tablesorter-theme.cafe.css']
   end
 end

@@ -6,6 +6,11 @@
   $('#submission_table').tablesorter({widgets: ['zebra','filter']});
   });
 
+:css
+  .fix-width {
+    font-family: Droid Sans Mono,Consolas, monospace, mono, Courier New, Courier;
+  }
+
 %h1= @user.full_name + ' Profile'
 
 %h2 Basic info
@@ -28,12 +33,13 @@
       %th Score
   %tbody
     - @submission.each do |s|
+      - next unless s.problem
       %tr
         %td= link_to "#{s.id}", controller: "graders", action: "submission", id: s.id
         %td= s.problem.name
         %td= s.problem.full_name
         %td= s.language.pretty_name
-        %td{style: 'font-family: Droid Sans Mono,Consolas, monospace, mono'}= s.grader_comment
+        %td.fix-width= s.grader_comment
         %td= s.points/s.problem.full_score * 100
 
 
