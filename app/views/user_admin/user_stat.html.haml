@@ -10,16 +10,20 @@
   });
 
 %h1 User grading results
-%h2 Show max scores in submission range
+%h2= params[:action] == 'user_stat' ? "Show scores from latest submission" : "Show max scores in submission range"
+
 
 - if @problem and @problem.errors
   =error_messages_for 'problem'
 
 = render partial: 'submission_range'
 
-%p= link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
+- if params[:action] == 'user_stat' 
+  = "latest score" 
+- else
+  = link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
 
-%table.tablesorter-cafe#my_table{style: 'width:auto;'}
+%table.tablesorter-cafe#my_table
   %thead
     %tr
       %th User
@@ -37,7 +41,7 @@
         - total,num_passed = 0,0
         - sc.each_index do |i|
           - if i == 0
-            %td= sc[i].login
+            %td= link_to sc[i].login, controller: 'users', action: 'profile', id: sc[i]
             %td= sc[i].full_name
             %td= sc[i].activated
             %td= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no'

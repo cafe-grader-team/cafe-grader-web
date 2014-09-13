@@ -37,9 +37,11 @@ gem 'prototype-rails'
 # gem 'debugger'
 #
 
+# jquery addition
 gem 'jquery-rails'
 gem 'jquery-ui-sass-rails'
 gem 'jquery-timepicker-addon-rails'
+gem 'jquery-tablesorter'
 
 #syntax highlighter
 gem 'rouge'

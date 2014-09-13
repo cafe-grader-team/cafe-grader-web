@@ -159,6 +159,8 @@ class UserAdminController < ApplicationController
       end
       @scorearray << ustat
     end
+
+    render template: 'user_admin/user_stat'
   end
 
   def import

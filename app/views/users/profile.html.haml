@@ -1,0 +1,40 @@
+- content_for :header do
+  = javascript_include_tag 'new'
+
+%script{:type=>"text/javascript"}
+  $(function () {
+  $('#submission_table').tablesorter({widgets: ['zebra','filter']});
+  });
+
+%h1= @user.full_name + ' Profile'
+
+%h2 Basic info
+<b>Login:</b> #{@user.login} <br/>
+<b>Full name:</b> #{@user.full_name} <br />
+
+
+%h2 Problem Stat
+
+%h2 Submissions
+
+%table.tablesorter-cafe#submission_table
+  %thead
+    %tr
+      %th ID
+      %th Problem code
+      %th Problem name
+      %th Language
+      %th Result
+      %th Score
+  %tbody
+    - @submission.each do |s|
+      %tr
+        %td= link_to "#{s.id}", controller: "graders", action: "submission", id: s.id
+        %td= s.problem.name
+        %td= s.problem.full_name
+        %td= s.language.pretty_name
+        %td{style: 'font-family: Droid Sans Mono,Consolas, monospace, mono'}= s.grader_comment
+        %td= s.points/s.problem.full_score * 100
+
+
+

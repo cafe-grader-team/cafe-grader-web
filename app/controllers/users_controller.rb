@@ -14,6 +14,7 @@ class UsersController < ApplicationController
                                                        :register,
                                                        :forget,
                                                        :retrieve_password]
+  before_filter :authenticate, :profile_authorization, only: [:profile]
 
   verify :method => :post, :only => [:chg_passwd],
          :redirect_to => { :action => :index }
@@ -108,6 +109,11 @@ class UsersController < ApplicationController
     redirect_to :action => 'forget'
   end
 
+  def profile
+    @user = User.find(params[:id])
+    @submission = Submission.where(user_id: params[:id]).all
+  end
+
   protected
 
   def verify_online_registration
@@ -151,6 +157,20 @@ class UsersController < ApplicationController
     logger.info mail_body
 
     send_mail(user.email, mail_subject, mail_body)
+  end
+
+  # allow viewing of regular user profile only when options allow so
+  # only admins can view admins profile
+  def profile_authorization
+    #if view admins' profile, allow only admin
+    return false unless(params[:id])
+    user = User.find(params[:id])
+    return false unless user
+    return admin_authorization if user.admin?
+    return true if GraderConfiguration["right.user_view_submission"]
+
+    #finally, we allow only admin
+    admin_authorization
   end
   
 end

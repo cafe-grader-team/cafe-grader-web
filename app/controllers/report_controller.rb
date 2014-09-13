@@ -27,7 +27,8 @@ class ReportController < ApplicationController
     end
     
     User.all.each do |user|
-      @logins << { login: user.login, 
+      @logins << { id: user.id,
+                   login: user.login, 
                    full_name: user.full_name, 
                    count: Login.where("user_id = ? AND created_at >= ? AND created_at <= ?",
                                       user.id,@since_time,@until_time)

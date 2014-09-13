@@ -1,10 +1,12 @@
 - content_for :header do
+  = stylesheet_link_tag 'tablesorter-theme.cafe'
   = javascript_include_tag 'new'
 
 %script{:type=>"text/javascript"}
   $(function () {
   $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
   $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#my_table').tablesorter({widthFixed: true, widgets: ['zebra']});
   });
 
 %h1 Login status
@@ -12,9 +14,9 @@
 =render partial: 'report_menu'
 =render partial: 'date_range', locals: {param_text: 'Login date range:', title: 'Query login stat in the range'  }
 
-%table.info
+%table.tablesorter-cafe#my_table
   %thead
-    %tr.info-head
+    %tr
       %th login
       %th full name
       %th login count
@@ -23,9 +25,8 @@
   %tbody
     - @logins.each do |l|
       %tr{class: cycle('info-even','info-odd')}
-        %td= l[:login]
+        %td= link_to l[:login], controller: 'users', action: 'profile', id: l[:id]
         %td= l[:full_name]
         %td= l[:count]
         %td= l[:min] ? l[:min].in_time_zone.strftime('%Y-%m-%d %H:%M') : ''
-        %td= l[:max] ? l[:max].in_time_zone.strftime('%Y-%m-%d %H:%M') : ''
-      
+        %td= l[:max] ? time_ago_in_words(l[:max].in_time_zone) + ' ago' : ''
