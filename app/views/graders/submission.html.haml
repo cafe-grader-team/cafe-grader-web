@@ -9,17 +9,21 @@
   %br/
   Problem: 
   - if @submission.problem!=nil
-    = "#{@submission.problem.full_name}"
+    = "(#{@submission.problem.name}) #{@submission.problem.full_name}"
   - else
     = "(n/a)"
   %br/
   = "Number: #{@submission.number}"
   %br/
-  = "Submitted at: #{format_short_time(@submission.submitted_at)}"
+  = "Submitted: #{time_ago_in_words(@submission.submitted_at)} ago (at #{@submission.submitted_at.to_formatted_s(:long)})"
   %br/
-  = "Points : #{@submission.points}/#{@submission.problem.full_score}"
+  = "Points: #{@submission.points}/#{@submission.problem.full_score}"
   %br/
-  = "Comment : #{@submission.grader_comment}"
+  = "Comment: #{@submission.grader_comment}"
+  %br/
+  = "Runtime (ms): #{@submission.max_runtime}"
+  %br/
+  = "Memory (kb): #{@submission.peak_memory}"
 
 %b Source code (first 10kb)
 //%div.highlight{:style => "border: 1px solid black;"}
