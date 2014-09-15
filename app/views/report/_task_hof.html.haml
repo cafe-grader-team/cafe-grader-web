@@ -17,7 +17,7 @@
   %b Best Memory Usage:
   by #{link_to @best[:memory][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
   using <span class="hof_language">#{@best[:memory][:lang]}</span> 
-  with <span class="hof_value">#{@best[:memory][:value]} kbytes </span> 
+  with <span class="hof_value">#{number_with_delimiter(@best[:memory][:value])} kbytes </span> 
   at submission
   = link_to("#" + @best[:memory][:sub_id].to_s, controller: 'graders' , action: 'submission', id:@best[:memory][:sub_id])
   %br/
