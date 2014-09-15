@@ -21,9 +21,9 @@
   %br/
   = "Comment: #{@submission.grader_comment}"
   %br/
-  = "Runtime (ms): #{@submission.max_runtime}"
+  = "Runtime (s): #{@submission.max_runtime}"
   %br/
-  = "Memory (kb): #{@submission.peak_memory}"
+  = "Memory (kb): #{number_with_delimiter(@submission.peak_memory)}"
 
 %b Source code (first 10kb)
 //%div.highlight{:style => "border: 1px solid black;"}
