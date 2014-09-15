@@ -164,7 +164,7 @@ class ReportController < ApplicationController
 
       #sum into best
       if @by_lang and @by_lang.first
-        @best = @by_lang.first[1]
+        @best = @by_lang.first[1].clone
         @by_lang.each do |lang,prop|
           if @best[:runtime][:value] >= prop[:runtime][:value]
             @best[:runtime] = prop[:runtime]
