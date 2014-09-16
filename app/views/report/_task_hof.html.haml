@@ -3,7 +3,7 @@
   .hof_language { color: green; font-style: italic; }
   .hof_value { color: deeppink;font-style: italic; }
 
-%h2 Overall
+%h2 Overall of #{Problem.find(params[:id]).full_name}
 
 - if @best
   %b Best Runtime:
