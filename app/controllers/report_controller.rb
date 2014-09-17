@@ -16,12 +16,14 @@ class ReportController < ApplicationController
 
     date_and_time = '%Y-%m-%d %H:%M'
     begin
-      @since_time = DateTime.strptime(params[:since_datetime],date_and_time)
+      md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
     rescue
       @since_time = DateTime.new(1000,1,1)
     end
     begin
-      @until_time = DateTime.strptime(params[:until_datetime],date_and_time)
+      md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
     rescue
       @until_time = DateTime.new(3000,1,1)
     end
