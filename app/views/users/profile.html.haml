@@ -31,6 +31,8 @@
       %th Language
       %th Result
       %th Score
+      - if session[:admin]
+        %th IP
   %tbody
     - @submission.each do |s|
       - next unless s.problem
@@ -41,6 +43,8 @@
         %td= s.language.pretty_name
         %td.fix-width= s.grader_comment
         %td= (s.points*100)/s.problem.full_score
+        - if session[:admin]
+          %td= s.ip_address
 
 
 

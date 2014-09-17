@@ -67,6 +67,7 @@ class MainController < ApplicationController
       @submission.source_filename = params['file'].original_filename
     end
     @submission.submitted_at = Time.new.gmtime
+    @submission.ip_address = request.remote_ip
 
     if GraderConfiguration.time_limit_mode? and user.contest_finished?
       @submission.errors.add_to_base "The contest is over."

@@ -50,6 +50,10 @@
     %tr{class: cycle('info-even','info-odd')}
       %td.field Memory (kb):
       %td.value #{@submission.peak_memory}
+    - if session[:admin]
+      %tr{class: cycle('info-even','info-odd')}
+        %td.field IP:
+        %td.value #{@submission.ip_address}
 
 %h2 Source code
 //%div.highlight{:style => "border: 1px solid black;"}
