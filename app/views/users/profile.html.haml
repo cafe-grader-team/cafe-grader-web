@@ -40,7 +40,7 @@
         %td= s.problem.full_name
         %td= s.language.pretty_name
         %td.fix-width= s.grader_comment
-        %td= s.points/s.problem.full_score * 100
+        %td= (s.points*100)/s.problem.full_score
 
 
 
