@@ -38,7 +38,11 @@ class ReportController < ApplicationController
                           .minimum(:created_at),
                    max: Login.where("user_id = ? AND created_at >= ? AND created_at <= ?",
                                       user.id,@since_time,@until_time)
-                          .maximum(:created_at)
+                          .maximum(:created_at),
+                    ip: Login.where("user_id = ? AND created_at >= ? AND created_at <= ?",
+                                      user.id,@since_time,@until_time)
+                          .select(:ip_address).uniq
+
                  }
     end
   end

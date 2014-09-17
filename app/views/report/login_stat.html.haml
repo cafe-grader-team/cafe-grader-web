@@ -22,6 +22,7 @@
       %th login count
       %th earliest
       %th latest
+      %th IP
   %tbody
     - @logins.each do |l|
       %tr{class: cycle('info-even','info-odd')}
@@ -29,4 +30,7 @@
         %td= l[:full_name]
         %td= l[:count]
         %td= l[:min] ? l[:min].in_time_zone.strftime('%Y-%m-%d %H:%M') : ''
-        %td= l[:max] ? "#{l[:max].in_time_zone.strftime('%Y-%m-%d %H:%M')} (#{time_ago_in_words(l[:max].in_time_zone)}  ago)" : ''
+        %td= l[:max] ? "#{l[:max].in_time_zone.strftime('%Y-%m-%d %H:%M.%S')} (#{time_ago_in_words(l[:max].in_time_zone)}  ago)" : ''
+        %td
+          - l[:ip].each do |ip|
+            #{ip.ip_address} <br/>
