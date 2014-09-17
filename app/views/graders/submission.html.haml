@@ -1,31 +1,57 @@
 %style{type: "text/css"}
   = @css_style
+:css
+  .field {
+    font-weight: bold;
+    text-align: right;
+    padding: 3px;
+  }
+
 
 %h1= "Submission: #{@submission.id}"
 
-%p
-  User:
-  = "(#{@submission.user.login}) #{@submission.user.full_name}"
-  %br/
-  Problem: 
-  - if @submission.problem!=nil
-    = "(#{@submission.problem.name}) #{@submission.problem.full_name}"
-  - else
-    = "(n/a)"
-  %br/
-  = "Number: #{@submission.number}"
-  %br/
-  = "Submitted: #{time_ago_in_words(@submission.submitted_at)} ago (at #{@submission.submitted_at.to_formatted_s(:long)})"
-  %br/
-  = "Points: #{@submission.points}/#{@submission.problem.full_score}"
-  %br/
-  = "Comment: #{@submission.grader_comment}"
-  %br/
-  = "Runtime (s): #{@submission.max_runtime}"
-  %br/
-  = "Memory (kb): #{number_with_delimiter(@submission.peak_memory)}"
 
-%b Source code (first 10kb)
+%h2 Stat
+
+%table.info
+  %thead
+    %tr.info-head
+      %th Field
+      %th Value
+  %tbody
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field User:
+      %td.value= "(#{@submission.user.login}) #{@submission.user.full_name}"
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Problem:
+      %td.value
+        - if @submission.problem!=nil
+          = "(#{@submission.problem.name}) #{@submission.problem.full_name}"
+        - else
+          = "(n/a)"
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Tries:
+      %td.value= @submission.number
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Submitted:
+      %td.value #{time_ago_in_words(@submission.submitted_at)} ago (at #{@submission.submitted_at.to_formatted_s(:long)})
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Graded:
+      %td.value #{time_ago_in_words(@submission.graded_at)} ago (at #{@submission.graded_at.to_formatted_s(:long)})
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Points:
+      %td.value #{@submission.points}/#{@submission.problem.full_score}
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Comment:
+      %td.value #{@submission.grader_comment}
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Runtime (s):
+      %td.value #{@submission.max_runtime}
+    %tr{class: cycle('info-even','info-odd')}
+      %td.field Memory (kb):
+      %td.value #{@submission.peak_memory}
+
+%h2 Source code
 //%div.highlight{:style => "border: 1px solid black;"}
 =@formatted_code.html_safe
 
