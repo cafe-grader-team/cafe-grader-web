@@ -16,12 +16,14 @@ class ReportController < ApplicationController
 
     date_and_time = '%Y-%m-%d %H:%M'
     begin
-      @since_time = DateTime.strptime(params[:since_datetime],date_and_time)
+      md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
     rescue
       @since_time = DateTime.new(1000,1,1)
     end
     begin
-      @until_time = DateTime.strptime(params[:until_datetime],date_and_time)
+      md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
     rescue
       @until_time = DateTime.new(3000,1,1)
     end
@@ -38,7 +40,11 @@ class ReportController < ApplicationController
                           .minimum(:created_at),
                    max: Login.where("user_id = ? AND created_at >= ? AND created_at <= ?",
                                       user.id,@since_time,@until_time)
-                          .maximum(:created_at)
+                          .maximum(:created_at),
+                    ip: Login.where("user_id = ? AND created_at >= ? AND created_at <= ?",
+                                      user.id,@since_time,@until_time)
+                          .select(:ip_address).uniq
+
                  }
     end
   end
@@ -164,7 +170,7 @@ class ReportController < ApplicationController
 
       #sum into best
       if @by_lang and @by_lang.first
-        @best = @by_lang.first[1]
+        @best = @by_lang.first[1].clone
         @by_lang.each do |lang,prop|
           if @best[:runtime][:value] >= prop[:runtime][:value]
             @best[:runtime] = prop[:runtime]
