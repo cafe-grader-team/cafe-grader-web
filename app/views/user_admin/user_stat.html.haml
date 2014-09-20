@@ -18,10 +18,13 @@
 
 = render partial: 'submission_range'
 
-- if params[:action] == 'user_stat' 
-  = "latest score" 
+- if params[:action] == 'user_stat'
+  %h3 Latest score
+  = link_to '[download csv with all problems]', controller: :user_admin, action: :user_stat, commit: 'download csv'
 - else
+  %h3 Max score
   = link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
+  = link_to '[download csv with all problems]', controller: :user_admin, action: :user_stat_max, commit: 'download csv'
 
 %table.tablesorter-cafe#my_table
   %thead
