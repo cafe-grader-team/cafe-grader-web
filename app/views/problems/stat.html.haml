@@ -1,0 +1,34 @@
+:css
+  .fix-width {
+    font-family: "Consolas, Monaco, Droid Sans Mono,Mono, Monospace,Courier"
+  }
+
+%h1 Problem stat: #{@problem.name}
+%h2 Overview
+
+%h2 Submissions
+- if @submissions and @submissions.count > 0
+  %table.info#main_table
+    %thead
+      %tr.info-head
+        %th ID
+        %th Login
+        %th Name
+        %th Submitted_at
+        %th Points
+        %th comment
+    %tbody
+      - row_odd,curr = true,''
+      - @submissions.each do |sub|
+        - next unless sub.user
+        - row_odd,curr = !row_odd, sub.user if curr != sub.user
+        %tr{class: row_odd ? "info-odd" : "info-even"}
+          %td= link_to sub.id, controller: 'graders', action: 'submission', id: sub.id
+          %td= link_to sub.user.login, controller: :users, action: :profile, id: sub.user.id
+          %td= sub.user.full_name
+          %td= time_ago_in_words(sub.submitted_at) + " ago"
+          %td= sub.points
+          %td.fix-width= sub.grader_comment
+- else
+  No submission
+
