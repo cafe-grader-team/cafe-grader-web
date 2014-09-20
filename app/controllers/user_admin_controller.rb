@@ -1,4 +1,7 @@
+require 'csv'
+
 class UserAdminController < ApplicationController
+
 
   include MailHelperMethods
 
@@ -122,7 +125,11 @@ class UserAdminController < ApplicationController
   end
 
   def user_stat
-    @problems = Problem.find_available_problems
+    if params[:commit] == 'download csv'
+      @problems = Problem.all
+    else
+      @problems = Problem.find_available_problems
+    end
     @users = User.find(:all, :include => [:contests, :contest_stat])
     @scorearray = Array.new
     @users.each do |u|
@@ -138,10 +145,21 @@ class UserAdminController < ApplicationController
       end
       @scorearray << ustat
     end
+
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'last_score.csv'
+    else
+      render template: 'user_admin/user_stat'
+    end
   end
 
   def user_stat_max
-    @problems = Problem.find_available_problems
+    if params[:commit] == 'download csv'
+      @problems = Problem.all
+    else
+      @problems = Problem.find_available_problems
+    end
     @users = User.find(:all, :include => [:contests, :contest_stat])
     @scorearray = Array.new
     #set up range from param
@@ -160,7 +178,12 @@ class UserAdminController < ApplicationController
       @scorearray << ustat
     end
 
-    render template: 'user_admin/user_stat'
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      render template: 'user_admin/user_stat'
+    end
   end
 
   def import
@@ -474,5 +497,36 @@ class UserAdminController < ApplicationController
       @users = User.find_users_with_no_contest
     end
     return [@contest, @users]
+  end
+
+  def gen_csv_from_scorearray(scorearray,problem)
+    CSV.generate do |csv|
+      #add header
+      header = ['User','Name', 'Activated?', 'Logged in', 'Contest']
+      problem.each { |p| header << p.name }
+      header += ['Total','Passed']
+      csv << header
+      #add data
+      scorearray.each do |sc|
+        total = num_passed = 0
+        row = Array.new
+        sc.each_index do |i|
+          if i == 0
+            row << sc[i].login
+            row << sc[i].full_name
+            row << sc[i].activated
+            row << (sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no')
+            row << sc[i].contests.collect {|c| c.name}.join(', ')
+          else
+            row << sc[i][0]
+            total += sc[i][0]
+            num_passed += 1 if sc[i][1]
+          end
+        end
+        row << total 
+        row << num_passed
+        csv << row
+      end
+    end
   end
 end

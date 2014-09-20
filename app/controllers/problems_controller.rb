@@ -131,7 +131,7 @@ class ProblemsController < ApplicationController
     if !@problem.available
       redirect_to :controller => 'main', :action => 'list'
     else
-      @submissions = Submission.find_all_last_by_problem(params[:id])
+      @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
     end
   end
 
