@@ -89,8 +89,30 @@ class ProblemsController < ApplicationController
         render :action => 'edit' and return
       end
     end
+    if params[:file] and params[:file].content_type != 'application/pdf'
+        flash[:notice] = 'Error: Uploaded file is not PDF'
+        render :action => 'edit' and return
+    end
     if @problem.update_attributes(params[:problem])
       flash[:notice] = 'Problem was successfully updated.'
+      unless params[:file] == nil or params[:file] == ''
+        flash[:notice] = 'Problem was successfully updated and a new PDF file is uploaded.'
+        out_dirname = "#{Problem.download_file_basedir}/#{@problem.id}"
+        if not FileTest.exists? out_dirname
+          Dir.mkdir out_dirname
+        end
+
+        out_filename = "#{out_dirname}/#{@problem.name}.pdf"
+        if FileTest.exists? out_filename
+          File.delete out_filename
+        end
+
+        File.open(out_filename,"wb") do |file|
+          file.write(params[:file].read)
+        end
+        @problem.description_filename = "#{@problem.name}.pdf"
+        @problem.save
+      end
       redirect_to :action => 'show', :id => @problem
     else
       render :action => 'edit'
