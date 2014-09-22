@@ -80,6 +80,7 @@ class GradersController < ApplicationController
       when "ruby"   then Rouge::Lexers::Ruby.new
       when "python" then Rouge::Lexers::Python.new
       when "java"   then Rouge::Lexers::Java.new
+      when "php"    then Rouge::Lexers::PHP.new
     end
     @formatted_code = formatter.format(lexer.lex(@submission.source))
     @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
