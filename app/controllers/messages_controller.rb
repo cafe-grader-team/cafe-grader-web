@@ -6,13 +6,13 @@ class MessagesController < ApplicationController
          :redirect_to => { :action => 'list' }
 
   before_filter :admin_authorization, :only => ['console','show',
-                                                'reply','hide']
+                                                'reply','hide','list_all']
 
   def list
     @user = User.find(session[:user_id])
     @messages = Message.find_all_sent_by_user(@user)
   end
-  
+
   def console
     @user = User.find(session[:user_id])
     @messages = Message.find_all_system_unreplied_messages
@@ -20,6 +20,11 @@ class MessagesController < ApplicationController
 
   def show
     @message = Message.find(params[:id])
+  end
+
+  def list_all
+    @user = User.find(session[:user_id])
+    @messages = Message.where(receiver_id: nil).order(:created_at)
   end
 
   def create
