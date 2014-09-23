@@ -164,8 +164,12 @@ class ProblemsController < ApplicationController
   def do_manage
     if params.has_key? 'change_date_added'
       change_date_added
-    else params.has_key? 'add_to_contest'
+    elsif params.has_key? 'add_to_contest'
       add_to_contest
+    elsif params.has_key? 'enable_problem'
+      set_available(true)
+    elsif params.has_key? 'disable_problem'
+      set_available(false)
     end
     redirect_to :action => 'manage'
   end
@@ -234,11 +238,19 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def set_available(avail)
+    problems = get_problems_from_params
+    problems.each do |p|
+      p.available = avail
+      p.save
+    end
+  end
+
   def get_problems_from_params
     problems = []
     params.keys.each do |k|
       if k.index('prob-')==0
-        name, id = k.split('-')
+        name, id, order = k.split('-')
         problems << Problem.find(id)
       end
     end

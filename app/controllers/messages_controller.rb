@@ -12,7 +12,7 @@ class MessagesController < ApplicationController
     @user = User.find(session[:user_id])
     @messages = Message.find_all_sent_by_user(@user)
   end
-  
+
   def console
     @user = User.find(session[:user_id])
     @messages = Message.find_all_system_unreplied_messages
