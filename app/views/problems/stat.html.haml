@@ -6,6 +6,23 @@
 %h1 Problem stat: #{@problem.name}
 %h2 Overview
 
+
+%table.info
+  %thead
+    %tr.info-head
+      %th Stat
+      %th Value
+  %tbody
+    %tr{class: cycle('info-even','info-odd')}
+      %td Submissions
+      %td= @submissions.count
+    %tr{class: cycle('info-even','info-odd')}
+      %td Solved/Attempted User
+      %td #{@summary[:solve]}/#{@summary[:attempt]} (#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%)
+
+%h2 Submissions Count
+= render partial: 'application/bar_graph', locals: { histogram: @histogram }
+
 %h2 Submissions
 - if @submissions and @submissions.count > 0
   %table.info#main_table

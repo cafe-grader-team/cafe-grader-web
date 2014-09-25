@@ -1,0 +1,44 @@
+- param = {} unless param
+- graph_height = param[:graph_height] || 100
+- bar_width = param[:bar_width] || 14
+- graph_width = (bar_width * histogram[:data].count) + 20
+:css
+  .hist_bar {
+    width: #{bar_width-1}px;
+    position: absolute;
+    background-color: lightblue;
+  }
+  .hist_fill {
+    width: #{bar_width-1}px;
+    position: absolute;
+    background-color: #eee;
+  }
+  .hist_text {
+    position: absolute;
+    font-size:5px;
+  }
+
+%div{style: "position: relative; width: #{graph_width}px; height: 150px; background-color:#fff;" }
+  //draw background
+  - histogram[:data].each_index do |i|
+    - height = histogram[:data][i] * graph_height / histogram[:summary][:max]
+    - top = graph_height - height
+    - left = graph_width - (i+1)*bar_width
+    %div.hist_fill{style: "top: 0px; height: #{graph_height - height}px; left: #{left}px;" }
+  // draw horizontal line
+  - line = 3
+  - line.times do |i|
+    - top = graph_height - graph_height * (i+0.5)/ line
+    %div{style: "position:absolute;width: #{graph_width-21}px;height: 1px;left: 20px;top:#{top}px;background-color: #333;"}
+    %div.hist_text{style: "position:absolute;left: 0px;top:#{top-6}px"}
+      =((i+0.5) * histogram[:summary][:max] / line).to_i
+  // draw the actual bar and text
+  - @histogram[:data].each_index do |i|
+    - height = histogram[:data][i] * graph_height / histogram[:summary][:max]
+    - top = graph_height - height
+    - left = graph_width - (i+1)*bar_width
+    %div.hist_bar{style: "top: #{top}px; height: #{height}px; left: #{left}px; dae: #{histogram[:data][i]}" }
+    - if i % 7 == 1
+      %div.hist_text{style: "top:#{graph_height + 5}px;left: #{left}px;"} #{(Time.zone.today - i.day).strftime('%-d')}
+    - if (Time.now.in_time_zone - i.day).day == 15
+      %div.hist_text{style: "top:#{graph_height + 15}px;left: #{left}px;"} #{(Time.zone.today - i.day).strftime('%b')}

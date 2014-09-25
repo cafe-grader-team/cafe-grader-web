@@ -54,6 +54,13 @@ class Problem < ActiveRecord::Base
   def self.download_file_basedir
     return "#{Rails.root}/data/tasks"
   end
+
+  def get_submission_stat
+    result = Hash.new
+    #total number of submission
+    result[:total_sub] = Submission.where(problem_id: self.id).count
+    result[:attempted_user] = Submission.where(problem_id: self.id).group_by(:user_id)
+  end
   
   protected
 
