@@ -21,12 +21,18 @@
   %tbody
     %tr{class: cycle('info-even','info-odd')}
       %td.field User:
-      %td.value= "(#{@submission.user.login}) #{@submission.user.full_name}"
+      %td.value
+        - if @submission.user 
+          = link_to "(#{@submission.user.login})", controller: "users", action: "profile", id: @submission.user
+          = @submission.user.full_name
+        - else
+          = "(n/a)"
     %tr{class: cycle('info-even','info-odd')}
       %td.field Problem:
       %td.value
         - if @submission.problem!=nil
-          = "(#{@submission.problem.name}) #{@submission.problem.full_name}"
+          = link_to "(#{@submission.problem.name})", controller: "problems", action: "stat", id: @submission.problem
+          = @submission.problem.full_name
         - else
           = "(n/a)"
     %tr{class: cycle('info-even','info-odd')}

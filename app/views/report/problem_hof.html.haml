@@ -6,7 +6,7 @@
 /  %h1 All-Time Hall of Fame
 
 
-%h1 Tasks Hall of Fame
+%h1 Hall of Fame
 .task-menu
   Tasks
   %br/
@@ -18,5 +18,6 @@
   Please select a problem.
 - else
   =render partial: 'task_hof'
-
+  %h2 Submission History
+  =render partial: 'application/bar_graph', locals: { histogram: @histogram }
 

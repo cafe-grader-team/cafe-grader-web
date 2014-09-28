@@ -150,11 +150,25 @@ class ProblemsController < ApplicationController
 
   def stat
     @problem = Problem.find(params[:id])
-    if !@problem.available
+    unless @problem.available or session[:admin]
       redirect_to :controller => 'main', :action => 'list'
-    else
-      @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
+      return
     end
+    @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
+
+    #stat summary
+    range =65
+    @histogram = { data: Array.new(range,0), summary: {} }
+    user = Hash.new(0)
+    @submissions.find_each do |sub|
+      d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
+      @histogram[:data][d.to_i] += 1 if d < range
+      user[sub.user_id] = [user[sub.user_id], (sub.points >= @problem.full_score) ? 1 : 0].max
+    end
+    @histogram[:summary][:max] = [@histogram[:data].max,1].max
+
+    @summary = { attempt: user.count, solve: 0 }
+    user.each_value { |v| @summary[:solve] += 1 if v == 1 }
   end
 
   def manage
@@ -255,6 +269,9 @@ class ProblemsController < ApplicationController
       end
     end
     problems
+  end
+
+  def get_problems_stat
   end
 
 end

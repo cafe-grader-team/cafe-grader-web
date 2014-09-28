@@ -1,48 +1,99 @@
+- content_for :header do
+  = javascript_include_tag 'local_jquery'
+
+:javascript
+  $(document).ready( function() {
+    $("#mem_remark").hover( function() {
+      $("#mem_remark_box").show();
+    }, function() {
+      $("#mem_remark_box").hide();
+    });
+  });
+  alert("hahaha");
 :css
   .hof_user { color: orangered; font-style: italic; }
   .hof_language { color: green; font-style: italic; }
   .hof_value { color: deeppink;font-style: italic; }
+  .info_param { font-weight: bold;text-align: right; }
+  .tooltip {
+    font-family: Verdana,sans-serif;
+    font-weight: normal;
+    text-align: left;
+    font-size: 1.0em;
+    color: black;
+    line-height: 1.1;
+    display: none;
+    min-width: 20em;
+    position: absolute;
+    left: 25px;
+    bottom: 5px;
+    border: 1px solid;
+    padding: 5px;
+    background-color: #FFF;
+    word-wrap: break-word;
+    z-index: 9999;
+    overflow: auto;
+  }
 
-%h2 Overall of #{Problem.find(params[:id]).full_name}
+%h1 (#{Problem.find(params[:id]).name}) #{Problem.find(params[:id]).full_name}
+
+%h2 Problem Stat
+%table.info
+  %thead
+    %tr.info-head
+      %th Stat
+      %th Value
+  %tbody
+    %tr{class: cycle('info-even','info-odd')}
+      %td.info_param Submissions
+      %td= @summary[:count]
+    %tr{class: cycle('info-even','info-odd')}
+      %td.info_param Solved/Attempted User
+      %td #{@summary[:solve]}/#{@summary[:attempt]} (#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%)
+    - if @best
+      %tr{class: cycle('info-even','info-odd')}
+        %td.info_param Best Runtime
+        %td
+          by #{link_to @best[:runtime][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
+          using <span class="hof_language">#{@best[:runtime][:lang]}</span> 
+          with <span class="hof_value">#{@best[:runtime][:value] * 1000} milliseconds</span> 
+          at submission
+          = link_to("#" + @best[:runtime][:sub_id].to_s, controller: 'graders', action: 'submission', id:@best[:runtime][:sub_id])
+
+      %tr{class: cycle('info-even','info-odd')}
+        %td.info_param
+          Best Memory Usage
+          %sup{ id: "mem_remark", style: "position:relative; color: blue;"} 
+            [?]
+            %span.tooltip#mem_remark_box
+              This counts only for submission with 100% score.
+              Right now, java is excluded from memory usage competition. (Because it always uses 2GB memory...)
+        %td
+          by #{link_to @best[:memory][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
+          using <span class="hof_language">#{@best[:memory][:lang]}</span> 
+          with <span class="hof_value">#{number_with_delimiter(@best[:memory][:value])} kbytes </span> 
+          at submission
+          = link_to("#" + @best[:memory][:sub_id].to_s, controller: 'graders' , action: 'submission', id:@best[:memory][:sub_id])
+
+      %tr{class: cycle('info-even','info-odd')}
+        %td.info_param Shortest Code
+        %td
+          by #{link_to @best[:length][:user], controller:'users', action:'profile', id:@best[:length][:user_id]} 
+          using <span class="hof_language">#{@best[:length][:lang]}</span> 
+          with  <span class="hof_value">#{@best[:length][:value]} bytes</span> 
+          at submission
+          = link_to("#" + @best[:length][:sub_id].to_s, controller: 'graders' , action: 'submission', id: @best[:length][:sub_id])
+
+      %tr{class: cycle('info-even','info-odd')}
+        %td.info_param First solver
+        %td
+          #{link_to @best[:first][:user], controller:'users', action:'profile', id:@best[:first][:user_id]} is the first solver 
+          using <span class="hof_language">#{@best[:first][:lang]}</span> 
+          on <span class="hof_value">#{@best[:first][:value]}</span> 
+          at submission
+          = link_to("#" + @best[:first][:sub_id].to_s, controller: 'graders' , action: 'submission', id: @best[:first][:sub_id])
 
 - if @best
-  %b Best Runtime:
-  by #{link_to @best[:runtime][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
-  using <span class="hof_language">#{@best[:runtime][:lang]}</span> 
-  with <span class="hof_value">#{@best[:runtime][:value] * 1000} milliseconds</span> 
-  at submission
-  = link_to("#" + @best[:runtime][:sub_id].to_s, controller: 'graders', action: 'submission', id:@best[:runtime][:sub_id])
-  %br/
-
-  %b Best Memory Usage:
-  by #{link_to @best[:memory][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
-  using <span class="hof_language">#{@best[:memory][:lang]}</span> 
-  with <span class="hof_value">#{number_with_delimiter(@best[:memory][:value])} kbytes </span> 
-  at submission
-  = link_to("#" + @best[:memory][:sub_id].to_s, controller: 'graders' , action: 'submission', id:@best[:memory][:sub_id])
-  %br/
-
-  %b Shortest Code:
-  by #{link_to @best[:length][:user], controller:'users', action:'profile', id:@best[:length][:user_id]} 
-  using <span class="hof_language">#{@best[:length][:lang]}</span> 
-  with  <span class="hof_value">#{@best[:length][:value]} bytes</span> 
-  at submission
-  = link_to("#" + @best[:length][:sub_id].to_s, controller: 'graders' , action: 'submission', id: @best[:length][:sub_id])
-  %br/
-
-  %b First solver:
-  #{link_to @best[:first][:user], controller:'users', action:'profile', id:@best[:first][:user_id]} is the first solver 
-  using <span class="hof_language">#{@best[:first][:lang]}</span> 
-  on <span class="hof_value">#{@best[:first][:value]}</span> 
-  at submission
-  = link_to("#" + @best[:first][:sub_id].to_s, controller: 'graders' , action: 'submission', id: @best[:first][:sub_id])
-  %br/
-
-
-  %p
-    This counts only for submission with 100% score <br/>
-    Right now, java is excluded from memory usage competition. (Because it always uses 2GB memory...)
-
   %h2 By language
 
   %table.info
@@ -75,5 +126,3 @@
               = "(#{value[:first][:value]} @"
               = "#{link_to("#" + value[:first][:sub_id].to_s, controller: 'graders' , action: 'submission', id: value[:first][:sub_id])} )".html_safe
 
-- else
-  %h3 No submissions

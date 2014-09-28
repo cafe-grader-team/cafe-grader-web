@@ -111,7 +111,25 @@ class UsersController < ApplicationController
 
   def profile
     @user = User.find(params[:id])
-    @submission = Submission.where(user_id: params[:id]).all
+    @submission = Submission.includes(:problem).where(user_id: params[:id])
+
+    range = 120
+    @histogram = { data: Array.new(range,0), summary: {} }
+    @summary = {count: 0, solve: 0, attempt: 0}
+    problem = Hash.new(0)
+
+    @submission.find_each do |sub|
+      #histogram
+      d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
+      @histogram[:data][d.to_i] += 1 if d < range
+
+      @summary[:count] += 1
+      problem[sub.problem] = [problem[sub.problem], (sub.points >= sub.problem.full_score) ? 1 : 0].max
+    end
+
+    @histogram[:summary][:max] = [@histogram[:data].max,1].max
+    @summary[:attempt] = problem.count
+    problem.each_value { |v| @summary[:solve] += 1 if v == 1 }
   end
 
   protected
