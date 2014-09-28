@@ -159,7 +159,6 @@ class ProblemsController < ApplicationController
     #stat summary
     range =65
     @histogram = { data: Array.new(range,0), summary: {} }
-    @histogram[:data] = Array.new(range,0)
     user = Hash.new(0)
     @submissions.find_each do |sub|
       d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60

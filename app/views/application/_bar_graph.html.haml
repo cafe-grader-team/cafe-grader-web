@@ -18,7 +18,7 @@
     font-size:5px;
   }
 
-%div{style: "position: relative; width: #{graph_width}px; height: 150px; background-color:#fff;" }
+%div{style: "position: relative; width: #{graph_width}px; height: 125px; background-color:#fff;" }
   //draw background
   - histogram[:data].each_index do |i|
     - height = histogram[:data][i] * graph_height / histogram[:summary][:max]

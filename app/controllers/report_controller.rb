@@ -111,7 +111,6 @@ class ReportController < ApplicationController
 
     range =65
     @histogram = { data: Array.new(range,0), summary: {} }
-    @histogram[:data] = Array.new(range,0)
     @summary = {count: 0, solve: 0, attempt: 0}
     user = Hash.new(0)
     Submission.where(problem_id: @problem.id).find_each do |sub|
