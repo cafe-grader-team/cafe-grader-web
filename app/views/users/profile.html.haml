@@ -53,7 +53,7 @@
       - next unless s.problem
       %tr
         %td= link_to "#{s.id}", controller: "graders", action: "submission", id: s.id
-        %td= s.problem.name
+        %td= link_to s.problem.name, controller: "problems", action: "stat", id: s.problem
         %td= s.problem.full_name
         %td= s.language.pretty_name
         %td  #{s.submitted_at.strftime('%Y-%m-%d %H:%M')} (#{time_ago_in_words(s.submitted_at)} ago)
