@@ -1,6 +1,6 @@
 class ReportController < ApplicationController
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat]
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck]
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
@@ -196,6 +196,7 @@ class ReportController < ApplicationController
     @struggle = Array.new
     record = {}
     Submission.includes(:problem,:user).order(:problem_id,:user_id).find_each do |sub|
+      next unless sub.problem and sub.user
       if user != sub.user_id or problem != sub.problem_id
         @struggle << { user: record[:user], problem: record[:problem], tries: tries } unless solve
         record = {user: sub.user, problem: sub.problem}
