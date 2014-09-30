@@ -188,4 +188,29 @@ class ReportController < ApplicationController
     user.each_value { |v| @summary[:solve] += 1 if v == 1 }
   end
 
+  def stuck #report struggling user,problem
+    # init
+    user,problem = nil
+    solve = true
+    tries = 0
+    @struggle = Array.new
+    record = {}
+    Submission.includes(:problem,:user).order(:problem_id,:user_id).find_each do |sub|
+      if user != sub.user_id or problem != sub.problem_id
+        @struggle << { user: record[:user], problem: record[:problem], tries: tries } unless solve
+        record = {user: sub.user, problem: sub.problem}
+        user,problem = sub.user_id, sub.problem_id
+        solve = false
+        tries = 0
+      end
+      if sub.points >= sub.problem.full_score
+        solve = true
+      else
+        tries += 1
+      end
+    end
+    @struggle.sort!{|a,b| b[:tries] <=> a[:tries] }
+    @struggle = @struggle[0..50]
+  end
+
 end

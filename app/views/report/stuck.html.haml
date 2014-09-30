@@ -1,0 +1,17 @@
+%table.info
+  %thead
+    %tr.info-head
+      %th Problem
+      %th User
+      %th tries
+  %tbody
+    - @struggle.each do |s|
+      %tr
+        %td
+          = link_to "(#{s[:problem].name})", controller: :problems, action: :stat, id: s[:problem]
+          = s[:problem].full_name
+        %td
+          = link_to "(#{s[:user].login})", controller: :users, action: :profile, id: s[:user]
+          = s[:user].full_name
+        %td
+          = s[:tries]
