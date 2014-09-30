@@ -63,7 +63,8 @@ class MainController < ApplicationController
     @submission.user = user
     @submission.language_id = 0
     if (params['file']) and (params['file']!='')
-      @submission.source = params['file'].read 
+      @submission.source = File.open(params['file'].path,'r:UTF-8',&:read) 
+      @submission.source.encode!('UTF-8','UTF-8',invalid: :replace, replace: '')
       @submission.source_filename = params['file'].original_filename
     end
     @submission.submitted_at = Time.new.gmtime

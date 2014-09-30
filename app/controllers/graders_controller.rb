@@ -32,6 +32,7 @@ class GradersController < ApplicationController
                            :order => 'created_at DESC')
     @last_test_request = TestRequest.find(:first,
                                           :order => 'created_at DESC')
+    @submission = Submission.order("id desc").limit(20)
   end
 
   def clear
