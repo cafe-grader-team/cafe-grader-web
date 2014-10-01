@@ -60,7 +60,7 @@ class TasksController < ApplicationController
         content_type = 'application/octet-stream'
       end
 
-      send_file filename, :stream => false, :filename => base_filename, :type => content_type
+      send_file filename, :stream => false, :disposition => 'inline', :filename => base_filename, :type => content_type
     end
   end
 
