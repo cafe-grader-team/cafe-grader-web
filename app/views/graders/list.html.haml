@@ -66,7 +66,7 @@
           %td= sub.try(:user).try(:full_name)
           %td= sub.try(:problem).try(:full_name)
           %td= "#{time_ago_in_words(sub.submitted_at)} ago"
-          %td= "#{time_ago_in_words(sub.graded_at)} ago"
+          %td= "#{sub.graded_at ? time_ago_in_words(sub.graded_at) : ''} ago"
           %td= sub.grader_comment
 
 

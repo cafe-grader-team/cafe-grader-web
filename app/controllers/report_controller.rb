@@ -196,6 +196,7 @@ class ReportController < ApplicationController
     @struggle = Array.new
     record = {}
     Submission.includes(:problem,:user).order(:problem_id,:user_id).find_each do |sub|
+      next unless sub.user and sub.problem
       if user != sub.user_id or problem != sub.problem_id
         @struggle << { user: record[:user], problem: record[:problem], tries: tries } unless solve
         record = {user: sub.user, problem: sub.problem}
