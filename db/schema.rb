@@ -239,7 +239,6 @@ ActiveRecord::Schema.define(:version => 20140917150629) do
     t.boolean  "activated",                     :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "section"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

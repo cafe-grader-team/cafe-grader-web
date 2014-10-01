@@ -100,7 +100,7 @@ CONFIGURATIONS =
      :value_type => 'boolean',
      :default_value => 'true',
      :description => 'If this option is true, users can change their settings'
-   }
+   },
 
    # If Configuration['contest.test_request.early_timeout'] is true
    # the user will not be able to use test request at 30 minutes
