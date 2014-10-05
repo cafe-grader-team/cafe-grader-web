@@ -4,8 +4,12 @@
     = submission_counter+1
   %td.info{:align => "center"}
     = link_to "##{submission.id}", controller: :graders, action: :submission, id: submission.id
-  %td.info= format_short_time(submission.submitted_at)
+  %td.info
+    = l submission.submitted_at, format: :long
+    = "( #{time_ago_in_words(submission.submitted_at)} ago)"
   %td.info{:align => "center"}
+    = submission.source_filename
+    = " (#{submission.language.pretty_name}) "
     = link_to('[load]',{:action => 'source', :id => submission.id})
   %td.info
     - if submission.graded_at!=nil
