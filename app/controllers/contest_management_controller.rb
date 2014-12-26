@@ -37,7 +37,7 @@ class ContestManagementController < ApplicationController
   end
 
   def change_contest_mode
-    if ['standard', 'contest', 'indv-contest'].include? params[:id]
+    if ['standard', 'contest', 'indv-contest', 'analysis'].include? params[:id]
       config = GraderConfiguration.find_by_key('system.mode')
       config.value = params[:id]
       config.save
