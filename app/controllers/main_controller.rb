@@ -192,7 +192,7 @@ class MainController < ApplicationController
 
   def confirm_contest_start
     user = User.find(session[:user_id])
-    if request.method == :post
+    if request.method == 'POST'
       user.update_start_time
       redirect_to :action => 'list'
     else
