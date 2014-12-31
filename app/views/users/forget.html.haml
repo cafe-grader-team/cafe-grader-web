@@ -11,7 +11,8 @@
 
 = form_tag :action => 'retrieve_password' do
   =t 'registration.password_retrieval.instructions'
-  = text_field 'email', nil, :size => 20
+  %br/
+  = email_field 'email', nil, :size => 20
   %br/
   = submit_tag(t 'registration.password_retrieval.button_label')
 
