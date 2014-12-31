@@ -16,7 +16,7 @@ group :assets do
   # See https://github.com/sstephenson/execjs#readme for more supported runtimes
   # gem 'therubyracer', :platforms => :ruby
 
-  gem 'uglifier', '~> 2.6.0'
+  gem 'uglifier'
 end
 
 gem 'prototype-rails'
