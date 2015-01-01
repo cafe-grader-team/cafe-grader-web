@@ -9,8 +9,8 @@ en:
   email_label: 'E-mail'
   password_label: 'Password'
 
-  go_ahead_to: "Go ahead to"
-  go_back_to: "Go back to"
+  go_ahead_to: "Go ahead to "
+  go_back_to: "Go back to "
   login_page: "login page"
   home_page: "home page"
 
