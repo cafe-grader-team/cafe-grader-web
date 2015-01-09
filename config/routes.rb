@@ -6,6 +6,8 @@ CafeGrader::Application.routes.draw do
   resources :announcements
   resources :sites
 
+  resources :grader_configuration, controller: 'configurations'
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

@@ -37,6 +37,9 @@ gem 'prototype-rails'
 # gem 'debugger'
 #
 
+#in-place editor
+gem 'best_in_place', '~> 3.0.1'
+
 # jquery addition
 gem 'jquery-rails'
 gem 'jquery-ui-sass-rails'
