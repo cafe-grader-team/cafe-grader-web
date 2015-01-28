@@ -200,9 +200,88 @@ class MainController < ApplicationController
       @user = user
     end
   end
+
+  # thailandoi contests
+
+  def verifying_testcase
+    problem = Problem.find(params[:id])
+    if !problem.available
+      flash[:notice] = 'Error: problem is not available'
+      redirect_to :action => 'list'
+    else
+      test_pair = TestPair.get_for(problem, false)
+      send_data(test_pair.input, 
+		{:filename => problem.name + '-verifying-input.txt', 
+                 :type => 'text/plain'})      
+    end
+  end
   
+  def testcase
+    problem = Problem.find(params[:id])
+    if !problem.available
+      flash[:notice] = 'Error: problem is not available'
+      redirect_to :action => 'list'
+    else
+      test_pair = TestPair.get_for(problem, true)
+
+      user = User.find(session[:user_id])
+      assignent = user.get_test_pair_assignment_for(problem)
+
+      if !assignent
+        assignent = TestPairAssignment.new
+        assignent.user = user
+        assignent.problem = problem
+        assignent.test_pair = test_pair
+        assignent.submitted = false
+        assignent.save
+      end
+
+      send_data(test_pair.input, 
+		{:filename => problem.name + '-input.txt', 
+                 :type => 'text/plain'})      
+    end
+  end
+  
+  def verifying_submit
+    user = User.find(session[:user_id])
+    problem_id = params[:id]
+    problem = Problem.find(problem_id)
+
+    if !problem or !problem.available
+      flash[:notice] = 'Error: problem is not available'
+      redirect_to :action => 'list' and return
+    end
+     
+    test_pair = TestPair.get_for(problem, false)
+    if (params['output_file']) and (params['output_file']!='')
+      output = params['output_file'].read   
+
+      @current_problem = problem
+      @grading_result = grade(output, test_pair.solution)
+      prepare_list_information
+      render :action => 'list' and return
+    else
+      flash[:notice] = 'Error: output file errors'
+      redirect_to :action => 'list'
+    end
+  end
+
   protected
 
+  def grade(output, solution)
+    out_items = output.split
+    sol_items = solution.split
+    res = ''
+    sol_items.length.times do |i|
+      if out_items[i] == sol_items[i]
+        res = res + 'P'
+      else
+        res = res + '-'
+      end
+    end
+    return res
+  end
+  
   def prepare_announcements(recent=nil)
     if GraderConfiguration.show_tasks_to?(@user)
       @announcements = Announcement.find_published(true)
@@ -215,6 +294,23 @@ class MainController < ApplicationController
     end
   end
 
+  def prepare_timeout_information(problems)
+    @submission_timeouts = {}
+    problems.each do |problem|
+      assignment = @user.get_test_pair_assignment_for(problem)
+      if assignment == nil
+        timeout = nil
+      else
+        if (assignment.expired?) or (assignment.submitted)
+          timeout = 0
+        else
+          timeout = assignment.created_at + TEST_ASSIGNMENT_EXPIRATION_DURATION - Time.new.gmtime
+        end
+      end
+      @submission_timeouts[problem.id] = timeout
+    end
+  end
+  
   def prepare_list_information
     @user = User.find(session[:user_id])
     if not GraderConfiguration.multicontests?
@@ -233,6 +329,7 @@ class MainController < ApplicationController
       end
     end
     prepare_announcements
+    prepare_timeout_information(@problems)
   end
 
   def check_viewability

@@ -1,8 +1,51 @@
-<%= form_tag({:action => 'submit'}, :multipart => true) do %>
-<b>Problem:</b> <%= select 'submission', 'problem_id', 
-             	[[(t 'main.specified_in_header'),'-1']] + 
-		@problems.collect {|p| [p.full_name, p.id]},
-		:selected => '-1' %>
-<b>File:</b> <%= file_field_tag 'file' %>
-<%= submit_tag 'Submit' %>
+<div class="submitbox">
+  <b>Problem:</b> <%= select 'submission', 'problem_id', 
+             	      [['กรุณาเลือกข้อที่ต้องการส่งหรือทดสอบ','-1']] + 
+		      @problems.collect {|p| [p.full_name, p.id]},
+		      { :selected => '-1' },
+                      { :onchange => 'select_click()' } %>
+</div>
+
+<% @problems.each do |problem| %>
+  <div class="submission-submit-divs" id="submission_submit_div_<%= problem.id %>_id" style="displanny: none;">
+    <div style="border: 1px solid #c0c0c0; padding: 5px; margin: 5px 0 5px 0;">
+      <b><%= problem.full_name %>: ข้อมูลสำหรับตรวจสอบ</b> (สามารถดาวน์โหลดและส่งกี่ครั้งก็ได้): 
+      <%= link_to 'ดาวน์โหลด input', :action => 'verifying_testcase', :id => problem.id %>
+      <% if @current_problem.id == problem.id %>
+        <% if @grading_result %>
+          | <b>ผลการตรวจ:</b> <%= @grading_result %>
+        <% end %>
+      <% end %>
+      <%= form_tag({:controller => 'main', :action => 'verifying_submit', :id => problem.id}, {:method => 'post', :multipart => true}) do %>
+        ส่งคำตอบของข้อมูลสำหรับตรวจสอบ:
+        <%= file_field_tag 'output_file' %>
+        <%= submit_tag 'Submit' %>
+      <% end %>
+    </div>
+    <div style="border: 1px solid #c0c0c0; padding: 5px; margin: 5px 0 5px 0;">
+      <b><%= problem.full_name %>: ข้อมูลทดสอบจริง</b> (ส่งกี่ครั้งก็ได้ภายในเวลา 5 นาทีหลังดาวน์โหลด):
+      <%= link_to 'ดาวน์โหลด input และเริ่มจับเวลา', { :action => 'testcase', :id => problem.id}, { :onclick => 'return confirm_download()' } %>
+      <span id="submission_time_left_<%= problem.id %>_id"></span>
+      <%= form_tag do %>
+        ข้อมูลส่งออก: <%= file_field_tag 'output_file' %>
+        โปรแกรมคำตอบ: <%= file_field_tag 'source_file' %>
+        <%= submit_tag 'Submit' %>
+      <% end %>
+    </div>
+  </div>
 <% end %>
+<script>
+ function select_click() {
+   $$(".submission-submit-divs").each(function(item) {
+     item.hide();
+   });
+   var problem_id = $('submission_problem_id').value;
+   if ( problem_id < 0 ) {
+     return;
+   }
+   $("submission_submit_div_" + problem_id + "_id").show();
+ }
+ function confirm_download() {
+   return confirm("แน่ใจ?");
+ }
+</script>

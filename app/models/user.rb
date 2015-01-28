@@ -254,6 +254,11 @@ class User < ActiveRecord::Base
     end
   end
 
+  def get_test_pair_assignment_for(problem)
+    return TestPairAssignment.where(:problem_id => problem.id,
+                                    :user_id => id).first
+  end
+  
   protected
     def encrypt_new_password
       return if password.blank?

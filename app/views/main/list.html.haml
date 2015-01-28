@@ -10,9 +10,8 @@
     = render :partial => 'announcement', :collection => @announcements
 
 - if GraderConfiguration.show_submitbox_to?(@user)
-  .submitbox
-    = error_messages_for 'submission'
-    = render :partial => 'submission_box'
+  = error_messages_for 'submission'
+  = render :partial => 'submission_box'
 
 
 %hr/
