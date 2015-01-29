@@ -272,14 +272,18 @@ class MainController < ApplicationController
     out_items = output.split
     sol_items = solution.split
     res = ''
+    f = 0
+    s = 0
     sol_items.length.times do |i|
+      f += 1
       if out_items[i] == sol_items[i]
         res = res + 'P'
+        s += 1
       else
         res = res + '-'
       end
     end
-    return res
+    return { :score => s, :full_score => f, :msg => res }
   end
   
   def prepare_announcements(recent=nil)
