@@ -1,3 +1,4 @@
+# coding: utf-8
 class MainController < ApplicationController
 
   before_filter :authenticate, :except => [:index, :login]
@@ -48,6 +49,10 @@ class MainController < ApplicationController
   end
 
   def list
+    if session[:current_problem_id]
+      @current_problem = Problem.find(session[:current_problem_id])
+      session[:current_problem_id] = nil
+    end
     prepare_list_information
   end
 
@@ -59,12 +64,34 @@ class MainController < ApplicationController
     user = User.find(session[:user_id])
 
     @submission = Submission.new
-    @submission.problem_id = params[:submission][:problem_id]
+    @current_problem = Problem.find(params[:submission][:problem_id])
+
+    if !@current_problem
+      flash[:notice] = 'Error: คุณยังไม่ได้ระบุข้อที่ต้องการส่ง'
+      redirect_to :action => 'list'
+    end
+
+    assignment = user.get_test_pair_assignment_for(@current_problem)
+    if !assignment
+      flash[:notice] = 'Error: คุณยังไม่ได้ดาวน์โหลดข้อมูลทดสอบ'
+      prepare_list_information
+      render :action => 'list' and return
+    end
+    if assignment.expired?
+      flash[:notice] = 'Error: หมดเวลาส่งสำหรับข้อนี้'
+      prepare_list_information
+      render :action => 'list' and return
+    end
+    
+    @submission.problem = @current_problem
     @submission.user = user
     @submission.language_id = 0
     if (params['file']) and (params['file']!='')
       @submission.source = params['file'].read 
       @submission.source_filename = params['file'].original_filename
+    end
+    if (params['output_file']) and (params['output_file']!='')
+      @submission.output = params['output_file'].read 
     end
     @submission.submitted_at = Time.new.gmtime
 
@@ -80,10 +107,16 @@ class MainController < ApplicationController
       elsif Task.create(:submission_id => @submission.id, 
                         :status => Task::STATUS_INQUEUE) == false
 	flash[:notice] = 'Error adding your submission to task queue'
+      else
+        flash[:notice] = 'จัดเก็บคำตอบและโปรแกรมที่คุณส่งเรียบร้อย'
       end
     else
       prepare_list_information
       render :action => 'list' and return
+    end
+
+    if @current_problem
+      session[:current_problem_id] = @current_problem.id
     end
     redirect_to :action => 'list'
   end
@@ -225,15 +258,11 @@ class MainController < ApplicationController
       test_pair = TestPair.get_for(problem, true)
 
       user = User.find(session[:user_id])
-      assignent = user.get_test_pair_assignment_for(problem)
+      assignment = user.get_test_pair_assignment_for(problem)
 
-      if !assignent
-        assignent = TestPairAssignment.new
-        assignent.user = user
-        assignent.problem = problem
-        assignent.test_pair = test_pair
-        assignent.submitted = false
-        assignent.save
+      if !assignment
+        assignment = TestPairAssignment.create_for(user, problem, test_pair)
+        assignment.save
       end
 
       send_data(test_pair.input, 
@@ -252,17 +281,18 @@ class MainController < ApplicationController
       redirect_to :action => 'list' and return
     end
      
+    @current_problem = problem
     test_pair = TestPair.get_for(problem, false)
     if (params['output_file']) and (params['output_file']!='')
       output = params['output_file'].read   
 
-      @current_problem = problem
       @grading_result = grade(output, test_pair.solution)
       prepare_list_information
       render :action => 'list' and return
     else
       flash[:notice] = 'Error: output file errors'
-      redirect_to :action => 'list'
+      prepare_list_information
+      render :action => 'list' and return
     end
   end
 

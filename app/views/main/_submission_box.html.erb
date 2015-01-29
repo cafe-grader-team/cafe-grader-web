@@ -1,13 +1,14 @@
+<% selected_problem_id = @current_problem ? @current_problem.id : -1 %>
 <div class="submitbox">
   <b>Problem:</b> <%= select 'submission', 'problem_id', 
              	      [['กรุณาเลือกข้อที่ต้องการส่งหรือทดสอบ','-1']] + 
 		      @problems.collect {|p| [p.full_name, p.id]},
-		      { :selected => '-1' },
+		      { :selected => selected_problem_id },
                       { :onchange => 'TOIContest.problemSelectClick()' } %>
 </div>
 
 <% @problems.each do |problem| %>
-  <div class="submission-submit-divs" id="submission_submit_div_<%= problem.id %>_id" style="displanny: none;">
+  <div class="submission-submit-divs" id="submission_submit_div_<%= problem.id %>_id" style="display: none;">
     <div style="border: 1px solid #c0c0c0; padding: 5px; margin: 5px 0 5px 0;">
       <b><%= problem.full_name %>: ข้อมูลสำหรับตรวจสอบ</b> (สามารถดาวน์โหลดและส่งกี่ครั้งก็ได้,ไม่มีคะแนน): 
       <%= link_to 'ดาวน์โหลด input', :action => 'verifying_testcase', :id => problem.id %>
@@ -24,11 +25,12 @@
     </div>
     <div style="border: 1px solid #c0c0c0; padding: 5px; margin: 5px 0 5px 0;">
       <b><%= problem.full_name %>: ข้อมูลทดสอบจริง</b> (ส่งกี่ครั้งก็ได้ภายในเวลา 5 นาทีหลังดาวน์โหลด):
-      <%= link_to 'ดาวน์โหลด input และเริ่มจับเวลา', { :action => 'testcase', :id => problem.id}, { :onclick => 'return TOIContest.confirmDownload()' } %>
+      <%= link_to 'ดาวน์โหลด input และเริ่มจับเวลา', { :action => 'testcase', :id => problem.id}, { :onclick => "return TOIContest.confirmDownload(#{problem.id})" } %>
       <span id="submission_time_left_<%= problem.id %>_id"></span>
-      <%= form_tag({:controller => 'main', :action => 'submit', :id => problem.id}, {:method => 'post', :multipart => true, :id => "submission_form_#{problem.id}_id" }) do %>
+      <%= form_tag({:controller => 'main', :action => 'submit'}, {:method => 'post', :multipart => true, :id => "submission_form_#{problem.id}_id" }) do %>
+        <%= hidden_field_tag 'submission[problem_id]', problem.id %>
         ข้อมูลส่งออก: <%= file_field_tag 'output_file' %>
-        โปรแกรมคำตอบ: <%= file_field_tag 'source_file' %>
+        โปรแกรมคำตอบ: <%= file_field_tag 'file' %>
         <%= submit_tag 'Submit' %>
       <% end %>
     </div>

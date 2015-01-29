@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150128165518) do
+ActiveRecord::Schema.define(:version => 20150129021221) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -166,6 +166,7 @@ ActiveRecord::Schema.define(:version => 20150128165518) do
     t.text     "grader_comment"
     t.integer  "number"
     t.string   "source_filename"
+    t.text     "output"
   end
 
   add_index "submissions", ["user_id", "problem_id", "number"], :name => "index_submissions_on_user_id_and_problem_id_and_number", :unique => true

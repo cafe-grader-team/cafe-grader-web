@@ -49,6 +49,8 @@
   = "Announcement.refreshUrl = '#{url_for :controller => 'main', :action => 'announcements'}';"
   Announcement.registerRefreshEventTimer();
 
+  TOIContest.problemSelectClick()
+
   TOIContest.timeOuts = {};
   - @problems.each do |p|
     - if (@submission_timeouts.has_key? p.id) and (@submission_timeouts[p.id] != nil)
@@ -57,3 +59,4 @@
       = "TOIContest.timeOuts[#{p.id}] = TOIContest.NO_TIMEOUT;"
 
   TOIContest.refreshTimeOutMessages();
+  TOIContest.registerRefreshEvent();

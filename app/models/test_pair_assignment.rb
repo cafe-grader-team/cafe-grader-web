@@ -6,4 +6,14 @@ class TestPairAssignment < ActiveRecord::Base
   def expired?
     return created_at + TEST_ASSIGNMENT_EXPIRATION_DURATION < Time.new.gmtime 
   end
+
+  def self.create_for(user, problem, test_pair)
+    assignment = TestPairAssignment.new
+    assignment.user = user
+    assignment.problem = problem
+    assignment.test_pair = test_pair
+    assignment.submitted = false
+    assignment.save
+    return assignment
+  end
 end
