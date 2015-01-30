@@ -299,14 +299,20 @@ class MainController < ApplicationController
   protected
 
   def grade(output, solution)
-    out_items = output.split
-    sol_items = solution.split
+    out_items = output.split("\n")
+    sol_items = solution.split("\n")
     res = ''
     f = 0
     s = 0
     sol_items.length.times do |i|
       f += 1
-      if out_items[i] == sol_items[i]
+      si = sol_items[i].chomp
+      if out_items[i]
+        oi = out_items[i].chomp
+      else
+        oi = ''
+      end
+      if oi == si
         res = res + 'P'
         s += 1
       else
