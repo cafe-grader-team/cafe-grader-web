@@ -286,7 +286,7 @@ class MainController < ApplicationController
     if (params['output_file']) and (params['output_file']!='')
       output = params['output_file'].read   
 
-      @grading_result = grade(output, test_pair.solution)
+      @grading_result = test_pair.grade(output)
       prepare_list_information
       render :action => 'list' and return
     else
@@ -298,30 +298,6 @@ class MainController < ApplicationController
 
   protected
 
-  def grade(output, solution)
-    out_items = output.split("\n")
-    sol_items = solution.split("\n")
-    res = ''
-    f = 0
-    s = 0
-    sol_items.length.times do |i|
-      f += 1
-      si = sol_items[i].chomp
-      if out_items[i]
-        oi = out_items[i].chomp
-      else
-        oi = ''
-      end
-      if oi == si
-        res = res + 'P'
-        s += 1
-      else
-        res = res + '-'
-      end
-    end
-    return { :score => s, :full_score => f, :msg => res }
-  end
-  
   def prepare_announcements(recent=nil)
     if GraderConfiguration.show_tasks_to?(@user)
       @announcements = Announcement.find_published(true)
