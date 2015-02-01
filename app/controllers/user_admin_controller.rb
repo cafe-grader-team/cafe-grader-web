@@ -133,7 +133,7 @@ class UserAdminController < ApplicationController
         if (sub!=nil) and (sub.points!=nil) 
           ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
         else
-          ustat << [0,false]
+          ustat << [nil,false]
         end
       end
       @scorearray << ustat
