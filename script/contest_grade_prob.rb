@@ -39,6 +39,7 @@ def main
       full_score = result[:full_score]
       sub.points = result[:score]*100 / full_score
       sub.grader_comment = result[:msg]
+      sub.graded_at = Time.now.gmtime
       sub.save
     end
   end
