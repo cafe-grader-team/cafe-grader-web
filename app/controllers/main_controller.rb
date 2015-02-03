@@ -77,7 +77,7 @@ class MainController < ApplicationController
       prepare_list_information
       render :action => 'list' and return
     end
-    if assignment.expired?
+    if (assignment.expired?) and (!GraderConfiguration.standard_mode?)
       flash[:notice] = 'Error: หมดเวลาส่งสำหรับข้อนี้'
       prepare_list_information
       render :action => 'list' and return
@@ -101,6 +101,14 @@ class MainController < ApplicationController
       render :action => 'list' and return
     end
 
+    if GraderConfiguration.standard_mode?
+      test_pair = assignment.test_pair
+      result = test_pair.grade(@submission.output)
+      @submission.points = result[:score]*100 / result[:full_score]
+      @submission.grader_comment = result[:msg]
+      @submission.graded_at = Time.now.gmtime
+    end
+    
     if @submission.valid?
       if @submission.save == false
 	flash[:notice] = 'Error saving your submission'
@@ -314,13 +322,17 @@ class MainController < ApplicationController
     @submission_timeouts = {}
     problems.each do |problem|
       assignment = @user.get_test_pair_assignment_for(problem)
-      if assignment == nil
+      if GraderConfiguration.standard_mode?
         timeout = nil
       else
-        if (assignment.expired?) or (assignment.submitted)
-          timeout = 0
+        if assignment == nil
+          timeout = nil
         else
-          timeout = assignment.created_at + TEST_ASSIGNMENT_EXPIRATION_DURATION - Time.new.gmtime
+          if (assignment.expired?) or (assignment.submitted)
+            timeout = 0
+          else
+            timeout = assignment.created_at + TEST_ASSIGNMENT_EXPIRATION_DURATION - Time.new.gmtime
+          end
         end
       end
       @submission_timeouts[problem.id] = timeout

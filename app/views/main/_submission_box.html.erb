@@ -30,7 +30,7 @@
       <%= form_tag({:controller => 'main', :action => 'submit'}, {:method => 'post', :multipart => true, :id => "submission_form_#{problem.id}_id" }) do %>
         <%= hidden_field_tag 'submission[problem_id]', problem.id %>
         ข้อมูลส่งออก: <%= file_field_tag 'output_file' %>
-        โปรแกรมคำตอบ: <%= file_field_tag 'file' %>
+        โปรแกรมของคุณ: <%= file_field_tag 'file' %>
         <%= submit_tag 'Submit' %>
       <% end %>
     </div>
