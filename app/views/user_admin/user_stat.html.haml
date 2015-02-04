@@ -34,6 +34,7 @@
       %th Activated?
       %th Logged in
       %th Contest(s)
+      %th Remark
       - @problems.each do |p|
         %th= p.name
       %th Total
@@ -49,6 +50,7 @@
             %td= sc[i].activated
             %td= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no'
             %td= sc[i].contests.collect {|c| c.name}.join(', ') 
+            %td= sc[i].remark
           - else
             %td= sc[i][0]
             - total += sc[i][0]
