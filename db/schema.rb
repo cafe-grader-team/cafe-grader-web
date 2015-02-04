@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140917150629) do
+ActiveRecord::Schema.define(:version => 20150203153534) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -239,6 +239,8 @@ ActiveRecord::Schema.define(:version => 20140917150629) do
     t.boolean  "activated",                     :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "enabled",                       :default => true
+    t.string   "remark"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true
