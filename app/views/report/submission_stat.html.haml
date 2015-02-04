@@ -1,0 +1,37 @@
+- content_for :header do
+  = javascript_include_tag 'local_jquery'
+
+%script{:type=>"text/javascript"}
+  $(function () {
+  $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  });
+
+%h1 Login status
+
+=render partial: 'report_menu'
+=render partial: 'date_range', locals: {param_text: 'Submission date range:', title: 'Query submission stat in the range'  }
+
+%table.info
+  %thead
+    %tr.info-head
+      %th login
+      %th full name
+      %th total submissions
+      %th submissions
+  %tbody
+    - @submissions.each do |user_id,data|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= data[:login]
+        %td= data[:full_name]
+        %td= data[:count]
+        %td
+          - data[:sub].each do |prob_id,sub_data|
+            = "#{sub_data[:prob_name]}: ["
+            - st = []
+            - sub_data[:sub_ids].each do |id|
+              - st << link_to(id, controller: 'graders' , action: 'submission', id: id)
+            = raw st.join ', '
+            = ']'
+            %br/
+

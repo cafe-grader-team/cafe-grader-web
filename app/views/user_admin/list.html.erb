@@ -68,8 +68,9 @@ Total <%= @user_count %> users |
   
 <% for user in @users %>
   <tr class="info-<%= cycle("odd","even") %>">
+    <td><%= link_to user.login, controller: :users, :action => 'profile', :id => user %></td>
     <% for column in User.content_columns %>
-      <% if !@hidden_columns.index(column.name) %>
+      <% if !@hidden_columns.index(column.name) and column.name != 'login' %>
         <td><%=h user.send(column.name) %></td>
       <% end %>
     <% end %>

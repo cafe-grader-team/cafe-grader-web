@@ -21,7 +21,7 @@ class Message < ActiveRecord::Base
     Message.build_replying_message_hierarchy messages, replied_messages
     return messages
   end
-  
+
   def self.find_all_system_unreplied_messages
     self.find(:all, 
               :conditions => 'ISNULL(receiver_id) ' + 
