@@ -2,7 +2,6 @@ require 'csv'
 
 class UserAdminController < ApplicationController
 
-
   include MailHelperMethods
 
   before_filter :admin_authorization
