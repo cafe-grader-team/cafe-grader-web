@@ -1,4 +1,7 @@
+require 'csv'
+
 class UserAdminController < ApplicationController
+
 
   include MailHelperMethods
 
@@ -81,11 +84,17 @@ class UserAdminController < ApplicationController
           added_random_password = true
         end
 
-        user = User.new({:login => login,
-                          :full_name => full_name,
-                          :password => password,
-                          :password_confirmation => password,
-                          :alias => user_alias})
+        user = User.find_by_login(login)
+        if (user)
+          user.full_name = full_name
+          user.password = password
+        else
+          user = User.new({:login => login,
+                            :full_name => full_name,
+                            :password => password,
+                            :password_confirmation => password,
+                            :alias => user_alias})
+        end
         user.activated = true
         user.save
 
@@ -122,7 +131,11 @@ class UserAdminController < ApplicationController
   end
 
   def user_stat
-    @problems = Problem.find_available_problems
+    if params[:commit] == 'download csv'
+      @problems = Problem.all
+    else
+      @problems = Problem.find_available_problems
+    end
     @users = User.find(:all, :include => [:contests, :contest_stat])
     @scorearray = Array.new
     @users.each do |u|
@@ -158,6 +171,45 @@ class UserAdminController < ApplicationController
         ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
       end
       @scorearray << ustat
+    end
+
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'last_score.csv'
+    else
+      render template: 'user_admin/user_stat'
+    end
+  end
+
+  def user_stat_max
+    if params[:commit] == 'download csv'
+      @problems = Problem.all
+    else
+      @problems = Problem.find_available_problems
+    end
+    @users = User.find(:all, :include => [:contests, :contest_stat])
+    @scorearray = Array.new
+    #set up range from param
+    since_id = params.fetch(:since_id, 0).to_i
+    until_id = params.fetch(:until_id, 0).to_i
+    @users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      @problems.each do |p|
+        max_points = 0
+        Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
+          max_points = sub.points if sub and sub.points and (sub.points > max_points)
+        end
+        ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
+      end
+      @scorearray << ustat
+    end
+
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      render template: 'user_admin/user_stat'
     end
   end
 
@@ -472,5 +524,36 @@ class UserAdminController < ApplicationController
       @users = User.find_users_with_no_contest
     end
     return [@contest, @users]
+  end
+
+  def gen_csv_from_scorearray(scorearray,problem)
+    CSV.generate do |csv|
+      #add header
+      header = ['User','Name', 'Activated?', 'Logged in', 'Contest']
+      problem.each { |p| header << p.name }
+      header += ['Total','Passed']
+      csv << header
+      #add data
+      scorearray.each do |sc|
+        total = num_passed = 0
+        row = Array.new
+        sc.each_index do |i|
+          if i == 0
+            row << sc[i].login
+            row << sc[i].full_name
+            row << sc[i].activated
+            row << (sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no')
+            row << sc[i].contests.collect {|c| c.name}.join(', ')
+          else
+            row << sc[i][0]
+            total += sc[i][0]
+            num_passed += 1 if sc[i][1]
+          end
+        end
+        row << total 
+        row << num_passed
+        csv << row
+      end
+    end
   end
 end

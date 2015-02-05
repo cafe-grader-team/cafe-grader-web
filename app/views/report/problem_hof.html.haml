@@ -1,0 +1,23 @@
+
+/- if params[:id]
+/  %h1 Tasks Hall of Fame
+/  = link_to('[back to All-Time Hall of Fame]', action: 'problem_hof', id: nil  )
+/- else
+/  %h1 All-Time Hall of Fame
+
+
+%h1 Hall of Fame
+.task-menu
+  Tasks
+  %br/
+  - @problems.each do |prob|
+    = link_to( "[#{prob.name}]", {id: prob.id})
+
+- unless params[:id]
+  /=render partial: 'all_time_hof'
+  Please select a problem.
+- else
+  =render partial: 'task_hof'
+  %h2 Submission History
+  =render partial: 'application/bar_graph', locals: { histogram: @histogram }
+

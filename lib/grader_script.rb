@@ -29,8 +29,8 @@ module GraderScript
   end
 
   def self.start_grader(env)
-    GraderScript.call_grader "#{env} queue &"
-    GraderScript.call_grader "#{env} test_request &"
+    GraderScript.call_grader "#{env} queue --err-log &"
+    GraderScript.call_grader "#{env} test_request -err-log &"
   end
 
   def self.call_import_problem(problem_name, 
@@ -50,7 +50,7 @@ module GraderScript
 
       Dir.chdir(cur_dir)
       
-      return output
+      return "import CMD: #{cmd}\n" + output
     end
     return ''
   end

@@ -1,8 +1,12 @@
 CafeGrader::Application.routes.draw do
+  get "report/login"
+
   resources :contests
 
   resources :announcements
   resources :sites
+
+  resources :grader_configuration, controller: 'configurations'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

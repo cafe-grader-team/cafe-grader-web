@@ -3,7 +3,10 @@
     <%= "#{problem_counter+1}" %>
   </td>
   <td>
-    <%= "#{problem.full_name} (#{problem.name})" %>
+    <%= "#{problem.name}"%>
+  </td>
+  <td>
+    <%= "#{problem.full_name}" %>
     <%= link_to_description_if_any "[#{t 'main.problem_desc'}]", problem %>
   </td>
   <td align="center">

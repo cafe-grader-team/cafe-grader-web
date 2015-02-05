@@ -35,6 +35,19 @@ gem 'prototype-rails'
 
 # To use debugger
 # gem 'debugger'
+#
+
+#in-place editor
+gem 'best_in_place', '~> 3.0.1'
+
+# jquery addition
+gem 'jquery-rails'
+gem 'jquery-ui-sass-rails'
+gem 'jquery-timepicker-addon-rails'
+gem 'jquery-tablesorter'
+
+#syntax highlighter
+gem 'rouge'
 
 gem 'haml'
 gem 'mail'

@@ -6,7 +6,12 @@ class ApplicationController < ActionController::Base
   def admin_authorization
     return false unless authenticate
     user = User.find(session[:user_id], :include => ['roles'])
-    redirect_to :controller => 'main', :action => 'login' unless user.admin?
+    unless user.admin?
+      flash[:notice] = 'You are not authorized to view the page you requested'
+      redirect_to :controller => 'main', :action => 'login' unless user.admin?
+      return false
+    end
+    return true
   end
 
   def authorization_by_roles(allowed_roles)
@@ -23,6 +28,10 @@ class ApplicationController < ActionController::Base
 
   def authenticate
     unless session[:user_id]
+      flash[:notice] = 'You need to login'
+      if GraderConfiguration[SINGLE_USER_MODE_CONF_KEY]
+        flash[:notice] = 'You need to login but you cannot log in at this time'
+      end
       redirect_to :controller => 'main', :action => 'login'
       return false
     end

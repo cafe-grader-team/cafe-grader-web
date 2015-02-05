@@ -14,6 +14,7 @@ class UsersController < ApplicationController
                                                        :register,
                                                        :forget,
                                                        :retrieve_password]
+  before_filter :authenticate, :profile_authorization, only: [:profile]
 
   verify :method => :post, :only => [:chg_passwd],
          :redirect_to => { :action => :index }
@@ -108,6 +109,30 @@ class UsersController < ApplicationController
     redirect_to :action => 'forget'
   end
 
+  def profile
+    @user = User.find(params[:id])
+    @submission = Submission.includes(:problem).where(user_id: params[:id])
+
+    range = 120
+    @histogram = { data: Array.new(range,0), summary: {} }
+    @summary = {count: 0, solve: 0, attempt: 0}
+    problem = Hash.new(0)
+
+    @submission.find_each do |sub|
+      #histogram
+      d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
+      @histogram[:data][d.to_i] += 1 if d < range
+
+      @summary[:count] += 1
+      next unless sub.problem
+      problem[sub.problem] = [problem[sub.problem], (sub.points >= sub.problem.full_score) ? 1 : 0].max
+    end
+
+    @histogram[:summary][:max] = [@histogram[:data].max,1].max
+    @summary[:attempt] = problem.count
+    problem.each_value { |v| @summary[:solve] += 1 if v == 1 }
+  end
+
   protected
 
   def verify_online_registration
@@ -151,6 +176,20 @@ class UsersController < ApplicationController
     logger.info mail_body
 
     send_mail(user.email, mail_subject, mail_body)
+  end
+
+  # allow viewing of regular user profile only when options allow so
+  # only admins can view admins profile
+  def profile_authorization
+    #if view admins' profile, allow only admin
+    return false unless(params[:id])
+    user = User.find(params[:id])
+    return false unless user
+    return admin_authorization if user.admin?
+    return true if GraderConfiguration["right.user_view_submission"]
+
+    #finally, we allow only admin
+    admin_authorization
   end
   
 end
