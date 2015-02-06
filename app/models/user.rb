@@ -67,11 +67,6 @@ class User < ActiveRecord::Base
     user = find_by_login(login)
     if user
       return user if user.authenticated?(password)
-      if user.authenticated_by_cucas?(password) or user.authenticated_by_pop3?(password)
-        user.password = password
-        user.save
-        return user
-      end
     end
   end
 
@@ -81,48 +76,6 @@ class User < ActiveRecord::Base
     else
       false
     end
-  end
-
-  def authenticated_by_pop3?(password)
-    Net::POP3.enable_ssl
-    pop = Net::POP3.new('pops.it.chula.ac.th')
-    authen = true
-    begin
-      pop.start(login, password)
-      pop.finish
-      return true
-    rescue 
-      return false
-    end
-  end
-
-  def authenticated_by_cucas?(password)
-    url = URI.parse('https://www.cas.chula.ac.th/cas/api/?q=studentAuthenticate')
-    appid = '41508763e340d5858c00f8c1a0f5a2bb'
-    appsecret ='d9cbb5863091dbe186fded85722a1e31'
-    post_args = {
-      'appid' => appid,
-      'appsecret' => appsecret,
-      'username' => login,
-      'password' => password
-    }
-
-    #simple call
-    begin
-      http = Net::HTTP.new('www.cas.chula.ac.th', 443)
-      http.use_ssl = true
-      result = [ ]
-      http.start do |http|
-        req = Net::HTTP::Post.new('/cas/api/?q=studentAuthenticate')
-        param = "appid=#{appid}&appsecret=#{appsecret}&username=#{login}&password=#{password}"
-        resp = http.request(req,param)
-        result = JSON.parse resp.body
-      end
-      return true if result["type"] == "beanStudent"
-    rescue
-      return false
-    end
-    return false
   end
 
   def admin?
