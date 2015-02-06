@@ -2,7 +2,6 @@ require 'csv'
 
 class UserAdminController < ApplicationController
 
-
   include MailHelperMethods
 
   before_filter :admin_authorization
@@ -150,13 +149,6 @@ class UserAdminController < ApplicationController
         end
       end
       @scorearray << ustat
-    end
-
-    if params[:commit] == 'download csv' then
-      csv = gen_csv_from_scorearray(@scorearray,@problems)
-      send_data csv, filename: 'last_score.csv'
-    else
-      render template: 'user_admin/user_stat'
     end
   end
 

@@ -31,20 +31,21 @@ class MessagesController < ApplicationController
     user = User.find(session[:user_id])
     @message = Message.new(params[:message])
     @message.sender = user
-    if !@message.save
-      render :action => 'list' and return
+    if @message.body == '' or !@message.save
+      flash[:notice] = 'An error occurred'
     else
       flash[:notice] = 'New message posted'
-      redirect_to :action => 'list'
     end
+    redirect_to :action => 'list'
   end
 
   def reply
     user = User.find(session[:user_id])
     @message = Message.new(params[:r_message])
     @message.sender = user
-    if !@message.save
-      render :action => 'show' and return
+    if @message.body == '' or !@message.save
+      flash[:notice] = 'An error occurred'
+      redirect_to :action => 'show', :id => @message.replying_message_id
     else
       flash[:notice] = 'Message replied'
       rep_msg = @message.replying_message
@@ -58,7 +59,7 @@ class MessagesController < ApplicationController
     message = Message.find(params[:id])
     message.replied = true
     message.save
-    flash[:notice] = 'Message hided (just marked replied)'
+    flash[:notice] = 'Message hidden (just marked replied)'
     redirect_to :action => 'console'
   end
 

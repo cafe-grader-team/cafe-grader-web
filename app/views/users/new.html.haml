@@ -25,12 +25,12 @@
     %tr
       %td{:align => "right"}
         = "#{t 'email_label'}:"
-      %td= f.text_field :email
+      %td= f.email_field :email
     %tr
       %td
       %td 
         %small
-          =t 'registration.email_guide'
+          =t('registration.email_guide').html_safe
     %tr
       %td/
       %td
