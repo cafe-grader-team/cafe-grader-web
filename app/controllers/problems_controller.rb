@@ -150,11 +150,25 @@ class ProblemsController < ApplicationController
 
   def stat
     @problem = Problem.find(params[:id])
-    if !@problem.available
+    unless @problem.available or session[:admin]
       redirect_to :controller => 'main', :action => 'list'
-    else
-      @submissions = Submission.find_all_last_by_problem(params[:id])
+      return
     end
+    @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
+
+    #stat summary
+    range =65
+    @histogram = { data: Array.new(range,0), summary: {} }
+    user = Hash.new(0)
+    @submissions.find_each do |sub|
+      d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
+      @histogram[:data][d.to_i] += 1 if d < range
+      user[sub.user_id] = [user[sub.user_id], (sub.points >= @problem.full_score) ? 1 : 0].max
+    end
+    @histogram[:summary][:max] = [@histogram[:data].max,1].max
+
+    @summary = { attempt: user.count, solve: 0 }
+    user.each_value { |v| @summary[:solve] += 1 if v == 1 }
   end
 
   def manage
@@ -164,8 +178,12 @@ class ProblemsController < ApplicationController
   def do_manage
     if params.has_key? 'change_date_added'
       change_date_added
-    else params.has_key? 'add_to_contest'
+    elsif params.has_key? 'add_to_contest'
       add_to_contest
+    elsif params.has_key? 'enable_problem'
+      set_available(true)
+    elsif params.has_key? 'disable_problem'
+      set_available(false)
     end
     redirect_to :action => 'manage'
   end
@@ -234,15 +252,26 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def set_available(avail)
+    problems = get_problems_from_params
+    problems.each do |p|
+      p.available = avail
+      p.save
+    end
+  end
+
   def get_problems_from_params
     problems = []
     params.keys.each do |k|
       if k.index('prob-')==0
-        name, id = k.split('-')
+        name, id, order = k.split('-')
         problems << Problem.find(id)
       end
     end
     problems
+  end
+
+  def get_problems_stat
   end
 
 end

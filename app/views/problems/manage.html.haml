@@ -1,5 +1,38 @@
 - content_for :head do
   = stylesheet_link_tag 'problems'
+  = javascript_include_tag 'local_jquery'
+
+:javascript
+  $(document).ready( function() {
+    function shiftclick(start,stop,value) {
+      $('tr input').each( function(id,input) { 
+        var $input=$(input);
+        var iid=parseInt($input.attr('id').split('-')[2]);
+        if(iid>=start&&iid<=stop){
+        $input.prop('checked',value)
+        }
+      });
+    }
+
+    $('tr input').click( function(e)  {
+      if (e.shiftKey) {
+        stop = parseInt($(this).attr('id').split('-')[2]);
+        var orig_stop = stop
+        if (typeof start !== 'undefined') {
+          if (start > stop) {
+            var tmp = start;
+            start = stop;
+            stop = tmp;
+          }
+          shiftclick(start,stop,$(this).is(':checked') )
+        }
+        start = orig_stop
+      } else {
+        start = parseInt($(this).attr('id').split('-')[2]);
+      }
+    });
+  });
+
 
 %h1 Manage problems
 
@@ -7,14 +40,19 @@
 
 = form_tag :action=>'do_manage' do
   .submitbox
-    What do you want to do?
+    What do you want to do to the selected problem?
     %br/
+    (You can shift-click to select a range of problems)
     %ul
       %li
         Change date added to
         = select_date Date.current, :prefix => 'date_added'
         &nbsp;&nbsp;&nbsp;
         = submit_tag 'Change', :name => 'change_date_added'
+      %li
+        Set available to
+        = submit_tag 'True', :name => 'enable_problem'
+        = submit_tag 'False', :name => 'disable_problem'
 
       - if GraderConfiguration.multicontests?
         %li
@@ -23,19 +61,23 @@
           = submit_tag 'Add', :name => 'add_to_contest'
 
   %table
-    %tr
-      %th/
+    %tr{style: "text-align: left;"}
+      %th= check_box_tag 'select_all'
       %th Name
       %th Full name
+      %th Available
       %th Date added
       - if GraderConfiguration.multicontests?
         %th Contests
 
+    - num = 0
     - for problem in @problems
+      - num += 1
       %tr{:id => "row-prob-#{problem.id}", :name=> "prob-#{problem.id}"}
-        %td= check_box_tag "prob-#{problem.id}"
+        %td= check_box_tag "prob-#{problem.id}-#{num}"
         %td= problem.name
         %td= problem.full_name
+        %td= problem.available
         %td= problem.date_added
         - if GraderConfiguration.multicontests?
           %td

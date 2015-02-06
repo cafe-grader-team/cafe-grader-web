@@ -6,60 +6,67 @@ CONFIGURATIONS =
      :default_value => 'false',
      :description => 'Only admins can log in to the system when running under single user mode.'
    },
-   
+
    { 
      :key => 'ui.front.title',
      :value_type => 'string',
      :default_value => 'Grader' 
    },
-   
+
    { 
      :key => 'ui.front.welcome_message',
      :value_type => 'string',
      :default_value => 'Welcome!' 
    },
-   
+
    { 
      :key => 'ui.show_score',
      :value_type => 'boolean',
      :default_value => 'true' 
    },
-   
+
    { 
      :key => 'contest.time_limit',
      :value_type => 'string',
      :default_value => 'unlimited',
      :description => 'Time limit in format hh:mm, or "unlimited" for contests with no time limits.  This config is CACHED.  Restart the server before the change can take effect.'
    },
-   
+
    { 
      :key => 'system.mode',
      :value_type => 'string',
      :default_value => 'standard',
      :description => 'Current modes are "standard", "contest", "indv-contest", and "analysis".'
    },
-   
+
    { 
      :key => 'contest.name',
      :value_type => 'string',
      :default_value => 'Grader',
      :description => 'This name will be shown on the user header bar.'
    },
-   
+
    {
      :key => 'contest.multisites',
      :value_type => 'boolean',
      :default_value => 'false',
      :description => 'If the server is in contest mode and this option is true, on the log in of the admin a menu for site selections is shown.'
    },
-   
+
    {
-     :key => 'system.online_registration',
+     :key => 'right.user_hall_of_fame',
      :value_type => 'boolean',
      :default_value => 'false',
-     :description => 'This option enables online registration.'
+     :description => 'If true, any user can access hall of fame page.'
    },
-   
+
+   {
+     :key => 'right.user_view_submission',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'If true, any user can view submissions of every one.'
+   },
+
    # If Configuration['system.online_registration'] is true, the
    # system allows online registration, and will use these
    # information for sending confirmation emails.
@@ -68,26 +75,33 @@ CONFIGURATIONS =
      :value_type => 'string',
      :default_value => 'smtp.somehost.com' 
    },
-   
+
    {
      :key => 'system.online_registration.from',
      :value_type => 'string',
      :default_value => 'your.email@address'
    },
-   
+
    {
      :key => 'system.admin_email',
      :value_type => 'string',
      :default_value => 'admin@admin.email'
    },
-   
+
    { 
      :key => 'system.user_setting_enabled',
      :value_type => 'boolean',
      :default_value => 'true',
      :description => 'If this option is true, users can change their settings'
    },
-   
+
+   {
+     :key => 'system.user_setting_enabled',
+     :value_type => 'boolean',
+     :default_value => 'true',
+     :description => 'If this option is true, users can change their settings'
+   },
+
    # If Configuration['contest.test_request.early_timeout'] is true
    # the user will not be able to use test request at 30 minutes
    # before the contest ends.
@@ -115,7 +129,7 @@ CONFIGURATIONS =
      :default_value => 'none',
      :description => "New user will be assigned to this contest automatically, if it exists.  Set to 'none' if there is no default contest."
    }
-   
+
   ]
 
 
@@ -194,5 +208,16 @@ def seed_users_and_roles
   seed_root
 end
 
+def seed_more_languages
+  Language.delete_all
+  Language.create( name: 'c', pretty_name: 'C', ext: 'c', common_ext: 'c' )
+  Language.create( name: 'cpp', pretty_name: 'C++', ext: 'cpp', common_ext: 'cpp,cc' )
+  Language.create( name: 'pas', pretty_name: 'Pascal', ext: 'pas', common_ext: 'pas' )
+  Language.create( name: 'ruby', pretty_name: 'Ruby', ext: 'rb', common_ext: 'rb' )
+  Language.create( name: 'python', pretty_name: 'Python', ext: 'py', common_ext: 'py' )
+  Language.create( name: 'java', pretty_name: 'Java', ext: 'java', common_ext: 'java' )
+end
+
 seed_config
 seed_users_and_roles
+seed_more_languages

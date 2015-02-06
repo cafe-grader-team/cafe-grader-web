@@ -1,3 +1,6 @@
+- content_for :header do
+  = javascript_include_tag 'local_jquery'
+
 %h1 System configuration
 
 %table.info
@@ -14,7 +17,7 @@
       %td
         = in_place_editor_field :grader_configuration, :value_type, {}, :rows=>1
       %td
-        = in_place_editor_field :grader_configuration, :value, {}, :rows=>1
+        = best_in_place @grader_configuration, :value, ok_button: "ok", cancel_button: "cancel"
       %td= conf.description
 
 - if GraderConfiguration.config_cached?

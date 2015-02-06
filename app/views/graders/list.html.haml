@@ -1,5 +1,6 @@
 - content_for :head do
   = stylesheet_link_tag 'graders'
+  = javascript_include_tag 'local_jquery'
   <meta http-equiv ="refresh" content="60"/>
 
 %h1 Grader information
@@ -24,28 +25,49 @@
       = submit_tag 'Clear all data'
   %br{:style => 'clear:both'}/
 
-- if @last_task
-  Last task:
-  = link_to "#{@last_task.id}", :action => 'view', :id => @last_task.id, :type => 'Task'
+%div{style: 'width:500px; float: left;'}
+  - if @last_task
+    Last task:
+    = link_to "#{@last_task.id}", :action => 'view', :id => @last_task.id, :type => 'Task'
 
-  %br/
+    %br/
 
-- if @last_test_request
-  Last test_request:
-  = link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
+  - if @last_test_request
+    Last test_request:
+    = link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
+
+  %h2 Current graders
+
+  = render :partial => 'grader_list', :locals => {:grader_list => @grader_processes}
+
+  %h2 Stalled graders
+
+  = render :partial => 'grader_list', :locals => {:grader_list => @stalled_processes}
+
+  %h2 Terminated graders
+
+  = form_for :clear, :url => {:action => 'clear_terminated'} do |f|
+    = submit_tag 'Clear data for terminated graders'
+
+  = render :partial => 'grader_list', :locals => {:grader_list => @terminated_processes}
+%div{}
+  %h2 Last 20 submissions
+  %table.graders
+    %thead
+      %th ID
+      %th User
+      %th Problem
+      %th Submitted
+      %th Graded
+      %th Result
+    %tbody
+      - @submission.each do |sub|
+        %tr.inactive
+          %td= link_to sub.id, controller: 'graders' ,action: 'submission', id: sub.id
+          %td= sub.try(:user).try(:full_name)
+          %td= sub.try(:problem).try(:full_name)
+          %td= "#{time_ago_in_words(sub.submitted_at)} ago"
+          %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
+          %td= sub.grader_comment
 
 
-%h2 Current graders
-
-= render :partial => 'grader_list', :locals => {:grader_list => @grader_processes}
-
-%h2 Stalled graders
-
-= render :partial => 'grader_list', :locals => {:grader_list => @stalled_processes}
-
-%h2 Terminated graders
-
-= form_for :clear, :url => {:action => 'clear_terminated'} do |f|
-  = submit_tag 'Clear data for terminated graders'
-
-= render :partial => 'grader_list', :locals => {:grader_list => @terminated_processes}

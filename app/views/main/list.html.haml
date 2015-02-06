@@ -25,7 +25,8 @@
     %table.info
       %tr.info-head
         %th
-        %th Tasks
+        %th Tasks name
+        %th Full name
         %th # of sub(s)
         %th Results
       = render :partial => 'problem', :collection => @problems
@@ -37,7 +38,8 @@
         %table.info
           %tr.info-head
             %th
-            %th Tasks
+            %th Tasks name
+            %th Full name
             %th # of sub(s)
             %th Results
           = render :partial => 'problem', :collection => cp[:problems]

@@ -1,0 +1,59 @@
+- content_for :header do
+  = javascript_include_tag 'local_jquery'
+  = stylesheet_link_tag 'tablesorter-theme.cafe'
+
+%script{:type=>"text/javascript"}
+  $(function () {
+  $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#my_table').tablesorter({widgets: ['zebra']});
+  });
+
+%h1 User grading results
+%h2= params[:action] == 'user_stat' ? "Show scores from latest submission" : "Show max scores in submission range"
+
+
+- if @problem and @problem.errors
+  =error_messages_for 'problem'
+
+= render partial: 'submission_range'
+
+- if params[:action] == 'user_stat'
+  %h3 Latest score
+  = link_to '[download csv with all problems]', controller: :user_admin, action: :user_stat, commit: 'download csv'
+- else
+  %h3 Max score
+  = link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
+  = link_to '[download csv with all problems]', controller: :user_admin, action: :user_stat_max, commit: 'download csv'
+
+%table.tablesorter-cafe#my_table
+  %thead
+    %tr
+      %th User
+      %th Name
+      %th Activated?
+      %th Logged in
+      %th Contest(s)
+      %th Remark
+      - @problems.each do |p|
+        %th= p.name
+      %th Total
+      %th Passed
+  %tbody
+    - @scorearray.each do |sc|
+      %tr{class: cycle('info-even','info-odd')}
+        - total,num_passed = 0,0
+        - sc.each_index do |i|
+          - if i == 0
+            %td= link_to sc[i].login, controller: 'users', action: 'profile', id: sc[i]
+            %td= sc[i].full_name
+            %td= sc[i].activated
+            %td= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no'
+            %td= sc[i].contests.collect {|c| c.name}.join(', ') 
+            %td= sc[i].remark
+          - else
+            %td= sc[i][0]
+            - total += sc[i][0]
+            - num_passed += 1 if sc[i][1]
+        %td= total 
+        %td= num_passed

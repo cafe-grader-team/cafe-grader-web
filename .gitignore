@@ -17,3 +17,10 @@
 *~
 
 /vendor/plugins/rails_upgrade
+
+#ignore public assets???
+/public/assets
+
+#ignore .orig and .swp
+*.orig
+*.swp

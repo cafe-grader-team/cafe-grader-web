@@ -25,7 +25,7 @@ class Submission < ActiveRecord::Base
 
   def self.find_all_last_by_problem(problem_id)
     # need to put in SQL command, maybe there's a better way
-    Submission.find_by_sql("SELECT * FROM submissions " +
+    Submission.includes(:user).find_by_sql("SELECT * FROM submissions " +
 			   "WHERE id = " +
 			   "(SELECT MAX(id) FROM submissions AS subs " +
 			   "WHERE subs.user_id = submissions.user_id AND " +

@@ -1,6 +1,15 @@
 class GradersController < ApplicationController
 
-  before_filter :admin_authorization
+  before_filter :admin_authorization, except: [ :submission ]
+  before_filter(only: [:submission]) {
+    return false unless authenticate
+
+    if GraderConfiguration["right.user_view_submission"]
+      return true;
+    end
+
+    admin_authorization
+  }
 
   verify :method => :post, :only => ['clear_all', 
                                      'start_exam',
@@ -23,6 +32,7 @@ class GradersController < ApplicationController
                            :order => 'created_at DESC')
     @last_test_request = TestRequest.find(:first,
                                           :order => 'created_at DESC')
+    @submission = Submission.order("id desc").limit(20)
   end
 
   def clear
@@ -63,6 +73,19 @@ class GradersController < ApplicationController
 
   def submission
     @submission = Submission.find(params[:id])
+    formatter = Rouge::Formatters::HTML.new(css_class: 'highlight', line_numbers: true )
+    lexer = case @submission.language.name
+      when "c"      then Rouge::Lexers::C.new
+      when "cpp"    then Rouge::Lexers::Cpp.new
+      when "pas"    then Rouge::Lexers::Pas.new
+      when "ruby"   then Rouge::Lexers::Ruby.new
+      when "python" then Rouge::Lexers::Python.new
+      when "java"   then Rouge::Lexers::Java.new
+      when "php"    then Rouge::Lexers::PHP.new
+    end
+    @formatted_code = formatter.format(lexer.lex(@submission.source))
+    @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
+
   end
 
   # various grader controls

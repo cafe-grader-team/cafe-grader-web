@@ -22,6 +22,9 @@ class LoginController < ApplicationController
         end
       end
 
+      #save login information
+      Login.create(user_id: user.id, ip_address: request.remote_ip)
+
       redirect_to :controller => 'main', :action => 'list'
     else
       flash[:notice] = 'Wrong password'

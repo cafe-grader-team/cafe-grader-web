@@ -1,4 +1,8 @@
 require 'digest/sha1'
+require 'net/pop'
+require 'net/https'
+require 'net/http'
+require 'json'
 
 class User < ActiveRecord::Base
 
@@ -61,7 +65,9 @@ class User < ActiveRecord::Base
 
   def self.authenticate(login, password)
     user = find_by_login(login)
-    return user if user && user.authenticated?(password)
+    if user
+      return user if user.authenticated?(password)
+    end
   end
 
   def authenticated?(password)
