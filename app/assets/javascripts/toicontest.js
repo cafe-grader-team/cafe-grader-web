@@ -37,6 +37,12 @@ var TOIContest = {
                 if ( timeOut > 0 ) {
                     var minLeft = parseInt(timeOut / 60);
                     var secLeft = parseInt(timeOut % 60);
+                    if ( minLeft < 10 ) {
+                        minLeft = '0' + minLeft;
+                    }
+                    if ( secLeft < 10 ) {
+                        secLeft = '0' + secLeft;
+                    }
                     $('submission_time_left_' + pid + '_id').innerHTML = '| <b>เหลือเวลาอีก ' + minLeft + ':' + secLeft + ' นาที</b>';
                     $('submission_form_'+ pid + '_id').show();
                 } else {
