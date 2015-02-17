@@ -67,11 +67,11 @@ class User < ActiveRecord::Base
     user = find_by_login(login)
     if user
       return user if user.authenticated?(password)
-      if user.authenticated_by_cucas?(password) or user.authenticated_by_pop3?(password)
-        user.password = password
-        user.save
-        return user
-      end
+#      if user.authenticated_by_cucas?(password) or user.authenticated_by_pop3?(password)
+#        user.password = password
+#        user.save
+#        return user
+#      end
     end
   end
 

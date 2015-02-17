@@ -84,11 +84,16 @@ class UserAdminController < ApplicationController
           added_random_password = true
         end
 
-        user = User.new({:login => login,
-                          :full_name => full_name,
-                          :password => password,
-                          :password_confirmation => password,
-                          :alias => user_alias})
+        user = User.find_by_login(login)
+        if user
+          user.password = password
+        else
+          user = User.new({:login => login,
+                            :full_name => full_name,
+                            :password => password,
+                            :password_confirmation => password,
+                            :alias => user_alias})
+        end
         user.activated = true
         user.save
 
