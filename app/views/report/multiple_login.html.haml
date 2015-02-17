@@ -1,0 +1,20 @@
+- content_for :header do
+  = stylesheet_link_tag 'tablesorter-theme.cafe'
+  = javascript_include_tag 'local_jquery'
+
+%h1 Login status
+
+=render partial: 'report_menu'
+
+%table.tablesorter-cafe#my_table
+  %thead
+    %tr
+      %th login
+      %th full name
+      %th IP
+  %tbody
+    - @multiple.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= link_to l[:login], controller: 'users', action: 'profile', id: l[:id]
+        %td= l[:full_name]
+        %td= l[:ip_address]
