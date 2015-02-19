@@ -150,7 +150,7 @@ class Submission < ActiveRecord::Base
     return if self.problem!=nil and self.problem.output_only
     
     if self.language==nil
-      errors.add('source',"must specify programming language") unless self.language!=nil
+      errors.add('source',"Cannot detect language. Did you submit a correct source file?") unless self.language!=nil
     end
   end
 
