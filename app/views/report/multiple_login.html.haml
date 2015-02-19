@@ -6,6 +6,9 @@
 
 =render partial: 'report_menu'
 
+Checking for all submissions with the currently available problem
+
+%h2 Users with Multiple IP
 %table.tablesorter-cafe#my_table
   %thead
     %tr
@@ -13,8 +16,22 @@
       %th full name
       %th IP
   %tbody
-    - @multiple.each do |l|
+    - @users.each do |l|
       %tr{class: cycle('info-even','info-odd')}
-        %td= link_to l[:login], controller: 'users', action: 'profile', id: l[:id]
-        %td= l[:full_name]
+        %td= link_to l.user.login, controller: 'users', action: 'profile', id: l[:id]
+        %td= l.user.full_name
         %td= l[:ip_address]
+
+%h2 IP with multiple users
+%table.tablesorter-cafe#my_table
+  %thead
+    %tr
+      %th IP
+      %th login
+      %th full name
+  %tbody
+    - @ip.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= l[:ip_address]
+        %td= link_to l.user.login, controller: 'users', action: 'profile', id: l[:id]
+        %td= l.user.full_name

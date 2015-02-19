@@ -34,6 +34,7 @@
         %th Submitted_at
         %th Points
         %th comment
+        %th IP
     %tbody
       - row_odd,curr = true,''
       - @submissions.each do |sub|
@@ -46,6 +47,7 @@
           %td= time_ago_in_words(sub.submitted_at) + " ago"
           %td= sub.points
           %td.fix-width= sub.grader_comment
+          %td= sub.ip_address
 - else
   No submission
 
