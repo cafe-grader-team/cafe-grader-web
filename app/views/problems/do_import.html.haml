@@ -7,8 +7,7 @@
   %b Problem:
   = "#{@problem.full_name} (#{@problem.name})"
   %br/
-  Note that the full score has be assigned to the default value, 100.
-  You should change it to the correct full score.
+  = "Note that the full score has been set to #{@problem.full_score}."
 
 %p
   = link_to '[Back to problem list]', :action => 'list'

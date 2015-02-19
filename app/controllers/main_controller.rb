@@ -71,7 +71,7 @@ class MainController < ApplicationController
     @submission.ip_address = request.remote_ip
 
     if GraderConfiguration.time_limit_mode? and user.contest_finished?
-      @submission.errors.add_to_base "The contest is over."
+      @submission.errors.add(:base,"The contest is over.")
       prepare_list_information
       render :action => 'list' and return
     end
@@ -194,7 +194,7 @@ class MainController < ApplicationController
 
   def confirm_contest_start
     user = User.find(session[:user_id])
-    if request.method == :post
+    if request.method == 'POST'
       user.update_start_time
       redirect_to :action => 'list'
     else

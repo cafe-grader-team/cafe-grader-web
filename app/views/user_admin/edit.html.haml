@@ -1,0 +1,11 @@
+%h1 Editing user
+
+= form_tag :action => 'update', :id => @user do
+  = error_messages_for 'user'
+  = render partial: "form"
+  = submit_tag "Edit"
+
+
+= link_to 'Show', :action => 'show', :id => @user 
+|
+= link_to 'Back', :action => 'list'

@@ -63,7 +63,7 @@ class UsersController < ApplicationController
         render :action => 'email_error', :layout => 'empty'
       end
     else
-      @user.errors.add_to_base("Email cannot be blank") if @user.email==''
+      @user.errors.add(:base,"Email cannot be blank") if @user.email==''
       render :action => 'new', :layout => 'empty'
     end
   end
@@ -154,7 +154,7 @@ class UsersController < ApplicationController
                     :login => user.login,
                     :password => user.password,
                     :activation_url => activation_url,
-                    :admin_email => admin_email
+                    :admin_email => GraderConfiguration['system.admin_email']
                   })
 
     logger.info mail_body
@@ -170,7 +170,7 @@ class UsersController < ApplicationController
                     :contest_name => contest_name,
                     :login => user.login,
                     :password => user.password,
-                    :admin_email => admin_email
+                    :admin_email => GraderConfiguration['system.admin_email']
                   })
 
     logger.info mail_body

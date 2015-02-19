@@ -1,6 +1,6 @@
 class ReportController < ApplicationController
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat]
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck]
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
@@ -118,6 +118,7 @@ class ReportController < ApplicationController
       d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
       @histogram[:data][d.to_i] += 1 if d < range
 
+      next unless sub.points
       @summary[:count] += 1
       user[sub.user_id] = [user[sub.user_id], (sub.points >= @problem.full_score) ? 1 : 0].max
 
@@ -196,7 +197,7 @@ class ReportController < ApplicationController
     @struggle = Array.new
     record = {}
     Submission.includes(:problem,:user).order(:problem_id,:user_id).find_each do |sub|
-      next unless sub.user and sub.problem
+      next unless sub.problem and sub.user
       if user != sub.user_id or problem != sub.problem_id
         @struggle << { user: record[:user], problem: record[:problem], tries: tries } unless solve
         record = {user: sub.user, problem: sub.problem}

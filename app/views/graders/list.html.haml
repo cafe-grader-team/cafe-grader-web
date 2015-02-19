@@ -1,5 +1,6 @@
 - content_for :head do
   = stylesheet_link_tag 'graders'
+  = javascript_include_tag 'local_jquery'
   <meta http-equiv ="refresh" content="60"/>
 
 %h1 Grader information
@@ -66,7 +67,7 @@
           %td= sub.try(:user).try(:full_name)
           %td= sub.try(:problem).try(:full_name)
           %td= "#{time_ago_in_words(sub.submitted_at)} ago"
-          %td= "#{sub.graded_at ? time_ago_in_words(sub.graded_at) : ''} ago"
+          %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
           %td= sub.grader_comment
 
 
