@@ -1,0 +1,37 @@
+- content_for :header do
+  = stylesheet_link_tag 'tablesorter-theme.cafe'
+  = javascript_include_tag 'local_jquery'
+
+%h1 Login status
+
+=render partial: 'report_menu'
+
+Checking for all submissions with the currently available problem
+
+%h2 Users with Multiple IP
+%table.tablesorter-cafe#my_table
+  %thead
+    %tr
+      %th login
+      %th full name
+      %th IP
+  %tbody
+    - @users.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= link_to l.user.login, controller: 'users', action: 'profile', id: l[:id]
+        %td= l.user.full_name
+        %td= l[:ip_address]
+
+%h2 IP with multiple users
+%table.tablesorter-cafe#my_table
+  %thead
+    %tr
+      %th IP
+      %th login
+      %th full name
+  %tbody
+    - @ip.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= l[:ip_address]
+        %td= link_to l.user.login, controller: 'users', action: 'profile', id: l[:id]
+        %td= l.user.full_name

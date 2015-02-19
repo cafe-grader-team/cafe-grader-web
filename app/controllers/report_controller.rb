@@ -215,4 +215,41 @@ class ReportController < ApplicationController
     @struggle = @struggle[0..50]
   end
 
+
+  def multiple_login
+    #user with multiple IP
+    raw = Submission.joins(:user).joins(:problem).where("problems.available != 0").group("login,ip_address").order(:login)
+    last,count = 0,0
+    first = 0
+    @users = []
+    raw.each do |r|
+      if last != r.user.login
+        count = 1
+        last = r.user.login
+        first = r
+      else
+        @users << first if count == 1
+        @users << r
+        count += 1
+      end
+    end
+
+    #IP with multiple user
+    raw = Submission.joins(:user).joins(:problem).where("problems.available != 0").group("login,ip_address").order(:ip_address)
+    last,count = 0,0
+    first = 0
+    @ip = []
+    raw.each do |r|
+      if last != r.ip_address
+        count = 1
+        last = r.ip_address
+        first = r
+      else
+        @ip << first if count == 1
+        @ip << r
+        count += 1
+      end
+    end
+  end
+
 end

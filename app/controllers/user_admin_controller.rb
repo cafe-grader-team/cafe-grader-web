@@ -150,6 +150,12 @@ class UserAdminController < ApplicationController
       end
       @scorearray << ustat
     end
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'last_score.csv'
+    else
+      render template: 'user_admin/user_stat'
+    end
   end
 
   def user_stat_max
