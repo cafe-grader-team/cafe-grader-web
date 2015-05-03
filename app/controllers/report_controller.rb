@@ -252,4 +252,7 @@ class ReportController < ApplicationController
     end
   end
 
+  def cheat_report
+  end
+
 end
