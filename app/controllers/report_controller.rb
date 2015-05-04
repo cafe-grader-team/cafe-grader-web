@@ -253,6 +253,96 @@ class ReportController < ApplicationController
   end
 
   def cheat_report
+    date_and_time = '%Y-%m-%d %H:%M'
+    begin
+      md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @since_time = Time.zone.now
+    end
+    begin
+      md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @until_time = Time.zone.now.ago( 90.minutes)
+    end
+
+    #multi login
+    @ml = Login.joins(:user).where("logins.created_at >= ? and logins.created_at <= ?",@since_time,@until_time).select('users.login,count(distinct ip_address) as count,users.full_name').group("users.id").having("count > 1")
+
+    st = <<-SQL
+  SELECT l2.*
+    FROM logins l2 INNER JOIN
+    (SELECT u.id,COUNT(DISTINCT ip_address) as count,u.login,u.full_name
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
+      GROUP BY u.id
+      HAVING count > 1
+    ) ml ON l2.user_id = ml.id
+    WHERE l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
+UNION
+  SELECT l2.*
+    FROM logins l2 INNER JOIN
+    (SELECT l.ip_address,COUNT(DISTINCT u.id) as count
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
+      GROUP BY l.ip_address
+      HAVING count > 1
+    ) ml on ml.ip_address = l2.ip_address
+    INNER JOIN users u ON l2.user_id = u.id
+    WHERE l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
+ORDER BY ip_address,created_at
+              SQL
+    @mld = Login.find_by_sql(st)
+
+    st = <<-SQL
+  SELECT s.id,s.user_id,s.ip_address,s.submitted_at,s.problem_id
+    FROM submissions s INNER JOIN
+    (SELECT u.id,COUNT(DISTINCT ip_address) as count,u.login,u.full_name
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= ? and l.created_at <= ?
+      GROUP BY u.id
+      HAVING count > 1
+    ) ml ON s.user_id = ml.id
+    WHERE s.submitted_at >= ? and s.submitted_at <= ?
+UNION
+  SELECT s.id,s.user_id,s.ip_address,s.submitted_at,s.problem_id
+    FROM submissions s INNER JOIN
+    (SELECT l.ip_address,COUNT(DISTINCT u.id) as count
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= ? and l.created_at <= ?
+      GROUP BY l.ip_address
+      HAVING count > 1
+    ) ml on ml.ip_address = s.ip_address
+    WHERE s.submitted_at >= ? and s.submitted_at <= ?
+ORDER BY ip_address,submitted_at
+            SQL
+    @subs = Submission.joins(:problem).find_by_sql([st,@since_time,@until_time,
+                                       @since_time,@until_time,
+                                       @since_time,@until_time,
+                                       @since_time,@until_time])
+
+#  st =
+#      " INNER JOIN" +
+#      "(SELECT u.id,l.ip_address,COUNT(DISTINCT ip_address) as count " +
+#      " FROM logins l INNER JOIN users u ON l.user_id = u.id "+
+#      " WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}' " +
+#      " GROUP BY u.id" +
+#      " HAVING count > 1) ml " 
+#  #ml detail
+#  @mld = Login.joins(st + "ON logins.user_id = ml.id").
+#    where("logins.created_at >= ? and logins.created_at <= ?",@since_time,@until_time).
+#    order("ip_address")
+#
+#  #submissions
+#  @subs =  Submission.joins(:problem).joins(st + "ON submissions.user_id = ml.id").
+#    where("submissions.submitted_at >= ? and submissions.submitted_at <= ?",@since_time,@until_time).
+#    order("submissions.ip_address")
   end
+
 
 end

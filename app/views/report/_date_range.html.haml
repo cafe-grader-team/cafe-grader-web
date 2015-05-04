@@ -7,11 +7,11 @@
       %tr
         %td{style: 'width: 120px; font-weight: bold'}= param_text
         %td{align: 'right'} since:
-        %td= text_field_tag 'since_datetime'
+        %td= text_field_tag 'since_datetime', @since_time
       %tr
         %td
         %td{align: 'right'} until:
-        %td= text_field_tag 'until_datetime'
+        %td= text_field_tag 'until_datetime', @until_time
       %tr
         %td
         %td
