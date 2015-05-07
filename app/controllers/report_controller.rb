@@ -1,6 +1,7 @@
 class ReportController < ApplicationController
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck]
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize]
+
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
@@ -258,13 +259,13 @@ class ReportController < ApplicationController
       md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
       @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
     rescue
-      @since_time = Time.zone.now
+      @since_time = Time.zone.now.ago( 90.minutes)
     end
     begin
       md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
       @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
     rescue
-      @until_time = Time.zone.now.ago( 90.minutes)
+      @until_time = Time.zone.now
     end
 
     #multi login
@@ -326,22 +327,52 @@ ORDER BY ip_address,submitted_at
                                        @since_time,@until_time,
                                        @since_time,@until_time])
 
-#  st =
-#      " INNER JOIN" +
-#      "(SELECT u.id,l.ip_address,COUNT(DISTINCT ip_address) as count " +
-#      " FROM logins l INNER JOIN users u ON l.user_id = u.id "+
-#      " WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}' " +
-#      " GROUP BY u.id" +
-#      " HAVING count > 1) ml " 
-#  #ml detail
-#  @mld = Login.joins(st + "ON logins.user_id = ml.id").
-#    where("logins.created_at >= ? and logins.created_at <= ?",@since_time,@until_time).
-#    order("ip_address")
-#
-#  #submissions
-#  @subs =  Submission.joins(:problem).joins(st + "ON submissions.user_id = ml.id").
-#    where("submissions.submitted_at >= ? and submissions.submitted_at <= ?",@since_time,@until_time).
-#    order("submissions.ip_address")
+  end
+
+  def cheat_scruntinize
+    #convert date & time
+    date_and_time = '%Y-%m-%d %H:%M'
+    begin
+      md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @since_time = Time.zone.now.ago( 90.minutes)
+    end
+    begin
+      md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @until_time = Time.zone.now
+    end
+
+    #convert sid
+    @sid = params[:SID].split(/[,\s]/) if params[:SID]
+    unless @sid and @sid.size > 0
+      return 
+      redirect_to actoin: :cheat_scruntinize
+      flash[:notice] = 'Please enter at least 1 student id'
+    end
+    mark = Array.new(@sid.size,'?')
+    condition = "(u.login = " + mark.join(' OR u.login = ') + ')'
+
+    @st = <<-SQL
+  SELECT l.created_at as submitted_at ,-1 as id,u.login,u.full_name,l.ip_address,"" as problem_id,"" as points,l.user_id
+  FROM logins l INNER JOIN users u on l.user_id  = u.id
+  WHERE l.created_at >= ? AND l.created_at <= ? AND #{condition}
+UNION
+  SELECT s.submitted_at,s.id,u.login,u.full_name,s.ip_address,s.problem_id,s.points,s.user_id
+  FROM submissions s INNER JOIN users u ON s.user_id = u.id
+  WHERE s.submitted_at >= ? AND s.submitted_at <= ? AND #{condition}
+ORDER BY submitted_at
+  SQL
+    
+    p = [@st,@since_time,@until_time] + @sid + [@since_time,@until_time] + @sid
+    @logs = Submission.joins(:problem).find_by_sql(p)
+
+
+
+
+
   end
 
 
