@@ -13,6 +13,8 @@ class MainController < ApplicationController
   prepend_before_filter :reject_announcement_refresh_when_logged_out, 
                         :only => [:announcements]
 
+  before_filter :authenticate_by_ip_address, :only => [:list]
+
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
 
