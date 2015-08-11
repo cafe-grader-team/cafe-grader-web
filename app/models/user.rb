@@ -307,6 +307,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.clear_last_login
+    User.update_all(:last_ip => nil)
+  end
+
   protected
     def encrypt_new_password
       return if password.blank?

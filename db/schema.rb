@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150203153534) do
+ActiveRecord::Schema.define(:version => 20150618085823) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -87,7 +87,7 @@ ActiveRecord::Schema.define(:version => 20150203153534) do
   end
 
   create_table "logins", :force => true do |t|
-    t.string   "user_id"
+    t.integer  "user_id"
     t.string   "ip_address"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
@@ -242,6 +242,7 @@ ActiveRecord::Schema.define(:version => 20150203153534) do
     t.string   "section"
     t.boolean  "enabled",                       :default => true
     t.string   "remark"
+    t.string   "last_ip"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

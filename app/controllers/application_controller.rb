@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery
 
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
+  MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
 
   def admin_authorization
     return false unless authenticate
@@ -56,6 +57,23 @@ class ApplicationController < ActionController::Base
           redirect_to :controller => 'main', :action => 'index'
         end
       rescue
+      end
+    end
+    return true
+  end
+
+  def authenticate_by_ip_address
+    #this assume that we have already authenticate normally
+    unless GraderConfiguration[MULTIPLE_IP_LOGIN_CONF_KEY]
+      user = User.find(session[:user_id])
+      if (not user.admin? and user.last_ip and user.last_ip != request.remote_ip)
+        flash[:notice] = "You cannot use the system from #{request.remote_ip}. Your last ip is #{user.last_ip}"
+        redirect_to :controller => 'main', :action => 'login'
+        return false
+      end
+      unless user.last_ip
+        user.last_ip = request.remote_ip
+        user.save
       end
     end
     return true
