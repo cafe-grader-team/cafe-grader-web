@@ -86,7 +86,7 @@ class GradersController < ApplicationController
     @formatted_code = formatter.format(lexer.lex(@submission.source))
     @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
 
-    SubmissionLogView.create(user_id: user.id,submission_id: @submission.id)
+    SubmissionViewLogs.create(user_id: session[:user_id],submission_id: @submission.id)
 
   end
 
