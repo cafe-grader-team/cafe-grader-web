@@ -125,7 +125,7 @@ class UsersController < ApplicationController
 
       @summary[:count] += 1
       next unless sub.problem
-      problem[sub.problem] = [problem[sub.problem], (sub.points >= sub.problem.full_score) ? 1 : 0].max
+      problem[sub.problem] = [problem[sub.problem], ( (sub.try(:points) || 0) >= sub.problem.full_score) ? 1 : 0].max
     end
 
     @histogram[:summary][:max] = [@histogram[:data].max,1].max

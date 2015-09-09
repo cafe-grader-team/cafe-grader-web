@@ -9,6 +9,7 @@ class GraderConfiguration < ActiveRecord::Base
   TEST_REQUEST_EARLY_TIMEOUT_KEY = 'contest.test_request.early_timeout'
   MULTICONTESTS_KEY = 'system.multicontests'
   CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
+  MULTIPLE_IP_LOGIN_KEY = 'right.multiple_ip_login'
 
   cattr_accessor :config_cache
   cattr_accessor :task_grading_info_cache
