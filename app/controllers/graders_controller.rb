@@ -86,6 +86,9 @@ class GradersController < ApplicationController
     @formatted_code = formatter.format(lexer.lex(@submission.source))
     @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
 
+    user = User.find(session[:user_id])
+    SubmissionViewLog.create(user_id: session[:user_id],submission_id: @submission.id) unless user.admin?
+
   end
 
   # various grader controls

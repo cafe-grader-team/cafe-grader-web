@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150618085823) do
+ActiveRecord::Schema.define(:version => 20150827133841) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -157,6 +157,13 @@ ActiveRecord::Schema.define(:version => 20150618085823) do
     t.datetime "updated_at", :null => false
     t.integer  "country_id"
     t.string   "password"
+  end
+
+  create_table "submission_view_logs", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "submission_id"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
   end
 
   create_table "submissions", :force => true do |t|
