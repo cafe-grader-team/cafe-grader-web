@@ -1,14 +1,29 @@
 class HeartbeatController < ApplicationController
+  before_filter :admin_authorization, :only => ['index']
+
   def edit
-    render layout: 'empty'
     @user = User.find_by_login(params[:id])
-    return unless @user
-    
+    unless @user
+      render text: "LOGIN_NOT_FOUND"
+      return
+    end
+
     hb = HeartBeat.where(user_id: @user.id, ip_address: request.remote_ip).first
+    puts "status = #{params[:status]}"
     if hb
+      if params[:status]
+        hb.status = params[:status]
+        hb.save
+      end
       hb.touch
     else
-      HeartBeat.create(user_id: @user.id, ip_address: request.remote_ip)
+      HeartBeat.creae(user_id: @user.id, ip_address: request.remote_ip)
     end
+    render text: "OK"
+  end
+
+  def index
+    @hb = HeartBeat.includes(:user).order(:user_id).all
+    @num = HeartBeat.where("updated_at >= ?",Time.zone.now-5.minutes).count
   end
 end
