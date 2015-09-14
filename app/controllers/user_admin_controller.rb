@@ -62,6 +62,13 @@ class UserAdminController < ApplicationController
     end    
   end
 
+  def clear_last_ip
+    @user = User.find(params[:id])
+    @user.last_ip = nil
+    @user.save
+    redirect_to action: 'list', page: params[:page]
+  end
+
   def create_from_list
     lines = params[:user_list]
 
@@ -213,7 +220,7 @@ class UserAdminController < ApplicationController
       @changed = true
     end
   end
-  
+
   # contest management
 
   def contests

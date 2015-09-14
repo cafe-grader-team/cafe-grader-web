@@ -64,6 +64,7 @@ Total <%= @user_count %> users |
     <th></th>
     <th></th>
     <th></th>
+    <th></th>
   </tr>
   
 <% for user in @users %>
@@ -74,6 +75,7 @@ Total <%= @user_count %> users |
         <td><%=h user.send(column.name) %></td>
       <% end %>
     <% end %>
+    <td><%= link_to 'Clear IP', {:action => 'clear_last_ip', :id => user, :page=>params[:page]}, :confirm => 'This will reset last logging in ip of the user, are you sure?' %></td>
     <td><%= link_to 'Show', :action => 'show', :id => user %></td>
     <td><%= link_to 'Edit', :action => 'edit', :id => user %></td>
     <td><%= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post %></td>
