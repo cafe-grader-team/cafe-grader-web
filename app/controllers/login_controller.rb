@@ -7,7 +7,10 @@ class LoginController < ApplicationController
   end
 
   def login
-    if user = User.authenticate(params[:login], params[:password])
+    if (!GraderConfiguration['right.bypass_agreement']) and (!params[:accept_agree])
+      flash[:notice] = 'You must accept the agreement before logging in'
+      redirect_to :controller => 'main', :action => 'login'
+    elsif user = User.authenticate(params[:login], params[:password])
       session[:user_id] = user.id
       session[:admin] = user.admin?
 
