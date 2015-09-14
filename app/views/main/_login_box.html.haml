@@ -22,6 +22,11 @@
           %td{:align => "right"} 
             ="#{t 'password_label'}:"
           %td= password_field_tag
+        - unless GraderConfiguration['right.bypass_agreement']
+          %tr
+            %td{:align => "right"}= check_box_tag 'accept_agree'
+            %td ยอมรับข้อตกลงการใช้งาน
+        
       = submit_tag t('login.login_submit')
 %br/
 
