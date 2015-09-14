@@ -11,16 +11,16 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150827133841) do
+ActiveRecord::Schema.define(:version => 20150914090545) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
-    t.text     "body",         :limit => 16777215
+    t.text     "body"
     t.boolean  "published"
-    t.datetime "created_at",                                          :null => false
-    t.datetime "updated_at",                                          :null => false
-    t.boolean  "frontpage",                        :default => false
-    t.boolean  "contest_only",                     :default => false
+    t.datetime "created_at",                      :null => false
+    t.datetime "updated_at",                      :null => false
+    t.boolean  "frontpage",    :default => false
+    t.boolean  "contest_only", :default => false
     t.string   "title"
     t.string   "notes"
   end
@@ -50,19 +50,19 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
   end
 
   create_table "descriptions", :force => true do |t|
-    t.text     "body",       :limit => 16777215
+    t.text     "body"
     t.boolean  "markdowned"
-    t.datetime "created_at",                     :null => false
-    t.datetime "updated_at",                     :null => false
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
   end
 
   create_table "grader_configurations", :force => true do |t|
     t.string   "key"
     t.string   "value_type"
     t.string   "value"
-    t.datetime "created_at",                      :null => false
-    t.datetime "updated_at",                      :null => false
-    t.text     "description", :limit => 16777215
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
+    t.text     "description"
   end
 
   create_table "grader_processes", :force => true do |t|
@@ -78,6 +78,13 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
   end
 
   add_index "grader_processes", ["host", "pid"], :name => "index_grader_processes_on_ip_and_pid"
+
+  create_table "heart_beats", :force => true do |t|
+    t.integer  "user_id"
+    t.string   "ip_address"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
 
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
@@ -97,10 +104,10 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
     t.integer  "sender_id"
     t.integer  "receiver_id"
     t.integer  "replying_message_id"
-    t.text     "body",                :limit => 16777215
+    t.text     "body"
     t.boolean  "replied"
-    t.datetime "created_at",                              :null => false
-    t.datetime "updated_at",                              :null => false
+    t.datetime "created_at",          :null => false
+    t.datetime "updated_at",          :null => false
   end
 
   create_table "problems", :force => true do |t|
@@ -142,7 +149,7 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
 
   create_table "sessions", :force => true do |t|
     t.string   "session_id"
-    t.text     "data",       :limit => 16777215
+    t.text     "data"
     t.datetime "updated_at"
   end
 
@@ -170,14 +177,14 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
     t.integer  "user_id"
     t.integer  "problem_id"
     t.integer  "language_id"
-    t.text     "source",                :limit => 16777215
+    t.text     "source"
     t.binary   "binary"
     t.datetime "submitted_at"
     t.datetime "compiled_at"
-    t.text     "compiler_message",      :limit => 16777215
+    t.text     "compiler_message"
     t.datetime "graded_at"
     t.integer  "points"
-    t.text     "grader_comment",        :limit => 16777215
+    t.text     "grader_comment"
     t.integer  "number"
     t.string   "source_filename"
     t.float    "max_runtime"
@@ -198,10 +205,10 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
 
   create_table "test_pairs", :force => true do |t|
     t.integer  "problem_id"
-    t.text     "input",      :limit => 2147483647
-    t.text     "solution",   :limit => 2147483647
-    t.datetime "created_at",                       :null => false
-    t.datetime "updated_at",                       :null => false
+    t.text     "input",      :limit => 16777215
+    t.text     "solution",   :limit => 16777215
+    t.datetime "created_at",                     :null => false
+    t.datetime "updated_at",                     :null => false
   end
 
   create_table "test_requests", :force => true do |t|
@@ -212,13 +219,13 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
     t.string   "output_file_name"
     t.string   "running_stat"
     t.integer  "status"
-    t.datetime "updated_at",                           :null => false
+    t.datetime "updated_at",       :null => false
     t.datetime "submitted_at"
     t.datetime "compiled_at"
-    t.text     "compiler_message", :limit => 16777215
+    t.text     "compiler_message"
     t.datetime "graded_at"
     t.string   "grader_comment"
-    t.datetime "created_at",                           :null => false
+    t.datetime "created_at",       :null => false
     t.float    "running_time"
     t.string   "exit_status"
     t.integer  "memory_usage"
@@ -246,10 +253,10 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
     t.boolean  "activated",                     :default => false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "section"
     t.boolean  "enabled",                       :default => true
     t.string   "remark"
     t.string   "last_ip"
+    t.string   "section"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true
