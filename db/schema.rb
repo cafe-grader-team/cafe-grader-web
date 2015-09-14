@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150827133841) do
+ActiveRecord::Schema.define(:version => 20150914090545) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -78,6 +78,13 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
   end
 
   add_index "grader_processes", ["host", "pid"], :name => "index_grader_processes_on_ip_and_pid"
+
+  create_table "heart_beats", :force => true do |t|
+    t.integer  "user_id"
+    t.string   "ip_address"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
 
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
@@ -249,6 +256,7 @@ ActiveRecord::Schema.define(:version => 20150827133841) do
     t.boolean  "enabled",                       :default => true
     t.string   "remark"
     t.string   "last_ip"
+    t.string   "section"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

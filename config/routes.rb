@@ -64,6 +64,8 @@ CafeGrader::Application.routes.draw do
   match 'tasks/view/:file.:ext' => 'tasks#view'
   match 'tasks/download/:id/:file.:ext' => 'tasks#download'
 
+  match 'heartbeat/:id/edit' => 'heartbeat#edit'
+
   # See how all your routes lay out with "rake routes"
 
   # This is a legacy wild controller route that's not recommended for RESTful applications.
