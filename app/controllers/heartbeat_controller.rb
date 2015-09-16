@@ -26,6 +26,6 @@ class HeartbeatController < ApplicationController
 
   def index
     @hb = HeartBeat.where("updated_at >= ?",Time.zone.now-2.hours).includes(:user).order(:user_id).all
-    @num = HeartBeat.where("updated_at >= ?",Time.zone.now-5.minutes).count
+    @num = HeartBeat.where("updated_at >= ?",Time.zone.now-5.minutes).count(:user_id,distinct: true)
   end
 end
