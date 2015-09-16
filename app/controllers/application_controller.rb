@@ -69,6 +69,7 @@ class ApplicationController < ActionController::Base
       if (not user.admin? and user.last_ip and user.last_ip != request.remote_ip)
         flash[:notice] = "You cannot use the system from #{request.remote_ip}. Your last ip is #{user.last_ip}"
         redirect_to :controller => 'main', :action => 'login'
+        puts "CHEAT: user #{user.login} tried to login from '#{request.remote_ip}' while last ip is '#{user.last_ip}' at #{Time.zone.now}"
         return false
       end
       unless user.last_ip
