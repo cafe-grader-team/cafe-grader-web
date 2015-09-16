@@ -20,11 +20,12 @@ class HeartbeatController < ApplicationController
     #  HeartBeat.creae(user_id: @user.id, ip_address: request.remote_ip)
     #end
     HeartBeat.create(user_id: @user.id, ip_address: request.remote_ip, status: params[:status])
-    render text: "OK"
+
+    render text: (GraderConfiguration['right.heartbeat_response'] || 'OK')
   end
 
   def index
-    @hb = HeartBeat.includes(:user).order(:user_id).all
+    @hb = HeartBeat.where("updated_at >= ?",Time.zone.now-2.hours).includes(:user).order(:user_id).all
     @num = HeartBeat.where("updated_at >= ?",Time.zone.now-5.minutes).count
   end
 end
