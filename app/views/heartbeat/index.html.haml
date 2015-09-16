@@ -12,7 +12,7 @@
 %h1 Heart Beat Count
 = "Last 5 minutes distinct user count = #{@num}"
 
-%h1 Heart Beat List
+%h1 Heart Beat from preview 2 hours
 
 %table.tablesorter-cafe#my_table
   %thead
@@ -20,11 +20,13 @@
       %th Login
       %th Full name
       %th IP
-      %th Last Update
+      %th Status
+      %th Update
   %tbody
     - @hb.each do |hb|
       %tr{class: cycle('info-even','info-odd')}
         %td= link_to hb.user.login, controller: :users, :action => 'profile', :id => hb.user.id
         %td= hb.user.full_name
         %td= hb.ip_address
+        %td= hb.status
         %td= "#{time_ago_in_words(hb.updated_at)} ago"

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150914223258) do
+ActiveRecord::Schema.define(:version => 20150916054105) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -86,6 +86,8 @@ ActiveRecord::Schema.define(:version => 20150914223258) do
     t.datetime "updated_at", :null => false
     t.string   "status"
   end
+
+  add_index "heart_beats", ["updated_at"], :name => "index_heart_beats_on_updated_at"
 
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
