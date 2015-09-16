@@ -8,17 +8,18 @@ class HeartbeatController < ApplicationController
       return
     end
 
-    hb = HeartBeat.where(user_id: @user.id, ip_address: request.remote_ip).first
-    puts "status = #{params[:status]}"
-    if hb
-      if params[:status]
-        hb.status = params[:status]
-        hb.save
-      end
-      hb.touch
-    else
-      HeartBeat.creae(user_id: @user.id, ip_address: request.remote_ip)
-    end
+    #hb = HeartBeat.where(user_id: @user.id, ip_address: request.remote_ip).first
+    #puts "status = #{params[:status]}"
+    #if hb
+    #  if params[:status]
+    #    hb.status = params[:status]
+    #    hb.save
+    #  end
+    #  hb.touch
+    #else
+    #  HeartBeat.creae(user_id: @user.id, ip_address: request.remote_ip)
+    #end
+    HeartBeat.create(user_id: @user.id, ip_address: request.remote_ip, status: params[:status])
     render text: "OK"
   end
 
