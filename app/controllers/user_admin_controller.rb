@@ -142,7 +142,7 @@ class UserAdminController < ApplicationController
     else
       @problems = Problem.find_available_problems
     end
-    @users = User.find(:all, :include => [:contests, :contest_stat])
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
