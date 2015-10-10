@@ -15,3 +15,4 @@
 //= require effects
 //= require dragdrop
 //= require controls
+//= require bootstrap-sprockets
