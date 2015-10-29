@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+%html
+%head
+  %title= GraderConfiguration['contest.name']
+  = stylesheet_link_tag "application", :media => "all"
+  = javascript_include_tag "application"
+  = csrf_meta_tags
+  = content_for :header
+  = yield :head
+
+%body
+
+%div.userbar
+  = user_header
+
+= content_tag(:p,flash[:notice],:style => "color:green") if flash[:notice]!=nil
+= yield
+
