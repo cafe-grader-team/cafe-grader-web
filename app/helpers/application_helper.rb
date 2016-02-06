@@ -1,6 +1,38 @@
 # Methods added to this helper will be available to all templates in the application.
 module ApplicationHelper
 
+  def navbar_user_header
+    left_menu = ''
+    right_menu = ''
+    user = User.find(session[:user_id])
+
+    if (user!=nil) and (GraderConfiguration.show_tasks_to?(user))
+      left_menu << add_menu("#{I18n.t 'menu.tasks'}", 'tasks', 'list')
+      left_menu << add_menu("#{I18n.t 'menu.submissions'}", 'main', 'submission')
+      left_menu << add_menu("#{I18n.t 'menu.test'}", 'test', 'index')
+    end
+
+    if GraderConfiguration['right.user_hall_of_fame']
+      left_menu << add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
+    end
+    left_menu << add_menu("#{I18n.t 'menu.help'}", 'main', 'help')
+
+
+    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-comment')} #{I18n.t 'menu.messages'}".html_safe, 'messages', 'list')
+    if GraderConfiguration['system.user_setting_enabled']
+      right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-cog')} #{I18n.t 'menu.settings'}".html_safe, 'users', 'index')
+    end
+    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-log-out')} #{I18n.t 'menu.log_out'}".html_safe, 'main', 'login',)
+
+    result = content_tag(:ul,left_menu.html_safe,class: 'nav navbar-nav') + content_tag(:ul,right_menu.html_safe,class: 'nav navbar-nav navbar-right')
+  end
+
+  def add_menu(title, controller, action,html_option = {})
+    link_option = {controller: controller, action: action}
+    html_option[:class] = (html_option[:class] || '') + " active" if current_page?(link_option)
+    content_tag(:li, link_to(title,link_option),html_option)
+  end
+
   def user_header
     menu_items = ''
     user = User.find(session[:user_id])
