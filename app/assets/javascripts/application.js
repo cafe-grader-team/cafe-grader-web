@@ -10,9 +10,17 @@
 // WARNING: THE FIRST BLANK LINE MARKS THE END OF WHAT'S TO BE PROCESSED, ANY BLANK LINE SHOULD
 // GO AFTER THE REQUIRES BELOW.
 //
-//= require prototype
-//= require prototype_ujs
-//= require effects
-//= require dragdrop
-//= require controls
+//= require jquery
+//= require jquery_ujs
+//= require jquery.ui.all
 //= require bootstrap-sprockets
+//= require custom
+//= require select2
+
+
+// since this is after blank line, it is not downloaded
+//x= require prototype
+//x= require prototype_ujs
+//x= require effects
+//x= require dragdrop
+//x= require controls

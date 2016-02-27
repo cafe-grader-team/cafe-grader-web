@@ -9,22 +9,7 @@
   = yield :head
 
 %body
-  %nav.navbar.navbar-default.navbar-fixed-top
-    .container-fluid
-      .navbar-header
-        %a.navbar-brand{href: main_list_path} หน้าหลัก
-      .collapse.navbar-collapse
-        = navbar_user_header #call helper function
-  %nav.navbar.navbar-default.navbar-fixed-top.navbar-inverse.secondnavbar
-    .container-fluid
-      .collapse.navbar-collapse
-        %ul.nav.navbar-nav
-          %li
-            %a{href:'#'}hahaha
-
-  %div.userbar
-    = user_header
+  = render 'layouts/header'
 
   = content_tag(:p,flash[:notice],:style => "color:green") if flash[:notice]!=nil
   = yield
-

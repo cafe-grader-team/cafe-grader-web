@@ -1,8 +1,15 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
+  before_filter :current_user 
+
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
+
+  # Returns the current logged-in user (if any).
+  def current_user
+    @current_user ||= User.find(session[:user_id])
+  end
 
   def admin_authorization
     return false unless authenticate

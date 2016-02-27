@@ -15,14 +15,14 @@ module ApplicationHelper
     if GraderConfiguration['right.user_hall_of_fame']
       left_menu << add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
     end
-    left_menu << add_menu("#{I18n.t 'menu.help'}", 'main', 'help')
 
-
-    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-comment')} #{I18n.t 'menu.messages'}".html_safe, 'messages', 'list')
+    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-question-sign')}".html_safe, 'main', 'help')
+    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-comment')}".html_safe, 'messages', 'list', {title: I18n.t('menu.messages'), data: {toggle: 'tooltip'}})
     if GraderConfiguration['system.user_setting_enabled']
-      right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-cog')} #{I18n.t 'menu.settings'}".html_safe, 'users', 'index')
+      right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-cog')}".html_safe, 'users', 'index', {title: I18n.t('menu.settings'), data: {toggle: 'tooltip'}})
     end
-    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-log-out')} #{I18n.t 'menu.log_out'}".html_safe, 'main', 'login',)
+    right_menu << add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-log-out')} #{user.full_name}".html_safe, 'main', 'login', {title: I18n.t('menu.log_out'), data: {toggle: 'tooltip'}})
+
 
     result = content_tag(:ul,left_menu.html_safe,class: 'nav navbar-nav') + content_tag(:ul,right_menu.html_safe,class: 'nav navbar-nav navbar-right')
   end

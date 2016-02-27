@@ -10,11 +10,13 @@
  * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
  * file per style scope.
  *
- *= require_tree .
- *= require_self
+ // bootstrap says that we should not do this, but @import each file instead
+ #   *= require_tree .
+ #   *= require_self
  */
 
-
+@import jquery.ui.all
+@import jquery.ui.core
 @import jquery.ui.core
 @import jquery.ui.theme
 @import jquery.ui.datepicker
@@ -23,17 +25,18 @@
 @import jquery-tablesorter/theme.metro-dark
 @import tablesorter-theme.cafe
 
-
-@import "bootstrap-sprockets"
-@import "bootstrap"
+@import bootstrap-sprockets
+@import bootstrap
+@import select2
+@import select2-bootstrap
 
 .secondnavbar
   top: 50px
 
 body
   background: white image-url("topbg.jpg") repeat-x top center
-  font-size: 13px
-  font-family: Tahoma, "sans-serif"
+  //font-size: 13px
+  //font-family: Tahoma, "sans-serif"
   margin: 10px
   padding: 10px
   padding-top: 100px

@@ -22,14 +22,16 @@
 
 - if GraderConfiguration.show_tasks_to?(@user)
   - if not GraderConfiguration.multicontests?
-    %table.info
-      %tr.info-head
-        %th
-        %th Tasks name
-        %th Full name
-        %th # of sub(s)
-        %th Results
-      = render :partial => 'problem', :collection => @problems
+    %table.table.table-striped
+      %thead
+        %tr.info-head
+          %th #
+          %th Tasks name
+          %th Full name
+          %th # of sub(s)
+          %th Results
+      %tbody
+        = render :partial => 'problem', :collection => @problems
   - else
     - @contest_problems.each do |cp|
       - if cp[:problems].length > 0
