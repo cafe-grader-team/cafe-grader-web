@@ -27,7 +27,8 @@
       <%=h announcement.body %>
     </td>
     <td><%=h announcement.author %></td>
-    <td><%= in_place_editor_field :announcement, :published, {}, :rows => 1 %></td>
+    <td><%= check_box_tag :published, 1, announcement.published, class: 'bootstrap-switch', data: {size: 'small'} %></td>
+    <!-- <td><%= in_place_editor_field :announcement, :published, {}, :rows => 1 %></td> -->
     <td><%= link_to 'Show', announcement %></td>
     <td><%= link_to 'Edit', edit_announcement_path(announcement) %></td>
     <td><%= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete %></td>

@@ -14,8 +14,9 @@
 //= require jquery_ujs
 //= require jquery.ui.all
 //= require bootstrap-sprockets
-//= require custom
+//= require bootstrap-switch
 //= require select2
+//= require custom
 
 
 // since this is after blank line, it is not downloaded

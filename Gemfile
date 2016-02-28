@@ -53,6 +53,7 @@ gem 'rouge'
 
 #add bootstrap
 gem 'bootstrap-sass', '~> 3.2.0'
+gem 'bootstrap-switch-rails'
 gem 'autoprefixer-rails'
 
 
