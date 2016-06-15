@@ -6,6 +6,8 @@ CafeGrader::Application.routes.draw do
   resources :contests
 
   resources :announcements
+  match 'announcements/toggle/:id' => 'announcements#toggle', via: :put
+
   resources :sites
 
   resources :grader_configuration, controller: 'configurations'

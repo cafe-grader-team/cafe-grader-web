@@ -46,6 +46,7 @@ GEM
     bootstrap-sass (3.2.0.2)
       sass (~> 3.2)
     bootstrap-switch-rails (3.3.3)
+    bootstrap-toggle-rails (2.2.1.0)
     builder (3.0.4)
     coffee-rails (3.2.2)
       coffee-script (>= 2.2.0)
@@ -164,6 +165,7 @@ DEPENDENCIES
   best_in_place (~> 3.0.1)
   bootstrap-sass (~> 3.2.0)
   bootstrap-switch-rails
+  bootstrap-toggle-rails
   coffee-rails (~> 3.2.2)
   dynamic_form
   haml

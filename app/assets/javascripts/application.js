@@ -14,7 +14,8 @@
 //= require jquery_ujs
 //= require jquery.ui.all
 //= require bootstrap-sprockets
-//= require bootstrap-switch
+//x= require bootstrap-switch
+//= require bootstrap-toggle
 //= require select2
 //= require custom
 

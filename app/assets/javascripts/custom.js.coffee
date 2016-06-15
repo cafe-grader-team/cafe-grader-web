@@ -13,7 +13,8 @@ $(document).on 'change', '.btn-file :file', ->
 
 $ ->
   $(".select2").select2()
-  $(".bootstrap-switch").bootstrapSwitch()
+  #$(".bootstrap-switch").bootstrapSwitch()
+  $(".bootstrap-toggle").bootstrapToggle()
   $('.btn-file :file').on 'fileselect', (event, numFiles, label) ->
     input = $(this).parents('.input-group').find(':text')
     log = if numFiles > 1 then numFiles + ' files selected' else label

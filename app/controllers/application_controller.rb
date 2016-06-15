@@ -8,6 +8,7 @@ class ApplicationController < ActionController::Base
 
   # Returns the current logged-in user (if any).
   def current_user
+    return nil unless session[:user_id]
     @current_user ||= User.find(session[:user_id])
   end
 

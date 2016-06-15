@@ -27,7 +27,7 @@
       <%=h announcement.body %>
     </td>
     <td><%=h announcement.author %></td>
-    <td><%= check_box_tag :published, 1, announcement.published, class: 'bootstrap-switch', data: {size: 'small'} %></td>
+    <td><%= check_box_tag :published, 1, announcement.published, { class: 'bootstrap-toggle', id: "published-#{announcement.id}", data: {remote: true, method: 'PUT', url: url_for(controller: :announcements, action: :toggle, id: announcement), size: 'small', toggle: 'toggle' } } %></td>
     <!-- <td><%= in_place_editor_field :announcement, :published, {}, :rows => 1 %></td> -->
     <td><%= link_to 'Show', announcement %></td>
     <td><%= link_to 'Edit', edit_announcement_path(announcement) %></td>
