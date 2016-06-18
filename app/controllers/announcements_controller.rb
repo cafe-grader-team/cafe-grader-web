@@ -81,7 +81,7 @@ class AnnouncementsController < ApplicationController
 
   def toggle
     @announcement = Announcement.find(params[:id])
-    @announcement.update_attributes( published: params[:published] == 1)
+    @announcement.update_attributes( published:  !@announcement.published? )
     respond_to do |format|
       format.js {}
     end

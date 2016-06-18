@@ -6,7 +6,7 @@ CafeGrader::Application.routes.draw do
   resources :contests
 
   resources :announcements
-  match 'announcements/toggle/:id' => 'announcements#toggle', via: :put
+  match 'announcements/toggle/:id' => 'announcements#toggle'
 
   resources :sites
 

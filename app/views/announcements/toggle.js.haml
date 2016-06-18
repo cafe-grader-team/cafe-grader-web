@@ -1,0 +1,8 @@
+:plain
+  var t = $("#published-#{@announcement.id}");
+  t.removeClass('btn-default');
+  t.removeClass('btn-success');
+  t.removeClass('btn-warning');
+  t.addClass("btn-#{@announcement.published? ? 'success' : 'default'}");
+  t.attr("data-params","published=#{!@announcement.published?}");
+  t.text("#{@announcement.published? ? "Yes" : "No"}");

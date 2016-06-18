@@ -1,0 +1,37 @@
+%h1 Listing announcements
+
+= link_to '+ Add announcement', new_announcement_path, class: 'btn btn-success'
+%br
+%br
+
+%table.table.table-striped
+  %tr
+    %th Updated
+    %th Announcement
+    %th Author
+    %th Published
+    %th
+    %th
+  - for announcement in @announcements
+    %tr
+      - @announcement = announcement
+      %td= time_ago_in_words announcement.updated_at
+      %td
+        - if !announcement.title.blank?
+          %b Title:
+          = h announcement.title
+          %br/
+        - if !announcement.notes.blank?
+          %b
+            Notes: #{h announcement.notes}
+          %br/
+        = h announcement.body
+      %td= h announcement.author
+      // %td= check_box_tag :published, 1, announcement.published, { class: 'bootstrap-toggle', id: "published-#{announcement.id}", data: {remote: true, method: 'PUT', url: url_for(controller: :announcements, action: :toggle, id: announcement), size: 'small', toggle: 'toggle' } }
+      // <td><haml_loud> in_place_editor_field :announcement, :published, {}, :rows => 1 </haml_loud></td>
+      %td= link_to (announcement.published? ? "Yes" : "No"), url_for(controller: :announcements, action: :toggle, id: announcement), { class: "btn btn-block btn-sm btn-#{(announcement.published? ? 'success' : 'default')} ajax-toggle", id: "published-#{announcement.id}", data: {remote: true, method: 'post' } }
+      %td= link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-block btn-sm btn-info'
+      %td= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete, class: "btn btn-block btn-sm btn-danger"
+%br
+
+= link_to '+ Add announcement', new_announcement_path, class: 'btn btn-success'
