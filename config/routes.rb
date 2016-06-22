@@ -10,6 +10,8 @@ CafeGrader::Application.routes.draw do
 
   resources :sites
 
+  resources :problem
+
   resources :grader_configuration, controller: 'configurations'
 
   match 'tasks/view/:file.:ext' => 'tasks#view'
