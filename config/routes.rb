@@ -22,6 +22,9 @@ CafeGrader::Application.routes.draw do
   get "main/list"
   get 'main/submission(/:id)', to: 'main#submission', as: 'main_submission'
 
+  #report
+  get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
+
   # See how all your routes lay out with "rake routes"
 
   # This is a legacy wild controller route that's not recommended for RESTful applications.

@@ -24,4 +24,12 @@ $ ->
       if log
         alert log
     return
+  $(".go-button").on 'click', (event) ->
+    link = $(this).attr("data-source")
+    url = $(link).val()
+    if url
+      window.location.href = url
+    return
   return
+
+
