@@ -1,0 +1,12 @@
+:plain
+  b = $("#prob-#{@problem.id}-avail");
+  b.removeClass('btn-default');
+  b.removeClass('btn-success');
+  b.removeClass('btn-warning');
+  b.addClass("btn-#{@problem.available? ? 'success' : 'default'}");
+  b.text("#{@problem.available? ? 'Yes' : 'No'}");
+  r = $("#prob-#{@problem.id}");
+  r.removeClass('success');
+  r.removeClass('danger');
+  r.addClass("#{@problem.available? ? 'success' : 'danger'}");
+

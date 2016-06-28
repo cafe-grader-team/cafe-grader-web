@@ -107,6 +107,18 @@ module ApplicationHelper
     end
   end
 
+  def problem_select(problems, options = {})
+    prefix = options[:with_specific_in_header] ? [[(t 'main.specified_in_header'),'-1']] : []
+    selected = options[:selected] || (options[:with_specific_in_header] ? -1 : nil)
+    puts "selected =  #{selected} hehe"
+    html_options = {class: 'select2 form-control'}
+    html_options[:id] = options[:id]if options[:id]
+    select 'submission',
+           'problem_id',  prefix + problems.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, 
+           (selected ? { selected: "#{selected}"} : {} ),
+           html_options
+  end
+
   def user_title_bar(user)
     header = ''
     time_left = ''

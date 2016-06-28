@@ -1,10 +1,16 @@
 = user_title_bar(@user)
 
-.task-menu
-  Task List
-  %br/
-  - @problems.each do |problem| 
-    = link_to problem.name, :action => 'submission', :id => problem.name
+.panel.panel-info
+  .panel-heading
+    Select Problems
+  .panel-body
+    .form-inline
+      = select 'submission',
+        'problem_id',
+        @problems.collect {|p| ["[#{p.name}] #{p.full_name}", main_submission_url(p.id)]},
+        {:selected => '-1'},
+        { class: 'select2 form-control' }
+      %button.btn.btn-primary.btn-sm#submission_problem_go Go
 
 - if @problem!=nil
   %h2= "Task: #{@problem.full_name} (#{@problem.name})"

@@ -20,6 +20,7 @@ CafeGrader::Application.routes.draw do
 
   #main
   get "main/list"
+  get 'main/submission(/:id)', to: 'main#submission', as: 'main_submission'
 
   # See how all your routes lay out with "rake routes"
 

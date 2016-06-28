@@ -1,7 +1,6 @@
 #js for announcement
 $ ->
   $('.ajax-toggle').on 'click', (event) ->
-    console.log event.target.id
     target = $(event.target)
     target.removeClass 'btn-default'
     target.removeClass 'btn-success'
