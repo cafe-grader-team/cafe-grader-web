@@ -107,11 +107,12 @@ module ApplicationHelper
     end
   end
 
-  def toggle_button(on,toggle_url,id)
-      link_to (on ? "Yes" : "No"), toggle_url,
-        {class: "btn btn-block btn-xs btn-#{on ? 'success' : 'default'} ajax-toggle",
-         id: id,
-         data: {remote: true, method: 'get'}}
+  def toggle_button(on,toggle_url,id, option={})
+    btn_size = option[:size] || 'btn-xs'
+    link_to (on ? "Yes" : "No"), toggle_url,
+      {class: "btn btn-block #{btn_size} btn-#{on ? 'success' : 'default'} ajax-toggle",
+        id: id,
+        data: {remote: true, method: 'get'}}
   end
 
   def user_title_bar(user)
