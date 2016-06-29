@@ -83,7 +83,8 @@ class AnnouncementsController < ApplicationController
     @announcement = Announcement.find(params[:id])
     @announcement.update_attributes( published:  !@announcement.published? )
     respond_to do |format|
-      format.js {}
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#announcement_toggle_#{@announcement.id}",button_on: @announcement.published? } }
     end
   end
 

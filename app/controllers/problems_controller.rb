@@ -123,7 +123,7 @@ class ProblemsController < ApplicationController
     @problem = Problem.find(params[:id])
     @problem.update_attributes(available: !(@problem.available) )
     respond_to do |format|
-      format.js {}
+      format.js { }
     end
   end
 

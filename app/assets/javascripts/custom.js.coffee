@@ -30,6 +30,12 @@ $ ->
     if url
       window.location.href = url
     return
+  $('.ajax-toggle').on 'click', (event) ->
+    target = $(event.target)
+    target.removeClass 'btn-default'
+    target.removeClass 'btn-success'
+    target.addClass 'btn-warning'
+    target.text '...'
+    return
+
   return
-
-

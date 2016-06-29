@@ -17,7 +17,6 @@ class UserAdminController < ApplicationController
 
   def index
     list
-    render :action => 'list'
   end
 
   def list

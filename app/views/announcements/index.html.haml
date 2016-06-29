@@ -27,9 +27,8 @@
           %br/
         = h announcement.body
       %td= h announcement.author
-      // %td= check_box_tag :published, 1, announcement.published, { class: 'bootstrap-toggle', id: "published-#{announcement.id}", data: {remote: true, method: 'PUT', url: url_for(controller: :announcements, action: :toggle, id: announcement), size: 'small', toggle: 'toggle' } }
-      // <td><haml_loud> in_place_editor_field :announcement, :published, {}, :rows => 1 </haml_loud></td>
-      %td= link_to (announcement.published? ? "Yes" : "No"), url_for(controller: :announcements, action: :toggle, id: announcement), { class: "btn btn-block btn-sm btn-#{(announcement.published? ? 'success' : 'default')} ajax-toggle", id: "published-#{announcement.id}", data: {remote: true, method: 'post' } }
+      %td= toggle_button(announcement.published?, toggle_announcement_url(@announcement), "announcement_toggle_#{@announcement.id}")
+      //%td= link_to (announcement.published? ? "Yes" : "No"), url_for(controller: :announcements, action: :toggle, id: announcement), { class: "btn btn-block btn-sm btn-#{(announcement.published? ? 'success' : 'default')} ajax-toggle", id: "published-#{announcement.id}", data: {remote: true, method: 'post' } }
       %td= link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-block btn-sm btn-info'
       %td= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete, class: "btn btn-block btn-sm btn-danger"
 %br

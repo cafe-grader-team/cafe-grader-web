@@ -47,9 +47,14 @@ class ApplicationController < ActionController::Base
 
     # check if run in single user mode
     if GraderConfiguration[SINGLE_USER_MODE_CONF_KEY]
-      user = User.find(session[:user_id])
+      user = User.find_by_id(session[:user_id])
       if user==nil or (not user.admin?)
         flash[:notice] = 'You cannot log in at this time'
+        redirect_to :controller => 'main', :action => 'login'
+        return false
+      end
+      unless user.enabled?
+        flash[:notice] = 'Your account is disabled'
         redirect_to :controller => 'main', :action => 'login'
         return false
       end

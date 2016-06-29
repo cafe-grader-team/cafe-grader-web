@@ -1,18 +1,38 @@
 CafeGrader::Application.routes.draw do
   root :to => 'main#login'
 
-  get "report/login"
 
   resources :contests
 
-  resources :announcements
-  match 'announcements/toggle/:id' => 'announcements#toggle'
-
   resources :sites
 
-  resources :problem
+  resources :announcements do
+    member do
+      get 'toggle'
+    end
+  end
+
+
+  resources :problems do
+    member do
+      get 'toggle'
+    end
+    collection do
+      get 'turn_all_off'
+      get 'turn_all_on'
+      get 'import'
+      get 'manage'
+    end
+  end
 
   resources :grader_configuration, controller: 'configurations'
+
+  resources :users do
+    member do
+      get 'toggle_activate', 'toggle_enable'
+    end
+  end
+
 
   match 'tasks/view/:file.:ext' => 'tasks#view'
   match 'tasks/download/:id/:file.:ext' => 'tasks#download'
@@ -24,6 +44,7 @@ CafeGrader::Application.routes.draw do
 
   #report
   get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
+  get "report/login"
 
   # See how all your routes lay out with "rake routes"
 

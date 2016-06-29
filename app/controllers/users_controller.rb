@@ -133,6 +133,24 @@ class UsersController < ApplicationController
     problem.each_value { |v| @summary[:solve] += 1 if v == 1 }
   end
 
+  def toggle_activate
+    @user = User.find(params[:id])
+    @user.update_attributes( activated:  !@user.activated? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_activate_user_#{@user.id}",button_on: @user.activated? } }
+    end
+  end
+
+  def toggle_enable
+    @user = User.find(params[:id])
+    @user.update_attributes( enabled:  !@user.enabled? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_enable_user_#{@user.id}",button_on: @user.enabled? } }
+    end
+  end
+
   protected
 
   def verify_online_registration
@@ -192,4 +210,5 @@ class UsersController < ApplicationController
     admin_authorization
   end
   
+
 end
