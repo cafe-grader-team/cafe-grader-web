@@ -24,8 +24,7 @@
     %table.table.table-striped.table-condensed
       %thead
         %tr.info-head
-          %th #
-          %th Tasks name
+          %th Task name
           %th Full name
           %th # of sub(s)
           %th Results
@@ -38,13 +37,11 @@
           = "#{cp[:contest] ? cp[:contest].title : 'Public problems'}"
         %table.info
           %tr.info-head
-            %th
-            %th Tasks name
+            %th Task name
             %th Full name
             %th # of sub(s)
             %th Results
           = render :partial => 'problem', :collection => cp[:problems]
-
 
 %hr/
 

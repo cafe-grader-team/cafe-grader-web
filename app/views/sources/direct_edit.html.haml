@@ -1,21 +1,23 @@
-%h1 Live submit
-= form_tag({controller: :main, :action => 'submit'}, :multipart => true, class: 'form-inline') do
-  = hidden_field_tag 'editor_text'
-  = hidden_field_tag 'submission[problem_id]', @problem.id
-  .form-group
-    = label_tag "Task:"
-    = text_field_tag 'asdf', "#{@problem.long_name}", class: 'form-control', disabled: true
-
-  .form-group
-    = label_tag 'Language'
-    = select_tag 'language_id', options_from_collection_for_select(Language.all, 'id', 'pretty_name',"C++"), class: 'form-control', style: "width: 100px"
-  .form-group
-    = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit'
-
+%h2 Live submit
 %br
 
+%textarea#text_haha{style: "display:none"}~ @source
 .container
   .row
-    .col-md-12
-      %div#editor{style: 'height: 400px'}
-        Hahaha
+    .col-md-7
+      %div#editor{style: 'height: 500px; border-radius: 7px; font-size: 14px;'}
+    .col-md-5
+      = form_tag({controller: :main, :action => 'submit'}, :multipart => true, class: 'form') do
+
+        = hidden_field_tag 'editor_text', @source
+        = hidden_field_tag 'submission[problem_id]', @problem.id
+        .form-group
+          = label_tag "Task:"
+          = text_field_tag 'asdf', "#{@problem.long_name}", class: 'form-control', disabled: true
+
+        .form-group
+          = label_tag 'Language'
+          = select_tag 'language_id', options_from_collection_for_select(Language.all, 'id', 'pretty_name', @lang_id || Language.first.id), class: 'form-control select', style: "width: 100px"
+        .form-group
+          = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
+            data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}

@@ -1,0 +1,11 @@
+%tr
+  %td
+    = "#{problem.name}"
+  %td
+    = "#{problem.full_name}"
+    = link_to_description_if_any "[#{t 'main.problem_desc'}] <span class='glyphicon glyphicon-file'></span>".html_safe, problem
+  %td{:align => "center"}
+    = @prob_submissions[problem.id][:count]
+  %td
+    = render :partial => 'submission_short',
+      :locals => {:submission => @prob_submissions[problem.id][:submission], :problem_name => problem.name }

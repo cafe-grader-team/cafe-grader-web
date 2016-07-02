@@ -19,6 +19,12 @@
 //= require select2
 //= require custom
 //= require ace-rails-ap
+//= require ace/mode-c_cpp
+//= require ace/mode-ruby
+//= require ace/mode-pascal
+//= require ace/mode-javascript
+//= require ace/mode-java
+//= require ace/theme-merbivore
 
 
 // since this is after blank line, it is not downloaded

@@ -17,15 +17,15 @@
 
 - if @submissions!=nil
   - if @submissions.length>0
-    %table.info
-      %tr.info-head
-        %th.info No.
-        %th.info #
-        %th.info At
-        %th.info Source
-        %th.info Result
-        %th.info{:width => "300px"} 
-          Compiler message
+    %table.table
+      %thead
+        %th No.
+        %th #
+        %th At
+        %th Source
+        %th Result
+        %th{:width => "300px"} Compiler message
+        %th
       = render :partial => 'submission', :collection => @submissions
   - else
     No submission

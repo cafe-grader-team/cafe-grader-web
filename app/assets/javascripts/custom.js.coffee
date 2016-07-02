@@ -39,7 +39,7 @@ $ ->
     return
 
   editor = ace.edit("editor")
-  editor.setTheme("ace/theme/monokai")
+  editor.setTheme("ace/theme/merbivore")
   editor.getSession().setMode("ace/mode/javascript")
 
   return

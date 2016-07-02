@@ -40,6 +40,7 @@ CafeGrader::Application.routes.draw do
   #  end
   #end
   get 'sources/direct_edit/:pid', to: 'sources#direct_edit', as: 'direct_edit'
+  get 'sources/direct_edit_submission/:sid', to: 'sources#direct_edit_submission', as: 'direct_edit_submission'
 
 
   match 'tasks/view/:file.:ext' => 'tasks#view'
