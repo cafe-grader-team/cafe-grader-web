@@ -57,8 +57,11 @@ gem 'bootstrap-switch-rails'
 gem 'bootstrap-toggle-rails'
 gem 'autoprefixer-rails'
 
+gem 'ace-rails-ap'
+
 
 gem 'haml'
+gem 'haml-rails'
 gem 'mail'
 gem 'rdiscount'
 gem 'test-unit'

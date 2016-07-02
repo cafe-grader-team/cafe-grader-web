@@ -1,4 +1,6 @@
 CafeGrader::Application.routes.draw do
+  get "sources/direct_edit"
+
   root :to => 'main#login'
 
 
@@ -32,6 +34,12 @@ CafeGrader::Application.routes.draw do
       get 'toggle_activate', 'toggle_enable'
     end
   end
+
+  #resources :sources do
+  #  collection do
+  #  end
+  #end
+  get 'sources/direct_edit/:pid', to: 'sources#direct_edit', as: 'direct_edit'
 
 
   match 'tasks/view/:file.:ext' => 'tasks#view'

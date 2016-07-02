@@ -69,6 +69,14 @@ class MainController < ApplicationController
       @submission.source.encode!('UTF-8','UTF-8',invalid: :replace, replace: '')
       @submission.source_filename = params['file'].original_filename
     end
+
+    if (params[:editor_text])
+      language = Language.find_by_id(params[:language_id])
+      @submission.source = params[:editor_text]
+      @submission.source_filename = "live_edit.#{language.ext}"
+      @submission.language = language
+    end
+
     @submission.submitted_at = Time.new.gmtime
     @submission.ip_address = request.remote_ip
 

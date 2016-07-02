@@ -18,6 +18,7 @@
 //= require bootstrap-toggle
 //= require select2
 //= require custom
+//= require ace-rails-ap
 
 
 // since this is after blank line, it is not downloaded
