@@ -37,9 +37,11 @@ $ ->
     target.addClass 'btn-warning'
     target.text '...'
     return
-
-  editor = ace.edit("editor")
-  editor.setTheme("ace/theme/merbivore")
-  editor.getSession().setMode("ace/mode/javascript")
+  
+  #ace editor
+  e = ace.edit("editor")
+  e.setTheme('ace/theme/merbivore')
+  e.getSession().setTabSize(2)
+  e.getSession().setUseSoftTabs(true)
 
   return

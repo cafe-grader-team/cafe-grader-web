@@ -115,6 +115,25 @@ module ApplicationHelper
         data: {remote: true, method: 'get'}}
   end
 
+  def get_ace_mode(language)
+    # return ace mode string from Language
+
+    case language.pretty_name
+      when 'Pascal'
+        'ace/mode/pascal'
+      when 'C++','C'
+        'ace/mode/c_cpp'
+      when 'Ruby'
+        'ace/mode/ruby'
+      when 'Python'
+        'ace/mode/python'
+      when 'Java'
+        'ace/mode/java'
+      else
+        'ace/mode/c_cpp'
+    end
+  end
+
   def user_title_bar(user)
     header = ''
     time_left = ''
