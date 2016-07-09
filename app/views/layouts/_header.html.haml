@@ -2,15 +2,49 @@
   %nav
     .container-fluid
       .navbar-header
-        %a.navbar-brand{href: main_list_path} หน้าหลัก
+        %a.navbar-brand{href: main_list_path} 
+          %span.glyphicon.glyphicon-home
+          MAIN
       .collapse.navbar-collapse
         %ul.nav.navbar-nav
           - if (@current_user!=nil) and (GraderConfiguration.show_tasks_to?(@current_user))
-            = add_menu("#{I18n.t 'menu.tasks'}", 'tasks', 'list')
-            = add_menu("#{I18n.t 'menu.submissions'}", 'main', 'submission')
-            = add_menu("#{I18n.t 'menu.test'}", 'test', 'index')
+            //= add_menu("#{I18n.t 'menu.tasks'}", 'tasks', 'list')
+            %li.dropdown
+              %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
+                = "#{I18n.t 'menu.submissions'}"
+                %span.caret
+              %ul.dropdown-menu
+                = add_menu("View", 'main', 'submission')
+                = add_menu("Self Test", 'test', 'index')
           - if GraderConfiguration['right.user_hall_of_fame']
             = add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
+          - if (@current_user!=nil) and (session[:admin])
+            %li.dropdown
+              %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
+                Manage
+                %span.caret
+              %ul.dropdown-menu
+                = add_menu( 'Announcements', 'announcements', 'index')
+                = add_menu( 'Problems', 'problems', 'index')
+                = add_menu( 'Users', 'user_admin', 'index')
+                = add_menu( 'Graders', 'graders', 'list')
+                = add_menu( 'Message ', 'messages', 'console')
+                %li.divider{role: 'separator'}
+                = add_menu( 'System config', 'configurations', 'index')
+                %li.divider{role: 'separator'}
+                = add_menu( 'Sites', 'sites', 'index')
+                = add_menu( 'Contests', 'contest_management', 'index')
+            %li.dropdown
+              %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
+                Report
+                %span.caret
+              %ul.dropdown-menu
+                = add_menu( 'Results', 'user_admin', 'user_stat')
+                = add_menu( 'Report', 'report', 'multiple_login')
+            %button.navbar-btn.btn.btn-default.btn-warning
+              hahaha
+
+
         %ul.nav.navbar-nav.navbar-right
           = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-question-sign')}".html_safe, 'main', 'help')
           = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-comment')}".html_safe, 'messages', 'list', {title: I18n.t('menu.messages'), data: {toggle: 'tooltip'}})
@@ -18,8 +52,9 @@
             = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-cog')}".html_safe, 'users', 'index', {title: I18n.t('menu.settings'), data: {toggle: 'tooltip'}})
           = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-log-out')} #{@current_user.full_name}".html_safe, 'main', 'login', {title: I18n.t('menu.log_out'), data: {toggle: 'tooltip'}})
 
-  - if (@current_user!=nil) and (session[:admin]) 
-    %nav.navbar.navbar-default.navbar-fixed-top.navbar-inverse.secondnavbar
+/
+  - if (@current_user!=nil) and (session[:admin])
+    %nav.navbar.navbar-fixed-top.navbar-inverse.secondnavbar
       .container-fluid
         .collapse.navbar-collapse
           %ul.nav.navbar-nav
