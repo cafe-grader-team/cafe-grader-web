@@ -22,5 +22,5 @@
     = link_to("[#{t 'main.cmp_msg'}]", {:action => 'compiler_msg', :id => submission.id}, {:popup => true})
   = " | "
   = link_to("[#{t 'main.src_link'}]",{:action => 'source', :id => submission.id})
-  = " | "
-  = link_to "[#{t 'main.submissions_link'}]", main_submission_path(submission.problem.id)
+  //= " | "
+  //= link_to "[#{t 'main.submissions_link'}]", main_submission_path(submission.problem.id)

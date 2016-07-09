@@ -5,11 +5,12 @@
 %br
 
 %table.table.table-striped
-  %tr
+  %thead
     %th Updated
     %th Announcement
     %th Author
-    %th Published
+    %th{style: 'width: 100px'} Published?
+    %th{style: 'width: 100px'}Front?
     %th
     %th
   - for announcement in @announcements
@@ -28,7 +29,7 @@
         = h announcement.body
       %td= h announcement.author
       %td= toggle_button(announcement.published?, toggle_announcement_url(@announcement), "announcement_toggle_#{@announcement.id}", {size: 'btn-sm'})
-      //%td= link_to (announcement.published? ? "Yes" : "No"), url_for(controller: :announcements, action: :toggle, id: announcement), { class: "btn btn-block btn-sm btn-#{(announcement.published? ? 'success' : 'default')} ajax-toggle", id: "published-#{announcement.id}", data: {remote: true, method: 'post' } }
+      %td= toggle_button(announcement.frontpage?, toggle_front_announcement_url(@announcement), "announcement_toggle_front_#{@announcement.id}", {size: 'btn-sm'})
       %td= link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-block btn-sm btn-info'
       %td= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete, class: "btn btn-block btn-sm btn-danger"
 %br

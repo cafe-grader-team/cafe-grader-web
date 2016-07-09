@@ -3,16 +3,16 @@
 
 = user_title_bar(@user)
 
-.announcementbox{:style => (@announcements.length==0 ? "display:none" : "")}
-  %span{:class => 'title'}
-    Announcements
-  #announcementbox-body
+.panel.panel-info
+  .panel-heading
+    Announcement
+  %ul.list-group
     = render :partial => 'announcement', :collection => @announcements
+
 
 - if GraderConfiguration.show_submitbox_to?(@user)
   .submitbox
     = render :partial => 'submission_box'
-
 
 %hr/
 
@@ -23,11 +23,12 @@
   - if not GraderConfiguration.multicontests?
     %table.table.table-striped.table-condensed
       %thead
-        %tr.info-head
+        %tr
           %th Task name
           %th Full name
           %th # of sub(s)
           %th Results
+          %th
       %tbody
         = render :partial => 'problem', :collection => @problems
   - else
@@ -41,6 +42,7 @@
             %th Full name
             %th # of sub(s)
             %th Results
+            %th
           = render :partial => 'problem', :collection => cp[:problems]
 
 %hr/

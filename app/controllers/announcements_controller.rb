@@ -88,6 +88,15 @@ class AnnouncementsController < ApplicationController
     end
   end
 
+  def toggle_front
+    @announcement = Announcement.find(params[:id])
+    @announcement.update_attributes( frontpage:  !@announcement.frontpage? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#announcement_toggle_front_#{@announcement.id}",button_on: @announcement.frontpage? } }
+    end
+  end
+
   # DELETE /announcements/1
   # DELETE /announcements/1.xml
   def destroy

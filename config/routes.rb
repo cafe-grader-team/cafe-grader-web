@@ -10,7 +10,7 @@ CafeGrader::Application.routes.draw do
 
   resources :announcements do
     member do
-      get 'toggle'
+      get 'toggle','toggle_front'
     end
   end
 
