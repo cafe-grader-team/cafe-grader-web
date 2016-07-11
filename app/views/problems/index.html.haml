@@ -20,10 +20,14 @@
   %thead
     %th Name
     %th Full name
-    %th Full score
+    %th.text-right Full score
     %th Date added
-    %th Avail?
-    %th Test?
+    %th.text-center
+      Avail?
+      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user submits to this problem?' } [?]
+    %th.text-center
+      Test?
+      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user uses test interface on this problem?' } [?]
     - if GraderConfiguration.multicontests?
       %th Contests
   - for problem in @problems
@@ -31,11 +35,10 @@
       - @problem=problem
       %td= in_place_editor_field :problem, :name, {}, :rows=>1
       %td= in_place_editor_field :problem, :full_name, {}, :rows=>1
-      %td= in_place_editor_field :problem, :full_score, {}, :rows=>1
+      %td.text-right= in_place_editor_field :problem, :full_score, {}, :rows=>1
       %td= problem.date_added
-      %td= toggle_button(@problem.available?, url_for(controller: :problems, action: :toggle, id: @problem), "problem-avail-#{@problem.id}")
-      //%td{}= link_to (@problem.available? ? "Yes" : "No"), url_for(controller: :problems, action: :toggle, id: @problem), { class: "btn btn-block btn-sm btn-#{(@problem.available? ? 'success' : 'default')} ajax-toggle", id: "problem-avail-#{@problem.id}", data: {remote: true, method: 'post' } }
-      %td= problem.test_allowed
+      %td= toggle_button(@problem.available?, toggle_problem_url(@problem), "problem-avail-#{@problem.id}")
+      %td= toggle_button(@problem.test_allowed?, toggle_test_problem_url(@problem), "problem-test-#{@problem.id}")
       - if GraderConfiguration.multicontests?
         %td
           = problem.contests.collect { |c| c.name }.join(', ')

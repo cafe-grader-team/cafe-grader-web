@@ -127,6 +127,14 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def toggle_test
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(test_allowed: !(@problem.test_allowed?) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
   def turn_all_off
     Problem.find(:all,
                  :conditions => "available = 1").each do |problem|

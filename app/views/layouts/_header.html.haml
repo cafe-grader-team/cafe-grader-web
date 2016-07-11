@@ -41,9 +41,12 @@
               %ul.dropdown-menu
                 = add_menu( 'Results', 'user_admin', 'user_stat')
                 = add_menu( 'Report', 'report', 'multiple_login')
-            %button.navbar-btn.btn.btn-default.btn-warning
-              hahaha
-
+            - if (ungraded = Submission.where('graded_at is null').where('submitted_at < ?', 1.minutes.ago).count) > 0
+              =link_to "#{ungraded} backlogs!",
+                grader_list_path,
+                class: 'navbar-btn btn btn-default btn-warning', data: {toggle: 'tooltip'},title: 'Number of ungraded submission'
+            =link_to 'Contest Mode, time remain: 00:20:33',grader_list_path,
+              class: 'navbar-btn btn btn-primary'
 
         %ul.nav.navbar-nav.navbar-right
           = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-question-sign')}".html_safe, 'main', 'help')

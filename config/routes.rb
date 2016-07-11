@@ -3,7 +3,6 @@ CafeGrader::Application.routes.draw do
 
   root :to => 'main#login'
 
-
   resources :contests
 
   resources :sites
@@ -14,10 +13,10 @@ CafeGrader::Application.routes.draw do
     end
   end
 
-
   resources :problems do
     member do
       get 'toggle'
+      get 'toggle_test'
     end
     collection do
       get 'turn_all_off'
@@ -35,10 +34,6 @@ CafeGrader::Application.routes.draw do
     end
   end
 
-  #resources :sources do
-  #  collection do
-  #  end
-  #end
   get 'sources/direct_edit/:pid', to: 'sources#direct_edit', as: 'direct_edit'
   get 'sources/direct_edit_submission/:sid', to: 'sources#direct_edit_submission', as: 'direct_edit_submission'
 
@@ -54,6 +49,9 @@ CafeGrader::Application.routes.draw do
   #report
   get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
   get "report/login"
+
+  #grader
+  get 'graders/list', to: 'graders#list', as: 'grader_list'
 
   # See how all your routes lay out with "rake routes"
 
