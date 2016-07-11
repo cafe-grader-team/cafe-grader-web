@@ -37,7 +37,7 @@ $ ->
     target.addClass 'btn-warning'
     target.text '...'
     return
-  
+
   #ace editor
   e = ace.edit("editor")
   e.setTheme('ace/theme/merbivore')

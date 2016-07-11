@@ -14,8 +14,8 @@
 //= require jquery_ujs
 //= require jquery.ui.all
 //= require bootstrap-sprockets
-//x= require bootstrap-switch
-//= require bootstrap-toggle
+//= require moment
+//= require bootstrap-sortable
 //= require select2
 //= require custom
 //= require ace-rails-ap

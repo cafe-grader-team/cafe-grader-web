@@ -1,12 +1,12 @@
-- content_for :header do
-  = javascript_include_tag 'local_jquery'
-  = stylesheet_link_tag 'tablesorter-theme.cafe'
+/- content_for :header do
+/ = javascript_include_tag 'local_jquery'
+/ = stylesheet_link_tag 'tablesorter-theme.cafe'
 
 %script{:type=>"text/javascript"}
   $(function () {
   $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
   $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
-  $('#my_table').tablesorter({widgets: ['zebra']});
+  /$('#my_table').tablesorter({widgets: ['zebra']});
   });
 
 %h1 User grading results
@@ -26,22 +26,22 @@
   = link_to '[Show only latest submissions]', controller: :user_admin, action: :user_stat
   = link_to '[download csv with all problems]', controller: :user_admin, action: :user_stat_max, commit: 'download csv'
 
-%table.tablesorter-cafe#my_table
+%table.table.sortable.table-striped.table-bordered
   %thead
     %tr
-      %th User
+      %th Login
       %th Name
       %th Activated?
-      %th Logged in
+      %th Logged_in
       %th Contest(s)
       %th Remark
       - @problems.each do |p|
-        %th= p.name
-      %th Total
-      %th Passed
+        %th.text-right= p.name
+      %th.text-right Total
+      %th.text-right Passed
   %tbody
     - @scorearray.each do |sc|
-      %tr{class: cycle('info-even','info-odd')}
+      %tr
         - total,num_passed = 0,0
         - sc.each_index do |i|
           - if i == 0
@@ -52,8 +52,10 @@
             %td= sc[i].contests.collect {|c| c.name}.join(', ') 
             %td= sc[i].remark
           - else
-            %td= sc[i][0]
+            %td.text-right= sc[i][0]
             - total += sc[i][0]
             - num_passed += 1 if sc[i][1]
-        %td= total 
-        %td= num_passed
+        %td.text-right= total 
+        %td.text-right= num_passed
+:javascript
+  $.bootstrapSortable(true,'reversed')

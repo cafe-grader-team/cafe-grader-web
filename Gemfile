@@ -57,8 +57,12 @@ gem 'bootstrap-switch-rails'
 gem 'bootstrap-toggle-rails'
 gem 'autoprefixer-rails'
 
-gem 'ace-rails-ap'
+#bootstrap sortable
+gem 'momentjs-rails'
+gem 'rails_bootstrap_sortable'
 
+#ace editor
+gem 'ace-rails-ap'
 
 gem 'haml'
 gem 'haml-rails'
