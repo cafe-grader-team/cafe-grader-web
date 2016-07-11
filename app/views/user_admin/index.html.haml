@@ -1,27 +1,28 @@
 %h1 Listing users
+
+.panel.panel-primary
+  .panel-title.panel-heading
+    Quick Add
+  .panel-body
+    = form_tag( {method: 'post'}, {class: 'form-inline'})  do
+      .form-group
+        = label_tag 'user_login', 'Login'
+        = text_field 'user', 'login', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_full_name', 'Full Name'
+        = text_field 'user', 'full_name', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_password', 'Password'
+        = text_field 'user', 'password', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_password_confirmation', 'Confirm'
+        = text_field 'user', 'password_confirmation', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_email', 'email'
+        = text_field 'user', 'email', :size => 10,class: 'form-control'
+      =submit_tag "Create", class: 'btn btn-primary'
+
 .submitbox
-  %b Quick add
-  = form_tag :action => 'create' do
-    %table{:border => "0"}
-      %tr
-        %td
-          %label{:for => "user_login"} Login
-        %td
-          %label{:for => "user_full_name"} Full name
-        %td
-          %label{:for => "user_password"} Password
-        %td
-          %label{:for => "user_password_confirmation"} Confirm
-        %td
-          %label{:for => "user_email"} Email
-      %tr
-        %td= text_field 'user', 'login', :size => 10
-        %td= text_field 'user', 'full_name', :size => 30
-        %td= password_field 'user', 'password', :size => 10
-        %td= password_field 'user', 'password_confirmation', :size => 10
-        %td= email_field 'user', 'email', :size => 15
-        %td= submit_tag "Create"
-  %br/
   %b Import from site management
   = form_tag({:action => 'import'}, :multipart => true) do
     File: #{file_field_tag 'file'} #{submit_tag 'Import'}
