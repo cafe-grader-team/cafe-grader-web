@@ -14,7 +14,7 @@ $(document).on 'change', '.btn-file :file', ->
 $ ->
   $(".select2").select2()
   #$(".bootstrap-switch").bootstrapSwitch()
-  $(".bootstrap-toggle").bootstrapToggle()
+  #$(".bootstrap-toggle").bootstrapToggle()
   $('.btn-file :file').on 'fileselect', (event, numFiles, label) ->
     input = $(this).parents('.input-group').find(':text')
     log = if numFiles > 1 then numFiles + ' files selected' else label
@@ -38,10 +38,15 @@ $ ->
     target.text '...'
     return
 
+
   #ace editor
-  e = ace.edit("editor")
-  e.setTheme('ace/theme/merbivore')
-  e.getSession().setTabSize(2)
-  e.getSession().setUseSoftTabs(true)
+  if $("#editor").length > 0
+    e = ace.edit("editor")
+    e.setTheme('ace/theme/merbivore')
+    e.getSession().setTabSize(2)
+    e.getSession().setUseSoftTabs(true)
+
+  #best in place
+  jQuery(".best_in_place").best_in_place()
 
   return

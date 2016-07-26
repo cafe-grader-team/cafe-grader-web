@@ -47,6 +47,7 @@ gem 'jquery-rails'
 gem 'jquery-ui-sass-rails'
 gem 'jquery-timepicker-addon-rails'
 gem 'jquery-tablesorter'
+gem 'jquery-countdown-rails'
 
 #syntax highlighter
 gem 'rouge'

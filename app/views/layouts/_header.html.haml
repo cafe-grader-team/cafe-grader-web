@@ -18,6 +18,19 @@
                 = add_menu("Self Test", 'test', 'index')
           - if GraderConfiguration['right.user_hall_of_fame']
             = add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
+          / display MODE button (with countdown in contest mode)
+          - if GraderConfiguration.analysis_mode?
+            %div.navbar-btn.btn.btn-success#countdown= "ANALYSIS MODE"
+          - elsif GraderConfiguration.time_limit_mode?
+            - if @current_user.contest_finished?
+              %div.navbar-btn.btn.btn-danger#countdown= "Contest is over"
+            - elsif !@current_user.contest_started?
+              %div.navbar-btn.btn.btn-primary#countdown= (t 'title_bar.contest_not_started')
+            - else
+              %div.navbar-btn.btn.btn-primary#countdown asdf
+              :javascript
+                $("#countdown").countdown({until: "+#{@current_user.contest_time_left.to_i}s", layout: 'Time left: {hnn}:{mnn}:{snn}'}); 
+          / admin section
           - if (@current_user!=nil) and (session[:admin])
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
@@ -45,8 +58,6 @@
               =link_to "#{ungraded} backlogs!",
                 grader_list_path,
                 class: 'navbar-btn btn btn-default btn-warning', data: {toggle: 'tooltip'},title: 'Number of ungraded submission'
-            =link_to 'Contest Mode, time remain: 00:20:33',grader_list_path,
-              class: 'navbar-btn btn btn-primary'
 
         %ul.nav.navbar-nav.navbar-right
           = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-question-sign')}".html_safe, 'main', 'help')

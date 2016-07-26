@@ -134,6 +134,7 @@ module ApplicationHelper
     end
   end
 
+
   def user_title_bar(user)
     header = ''
     time_left = ''

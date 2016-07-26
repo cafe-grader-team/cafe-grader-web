@@ -22,6 +22,28 @@
         = text_field 'user', 'email', :size => 10,class: 'form-control'
       =submit_tag "Create", class: 'btn btn-primary'
 
+.panel.panel-primary
+  .panel-title.panel-heading
+    Import from site management
+  .panel-body
+    = form_tag( {method: 'post',multipart: true, action: 'import'}, {class: 'form-inline'})  do
+      .form-group
+        = label_tag 'user_login', 'Login'
+        = text_field 'user', 'login', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_full_name', 'Full Name'
+        = text_field 'user', 'full_name', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_password', 'Password'
+        = text_field 'user', 'password', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_password_confirmation', 'Confirm'
+        = text_field 'user', 'password_confirmation', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_email', 'email'
+        = text_field 'user', 'email', :size => 10,class: 'form-control'
+      =submit_tag "Create", class: 'btn btn-primary'
+
 .submitbox
   %b Import from site management
   = form_tag({:action => 'import'}, :multipart => true) do

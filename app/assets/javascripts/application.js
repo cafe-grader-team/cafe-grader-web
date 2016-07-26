@@ -17,7 +17,6 @@
 //= require moment
 //= require bootstrap-sortable
 //= require select2
-//= require custom
 //= require ace-rails-ap
 //= require ace/mode-c_cpp
 //= require ace/mode-ruby
@@ -25,7 +24,15 @@
 //= require ace/mode-javascript
 //= require ace/mode-java
 //= require ace/theme-merbivore
-
+//= require custom
+//= require jquery.countdown
+//-------------- addition from local_jquery -----------
+//= require jquery.ui.datepicker
+//= require jquery.ui.slider
+//= require jquery-ui-timepicker-addon
+//= require jquery-tablesorter
+//= require best_in_place
+//= require best_in_place.jquery-ui
 
 // since this is after blank line, it is not downloaded
 //x= require prototype
