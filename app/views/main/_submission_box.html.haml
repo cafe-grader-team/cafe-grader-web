@@ -1,4 +1,4 @@
-= form_tag({:action => 'submit'}, :multipart => true, class: 'form-inline') do
+= form_tag({:action => 'submit'}, :multipart => true, class: 'form') do
   - if @submission and @submission.errors.any?
     #error_explanation
       .alert.alert-danger
