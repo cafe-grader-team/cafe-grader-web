@@ -239,7 +239,7 @@ class User < ActiveRecord::Base
 
   def update_start_time
     stat = self.contest_stat
-    if stat == nil or stat.started_at == nil
+    if (stat.nil?) or (stat.started_at.nil?)
       stat ||= UserContestStat.new(:user => self)
       stat.started_at = Time.now.gmtime
       stat.save
