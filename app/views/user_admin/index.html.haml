@@ -26,44 +26,35 @@
   .panel-title.panel-heading
     Import from site management
   .panel-body
-    = form_tag( {method: 'post',multipart: true, action: 'import'}, {class: 'form-inline'})  do
+    = form_tag({:action => 'import'}, :multipart => true,class: 'form form-inline') do
       .form-group
-        = label_tag 'user_login', 'Login'
-        = text_field 'user', 'login', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_full_name', 'Full Name'
-        = text_field 'user', 'full_name', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_password', 'Password'
-        = text_field 'user', 'password', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_password_confirmation', 'Confirm'
-        = text_field 'user', 'password_confirmation', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_email', 'email'
-        = text_field 'user', 'email', :size => 10,class: 'form-control'
-      =submit_tag "Create", class: 'btn btn-primary'
+        = label_tag :file, 'File:'
+        .input-group
+          %span.input-group-btn
+            %span.btn.btn-default.btn-file
+              Browse
+              = file_field_tag 'file'
+          = text_field_tag '' , nil, {readonly: true, class: 'form-control'}
+      = submit_tag 'Submit', class: 'btn btn-default'
 
-.submitbox
-  %b Import from site management
-  = form_tag({:action => 'import'}, :multipart => true) do
-    File: #{file_field_tag 'file'} #{submit_tag 'Import'}
+
+%p
+  = link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
+  = link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}
+  = link_to 'View administrators',{ :action => 'admin'}, { class: 'btn btn-default '}
+  = link_to 'Random passwords',{ :action => 'random_all_passwords'}, { class: 'btn btn-default '}
+  = link_to 'View active users',{ :action => 'active'}, { class: 'btn btn-default '}
+  = link_to 'Mass mailing',{ :action => 'mass_mailing'}, { class: 'btn btn-default '}
+
+- if GraderConfiguration.multicontests?
   %br/
-  %b What else:
-  = link_to 'New user', {:action => 'new'}, { class: 'btn btn-default btn-sm'}
-  = link_to 'New list of users',{ :action => 'new_list'}, { class: 'btn btn-default btn-sm'}
-  = link_to 'View administrators',{ :action => 'admin'}, { class: 'btn btn-default btn-sm'}
-  = link_to 'Random passwords',{ :action => 'random_all_passwords'}, { class: 'btn btn-default btn-sm'}
-  = link_to 'View active users',{ :action => 'active'}, { class: 'btn btn-default btn-sm'}
-  = link_to 'Mass mailing',{ :action => 'mass_mailing'}, { class: 'btn btn-default btn-sm'}
-  - if GraderConfiguration.multicontests?
-    %br/
-    %b Multi-contest:
-    = link_to '[Manage bulk users in contests]', :action => 'contest_management'
-    View users in:
-    - @contests.each do |contest|
-      = link_to "[#{contest.name}]", :action => 'contests', :id => contest.id
-    = link_to "[no contest]", :action => 'contests', :id => 'none'
+  %b Multi-contest:
+  = link_to '[Manage bulk users in contests]', :action => 'contest_management'
+  View users in:
+  - @contests.each do |contest|
+    = link_to "[#{contest.name}]", :action => 'contests', :id => contest.id
+  = link_to "[no contest]", :action => 'contests', :id => 'none'
+
 Total #{@user_count} users |
 - if !@paginated
   Display all users.
@@ -105,5 +96,5 @@ Total #{@user_count} users |
       %td= link_to 'Edit', {:action => 'edit', :id => user}, class: 'btn btn-default btn-xs btn-block'
       %td= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post, class: 'btn btn-danger btn-xs btn-block'
 %br/
-= link_to '[New user]', :action => 'new'
-= link_to '[New list of users]', :action => 'new_list'
+= link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
+= link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}

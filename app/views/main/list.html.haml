@@ -9,8 +9,11 @@
 .row
   .col-md-7
     - if GraderConfiguration.show_submitbox_to?(@user)
-      .submitbox
-        = render :partial => 'submission_box'
+      .panel.panel-primary
+        .panel-heading
+          Submission
+        .panel-body
+          = render :partial => 'submission_box'
     - if GraderConfiguration.show_tasks_to?(@user)
       - if not GraderConfiguration.multicontests?
         %table.table.table-striped.table-condensed
@@ -42,14 +45,6 @@
         Announcement
       %ul.list-group
         = render :partial => 'announcement', :collection => @announcements
-
-
-
-%hr/
-
-
-
-%hr/
 
 %script{:type => 'text/javascript'}
   = "Announcement.refreshUrl = '#{url_for :controller => 'main', :action => 'announcements'}';"
