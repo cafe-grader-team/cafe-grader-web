@@ -11,4 +11,7 @@
     = render :partial => 'submission_short',
       :locals => {:submission => @prob_submissions[problem.id][:submission], :problem_name => problem.name }
   %td
-    = link_to 'Edit', direct_edit_path(problem.id), class: 'btn btn-success'
+    - if @prob_submissions[problem.id][:submission]
+      = link_to 'Edit', direct_edit_submission_path(@prob_submissions[problem.id][:submission]), class: 'btn btn-success'
+    - else
+      = link_to 'New', direct_edit_path(problem.id), class: 'btn btn-success'

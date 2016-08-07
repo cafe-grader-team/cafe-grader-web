@@ -12,7 +12,7 @@
     = " (#{submission.language.pretty_name}) "
     = link_to('[load]',{:action => 'source', :id => submission.id})
   %td
-    - if submission.graded_at!=nil
+    - if submission.graded_at
       = "Graded at #{format_short_time(submission.graded_at)}." 
       %br/
       = "Score: #{(submission.points*100/submission.problem.full_score).to_i} " if GraderConfiguration['ui.show_score']
