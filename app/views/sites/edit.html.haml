@@ -1,0 +1,24 @@
+%h1 Editing site
+= error_messages_for :site
+= form_for(@site) do |f|
+  %p
+    %b Name
+    %br/
+    = f.text_field :name
+  %p
+    %b Password
+    %br/
+    = f.text_field :password
+  %p
+    %b Started
+    %br/
+    = f.check_box :started
+  %p
+    %b Start time
+    %br/
+    = f.datetime_select :start_time, :include_blank => true
+  %p
+    = f.submit "Update"
+= link_to 'Show', @site
+|
+= link_to 'Back', sites_path
