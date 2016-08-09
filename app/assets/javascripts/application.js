@@ -34,6 +34,7 @@
 //= require jquery-tablesorter
 //= require best_in_place
 //= require best_in_place.jquery-ui
+//= require brython
 
 // since this is after blank line, it is not downloaded
 //x= require prototype
