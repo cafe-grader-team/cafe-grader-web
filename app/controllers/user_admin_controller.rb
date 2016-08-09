@@ -17,7 +17,6 @@ class UserAdminController < ApplicationController
 
   def index
     list
-    render :action => 'list'
   end
 
   def list
@@ -56,7 +55,7 @@ class UserAdminController < ApplicationController
     @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to :action => 'index'
     else
       render :action => 'new'
     end    
@@ -66,7 +65,7 @@ class UserAdminController < ApplicationController
     @user = User.find(params[:id])
     @user.last_ip = nil
     @user.save
-    redirect_to action: 'list', page: params[:page]
+    redirect_to action: 'index', page: params[:page]
   end
 
   def create_from_list
@@ -114,7 +113,7 @@ class UserAdminController < ApplicationController
     flash[:notice] = 'User(s) ' + note.join(', ') + 
       ' were successfully created.  ' +
       '( (+) - created with random passwords.)'   
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def edit
@@ -133,7 +132,7 @@ class UserAdminController < ApplicationController
 
   def destroy
     User.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def user_stat
@@ -200,7 +199,7 @@ class UserAdminController < ApplicationController
   def import
     if params[:file]==''
       flash[:notice] = 'Error importing no file'
-      redirect_to :action => 'list' and return
+      redirect_to :action => 'index' and return
     end
     import_from_file(params[:file])
   end
@@ -253,7 +252,7 @@ class UserAdminController < ApplicationController
     if user and contest
       user.contests << contest
     end
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def remove_from_contest
@@ -262,7 +261,7 @@ class UserAdminController < ApplicationController
     if user and contest
       user.contests.delete(contest)
     end
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def contest_management

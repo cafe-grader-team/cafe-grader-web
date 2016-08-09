@@ -3,7 +3,7 @@ Metro Dark Theme
 *************/
 /* overall */
 .tablesorter-cafe {
-	// font: 12px/18px 'Segoe UI Semilight', 'Open Sans', Verdana, Arial, Helvetica, sans-serif;
+	/* font: 12px/18px 'Segoe UI Semilight', 'Open Sans', Verdana, Arial, Helvetica, sans-serif; */
 	color: #000;
 	background-color: #777;
 	margin: 10px 0 15px;
@@ -25,8 +25,10 @@ Metro Dark Theme
 .tablesorter-cafe thead td,
 .tablesorter-cafe tfoot th,
 .tablesorter-cafe tfoot td {
+        /*
 	//font-weight: 300;
 	//font-size: 15px;
+        */
 	color: #fff;
 	background-color: #777;
 	padding: 2px;

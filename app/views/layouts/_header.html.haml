@@ -1,0 +1,84 @@
+%header.navbar.navbar-default.navbar-fixed-top
+  %nav
+    .container-fluid
+      .navbar-header
+        %a.navbar-brand{href: main_list_path} 
+          %span.glyphicon.glyphicon-home
+          MAIN
+      .collapse.navbar-collapse
+        %ul.nav.navbar-nav
+          - if (@current_user!=nil) and (GraderConfiguration.show_tasks_to?(@current_user))
+            //= add_menu("#{I18n.t 'menu.tasks'}", 'tasks', 'list')
+            %li.dropdown
+              %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
+                = "#{I18n.t 'menu.submissions'}"
+                %span.caret
+              %ul.dropdown-menu
+                = add_menu("View", 'main', 'submission')
+                = add_menu("Self Test", 'test', 'index')
+          - if GraderConfiguration['right.user_hall_of_fame']
+            = add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
+          / display MODE button (with countdown in contest mode)
+          - if GraderConfiguration.analysis_mode?
+            %div.navbar-btn.btn.btn-success#countdown= "ANALYSIS MODE"
+          - elsif GraderConfiguration.time_limit_mode?
+            - if @current_user.contest_finished?
+              %div.navbar-btn.btn.btn-danger#countdown= "Contest is over"
+            - elsif !@current_user.contest_started?
+              %div.navbar-btn.btn.btn-primary#countdown= (t 'title_bar.contest_not_started')
+            - else
+              %div.navbar-btn.btn.btn-primary#countdown asdf
+              :javascript
+                $("#countdown").countdown({until: "+#{@current_user.contest_time_left.to_i}s", layout: 'Time left: {hnn}:{mnn}:{snn}'}); 
+          / admin section
+          - if (@current_user!=nil) and (session[:admin])
+            %li.dropdown
+              %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
+                Manage
+                %span.caret
+              %ul.dropdown-menu
+                = add_menu( 'Announcements', 'announcements', 'index')
+                = add_menu( 'Problems', 'problems', 'index')
+                = add_menu( 'Users', 'user_admin', 'index')
+                = add_menu( 'Graders', 'graders', 'list')
+                = add_menu( 'Message ', 'messages', 'console')
+                %li.divider{role: 'separator'}
+                = add_menu( 'System config', 'configurations', 'index')
+                %li.divider{role: 'separator'}
+                = add_menu( 'Sites', 'sites', 'index')
+                = add_menu( 'Contests', 'contest_management', 'index')
+            %li.dropdown
+              %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
+                Report
+                %span.caret
+              %ul.dropdown-menu
+                = add_menu( 'Results', 'user_admin', 'user_stat')
+                = add_menu( 'Report', 'report', 'multiple_login')
+            - if (ungraded = Submission.where('graded_at is null').where('submitted_at < ?', 1.minutes.ago).count) > 0
+              =link_to "#{ungraded} backlogs!",
+                grader_list_path,
+                class: 'navbar-btn btn btn-default btn-warning', data: {toggle: 'tooltip'},title: 'Number of ungraded submission'
+
+        %ul.nav.navbar-nav.navbar-right
+          = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-question-sign')}".html_safe, 'main', 'help')
+          = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-comment')}".html_safe, 'messages', 'list', {title: I18n.t('menu.messages'), data: {toggle: 'tooltip'}})
+          - if GraderConfiguration['system.user_setting_enabled']
+            = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-cog')}".html_safe, 'users', 'index', {title: I18n.t('menu.settings'), data: {toggle: 'tooltip'}})
+          = add_menu("#{content_tag(:span,'',class: 'glyphicon glyphicon-log-out')} #{@current_user.full_name}".html_safe, 'main', 'login', {title: I18n.t('menu.log_out'), data: {toggle: 'tooltip'}})
+
+/
+  - if (@current_user!=nil) and (session[:admin])
+    %nav.navbar.navbar-fixed-top.navbar-inverse.secondnavbar
+      .container-fluid
+        .collapse.navbar-collapse
+          %ul.nav.navbar-nav
+            = add_menu( '[Announcements]', 'announcements', 'index')
+            = add_menu( '[Msg console]', 'messages', 'console')
+            = add_menu( '[Problems]', 'problems', 'index')
+            = add_menu( '[Users]', 'user_admin', 'index')
+            = add_menu( '[Results]', 'user_admin', 'user_stat')
+            = add_menu( '[Report]', 'report', 'multiple_login')
+            = add_menu( '[Graders]', 'graders', 'list')
+            = add_menu( '[Contests]', 'contest_management', 'index')
+            = add_menu( '[Sites]', 'sites', 'index')
+            = add_menu( '[System config]', 'configurations', 'index')
