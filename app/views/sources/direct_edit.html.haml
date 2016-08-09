@@ -8,9 +8,9 @@
       .alert.alert-info
         Write your code in the following box, choose language, and click submit button when finished
   .row
-    .col-md-7
+    .col-md-8
       %div#editor{style: 'height: 500px; border-radius: 7px; font-size: 14px;'}
-    .col-md-5
+    .col-md-4
       = form_tag({controller: :main, :action => 'submit'}, :multipart => true, class: 'form') do
 
         = hidden_field_tag 'editor_text', @source
@@ -25,3 +25,10 @@
         .form-group
           = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
             data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}
+      .panel.panel-info
+        .panel-heading
+          Latest Submission Status
+        .panel-body
+          - if @submission
+            = render :partial => 'submission_short',
+              :locals => {:submission => @submission, :problem_name => @problem.name }
