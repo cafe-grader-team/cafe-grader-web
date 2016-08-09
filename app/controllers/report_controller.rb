@@ -12,6 +12,36 @@ class ReportController < ApplicationController
     admin_authorization
   }
 
+  def score
+    if params[:commit] == 'download csv'
+      @problems = Problem.all
+    else
+      @problems = Problem.find_available_problems
+    end
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @scorearray = Array.new
+    @users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      @problems.each do |p|
+        sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+        if (sub!=nil) and (sub.points!=nil) and p and p.full_score
+          ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
+        else
+          ustat << [0,false]
+        end
+      end
+      @scorearray << ustat
+    end
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'last_score.csv'
+    else
+      render template: 'user_admin/user_stat'
+    end
+
+  end
+
   def login_stat
     @logins = Array.new
 
@@ -73,12 +103,7 @@ class ReportController < ApplicationController
     Submission.where("submitted_at >= ? AND submitted_at <= ?",@since_time,@until_time).find_each do |s|
       if @submissions[s.user_id]
         if not @submissions[s.user_id][:sub].has_key?(s.problem_id)
-          a = nil
-          begin
-            a = Problem.find(s.problem_id)
-          rescue
-            a = nil
-          end
+          a = Problem.find_by_id(s.problem_id)
           @submissions[s.user_id][:sub][s.problem_id] = 
             { prob_name: (a ? a.full_name : '(NULL)'),
               sub_ids: [s.id] } 

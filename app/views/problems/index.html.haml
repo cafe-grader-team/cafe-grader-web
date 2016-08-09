@@ -1,0 +1,50 @@
+- content_for :head do
+  = stylesheet_link_tag 'problems'
+%h1 Listing problems
+%p
+  = link_to 'New problem', new_problem_path, class: 'btn btn-default btn-sm'
+  = link_to 'Manage problems', { action: 'manage'}, class: 'btn btn-default btn-sm'
+  = link_to 'Import problems', {:action => 'import'}, class: 'btn btn-default btn-sm'
+  = link_to 'Turn off all problems', {:action => 'turn_all_off'}, class: 'btn btn-default btn-sm'
+  = link_to 'Turn on all problems', {:action => 'turn_all_on'}, class: 'btn btn-default btn-sm'
+.submitbox
+  = form_tag :action => 'quick_create' do
+    %b Quick New:
+    %label{:for => "problem_name"} Name
+    = text_field 'problem', 'name'
+    |
+    %label{:for => "problem_full_name"} Full name
+    = text_field 'problem', 'full_name'
+    = submit_tag "Create"
+%table.table.table-condense.table-hover
+  %thead
+    %th Name
+    %th Full name
+    %th.text-right Full score
+    %th Date added
+    %th.text-center
+      Avail?
+      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user submits to this problem?' } [?]
+    %th.text-center
+      Test?
+      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user uses test interface on this problem?' } [?]
+    - if GraderConfiguration.multicontests?
+      %th Contests
+  - for problem in @problems
+    %tr{:class => "#{(problem.available) ? "success" : "danger"}", :id => "prob-#{problem.id}", :name => "prob-#{problem.id}"}
+      - @problem=problem
+      %td= in_place_editor_field :problem, :name, {}, :rows=>1
+      %td= in_place_editor_field :problem, :full_name, {}, :rows=>1
+      %td.text-right= in_place_editor_field :problem, :full_score, {}, :rows=>1
+      %td= problem.date_added
+      %td= toggle_button(@problem.available?, toggle_problem_url(@problem), "problem-avail-#{@problem.id}")
+      %td= toggle_button(@problem.test_allowed?, toggle_test_problem_url(@problem), "problem-test-#{@problem.id}")
+      - if GraderConfiguration.multicontests?
+        %td
+          = problem.contests.collect { |c| c.name }.join(', ')
+      %td= link_to 'Stat', {:action => 'stat', :id => problem.id}, class: 'btn btn-info btn-xs btn-block'
+      %td= link_to 'Show', {:action => 'show', :id => problem}, class: 'btn btn-info btn-xs btn-block'
+      %td= link_to 'Edit', {:action => 'edit', :id => problem}, class: 'btn btn-info btn-xs btn-block'
+      %td= link_to 'Destroy', { :action => 'destroy', :id => problem }, :confirm => 'Are you sure?', :method => :post, class: 'btn btn-danger btn-xs btn-block'
+%br/
+= link_to '[New problem]', :action => 'new'

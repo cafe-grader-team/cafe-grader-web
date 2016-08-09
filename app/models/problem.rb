@@ -61,6 +61,10 @@ class Problem < ActiveRecord::Base
     result[:total_sub] = Submission.where(problem_id: self.id).count
     result[:attempted_user] = Submission.where(problem_id: self.id).group_by(:user_id)
   end
+
+  def long_name
+    "[#{name}] #{full_name}"
+  end
   
   protected
 

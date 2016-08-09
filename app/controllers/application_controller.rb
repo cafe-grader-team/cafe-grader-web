@@ -1,8 +1,16 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
+  before_filter :current_user 
+
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
+
+  # Returns the current logged-in user (if any).
+  def current_user
+    return nil unless session[:user_id]
+    @current_user ||= User.find(session[:user_id])
+  end
 
   def admin_authorization
     return false unless authenticate
@@ -39,9 +47,14 @@ class ApplicationController < ActionController::Base
 
     # check if run in single user mode
     if GraderConfiguration[SINGLE_USER_MODE_CONF_KEY]
-      user = User.find(session[:user_id])
+      user = User.find_by_id(session[:user_id])
       if user==nil or (not user.admin?)
         flash[:notice] = 'You cannot log in at this time'
+        redirect_to :controller => 'main', :action => 'login'
+        return false
+      end
+      unless user.enabled?
+        flash[:notice] = 'Your account is disabled'
         redirect_to :controller => 'main', :action => 'login'
         return false
       end

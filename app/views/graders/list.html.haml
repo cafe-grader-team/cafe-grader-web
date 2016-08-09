@@ -1,12 +1,19 @@
 - content_for :head do
-  = stylesheet_link_tag 'graders'
-  = javascript_include_tag 'local_jquery'
   <meta http-equiv ="refresh" content="60"/>
 
 %h1 Grader information
 
-= link_to '[Refresh]', :action => 'list'
-%br/
+%p
+  = link_to 'Refresh', { :action => 'list' }, class: 'btn btn-info'
+
+.panel.panel-primary
+  .panel-heading
+    Grader control:
+  .panel-body
+    =link_to 'Start Graders in grading env', { action: 'start_grading'}, class: 'btn btn-default', method: 'post'
+    =link_to 'Start Graders in exam env', { action: 'start_exam'}, class: 'btn btn-default', method: 'post'
+    =link_to 'Stop all running Graders', { action: 'stop_all'}, class: 'btn btn-default', method: 'post'
+    =link_to 'Clear all data', { action: 'clear_all'}, class: 'btn btn-default', method: 'post'
 
 .submitbox
   .item
@@ -25,49 +32,50 @@
       = submit_tag 'Clear all data'
   %br{:style => 'clear:both'}/
 
-%div{style: 'width:500px; float: left;'}
-  - if @last_task
-    Last task:
-    = link_to "#{@last_task.id}", :action => 'view', :id => @last_task.id, :type => 'Task'
+.row
+  .col-md-6
+    - if @last_task
+      Last task:
+      = link_to "#{@last_task.id}", :action => 'view', :id => @last_task.id, :type => 'Task'
 
-    %br/
+      %br/
 
-  - if @last_test_request
-    Last test_request:
-    = link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
+    - if @last_test_request
+      Last test_request:
+      = link_to "#{@last_test_request.id}", :action => 'view', :id => @last_test_request.id, :type => 'TestRequest'
 
-  %h2 Current graders
+    %h2 Current graders
 
-  = render :partial => 'grader_list', :locals => {:grader_list => @grader_processes}
+    = render :partial => 'grader_list', :locals => {:grader_list => @grader_processes}
 
-  %h2 Stalled graders
+    %h2 Stalled graders
 
-  = render :partial => 'grader_list', :locals => {:grader_list => @stalled_processes}
+    = render :partial => 'grader_list', :locals => {:grader_list => @stalled_processes}
 
-  %h2 Terminated graders
+    %h2 Terminated graders
 
-  = form_for :clear, :url => {:action => 'clear_terminated'} do |f|
-    = submit_tag 'Clear data for terminated graders'
+    %p= link_to 'Clear data for terminated graders', { action: 'clear_terminated'}, class: 'btn btn-default', method: 'post'
 
-  = render :partial => 'grader_list', :locals => {:grader_list => @terminated_processes}
-%div{}
-  %h2 Last 20 submissions
-  %table.graders
-    %thead
-      %th ID
-      %th User
-      %th Problem
-      %th Submitted
-      %th Graded
-      %th Result
-    %tbody
-      - @submission.each do |sub|
-        %tr.inactive
-          %td= link_to sub.id, controller: 'graders' ,action: 'submission', id: sub.id
-          %td= sub.try(:user).try(:full_name)
-          %td= sub.try(:problem).try(:full_name)
-          %td= "#{time_ago_in_words(sub.submitted_at)} ago"
-          %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
-          %td= sub.grader_comment
+    = render :partial => 'grader_list', :locals => {:grader_list => @terminated_processes}
+  .col-md-6
+    %h2 Last 20 submissions
+    %table.table.table-striped.table-condensed
+      %thead
+        %th ID
+        %th User
+        %th Problem
+        %th Submitted
+        %th Graded
+        %th Result
+        %th
+      %tbody
+        - @submission.each do |sub|
+          %tr.inactive
+            %td= link_to sub.id, controller: 'graders' ,action: 'submission', id: sub.id
+            %td= sub.try(:user).try(:full_name)
+            %td= sub.try(:problem).try(:full_name)
+            %td= "#{time_ago_in_words(sub.submitted_at)} ago"
+            %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
+            %td= sub.grader_comment
 
 

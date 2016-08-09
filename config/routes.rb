@@ -1,68 +1,59 @@
 CafeGrader::Application.routes.draw do
-  get "report/login"
-
-  resources :contests
-
-  resources :announcements
-  resources :sites
-
-  resources :grader_configuration, controller: 'configurations'
-
-  # The priority is based upon order of creation:
-  # first created -> highest priority.
-
-  # Sample of regular route:
-  #   match 'products/:id' => 'catalog#view'
-  # Keep in mind you can assign values other than :controller and :action
-
-  # Sample of named route:
-  #   match 'products/:id/purchase' => 'catalog#purchase', :as => :purchase
-  # This route can be invoked with purchase_url(:id => product.id)
-
-  # Sample resource route (maps HTTP verbs to controller actions automatically):
-  #   resources :products
-
-  # Sample resource route with options:
-  #   resources :products do
-  #     member do
-  #       get 'short'
-  #       post 'toggle'
-  #     end
-  #
-  #     collection do
-  #       get 'sold'
-  #     end
-  #   end
-
-  # Sample resource route with sub-resources:
-  #   resources :products do
-  #     resources :comments, :sales
-  #     resource :seller
-  #   end
-
-  # Sample resource route with more complex sub-resources
-  #   resources :products do
-  #     resources :comments
-  #     resources :sales do
-  #       get 'recent', :on => :collection
-  #     end
-  #   end
-
-  # Sample resource route within a namespace:
-  #   namespace :admin do
-  #     # Directs /admin/products/* to Admin::ProductsController
-  #     # (app/controllers/admin/products_controller.rb)
-  #     resources :products
-  #   end
-
-  # You can have the root of your site routed with "root"
-  # just remember to delete public/index.html.
-  # root :to => 'welcome#index'
+  get "sources/direct_edit"
 
   root :to => 'main#login'
 
+  resources :contests
+
+  resources :sites
+
+  resources :announcements do
+    member do
+      get 'toggle','toggle_front'
+    end
+  end
+
+  resources :problems do
+    member do
+      get 'toggle'
+      get 'toggle_test'
+    end
+    collection do
+      get 'turn_all_off'
+      get 'turn_all_on'
+      get 'import'
+      get 'manage'
+    end
+  end
+
+  resources :grader_configuration, controller: 'configurations'
+
+  resources :users do
+    member do
+      get 'toggle_activate', 'toggle_enable'
+    end
+  end
+
+  #source code edit
+  get 'sources/direct_edit/:pid', to: 'sources#direct_edit', as: 'direct_edit'
+  get 'sources/direct_edit_submission/:sid', to: 'sources#direct_edit_submission', as: 'direct_edit_submission'
+  get 'sources/get_latest_submission_status/:uid/:pid', to: 'sources#get_latest_submission_status', as: 'get_latest_submission_status'
+
+
   match 'tasks/view/:file.:ext' => 'tasks#view'
   match 'tasks/download/:id/:file.:ext' => 'tasks#download'
+  match 'heartbeat/:id/edit' => 'heartbeat#edit'
+
+  #main
+  get "main/list"
+  get 'main/submission(/:id)', to: 'main#submission', as: 'main_submission'
+
+  #report
+  get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
+  get "report/login"
+
+  #grader
+  get 'graders/list', to: 'graders#list', as: 'grader_list'
 
   match 'heartbeat/:id/edit' => 'heartbeat#edit'
 
