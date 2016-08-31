@@ -48,7 +48,7 @@
             %td= link_to sc[i].login, controller: 'users', action: 'profile', id: sc[i]
             %td= sc[i].full_name
             %td= sc[i].activated
-            %td= sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no'
+            %td= sc[i].try(:contest_stat).try(:started_at) ? 'yes' : 'no'
             %td= sc[i].contests.collect {|c| c.name}.join(', ') 
             %td= sc[i].remark
           - else

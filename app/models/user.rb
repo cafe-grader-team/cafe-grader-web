@@ -111,6 +111,7 @@ class User < ActiveRecord::Base
     begin
       http = Net::HTTP.new('www.cas.chula.ac.th', 443)
       http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       result = [ ]
       http.start do |http|
         req = Net::HTTP::Post.new('/cas/api/?q=studentAuthenticate')
@@ -119,7 +120,7 @@ class User < ActiveRecord::Base
         result = JSON.parse resp.body
       end
       return true if result["type"] == "beanStudent"
-    rescue
+    rescue => e
       return false
     end
     return false
@@ -239,7 +240,7 @@ class User < ActiveRecord::Base
 
   def update_start_time
     stat = self.contest_stat
-    if (stat.nil?) or (stat.started_at.nil?)
+    if stat.nil? or stat.started_at.nil?
       stat ||= UserContestStat.new(:user => self)
       stat.started_at = Time.now.gmtime
       stat.save
