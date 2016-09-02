@@ -3,6 +3,7 @@
     = "#{problem.name}"
   %td
     = "#{problem.full_name}"
+    %br
     = link_to_description_if_any "[#{t 'main.problem_desc'}] <span class='glyphicon glyphicon-file'></span>".html_safe, problem
   %td
     = @prob_submissions[problem.id][:count]
