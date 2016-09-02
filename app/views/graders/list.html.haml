@@ -15,23 +15,6 @@
     =link_to 'Stop all running Graders', { action: 'stop_all'}, class: 'btn btn-default', method: 'post'
     =link_to 'Clear all data', { action: 'clear_all'}, class: 'btn btn-default', method: 'post'
 
-.submitbox
-  .item
-    Grader control:
-  .item
-    = form_for :clear, :url => {:action => 'start_grading'} do |f|
-      = submit_tag 'Start graders in grading env'
-  .item
-    = form_for :clear, :url => {:action => 'start_exam'} do |f|
-      = submit_tag 'Start graders in exam env'
-  .item
-    = form_for :clear, :url => {:action => 'stop_all'} do |f|
-      = submit_tag 'Stop all running graders'
-  .item
-    = form_for :clear, :url => {:action => 'clear_all'} do |f|
-      = submit_tag 'Clear all data'
-  %br{:style => 'clear:both'}/
-
 .row
   .col-md-6
     - if @last_task
@@ -67,7 +50,6 @@
         %th Submitted
         %th Graded
         %th Result
-        %th
       %tbody
         - @submission.each do |sub|
           %tr.inactive
@@ -77,5 +59,24 @@
             %td= "#{time_ago_in_words(sub.submitted_at)} ago"
             %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
             %td= sub.grader_comment
+    %h2 Ungraded submission
+    %table.table.table-striped.table-condensed
+      %thead
+        %th ID
+        %th User
+        %th Problem
+        %th Submitted
+        %th Graded
+        %th Result
+      %tbody
+        - @backlog_submission.each do |sub|
+          %tr.inactive
+            %td= link_to sub.id, controller: 'graders' ,action: 'submission', id: sub.id
+            %td= sub.try(:user).try(:full_name)
+            %td= sub.try(:problem).try(:full_name)
+            %td= "#{time_ago_in_words(sub.submitted_at)} ago"
+            %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
+            %td= sub.grader_comment
+
 
 

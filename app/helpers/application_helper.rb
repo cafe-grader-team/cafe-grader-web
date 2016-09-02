@@ -1,6 +1,7 @@
 # Methods added to this helper will be available to all templates in the application.
 module ApplicationHelper
 
+  #new bootstrap header
   def navbar_user_header
     left_menu = ''
     right_menu = ''

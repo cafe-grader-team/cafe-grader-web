@@ -16,11 +16,6 @@ class UserAdminController < ApplicationController
          :redirect_to => { :action => :list }
 
   def index
-    list
-    render :action => 'list'
-  end
-
-  def list
     @user_count = User.count
     if params[:page] == 'all'
       @users = User.all

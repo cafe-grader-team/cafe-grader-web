@@ -33,6 +33,7 @@ class GradersController < ApplicationController
     @last_test_request = TestRequest.find(:first,
                                           :order => 'created_at DESC')
     @submission = Submission.order("id desc").limit(20)
+    @backlog_submission = Submission.where('graded_at is null')
   end
 
   def clear
