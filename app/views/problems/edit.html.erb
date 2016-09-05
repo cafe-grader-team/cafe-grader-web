@@ -1,6 +1,6 @@
 <h1>Editing problem</h1>
 
-<%= form_tag({action: 'update', id: @problem},multipart: true) do %>
+<%= form_for @problem,url:{action: 'update'},html: {multipart: true} do %>
   <%= render :partial => 'form' %>
   <%= submit_tag 'Edit' %>
 <% end %>

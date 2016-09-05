@@ -15,7 +15,7 @@ class ProblemsController < ApplicationController
                                       :create, :quick_create,
                                       :do_manage,
                                       :do_import,
-                                      :update ],
+                                      ],
          :redirect_to => { :action => :index }
 
   def show
@@ -71,14 +71,14 @@ class ProblemsController < ApplicationController
   def update
     @problem = Problem.find(params[:id])
     @description = @problem.description
-    if @description == nil and params[:description][:body]!=''
+    if @description.nil? and params[:description][:body]!=''
       @description = Description.new(params[:description])
       if !@description.save
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
       end
       @problem.description = @description
-    elsif @description!=nil
+    elsif @description
       if !@description.update_attributes(params[:description])
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
