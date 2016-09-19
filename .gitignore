@@ -20,6 +20,9 @@
 
 #ignore public assets???
 /public/assets
+/public
+
+/data
 
 #ignore .orig and .swp
 *.orig
