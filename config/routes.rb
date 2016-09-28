@@ -52,6 +52,7 @@ CafeGrader::Application.routes.draw do
   get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
   get "report/login"
   get 'report/max_score', to: 'report#max_score', as: 'report_max_score'
+  post 'report/show_max_score', to: 'report#show_max_score', as: 'report_show_max_score'
 
   #grader
   get 'graders/list', to: 'graders#list', as: 'grader_list'

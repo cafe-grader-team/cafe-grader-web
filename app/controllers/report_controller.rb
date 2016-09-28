@@ -12,23 +12,31 @@ class ReportController < ApplicationController
     admin_authorization
   }
 
-  def show_max_score
+  def max_score
   end
 
-  def get_max_score
-    #process list of problems
-
-    #process submission range
-    if params[:commit] == 'download csv'
-      @problems = Problem.all
-    else
-      @problems = Problem.find_available_problems
+  def show_max_score
+    #process parameters
+    #problems
+    @problems = []
+    params[:problem_id].each do |id|
+      next unless id.strip != ""
+      @problems << Problem.find(id.to_i)
     end
-    @users = User.find(:all, :include => [:contests, :contest_stat])
-    @scorearray = Array.new
+
+    #users
+    @users = if params[:user] == "all" then 
+               User.find(:all, :include => [:contests, :contest_stat]) 
+             else 
+               User.includes(:contests).includes(:contest_stat).where(enabled: true)
+             end
+
     #set up range from param
-    since_id = params.fetch(:since_id, 0).to_i
-    until_id = params.fetch(:until_id, 0).to_i
+    since_id = params.fetch(:min_id, 0).to_i
+    until_id = params.fetch(:max_id, 0).to_i
+
+    #get data
+    @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
       ustat[0] = u
@@ -46,7 +54,8 @@ class ReportController < ApplicationController
       csv = gen_csv_from_scorearray(@scorearray,@problems)
       send_data csv, filename: 'max_score.csv'
     else
-      render template: 'user_admin/user_stat'
+      #render template: 'user_admin/user_stat'
+      render 'max_score'
     end
 
   end

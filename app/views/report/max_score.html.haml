@@ -1,24 +1,30 @@
 %h1 Maximum score
 
-= form_tag report_max_score_path
+= form_tag report_show_max_score_path
 .row
   .col-md-4
     .panel.panel-primary
       .panel-heading
         Problems
       .panel-body
-        = label_tag :problems, "Problems"
-        = select 'problems', 'problem_id', [[(t 'main.specified_in_header'),'-1']] + Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, {:selected => '-1'}, { class: 'select2 form-control' }
+        %p
+          Select problem(s) that we wish to know the score.
+        = label_tag :problem_id, "Problems"
+        = select_tag 'problem_id[]',
+            options_for_select(Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}),
+            { class: 'select2 form-control', multiple: "true" }
   .col-md-4
     .panel.panel-primary
       .panel-heading
         Submission range
       .panel-body
+        %p
+          Input minimum and maximum range of submission ID that should be included. A blank value for min and max means -1 and infinity, respectively.
         .form-group
-          = label_tag :from, "From"
+          = label_tag :from, "Min"
           = text_field_tag 'from_id', nil, class: "form-control"
         .form-group
-          = label_tag :from, "To"
+          = label_tag :from, "Max"
           = text_field_tag 'to_id', nil, class: "form-control"
   .col-md-4
     .panel.panel-primary
@@ -37,6 +43,42 @@
   .col-md-12
     = button_tag 'Show', class: "btn btn-primary btn-large"
     = button_tag 'Download CSV', class: "btn btn-primary btn-large"
+
+- if @scorearray
+  %h2 Result
+  %table.table.sortable.table-striped.table-bordered.table-condensed
+    %thead
+      %tr
+        %th Login
+        %th Name
+        %th Activated?
+        %th Logged_in
+        %th Contest(s)
+        %th Remark
+        - @problems.each do |p|
+          %th.text-right= p.name
+        %th.text-right Total
+        %th.text-right Passed
+    %tbody
+      - @scorearray.each do |sc|
+        %tr
+          - total,num_passed = 0,0
+          - sc.each_index do |i|
+            - if i == 0
+              %td= link_to sc[i].login, controller: 'users', action: 'profile', id: sc[i]
+              %td= sc[i].full_name
+              %td= sc[i].activated
+              %td= sc[i].try(:contest_stat).try(:started_at) ? 'yes' : 'no'
+              %td= sc[i].contests.collect {|c| c.name}.join(', ') 
+              %td= sc[i].remark
+            - else
+              %td.text-right= sc[i][0]
+              - total += sc[i][0]
+              - num_passed += 1 if sc[i][1]
+          %td.text-right= total 
+          %td.text-right= num_passed
+  :javascript
+    $.bootstrapSortable(true,'reversed')
   /.col-md-4.col-md-offset-1
   /  = button_tag 'Show', class: "btn btn-primary btn-block"
   /.col-md-4.col-md-offset-2
