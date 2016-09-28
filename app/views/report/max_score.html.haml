@@ -1,0 +1,43 @@
+%h1 Maximum score
+
+= form_tag report_max_score_path
+.row
+  .col-md-4
+    .panel.panel-primary
+      .panel-heading
+        Problems
+      .panel-body
+        = label_tag :problems, "Problems"
+        = select 'problems', 'problem_id', [[(t 'main.specified_in_header'),'-1']] + Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, {:selected => '-1'}, { class: 'select2 form-control' }
+  .col-md-4
+    .panel.panel-primary
+      .panel-heading
+        Submission range
+      .panel-body
+        .form-group
+          = label_tag :from, "From"
+          = text_field_tag 'from_id', nil, class: "form-control"
+        .form-group
+          = label_tag :from, "To"
+          = text_field_tag 'to_id', nil, class: "form-control"
+  .col-md-4
+    .panel.panel-primary
+      .panel-heading
+        Users
+      .panel-body
+        .radio
+          %label
+            = radio_button_tag 'users', 'all', true
+            All users
+        .radio
+          %label
+            = radio_button_tag 'users', 'enabled'
+            Only enabled users
+.row
+  .col-md-12
+    = button_tag 'Show', class: "btn btn-primary btn-large"
+    = button_tag 'Download CSV', class: "btn btn-primary btn-large"
+  /.col-md-4.col-md-offset-1
+  /  = button_tag 'Show', class: "btn btn-primary btn-block"
+  /.col-md-4.col-md-offset-2
+  /  = button_tag 'Download CSV', class: "btn btn-primary btn-block"

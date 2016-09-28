@@ -2,13 +2,20 @@ class GradersController < ApplicationController
 
   before_filter :admin_authorization, except: [ :submission ]
   before_filter(only: [:submission]) {
+    #check if authenticated
     return false unless authenticate
 
-    if GraderConfiguration["right.user_view_submission"]
-      return true;
+    #admin always has privileged
+    if @current_user.admin?
+      return true
     end
 
-    admin_authorization
+    if GraderConfiguration["right.user_view_submission"] and Submission.find(params[:id]).problem.available?
+      return true
+    else
+      unauthorized_redirect
+      return false
+    end
   }
 
   verify :method => :post, :only => ['clear_all', 

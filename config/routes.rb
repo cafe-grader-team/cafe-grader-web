@@ -51,9 +51,11 @@ CafeGrader::Application.routes.draw do
   #report
   get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
   get "report/login"
+  get 'report/max_score', to: 'report#max_score', as: 'report_max_score'
 
   #grader
   get 'graders/list', to: 'graders#list', as: 'grader_list'
+  
 
   match 'heartbeat/:id/edit' => 'heartbeat#edit'
 

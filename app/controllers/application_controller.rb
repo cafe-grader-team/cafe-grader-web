@@ -6,6 +6,12 @@ class ApplicationController < ActionController::Base
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
 
+  #report and redirect for unauthorized activities
+  def unauthorized_redirect
+    flash[:notice] = 'You are not authorized to view the page you requested'
+    redirect_to :controller => 'main', :action => 'login'
+  end
+
   # Returns the current logged-in user (if any).
   def current_user
     return nil unless session[:user_id]
@@ -16,8 +22,7 @@ class ApplicationController < ActionController::Base
     return false unless authenticate
     user = User.find(session[:user_id], :include => ['roles'])
     unless user.admin?
-      flash[:notice] = 'You are not authorized to view the page you requested'
-      redirect_to :controller => 'main', :action => 'login' unless user.admin?
+      unauthorized_redirect
       return false
     end
     return true
@@ -27,8 +32,7 @@ class ApplicationController < ActionController::Base
     return false unless authenticate
     user = User.find(session[:user_id])
     unless user.roles.detect { |role| allowed_roles.member?(role.name) }
-      flash[:notice] = 'You are not authorized to view the page you requested'
-      redirect_to :controller => 'main', :action => 'login'
+      unauthorized_redirect
       return false
     end
   end
