@@ -23,4 +23,4 @@
   %td
     = render :partial => 'compiler_message', :locals => {:compiler_message => submission.compiler_message }
   %td
-    = link_to 'Edit', direct_edit_submission_path(submission.id), class: 'btn btn-success'
+    = link_to 'Edit', edit_submission_path(submission.id), class: 'btn btn-success'

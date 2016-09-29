@@ -37,14 +37,10 @@ CafeGrader::Application.routes.draw do
   resources :submissions do
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'
+      get 'direct_edit_problem/:problem_id', to: 'submissions#direct_edit_problem', as: 'direct_edit_problem'
+      get 'get_latest_submission_status/:uid/:pid', to: 'submissions#get_latest_submission_status', as: 'get_latest_submission_status'
     end
   end
-
-  #source code edit
-  get 'sources/direct_edit/:pid', to: 'sources#direct_edit', as: 'direct_edit'
-  get 'sources/direct_edit_submission/:sid', to: 'sources#direct_edit_submission', as: 'direct_edit_submission'
-  get 'sources/get_latest_submission_status/:uid/:pid', to: 'sources#get_latest_submission_status', as: 'get_latest_submission_status'
-
 
   match 'tasks/view/:file.:ext' => 'tasks#view'
   match 'tasks/download/:id/:file.:ext' => 'tasks#download'

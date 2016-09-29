@@ -13,6 +13,6 @@
       :locals => {:submission => @prob_submissions[problem.id][:submission], :problem_name => problem.name, :problem_id => problem.id }
   %td
     - if @prob_submissions[problem.id][:submission]
-      = link_to 'Edit', direct_edit_submission_path(@prob_submissions[problem.id][:submission]), class: 'btn btn-success'
+      = link_to 'Edit', edit_submission_path(@prob_submissions[problem.id][:submission]), class: 'btn btn-success'
     - else
-      = link_to 'New', direct_edit_path(problem.id), class: 'btn btn-success'
+      = link_to 'New', direct_edit_problem_submissions_path(problem.id), class: 'btn btn-success'
