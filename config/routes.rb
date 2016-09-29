@@ -34,6 +34,12 @@ CafeGrader::Application.routes.draw do
     end
   end
 
+  resources :submissions do
+    collection do
+      get 'prob/:problem_id', to: 'submissions#index', as: 'problem'
+    end
+  end
+
   #source code edit
   get 'sources/direct_edit/:pid', to: 'sources#direct_edit', as: 'direct_edit'
   get 'sources/direct_edit_submission/:sid', to: 'sources#direct_edit_submission', as: 'direct_edit_submission'

@@ -24,4 +24,4 @@
   = " | "
   = link_to("[#{t 'main.src_link'}]",{:action => 'source', :id => submission.id})
   = " | "
-  = link_to "[#{t 'main.submissions_link'}]", :action => 'submission', :id => problem_name
+  = link_to "[#{t 'main.submissions_link'}]", problem_submissions_path(problem_id)

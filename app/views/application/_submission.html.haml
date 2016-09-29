@@ -3,7 +3,7 @@
   %td{:align => "center"}
     = submission_counter+1
   %td{:align => "center"}
-    = link_to "##{submission.id}", controller: :graders, action: :submission, id: submission.id
+    = link_to "##{submission.id}", submission_path(submission.id)
   %td
     = l submission.submitted_at, format: :long
     = "( #{time_ago_in_words(submission.submitted_at)} ago)"
