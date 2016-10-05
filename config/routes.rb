@@ -51,6 +51,7 @@ CafeGrader::Application.routes.draw do
   get 'main/submission(/:id)', to: 'main#submission', as: 'main_submission'
 
   #report
+  get 'report/current_score', to: 'report#current_score', as: 'report_current_score'
   get 'report/problem_hof(/:id)', to: 'report#problem_hof', as: 'report_problem_hof'
   get "report/login"
   get 'report/max_score', to: 'report#max_score', as: 'report_max_score'

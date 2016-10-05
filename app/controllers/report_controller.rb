@@ -1,5 +1,7 @@
 class ReportController < ApplicationController
 
+  before_filter :authenticate
+
   before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score]
 
   before_filter(only: [:problem_hof]) { |c|
@@ -18,7 +20,7 @@ class ReportController < ApplicationController
   def current_score
     @problems = Problem.find_available_problems
     @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
-    @scorearray = calculate_max_score(problems, users,0,0,{max: true})
+    @scorearray = calculate_max_score(@problems, @users,0,0,true)
 
     #rencer accordingly
     if params[:commit] == 'download csv' then
@@ -36,7 +38,8 @@ class ReportController < ApplicationController
     @problems = []
     params[:problem_id].each do |id|
       next unless id.strip != ""
-      @problems << Problem.find(id.to_i)
+      pid = Problem.find_by_id(id.to_i)
+      @problems << pid if pid
     end
 
     #users
@@ -51,7 +54,7 @@ class ReportController < ApplicationController
     until_id = params.fetch(:max_id, 0).to_i
 
     #calculate the routine
-    @scorearray = calculate_max_score(problems, users,since_id,until_id)
+    @scorearray = calculate_max_score(@problems, @users,since_id,until_id)
 
     #rencer accordingly
     if params[:commit] == 'download csv' then
