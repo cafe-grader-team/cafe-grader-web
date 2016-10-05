@@ -88,8 +88,8 @@ Total #{@user_count} users |
       %td= user.full_name
       %td= user.email
       %td= user.remark
-      %td= toggle_button(user.activated?, toggle_activate_user_url(user),"toggle_activate_user_#{user.id}")
-      %td= toggle_button(user.enabled?, toggle_enable_user_url(user),"toggle_enable_user_#{user.id}")
+      %td= toggle_button(user.activated?, toggle_activate_user_path(user),"toggle_activate_user_#{user.id}")
+      %td= toggle_button(user.enabled?, toggle_enable_user_path(user),"toggle_enable_user_#{user.id}")
       %td= user.last_ip
       %td= link_to 'Clear IP', {:action => 'clear_last_ip', :id => user, :page=>params[:page]}, :confirm => 'This will reset last logging in ip of the user, are you sure?', class: 'btn btn-default btn-xs btn-block'
       %td= link_to 'Show', {:action => 'show', :id => user}, class: 'btn btn-default btn-xs btn-block'

@@ -37,8 +37,8 @@
       %td= problem.full_name #in_place_editor_field :problem, :full_name, {}, :rows=>1
       %td.text-right= problem.full_score #in_place_editor_field :problem, :full_score, {}, :rows=>1
       %td= problem.date_added
-      %td= toggle_button(@problem.available?, toggle_problem_url(@problem), "problem-avail-#{@problem.id}")
-      %td= toggle_button(@problem.test_allowed?, toggle_test_problem_url(@problem), "problem-test-#{@problem.id}")
+      %td= toggle_button(@problem.available?, toggle_problem_path(@problem), "problem-avail-#{@problem.id}")
+      %td= toggle_button(@problem.test_allowed?, toggle_test_problem_path(@problem), "problem-test-#{@problem.id}")
       - if GraderConfiguration.multicontests?
         %td
           = problem.contests.collect { |c| c.name }.join(', ')
