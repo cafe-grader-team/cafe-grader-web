@@ -33,9 +33,9 @@
   - for problem in @problems
     %tr{:class => "#{(problem.available) ? "success" : "danger"}", :id => "prob-#{problem.id}", :name => "prob-#{problem.id}"}
       - @problem=problem
-      %td= in_place_editor_field :problem, :name, {}, :rows=>1
-      %td= in_place_editor_field :problem, :full_name, {}, :rows=>1
-      %td.text-right= in_place_editor_field :problem, :full_score, {}, :rows=>1
+      %td= problem.name #in_place_editor_field :problem, :name, {}, :rows=>1
+      %td= problem.full_name #in_place_editor_field :problem, :full_name, {}, :rows=>1
+      %td.text-right= problem.full_score #in_place_editor_field :problem, :full_score, {}, :rows=>1
       %td= problem.date_added
       %td= toggle_button(@problem.available?, toggle_problem_url(@problem), "problem-avail-#{@problem.id}")
       %td= toggle_button(@problem.test_allowed?, toggle_test_problem_url(@problem), "problem-test-#{@problem.id}")

@@ -15,6 +15,21 @@ class ReportController < ApplicationController
   def max_score
   end
 
+  def current_score
+    @problems = Problem.find_available_problems
+    @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
+    @scorearray = calculate_max_score(problems, users,0,0,{max: true})
+
+    #rencer accordingly
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      #render template: 'user_admin/user_stat'
+      render 'current_score'
+    end
+  end
+
   def show_max_score
     #process parameters
     #problems
@@ -35,21 +50,10 @@ class ReportController < ApplicationController
     since_id = params.fetch(:min_id, 0).to_i
     until_id = params.fetch(:max_id, 0).to_i
 
-    #get data
-    @scorearray = Array.new
-    @users.each do |u|
-      ustat = Array.new
-      ustat[0] = u
-      @problems.each do |p|
-        max_points = 0
-        Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
-          max_points = sub.points if sub and sub.points and (sub.points > max_points)
-        end
-        ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
-      end
-      @scorearray << ustat
-    end
+    #calculate the routine
+    @scorearray = calculate_max_score(problems, users,since_id,until_id)
 
+    #rencer accordingly
     if params[:commit] == 'download csv' then
       csv = gen_csv_from_scorearray(@scorearray,@problems)
       send_data csv, filename: 'max_score.csv'
@@ -448,5 +452,33 @@ ORDER BY submitted_at
 
   end
 
+  protected
+
+  def calculate_max_score(problems, users,since_id,until_id, get_last_score = false)
+    scorearray = Array.new
+    users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      problems.each do |p|
+        unless get_last_score
+          #get max score
+          max_points = 0
+          Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
+            max_points = sub.points if sub and sub.points and (sub.points > max_points)
+          end
+          ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
+        else
+          #get latest score
+          sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+          if (sub!=nil) and (sub.points!=nil) and p and p.full_score
+            ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
+          else
+            ustat << [0,false]
+        end
+      end
+      scorearray << ustat
+    end
+    return scorearray
+  end
 
 end
