@@ -192,7 +192,7 @@ class User < ActiveRecord::Base
 
   def update_start_time
     stat = self.contest_stat
-    if stat == nil or stat.started_at == nil
+    if stat.nil? or stat.started_at.nil?
       stat ||= UserContestStat.new(:user => self)
       stat.started_at = Time.now.gmtime
       stat.save
@@ -258,6 +258,10 @@ class User < ActiveRecord::Base
     else
       return problem_in_user_contests? problem
     end
+  end
+
+  def self.clear_last_login
+    User.update_all(:last_ip => nil)
   end
 
   protected

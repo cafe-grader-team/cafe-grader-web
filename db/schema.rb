@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150203153534) do
+ActiveRecord::Schema.define(:version => 20150916054105) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -79,6 +79,16 @@ ActiveRecord::Schema.define(:version => 20150203153534) do
 
   add_index "grader_processes", ["host", "pid"], :name => "index_grader_processes_on_ip_and_pid"
 
+  create_table "heart_beats", :force => true do |t|
+    t.integer  "user_id"
+    t.string   "ip_address"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+    t.string   "status"
+  end
+
+  add_index "heart_beats", ["updated_at"], :name => "index_heart_beats_on_updated_at"
+
   create_table "languages", :force => true do |t|
     t.string "name",        :limit => 10
     t.string "pretty_name"
@@ -87,7 +97,7 @@ ActiveRecord::Schema.define(:version => 20150203153534) do
   end
 
   create_table "logins", :force => true do |t|
-    t.string   "user_id"
+    t.integer  "user_id"
     t.string   "ip_address"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
@@ -157,6 +167,13 @@ ActiveRecord::Schema.define(:version => 20150203153534) do
     t.datetime "updated_at", :null => false
     t.integer  "country_id"
     t.string   "password"
+  end
+
+  create_table "submission_view_logs", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "submission_id"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
   end
 
   create_table "submissions", :force => true do |t|
@@ -241,6 +258,8 @@ ActiveRecord::Schema.define(:version => 20150203153534) do
     t.datetime "updated_at"
     t.boolean  "enabled",                       :default => true
     t.string   "remark"
+    t.string   "last_ip"
+    t.string   "section"
   end
 
   add_index "users", ["login"], :name => "index_users_on_login", :unique => true

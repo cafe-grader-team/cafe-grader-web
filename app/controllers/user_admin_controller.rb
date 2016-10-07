@@ -16,11 +16,6 @@ class UserAdminController < ApplicationController
          :redirect_to => { :action => :list }
 
   def index
-    list
-    render :action => 'list'
-  end
-
-  def list
     @user_count = User.count
     if params[:page] == 'all'
       @users = User.all
@@ -56,10 +51,17 @@ class UserAdminController < ApplicationController
     @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to :action => 'index'
     else
       render :action => 'new'
     end    
+  end
+
+  def clear_last_ip
+    @user = User.find(params[:id])
+    @user.last_ip = nil
+    @user.save
+    redirect_to action: 'index', page: params[:page]
   end
 
   def create_from_list
@@ -107,7 +109,7 @@ class UserAdminController < ApplicationController
     flash[:notice] = 'User(s) ' + note.join(', ') + 
       ' were successfully created.  ' +
       '( (+) - created with random passwords.)'   
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def edit
@@ -126,7 +128,7 @@ class UserAdminController < ApplicationController
 
   def destroy
     User.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def user_stat
@@ -135,14 +137,14 @@ class UserAdminController < ApplicationController
     else
       @problems = Problem.find_available_problems
     end
-    @users = User.find(:all, :include => [:contests, :contest_stat])
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
       ustat[0] = u
       @problems.each do |p|
         sub = Submission.find_last_by_user_and_problem(u.id,p.id)
-        if (sub!=nil) and (sub.points!=nil) 
+        if (sub!=nil) and (sub.points!=nil) and p and p.full_score
           ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
         else
           ustat << [0,false]
@@ -193,7 +195,7 @@ class UserAdminController < ApplicationController
   def import
     if params[:file]==''
       flash[:notice] = 'Error importing no file'
-      redirect_to :action => 'list' and return
+      redirect_to :action => 'index' and return
     end
     import_from_file(params[:file])
   end
@@ -213,7 +215,7 @@ class UserAdminController < ApplicationController
       @changed = true
     end
   end
-  
+
   # contest management
 
   def contests
@@ -246,7 +248,7 @@ class UserAdminController < ApplicationController
     if user and contest
       user.contests << contest
     end
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def remove_from_contest
@@ -255,7 +257,7 @@ class UserAdminController < ApplicationController
     if user and contest
       user.contests.delete(contest)
     end
-    redirect_to :action => 'list'
+    redirect_to :action => 'index'
   end
 
   def contest_management

@@ -61,6 +61,13 @@ CONFIGURATIONS =
    },
 
    {
+     :key => 'right.multiple_ip_login',
+     :value_type => 'boolean',
+     :default_value => 'true',
+     :description => 'When change from true to false, a user can login from the first IP they logged into afterward.'
+   },
+
+   {
      :key => 'right.user_view_submission',
      :value_type => 'boolean',
      :default_value => 'false',

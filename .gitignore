@@ -20,7 +20,14 @@
 
 #ignore public assets???
 /public/assets
+/public
+
+/data
 
 #ignore .orig and .swp
 *.orig
 *.swp
+
+#ignore rvm setting file
+.ruby-gemset
+.ruby-version

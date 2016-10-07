@@ -7,8 +7,7 @@ class ProblemsController < ApplicationController
   in_place_edit_for :problem, :full_score
 
   def index
-    list
-    render :action => 'list'
+    @problems = Problem.find(:all, :order => 'date_added DESC')
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -16,12 +15,8 @@ class ProblemsController < ApplicationController
                                       :create, :quick_create,
                                       :do_manage,
                                       :do_import,
-                                      :update ],
-         :redirect_to => { :action => :list }
-
-  def list
-    @problems = Problem.find(:all, :order => 'date_added DESC')
-  end
+                                      ],
+         :redirect_to => { :action => :index }
 
   def show
     @problem = Problem.find(params[:id])
@@ -45,7 +40,7 @@ class ProblemsController < ApplicationController
     @problem.description = @description
     if @problem.save
       flash[:notice] = 'Problem was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to action: :index
     else
       render :action => 'new'
     end
@@ -61,10 +56,10 @@ class ProblemsController < ApplicationController
     @problem.date_added = Time.new
     if @problem.save
       flash[:notice] = 'Problem was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to action: :index
     else
       flash[:notice] = 'Error saving problem'
-      redirect_to :action => 'list'
+    redirect_to action: :index
     end
   end
 
@@ -76,14 +71,14 @@ class ProblemsController < ApplicationController
   def update
     @problem = Problem.find(params[:id])
     @description = @problem.description
-    if @description == nil and params[:description][:body]!=''
+    if @description.nil? and params[:description][:body]!=''
       @description = Description.new(params[:description])
       if !@description.save
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
       end
       @problem.description = @description
-    elsif @description!=nil
+    elsif @description
       if !@description.update_attributes(params[:description])
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
@@ -121,13 +116,23 @@ class ProblemsController < ApplicationController
 
   def destroy
     Problem.find(params[:id]).destroy
-    redirect_to :action => 'list'
+      redirect_to action: :index
   end
 
   def toggle
     @problem = Problem.find(params[:id])
-    @problem.available = !(@problem.available)
-    @problem.save
+    @problem.update_attributes(available: !(@problem.available) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
+  def toggle_test
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(test_allowed: !(@problem.test_allowed?) )
+    respond_to do |format|
+      format.js { }
+    end
   end
 
   def turn_all_off
@@ -136,7 +141,7 @@ class ProblemsController < ApplicationController
       problem.available = false
       problem.save
     end
-    redirect_to :action => 'list'
+    redirect_to action: :index
   end
 
   def turn_all_on
@@ -145,7 +150,7 @@ class ProblemsController < ApplicationController
       problem.available = true
       problem.save
     end
-    redirect_to :action => 'list'
+    redirect_to action: :index
   end
 
   def stat
@@ -163,7 +168,7 @@ class ProblemsController < ApplicationController
     @submissions.find_each do |sub|
       d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
       @histogram[:data][d.to_i] += 1 if d < range
-      user[sub.user_id] = [user[sub.user_id], ( sub.try(:points) >= @problem.full_score) ? 1 : 0].max
+      user[sub.user_id] = [user[sub.user_id], ((sub.try(:points) || 0) >= @problem.full_score) ? 1 : 0].max
     end
     @histogram[:summary][:max] = [@histogram[:data].max,1].max
 

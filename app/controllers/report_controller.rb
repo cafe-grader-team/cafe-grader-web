@@ -1,6 +1,9 @@
 class ReportController < ApplicationController
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck]
+  before_filter :authenticate
+
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score]
+
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
@@ -10,6 +13,89 @@ class ReportController < ApplicationController
 
     admin_authorization
   }
+
+  def max_score
+  end
+
+  def current_score
+    @problems = Problem.find_available_problems
+    @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
+    @scorearray = calculate_max_score(@problems, @users,0,0,true)
+
+    #rencer accordingly
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      #render template: 'user_admin/user_stat'
+      render 'current_score'
+    end
+  end
+
+  def show_max_score
+    #process parameters
+    #problems
+    @problems = []
+    params[:problem_id].each do |id|
+      next unless id.strip != ""
+      pid = Problem.find_by_id(id.to_i)
+      @problems << pid if pid
+    end
+
+    #users
+    @users = if params[:user] == "all" then 
+               User.find(:all, :include => [:contests, :contest_stat]) 
+             else 
+               User.includes(:contests).includes(:contest_stat).where(enabled: true)
+             end
+
+    #set up range from param
+    since_id = params.fetch(:min_id, 0).to_i
+    until_id = params.fetch(:max_id, 0).to_i
+
+    #calculate the routine
+    @scorearray = calculate_max_score(@problems, @users,since_id,until_id)
+
+    #rencer accordingly
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      #render template: 'user_admin/user_stat'
+      render 'max_score'
+    end
+
+  end
+
+  def score
+    if params[:commit] == 'download csv'
+      @problems = Problem.all
+    else
+      @problems = Problem.find_available_problems
+    end
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @scorearray = Array.new
+    @users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      @problems.each do |p|
+        sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+        if (sub!=nil) and (sub.points!=nil) and p and p.full_score
+          ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
+        else
+          ustat << [0,false]
+        end
+      end
+      @scorearray << ustat
+    end
+    if params[:commit] == 'download csv' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'last_score.csv'
+    else
+      render template: 'user_admin/user_stat'
+    end
+
+  end
 
   def login_stat
     @logins = Array.new
@@ -72,12 +158,7 @@ class ReportController < ApplicationController
     Submission.where("submitted_at >= ? AND submitted_at <= ?",@since_time,@until_time).find_each do |s|
       if @submissions[s.user_id]
         if not @submissions[s.user_id][:sub].has_key?(s.problem_id)
-          a = nil
-          begin
-            a = Problem.find(s.problem_id)
-          rescue
-            a = nil
-          end
+          a = Problem.find_by_id(s.problem_id)
           @submissions[s.user_id][:sub][s.problem_id] = 
             { prob_name: (a ? a.full_name : '(NULL)'),
               sub_ids: [s.id] } 
@@ -250,6 +331,158 @@ class ReportController < ApplicationController
         count += 1
       end
     end
+  end
+
+  def cheat_report
+    date_and_time = '%Y-%m-%d %H:%M'
+    begin
+      md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @since_time = Time.zone.now.ago( 90.minutes)
+    end
+    begin
+      md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @until_time = Time.zone.now
+    end
+
+    #multi login
+    @ml = Login.joins(:user).where("logins.created_at >= ? and logins.created_at <= ?",@since_time,@until_time).select('users.login,count(distinct ip_address) as count,users.full_name').group("users.id").having("count > 1")
+
+    st = <<-SQL
+  SELECT l2.*
+    FROM logins l2 INNER JOIN
+    (SELECT u.id,COUNT(DISTINCT ip_address) as count,u.login,u.full_name
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
+      GROUP BY u.id
+      HAVING count > 1
+    ) ml ON l2.user_id = ml.id
+    WHERE l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
+UNION
+  SELECT l2.*
+    FROM logins l2 INNER JOIN
+    (SELECT l.ip_address,COUNT(DISTINCT u.id) as count
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
+      GROUP BY l.ip_address
+      HAVING count > 1
+    ) ml on ml.ip_address = l2.ip_address
+    INNER JOIN users u ON l2.user_id = u.id
+    WHERE l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
+ORDER BY ip_address,created_at
+              SQL
+    @mld = Login.find_by_sql(st)
+
+    st = <<-SQL
+  SELECT s.id,s.user_id,s.ip_address,s.submitted_at,s.problem_id
+    FROM submissions s INNER JOIN
+    (SELECT u.id,COUNT(DISTINCT ip_address) as count,u.login,u.full_name
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= ? and l.created_at <= ?
+      GROUP BY u.id
+      HAVING count > 1
+    ) ml ON s.user_id = ml.id
+    WHERE s.submitted_at >= ? and s.submitted_at <= ?
+UNION
+  SELECT s.id,s.user_id,s.ip_address,s.submitted_at,s.problem_id
+    FROM submissions s INNER JOIN
+    (SELECT l.ip_address,COUNT(DISTINCT u.id) as count
+      FROM logins l
+      INNER JOIN users u ON l.user_id =  u.id
+      WHERE l.created_at >= ? and l.created_at <= ?
+      GROUP BY l.ip_address
+      HAVING count > 1
+    ) ml on ml.ip_address = s.ip_address
+    WHERE s.submitted_at >= ? and s.submitted_at <= ?
+ORDER BY ip_address,submitted_at
+            SQL
+    @subs = Submission.joins(:problem).find_by_sql([st,@since_time,@until_time,
+                                       @since_time,@until_time,
+                                       @since_time,@until_time,
+                                       @since_time,@until_time])
+
+  end
+
+  def cheat_scruntinize
+    #convert date & time
+    date_and_time = '%Y-%m-%d %H:%M'
+    begin
+      md = params[:since_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @since_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @since_time = Time.zone.now.ago( 90.minutes)
+    end
+    begin
+      md = params[:until_datetime].match(/(\d+)-(\d+)-(\d+) (\d+):(\d+)/)
+      @until_time = Time.zone.local(md[1].to_i,md[2].to_i,md[3].to_i,md[4].to_i,md[5].to_i)
+    rescue
+      @until_time = Time.zone.now
+    end
+
+    #convert sid
+    @sid = params[:SID].split(/[,\s]/) if params[:SID]
+    unless @sid and @sid.size > 0
+      return 
+      redirect_to actoin: :cheat_scruntinize
+      flash[:notice] = 'Please enter at least 1 student id'
+    end
+    mark = Array.new(@sid.size,'?')
+    condition = "(u.login = " + mark.join(' OR u.login = ') + ')'
+
+    @st = <<-SQL
+  SELECT l.created_at as submitted_at ,-1 as id,u.login,u.full_name,l.ip_address,"" as problem_id,"" as points,l.user_id
+  FROM logins l INNER JOIN users u on l.user_id  = u.id
+  WHERE l.created_at >= ? AND l.created_at <= ? AND #{condition}
+UNION
+  SELECT s.submitted_at,s.id,u.login,u.full_name,s.ip_address,s.problem_id,s.points,s.user_id
+  FROM submissions s INNER JOIN users u ON s.user_id = u.id
+  WHERE s.submitted_at >= ? AND s.submitted_at <= ? AND #{condition}
+ORDER BY submitted_at
+  SQL
+    
+    p = [@st,@since_time,@until_time] + @sid + [@since_time,@until_time] + @sid
+    @logs = Submission.joins(:problem).find_by_sql(p)
+
+
+
+
+
+  end
+
+  protected
+
+  def calculate_max_score(problems, users,since_id,until_id, get_last_score = false)
+    scorearray = Array.new
+    users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      problems.each do |p|
+        unless get_last_score
+          #get max score
+          max_points = 0
+          Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
+            max_points = sub.points if sub and sub.points and (sub.points > max_points)
+          end
+          ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
+        else
+          #get latest score
+          sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+          if (sub!=nil) and (sub.points!=nil) and p and p.full_score
+            ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
+          else
+            ustat << [0,false]
+          end
+        end
+      end
+      scorearray << ustat
+    end
+    return scorearray
   end
 
 end

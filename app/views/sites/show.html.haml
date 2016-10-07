@@ -1,0 +1,15 @@
+%p
+  %b Name:
+  = h @site.name
+%p
+  %b Password:
+  = h @site.password
+%p
+  %b Started:
+  = h @site.started
+%p
+  %b Start time:
+  = h @site.start_time
+= link_to 'Edit', edit_site_path(@site)
+|
+= link_to 'Back', sites_path

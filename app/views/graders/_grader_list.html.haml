@@ -1,5 +1,5 @@
 - if grader_list.length!=0
-  %table.graders
+  %table.table.table-striped.table-condensed
     %tr
       %th host
       %th pid
@@ -7,6 +7,7 @@
       %th last updated
       %th type
       %th task
+      %th
     - grader_list.each do |grader|
       - if grader.active
         - c = 'active'
@@ -16,9 +17,9 @@
         = render :partial => 'grader', :locals => {:grader => grader}
         - if not grader.terminated
           - if GraderScript.grader_control_enabled?
-            %td= link_to 'stop', {:action => 'stop', :id => grader}
+            %td= link_to 'stop', {:action => 'stop', :id => grader}, class: 'btn btn-danger btn-xs btn-block'
         - else
-          %td= link_to 'clear', {:action => 'clear', :id => grader}
+          %td= link_to 'clear', {:action => 'clear', :id => grader}, class: 'btn btn-danger btn-xs btn-block'
 - else
   %ul
     %li None

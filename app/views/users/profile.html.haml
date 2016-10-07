@@ -58,7 +58,7 @@
         %td= s.language.pretty_name
         %td  #{s.submitted_at.strftime('%Y-%m-%d %H:%M')} (#{time_ago_in_words(s.submitted_at)} ago)
         %td.fix-width= s.grader_comment
-        %td= (s.points*100)/s.problem.full_score
+        %td= ( s.try(:points) ? (s.points*100/s.problem.full_score)  : '' )
         - if session[:admin]
           %td= s.ip_address
 

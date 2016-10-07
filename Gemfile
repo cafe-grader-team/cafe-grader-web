@@ -1,6 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'rails', '3.2.21'
+gem 'rails', '~>3.2'
+
+gem 'select2-rails'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
@@ -45,11 +47,26 @@ gem 'jquery-rails'
 gem 'jquery-ui-sass-rails'
 gem 'jquery-timepicker-addon-rails'
 gem 'jquery-tablesorter'
+gem 'jquery-countdown-rails'
 
 #syntax highlighter
 gem 'rouge'
 
+#add bootstrap
+gem 'bootstrap-sass', '~> 3.2.0'
+gem 'bootstrap-switch-rails'
+gem 'bootstrap-toggle-rails'
+gem 'autoprefixer-rails'
+
+#bootstrap sortable
+gem 'momentjs-rails'
+gem 'rails_bootstrap_sortable'
+
+#ace editor
+gem 'ace-rails-ap'
+
 gem 'haml'
+gem 'haml-rails'
 gem 'mail'
 gem 'rdiscount'
 gem 'test-unit'

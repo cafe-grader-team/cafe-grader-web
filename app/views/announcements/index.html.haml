@@ -1,0 +1,37 @@
+%h1 Listing announcements
+
+= link_to '+ Add announcement', new_announcement_path, class: 'btn btn-success'
+%br
+%br
+
+%table.table.table-striped
+  %thead
+    %th Updated
+    %th Announcement
+    %th Author
+    %th{style: 'width: 100px'} Published?
+    %th{style: 'width: 100px'}Front?
+    %th
+    %th
+  - for announcement in @announcements
+    %tr
+      - @announcement = announcement
+      %td= time_ago_in_words announcement.updated_at
+      %td
+        - if !announcement.title.blank?
+          %b Title:
+          = h announcement.title
+          %br/
+        - if !announcement.notes.blank?
+          %b
+            Notes: #{h announcement.notes}
+          %br/
+        = h announcement.body
+      %td= h announcement.author
+      %td= toggle_button(announcement.published?, toggle_announcement_path(@announcement), "announcement_toggle_#{@announcement.id}", {size: 'btn-sm'})
+      %td= toggle_button(announcement.frontpage?, toggle_front_announcement_path(@announcement), "announcement_toggle_front_#{@announcement.id}", {size: 'btn-sm'})
+      %td= link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-block btn-sm btn-info'
+      %td= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete, class: "btn btn-block btn-sm btn-danger"
+%br
+
+= link_to '+ Add announcement', new_announcement_path, class: 'btn btn-success'

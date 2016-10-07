@@ -13,6 +13,8 @@ class MainController < ApplicationController
   prepend_before_filter :reject_announcement_refresh_when_logged_out, 
                         :only => [:announcements]
 
+  before_filter :authenticate_by_ip_address, :only => [:list]
+
   # COMMENTED OUT: filter in each action instead
   # before_filter :verify_time_limit, :only => [:submit]
 
@@ -67,6 +69,14 @@ class MainController < ApplicationController
       @submission.source.encode!('UTF-8','UTF-8',invalid: :replace, replace: '')
       @submission.source_filename = params['file'].original_filename
     end
+
+    if (params[:editor_text])
+      language = Language.find_by_id(params[:language_id])
+      @submission.source = params[:editor_text]
+      @submission.source_filename = "live_edit.#{language.ext}"
+      @submission.language = language
+    end
+
     @submission.submitted_at = Time.new.gmtime
     @submission.ip_address = request.remote_ip
 
@@ -121,8 +131,8 @@ class MainController < ApplicationController
       @problem = nil
       @submissions = nil
     else
-      @problem = Problem.find_by_name(params[:id])
-      if not @problem.available
+      @problem = Problem.find_by_id(params[:id])
+      if (@problem == nil) or (not @problem.available)
         redirect_to :action => 'list'
         flash[:notice] = 'Error: submissions for that problem are not viewable.'
         return

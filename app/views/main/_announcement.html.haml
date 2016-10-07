@@ -1,19 +1,15 @@
-.announcement{:id => "announcement-#{announcement.id}", :style => "#{'display: none; opacity: 0' if (defined? announcement_effect) and announcement_effect }"}
-  %div
-    .announcement-title
-      -# .toggles
-      -#  %a{:href => '#', :onclick => "$(\"announcement-body-#{announcement.id}\").blindUp({duration: 0.2}); return false;"}
-      -#    [hide]
-      -#  %a{:href => '#', :onclick => "$(\"announcement-body-#{announcement.id}\").blindDown({duration: 0.2}); return false;"}
-      -#   [show]
-      = announcement.title
-    .announcement-body{:id => "announcement-body-#{announcement.id}"}
-      = markdown(announcement.body)
-      -#.pub-info
-      -#  %p= "#{announcement.author}, #{announcement.created_at}"
+%li.list-group-item
+  %strong
+    = announcement.title
+  - if @current_user.admin?
+    = link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-xs btn-default'
+  %small= "(updated #{time_ago_in_words(announcement.updated_at)} ago on #{announcement.updated_at})"
+
+  %br
+    = markdown(announcement.body)
+  :javascript
+    Announcement.updateRecentId(#{announcement.id});
+  - if (defined? announcement_effect) and announcement_effect
     :javascript
-      Announcement.updateRecentId(#{announcement.id});
-    - if (defined? announcement_effect) and announcement_effect
-      :javascript
-        $("announcement-#{announcement.id}").blindDown({duration: 0.2});
-        $("announcement-#{announcement.id}").appear({duration: 0.5, queue: 'end'});
+      $("announcement-#{announcement.id}").blindDown({duration: 0.2});
+      $("announcement-#{announcement.id}").appear({duration: 0.5, queue: 'end'});

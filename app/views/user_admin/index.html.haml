@@ -1,0 +1,100 @@
+%h1 Listing users
+
+.panel.panel-primary
+  .panel-title.panel-heading
+    Quick Add
+  .panel-body
+    = form_tag( {method: 'post'}, {class: 'form-inline'})  do
+      .form-group
+        = label_tag 'user_login', 'Login'
+        = text_field 'user', 'login', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_full_name', 'Full Name'
+        = text_field 'user', 'full_name', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_password', 'Password'
+        = text_field 'user', 'password', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_password_confirmation', 'Confirm'
+        = text_field 'user', 'password_confirmation', :size => 10,class: 'form-control'
+      .form-group
+        = label_tag 'user_email', 'email'
+        = text_field 'user', 'email', :size => 10,class: 'form-control'
+      =submit_tag "Create", class: 'btn btn-primary'
+
+.panel.panel-primary
+  .panel-title.panel-heading
+    Import from site management
+  .panel-body
+    = form_tag({:action => 'import'}, :multipart => true,class: 'form form-inline') do
+      .form-group
+        = label_tag :file, 'File:'
+        .input-group
+          %span.input-group-btn
+            %span.btn.btn-default.btn-file
+              Browse
+              = file_field_tag 'file'
+          = text_field_tag '' , nil, {readonly: true, class: 'form-control'}
+      = submit_tag 'Submit', class: 'btn btn-default'
+
+
+%p
+  = link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
+  = link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}
+  = link_to 'View administrators',{ :action => 'admin'}, { class: 'btn btn-default '}
+  = link_to 'Random passwords',{ :action => 'random_all_passwords'}, { class: 'btn btn-default '}
+  = link_to 'View active users',{ :action => 'active'}, { class: 'btn btn-default '}
+  = link_to 'Mass mailing',{ :action => 'mass_mailing'}, { class: 'btn btn-default '}
+
+- if GraderConfiguration.multicontests?
+  %br/
+  %b Multi-contest:
+  = link_to '[Manage bulk users in contests]', :action => 'contest_management'
+  View users in:
+  - @contests.each do |contest|
+    = link_to "[#{contest.name}]", :action => 'contests', :id => contest.id
+  = link_to "[no contest]", :action => 'contests', :id => 'none'
+
+Total #{@user_count} users |
+- if !@paginated
+  Display all users.
+  \#{link_to '[show in pages]', :action => 'index', :page => '1'}
+- else
+  Display in pages.
+  \#{link_to '[display all]', :action => 'index', :page => 'all'} |
+  \#{will_paginate @users, :container => false}
+
+
+%table.table.table-hover.table-condense
+  %thead
+    %th Login
+    %th Full name
+    %th email
+    %th Remark
+    %th 
+      Activated
+      %sup{class: 'text-primary',data: {toggle: 'tooltip', placement: 'top'}, title: 'User has already confirmed the email?' } [?]
+    %th 
+      Enabled
+      %sup{class: 'text-primary',data: {toggle: 'tooltip', placement: 'top'}, title: 'Allow the user to login?' } [?]
+    %th Last IP
+    %th
+    %th
+    %th
+    %th
+  - for user in @users
+    %tr
+      %td= link_to user.login, controller: :users, :action => 'profile', :id => user
+      %td= user.full_name
+      %td= user.email
+      %td= user.remark
+      %td= toggle_button(user.activated?, toggle_activate_user_path(user),"toggle_activate_user_#{user.id}")
+      %td= toggle_button(user.enabled?, toggle_enable_user_path(user),"toggle_enable_user_#{user.id}")
+      %td= user.last_ip
+      %td= link_to 'Clear IP', {:action => 'clear_last_ip', :id => user, :page=>params[:page]}, :confirm => 'This will reset last logging in ip of the user, are you sure?', class: 'btn btn-default btn-xs btn-block'
+      %td= link_to 'Show', {:action => 'show', :id => user}, class: 'btn btn-default btn-xs btn-block'
+      %td= link_to 'Edit', {:action => 'edit', :id => user}, class: 'btn btn-default btn-xs btn-block'
+      %td= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :post, class: 'btn btn-danger btn-xs btn-block'
+%br/
+= link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
+= link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}

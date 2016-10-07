@@ -1,6 +1,0 @@
-if @problem.available
-  page["prob-#{@problem.id}"].className = "available"
-else
-  page["prob-#{@problem.id}"].className = "not-available"
-end
-page["prob-#{@problem.id}-avail"].innerHTML = @problem.available.to_s

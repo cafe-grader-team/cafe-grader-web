@@ -69,11 +69,31 @@ class AnnouncementsController < ApplicationController
       if @announcement.update_attributes(params[:announcement])
         flash[:notice] = 'Announcement was successfully updated.'
         format.html { redirect_to(@announcement) }
+        format.js   {}
         format.xml  { head :ok }
       else
         format.html { render :action => "edit" }
+        format.js   {}
         format.xml  { render :xml => @announcement.errors, :status => :unprocessable_entity }
       end
+    end
+  end
+
+  def toggle
+    @announcement = Announcement.find(params[:id])
+    @announcement.update_attributes( published:  !@announcement.published? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#announcement_toggle_#{@announcement.id}",button_on: @announcement.published? } }
+    end
+  end
+
+  def toggle_front
+    @announcement = Announcement.find(params[:id])
+    @announcement.update_attributes( frontpage:  !@announcement.frontpage? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#announcement_toggle_front_#{@announcement.id}",button_on: @announcement.frontpage? } }
     end
   end
 

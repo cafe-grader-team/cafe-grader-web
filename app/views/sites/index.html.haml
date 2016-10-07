@@ -1,0 +1,24 @@
+%h1 Listing sites
+%table.table.table-striped
+  %tr
+    %th Name
+    %th Password
+    %th Started
+    %th Start time
+    %th
+    %th
+    %th
+  - for site in @sites
+    - background = "white"
+    - background = "grey" if (site.started==true) and (site.finished? == true)
+    - background = "lightgreen" if (site.started==true) and (site.finished? != true)
+    %tr{:style => "background: #{background};"}
+      %td= h site.name
+      %td= h site.password
+      %td= h site.started
+      %td= h site.start_time
+      %td= link_to 'Show', site, class: 'btn btn-default'
+      %td= link_to 'Edit', edit_site_path(site), class: 'btn btn-default'
+      %td= link_to 'Destroy', site, :confirm => 'Are you sure?', :method => :delete, class: 'btn btn-default'
+%br/
+= link_to '+ New site', new_site_path, class: 'btn btn-success'

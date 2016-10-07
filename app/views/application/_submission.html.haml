@@ -1,0 +1,26 @@
+
+%tr
+  %td{:align => "center"}
+    = submission_counter+1
+  %td{:align => "center"}
+    = link_to "##{submission.id}", submission_path(submission.id)
+  %td
+    = l submission.submitted_at, format: :long
+    = "( #{time_ago_in_words(submission.submitted_at)} ago)"
+  %td
+    = submission.source_filename
+    = " (#{submission.language.pretty_name}) "
+    = link_to('[load]',{:action => 'source', :id => submission.id})
+  %td
+    - if submission.graded_at
+      = "Graded at #{format_short_time(submission.graded_at)}." 
+      %br/
+      = "Score: #{(submission.points*100/submission.problem.full_score).to_i} " if GraderConfiguration['ui.show_score']
+      = " [" 
+      %tt
+        = submission.grader_comment
+      = "]"
+  %td
+    = render :partial => 'compiler_message', :locals => {:compiler_message => submission.compiler_message }
+  %td
+    = link_to 'Edit', edit_submission_path(submission.id), class: 'btn btn-success'

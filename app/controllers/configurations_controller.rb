@@ -16,6 +16,7 @@ class ConfigurationsController < ApplicationController
 
   def update
     @config = GraderConfiguration.find(params[:id])
+    User.clear_last_login if @config.key == GraderConfiguration::MULTIPLE_IP_LOGIN_KEY and @config.value == 'true' and params[:grader_configuration][:value] == 'false'
     respond_to do |format|
       if @config.update_attributes(params[:grader_configuration])
         format.json { head :ok }
