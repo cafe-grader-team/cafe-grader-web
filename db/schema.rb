@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150916054105) do
+ActiveRecord::Schema.define(:version => 20161008050135) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -66,12 +66,12 @@ ActiveRecord::Schema.define(:version => 20150916054105) do
   end
 
   create_table "grader_processes", :force => true do |t|
-    t.string   "host",       :limit => 20
+    t.string   "host"
     t.integer  "pid"
     t.string   "mode"
     t.boolean  "active"
-    t.datetime "created_at",               :null => false
-    t.datetime "updated_at",               :null => false
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
     t.integer  "task_id"
     t.string   "task_type"
     t.boolean  "terminated"
