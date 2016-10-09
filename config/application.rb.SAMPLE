@@ -69,7 +69,7 @@ module CafeGrader
 
     config.assets.precompile += ['announcement_refresh.js','effects.js','site_update.js']
     config.assets.precompile += ['local_jquery.js','tablesorter-theme.cafe.css']
-    %w( announcements configurations contests contest_management graders heartbeat 
+    %w( announcements submissions configurations contests contest_management graders heartbeat 
         login main messages problems report site sites sources tasks 
         test user_admin users ).each do |controller|
       config.assets.precompile += ["#{controller}.js", "#{controller}.css"]
