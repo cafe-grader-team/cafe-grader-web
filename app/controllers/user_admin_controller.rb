@@ -7,7 +7,7 @@ class UserAdminController < ApplicationController
   before_filter :admin_authorization
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, 
+  verify :method => :post, :only => [
                                       :create, :create_from_list, 
                                       :update, 
                                       :manage_contest, 
