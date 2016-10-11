@@ -45,6 +45,6 @@
       %td= link_to 'Stat', {:action => 'stat', :id => problem.id}, class: 'btn btn-info btn-xs btn-block'
       %td= link_to 'Show', {:action => 'show', :id => problem}, class: 'btn btn-info btn-xs btn-block'
       %td= link_to 'Edit', {:action => 'edit', :id => problem}, class: 'btn btn-info btn-xs btn-block'
-      %td= link_to 'Destroy', { :action => 'destroy', :id => problem }, :confirm => 'Are you sure?', :method => :post, class: 'btn btn-danger btn-xs btn-block'
+      %td= link_to 'Destroy', { :action => 'destroy', :id => problem }, :confirm => 'Are you sure?', :method => :delete, class: 'btn btn-danger btn-xs btn-block'
 %br/
 = link_to '[New problem]', :action => 'new'
