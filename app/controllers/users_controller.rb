@@ -109,7 +109,7 @@ class UsersController < ApplicationController
     redirect_to :action => 'forget'
   end
 
-  def profile
+  def stat
     @user = User.find(params[:id])
     @submission = Submission.includes(:problem).where(user_id: params[:id])
 

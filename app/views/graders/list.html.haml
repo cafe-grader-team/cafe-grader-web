@@ -53,9 +53,9 @@
       %tbody
         - @submission.each do |sub|
           %tr.inactive
-            %td= link_to sub.id, controller: 'graders' ,action: 'submission', id: sub.id
-            %td= sub.try(:user).try(:full_name)
-            %td= sub.try(:problem).try(:full_name)
+            %td= link_to sub.id, submission_path(sub.id)
+            %td= link_to sub.try(:user).try(:full_name), stat_user_path(sub.user.id)
+            %td= link_to sub.try(:problem).try(:full_name), stat_problem_path(sub.problem.id)
             %td= "#{time_ago_in_words(sub.submitted_at)} ago"
             %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
             %td= sub.grader_comment
@@ -71,9 +71,9 @@
       %tbody
         - @backlog_submission.each do |sub|
           %tr.inactive
-            %td= link_to sub.id, controller: 'graders' ,action: 'submission', id: sub.id
-            %td= sub.try(:user).try(:full_name)
-            %td= sub.try(:problem).try(:full_name)
+            %td= link_to sub.id, submission_path(sub.id)
+            %td= link_to sub.try(:user).try(:full_name), stat_user_path(sub.user.id)
+            %td= link_to sub.try(:problem).try(:full_name), stat_problem_path(sub.problem.id)
             %td= "#{time_ago_in_words(sub.submitted_at)} ago"
             %td= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : " "
             %td= sub.grader_comment
