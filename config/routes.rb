@@ -17,6 +17,7 @@ CafeGrader::Application.routes.draw do
     member do
       get 'toggle'
       get 'toggle_test'
+      get 'stat'
     end
     collection do
       get 'turn_all_off'
@@ -31,6 +32,7 @@ CafeGrader::Application.routes.draw do
   resources :users do
     member do
       get 'toggle_activate', 'toggle_enable'
+      get 'stat'
     end
   end
 

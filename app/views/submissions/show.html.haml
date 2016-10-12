@@ -29,7 +29,7 @@
             %strong User
           %td
             - if @submission.user 
-              = link_to "(#{@submission.user.login})", controller: "users", action: "profile", id: @submission.user
+              = link_to "#{@submission.user.login}", stat_user_path(@submission.user)
               = @submission.user.full_name
             - else
               = "(n/a)"
@@ -38,7 +38,7 @@
             %strong Task
           %td
             - if @submission.problem!=nil
-              = link_to "(#{@submission.problem.name})", controller: "problems", action: "stat", id: @submission.problem
+              = link_to "[#{@submission.problem.name}]", stat_problem_path(@submission.problem)
               = @submission.problem.full_name
             - else
               = "(n/a)"

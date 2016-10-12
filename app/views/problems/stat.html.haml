@@ -41,8 +41,8 @@
         - next unless sub.user
         - row_odd,curr = !row_odd, sub.user if curr != sub.user
         %tr{class: row_odd ? "info-odd" : "info-even"}
-          %td= link_to sub.id, controller: 'graders', action: 'submission', id: sub.id
-          %td= link_to sub.user.login, controller: :users, action: :profile, id: sub.user.id
+          %td= link_to sub.id, submission_path(sub)
+          %td= link_to sub.user.login, stat_user_path(sub.user)
           %td= sub.user.full_name
           %td= time_ago_in_words(sub.submitted_at) + " ago"
           %td= sub.points
