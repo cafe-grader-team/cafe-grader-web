@@ -11,7 +11,7 @@
           Select problem(s) that we wish to know the score.
         = label_tag :problem_id, "Problems"
         = select_tag 'problem_id[]',
-            options_for_select(Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}),
+            options_for_select(Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]},params[:problem_id]),
             { class: 'select2 form-control', multiple: "true" }
   .col-md-4
     .panel.panel-primary
@@ -41,8 +41,8 @@
             Only enabled users
 .row
   .col-md-12
-    = button_tag 'Show', class: "btn btn-primary btn-large"
-    = button_tag 'Download CSV', class: "btn btn-primary btn-large"
+    = button_tag 'Show', class: "btn btn-primary btn-large", value: "show"
+    = button_tag 'Download CSV', class: "btn btn-primary btn-large", value: "download"
 
 - if @scorearray
   %h2 Result
