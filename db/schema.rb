@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20161008050135) do
+ActiveRecord::Schema.define(:version => 20161014091417) do
 
   create_table "announcements", :force => true do |t|
     t.string   "author"
@@ -235,6 +235,19 @@ ActiveRecord::Schema.define(:version => 20161008050135) do
   end
 
   add_index "test_requests", ["user_id", "problem_id"], :name => "index_test_requests_on_user_id_and_problem_id"
+
+  create_table "testcases", :force => true do |t|
+    t.integer  "problem_id"
+    t.integer  "num"
+    t.integer  "group"
+    t.integer  "score"
+    t.text     "input"
+    t.text     "sol"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  add_index "testcases", ["problem_id"], :name => "index_testcases_on_problem_id"
 
   create_table "user_contest_stats", :force => true do |t|
     t.integer  "user_id"

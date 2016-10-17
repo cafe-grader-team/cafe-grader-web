@@ -1,3 +1,5 @@
+require 'csv'
+
 class ReportController < ApplicationController
 
   before_filter :authenticate
@@ -23,7 +25,7 @@ class ReportController < ApplicationController
     @scorearray = calculate_max_score(@problems, @users,0,0,true)
 
     #rencer accordingly
-    if params[:commit] == 'download csv' then
+    if params[:button] == 'download' then
       csv = gen_csv_from_scorearray(@scorearray,@problems)
       send_data csv, filename: 'max_score.csv'
     else
@@ -57,7 +59,7 @@ class ReportController < ApplicationController
     @scorearray = calculate_max_score(@problems, @users,since_id,until_id)
 
     #rencer accordingly
-    if params[:commit] == 'download csv' then
+    if params[:button] == 'download' then
       csv = gen_csv_from_scorearray(@scorearray,@problems)
       send_data csv, filename: 'max_score.csv'
     else
@@ -483,6 +485,37 @@ ORDER BY submitted_at
       scorearray << ustat
     end
     return scorearray
+  end
+
+  def gen_csv_from_scorearray(scorearray,problem)
+    CSV.generate do |csv|
+      #add header
+      header = ['User','Name', 'Activated?', 'Logged in', 'Contest']
+      problem.each { |p| header << p.name }
+      header += ['Total','Passed']
+      csv << header
+      #add data
+      scorearray.each do |sc|
+        total = num_passed = 0
+        row = Array.new
+        sc.each_index do |i|
+          if i == 0
+            row << sc[i].login
+            row << sc[i].full_name
+            row << sc[i].activated
+            row << (sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no')
+            row << sc[i].contests.collect {|c| c.name}.join(', ')
+          else
+            row << sc[i][0]
+            total += sc[i][0]
+            num_passed += 1 if sc[i][1]
+          end
+        end
+        row << total 
+        row << num_passed
+        csv << row
+      end
+    end
   end
 
 end
