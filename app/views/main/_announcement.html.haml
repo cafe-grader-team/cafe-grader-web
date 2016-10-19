@@ -1,7 +1,7 @@
 %li.list-group-item
   %strong
     = announcement.title
-  - if @current_user.admin?
+  - if @current_user and @current_user.admin?
     = link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-xs btn-default'
   %small= "(updated #{time_ago_in_words(announcement.updated_at)} ago on #{announcement.updated_at})"
 
