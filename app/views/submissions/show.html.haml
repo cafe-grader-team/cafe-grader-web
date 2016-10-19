@@ -77,6 +77,11 @@
           %td.text-right
             %strong Memory (kb)
           %td #{@submission.peak_memory}
+        %tr
+          %td.text-right
+            %strong Compiler result
+          %td
+            %pre= @submission.compiler_message
         - if session[:admin]
           %tr
             %td.text-right
