@@ -521,7 +521,7 @@ class UserAdminController < ApplicationController
             row << sc[i].login
             row << sc[i].full_name
             row << sc[i].activated
-            row << (sc[i].try(:contest_stat).try(:started_at).nil? 'no' : 'yes')
+            row << (sc[i].try(:contest_stat).try(:started_at).nil? ? 'no' : 'yes')
             row << sc[i].contests.collect {|c| c.name}.join(', ')
           else
             row << sc[i][0]

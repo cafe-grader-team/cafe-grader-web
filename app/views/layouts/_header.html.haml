@@ -32,6 +32,7 @@
                 $("#countdown").countdown({until: "+#{@current_user.contest_time_left.to_i}s", layout: 'Time left: {hnn}:{mnn}:{snn}'}); 
           / admin section
           - if (@current_user!=nil) and (session[:admin])
+            / management
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
                 Manage
@@ -47,12 +48,14 @@
                 %li.divider{role: 'separator'}
                 = add_menu( 'Sites', 'sites', 'index')
                 = add_menu( 'Contests', 'contest_management', 'index')
+            / report
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
                 Report
                 %span.caret
               %ul.dropdown-menu
-                = add_menu( 'Results', 'report', 'current_score')
+                = add_menu( 'Current Score', 'report', 'current_score')
+                = add_menu( 'Score Report', 'report', 'max_score')
                 = add_menu( 'Report', 'report', 'multiple_login')
             - if (ungraded = Submission.where('graded_at is null').where('submitted_at < ?', 1.minutes.ago).count) > 0
               =link_to "#{ungraded} backlogs!",
