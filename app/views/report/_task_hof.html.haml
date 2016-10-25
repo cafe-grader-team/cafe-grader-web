@@ -44,7 +44,7 @@
             %tr
               %td.info_param Best Runtime
               %td
-                by #{link_to @best[:runtime][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
+                by #{link_to @best[:runtime][:user], stat_user_path(@best[:runtime][:user_id])} 
                 %br
                 using <span class="text-success">#{@best[:runtime][:lang]}</span> 
                 %br
@@ -62,7 +62,7 @@
                   title: "This counts only for submission with 100% score.  Right now, java is excluded from memory usage competition. (Because it always uses 2GB memory...)"} 
                   [?]
               %td
-                by #{link_to @best[:memory][:user], controller:'users', action:'profile', id:@best[:memory][:user_id]} 
+                by #{link_to @best[:memory][:user], stat_user_path(@best[:memory][:user_id])} 
                 %br
                 using <span class="text-success">#{@best[:memory][:lang]}</span> 
                 %br
@@ -74,7 +74,7 @@
             %tr
               %td.info_param Shortest Code
               %td
-                by #{link_to @best[:length][:user], controller:'users', action:'profile', id:@best[:length][:user_id]} 
+                by #{link_to @best[:length][:user], stat_user_path(@best[:length][:user_id])} 
                 %br
                 using <span class="text-success">#{@best[:length][:lang]}</span> 
                 %br
@@ -87,7 +87,7 @@
               %td.info_param First solver
               %td
                 - if @best[:first][:user] != '(NULL)'
-                  #{link_to @best[:first][:user], controller:'users', action:'profile', id:@best[:first][:user_id]} is the first solver 
+                  #{link_to @best[:first][:user], stat_user_path(@best[:first][:user_id])} is the first solver 
                   %br
                   using <span class="text-success">#{@best[:first][:lang]}</span> 
                   %br
@@ -113,23 +113,23 @@
               %tr
                 %td= lang
                 %td
-                  = link_to value[:runtime][:user], controller: 'users', action: 'profile', id: value[:runtime][:user_id]
+                  = link_to value[:runtime][:user], stat_user_path(value[:runtime][:user_id])
                   %br
                   = "#{(value[:runtime][:value] * 1000).to_i} @"
                   = link_to "#" + value[:runtime][:sub_id].to_s, submission_path( value[:runtime][:sub_id])
                 %td
-                  = link_to value[:memory][:user], controller: 'users', action: 'profile', id: value[:memory][:user_id]
+                  = link_to value[:memory][:user], stat_user_path( value[:memory][:user_id])
                   %br
                   = "#{number_with_delimiter(value[:memory][:value])} @"
                   = link_to "#" + value[:memory][:sub_id].to_s, submission_path(value[:memory][:sub_id])
                 %td
-                  = link_to value[:length][:user], controller: 'users', action: 'profile', id: value[:length][:user_id]
+                  = link_to value[:length][:user], stat_user_path(value[:length][:user_id])
                   %br
                   = "#{value[:length][:value]} @"
                   = link_to "#" + value[:length][:sub_id].to_s, submission_path(value[:length][:sub_id])
                 %td
                   - if value[:first][:user] != '(NULL)' #TODO: i know... this is wrong...
-                    = link_to value[:first][:user], controller: 'users', action: 'profile', id: value[:first][:user_id]
+                    = link_to value[:first][:user], stat_user_path(value[:first][:user_id])
                     %br
                     = "#{value[:first][:value]} @"
                     = link_to "#" + value[:first][:sub_id].to_s, submission_path( value[:first][:sub_id])
