@@ -6,6 +6,8 @@
 
 //%div.highlight{:style => "border: 1px solid black;"}
 //=@formatted_code.html_safe
+
+
 .containter
   .row
     .col-md-7
@@ -81,7 +83,19 @@
           %td.text-right
             %strong Compiler result
           %td
-            %pre= @submission.compiler_message
+            %button.btn.btn-info.btn-xs{type: 'button', data: {toggle: 'modal', target: '#compiler'}}
+              view
+            .modal.fade#compiler{tabindex: -1,role: 'dialog'}
+              .modal-dialog.modal-lg{role:'document'}
+                .modal-content
+                  .modal-header
+                    %button.close{type: 'button', data: {dismissed: :modal}, aria: {label: 'close'}}
+                      %span{aria: {hidden: 'true'}, data: {dismiss: 'modal'}} &times;
+                    %h4 Compiler message
+                  .modal-body
+                    %pre= @submission.compiler_message
+                  .modal-footer
+                    %button.btn.btn-default{type: 'button', data: {dismiss: 'modal'}} Close
         - if session[:admin]
           %tr
             %td.text-right

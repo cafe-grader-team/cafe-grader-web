@@ -84,7 +84,7 @@ Total #{@user_count} users |
     %th
   - for user in @users
     %tr
-      %td= link_to user.login, controller: :users, :action => 'profile', :id => user
+      %td= link_to user.login, stat_user_path(user)
       %td= user.full_name
       %td= user.email
       %td= user.remark
