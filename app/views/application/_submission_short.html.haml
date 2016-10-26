@@ -2,7 +2,7 @@
 - if submission.nil?
   = "-"
 - else
-  - if submission.graded_at.nil?
+  - unless submission.graded_at
     = t 'main.submitted_at'
     = format_short_time(submission.submitted_at.localtime)
   - else
