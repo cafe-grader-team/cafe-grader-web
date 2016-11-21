@@ -44,9 +44,9 @@ CafeGrader::Application.routes.draw do
     end
   end
 
-  match 'tasks/view/:file.:ext' => 'tasks#view'
-  match 'tasks/download/:id/:file.:ext' => 'tasks#download'
-  match 'heartbeat/:id/edit' => 'heartbeat#edit'
+  get 'tasks/view/:file.:ext' => 'tasks#view'
+  get 'tasks/download/:id/:file.:ext' => 'tasks#download'
+  get 'heartbeat/:id/edit' => 'heartbeat#edit'
 
   #main
   get "main/list"
@@ -63,11 +63,11 @@ CafeGrader::Application.routes.draw do
   get 'graders/list', to: 'graders#list', as: 'grader_list'
   
 
-  match 'heartbeat/:id/edit' => 'heartbeat#edit'
+  get 'heartbeat/:id/edit' => 'heartbeat#edit'
 
   # See how all your routes lay out with "rake routes"
 
   # This is a legacy wild controller route that's not recommended for RESTful applications.
   # Note: This route will make all actions in every controller accessible via GET requests.
-  match ':controller(/:action(/:id))(.:format)'
+  match ':controller(/:action(/:id))(.:format)', via:  [:get, :post]
 end
