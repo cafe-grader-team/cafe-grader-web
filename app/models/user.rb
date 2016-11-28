@@ -31,7 +31,7 @@ class User < ActiveRecord::Base
 
   validates_presence_of :login
   validates_uniqueness_of :login
-  validates_format_of :login, :with => /^[\_A-Za-z0-9]+$/
+  validates_format_of :login, :with => /\A[\_A-Za-z0-9]+\z/
   validates_length_of :login, :within => 3..30
 
   validates_presence_of :full_name

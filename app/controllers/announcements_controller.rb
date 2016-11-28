@@ -66,7 +66,7 @@ class AnnouncementsController < ApplicationController
     @announcement = Announcement.find(params[:id])
 
     respond_to do |format|
-      if @announcement.update_attributes(params[:announcement])
+      if @announcement.update_attributes(announcement_params)
         flash[:notice] = 'Announcement was successfully updated.'
         format.html { redirect_to(@announcement) }
         format.js   {}
@@ -108,4 +108,10 @@ class AnnouncementsController < ApplicationController
       format.xml  { head :ok }
     end
   end
+
+  private
+
+    def announcement_params
+      params.require(:announcement).permit(:author, :body, :published, :frontpage, :contest_only,:title, :note)
+    end
 end

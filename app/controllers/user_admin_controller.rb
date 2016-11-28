@@ -118,7 +118,7 @@ class UserAdminController < ApplicationController
 
   def update
     @user = User.find(params[:id])
-    if @user.update_attributes(params[:user])
+    if @user.update_attributes(user_params)
       flash[:notice] = 'User was successfully updated.'
       redirect_to :action => 'show', :id => @user
     else
@@ -535,4 +535,9 @@ class UserAdminController < ApplicationController
       end
     end
   end
+
+  private
+    def user_params
+      params.require(:user).permit(:login,:full_name,:hashed_password,:salt,:alias,:email,:site_id,:country_id,:activated,:enabled,:remark,:last_ip,:section)
+    end
 end
