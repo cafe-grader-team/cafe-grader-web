@@ -6,7 +6,7 @@ class Problem < ActiveRecord::Base
   has_many :testcases, :dependent => :destroy
 
   validates_presence_of :name
-  validates_format_of :name, :with => /^\w+$/
+  validates_format_of :name, :with => /\A\w+\z/
   validates_presence_of :full_name
 
   scope :available, :conditions => {:available => true}

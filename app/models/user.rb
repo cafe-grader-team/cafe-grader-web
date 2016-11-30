@@ -8,26 +8,24 @@ class User < ActiveRecord::Base
 
   has_and_belongs_to_many :roles
 
-  has_many :test_requests, :order => "submitted_at DESC"
+  has_many :test_requests, -> {order(submitted_at: DESC)}
 
-  has_many :messages, 
+  has_many :messages, -> { order(created_at: DESC) },
            :class_name => "Message",
-           :foreign_key => "sender_id", 
-           :order => 'created_at DESC'
+           :foreign_key => "sender_id"
 
-  has_many :replied_messages, 
+  has_many :replied_messages, -> { order(created_at: DESC) },
            :class_name => "Message",
-           :foreign_key => "receiver_id", 
-           :order => 'created_at DESC'
+           :foreign_key => "receiver_id"
 
   has_one :contest_stat, :class_name => "UserContestStat", :dependent => :destroy
 
   belongs_to :site
   belongs_to :country
 
-  has_and_belongs_to_many :contests, :uniq => true, :order => 'name'
+  has_and_belongs_to_many :contests, -> { order(:name); uniq}
 
-  scope :activated_users, :conditions => {:activated => true}
+  scope :activated_users, -> {where activated: true}
 
   validates_presence_of :login
   validates_uniqueness_of :login

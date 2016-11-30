@@ -16,8 +16,7 @@
 require 'fileutils'
 
 class TestRequest < Task
-
-  set_table_name "test_requests"
+  self.table_name = "test_requests"
 
   belongs_to :user
   belongs_to :problem
