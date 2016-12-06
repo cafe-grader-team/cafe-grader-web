@@ -5,8 +5,7 @@ class ConfigurationsController < ApplicationController
 
 
   def index
-    @configurations = GraderConfiguration.find(:all,
-                                         :order => '`key`')
+    @configurations = GraderConfiguration.order(:key)
     @group = GraderConfiguration.pluck("grader_configurations.key").map{ |x| x[0...(x.index('.'))] }.uniq.sort
   end
 

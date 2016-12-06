@@ -45,7 +45,7 @@ class MainController < ApplicationController
     #   @hidelogin = true
     # end
 
-    @announcements = Announcement.find_for_frontpage
+    @announcements = Announcement.frontpage
     render :action => 'login', :layout => 'empty'
   end
 
@@ -217,9 +217,9 @@ class MainController < ApplicationController
 
   def prepare_announcements(recent=nil)
     if GraderConfiguration.show_tasks_to?(@user)
-      @announcements = Announcement.find_published(true)
+      @announcements = Announcement.published(true)
     else
-      @announcements = Announcement.find_published
+      @announcements = Announcement.published
     end
     if recent!=nil
       recent_id = recent.to_i

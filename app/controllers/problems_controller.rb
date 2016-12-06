@@ -7,7 +7,7 @@ class ProblemsController < ApplicationController
   in_place_edit_for :problem, :full_score
 
   def index
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -135,8 +135,7 @@ class ProblemsController < ApplicationController
   end
 
   def turn_all_off
-    Problem.find(:all,
-                 :conditions => "available = 1").each do |problem|
+    Problem.available.all.each do |problem|
       problem.available = false
       problem.save
     end
@@ -144,8 +143,7 @@ class ProblemsController < ApplicationController
   end
 
   def turn_all_on
-    Problem.find(:all,
-                 :conditions => "available = 0").each do |problem|
+    Problem.where.not(available: true).each do |problem|
       problem.available = true
       problem.save
     end
@@ -176,7 +174,7 @@ class ProblemsController < ApplicationController
   end
 
   def manage
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   def do_manage

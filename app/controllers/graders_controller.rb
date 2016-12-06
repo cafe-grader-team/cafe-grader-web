@@ -35,10 +35,8 @@ class GradersController < ApplicationController
 
     @terminated_processes = GraderProcess.find_terminated_graders
     
-    @last_task = Task.find(:first,
-                           :order => 'created_at DESC')
-    @last_test_request = TestRequest.find(:first,
-                                          :order => 'created_at DESC')
+    @last_task = Task.last
+    @last_test_request = TestRequest.last
     @submission = Submission.order("id desc").limit(20)
     @backlog_submission = Submission.where('graded_at is null')
   end
@@ -57,7 +55,7 @@ class GradersController < ApplicationController
   end
 
   def clear_all
-    GraderProcess.find(:all).each do |p|
+    GraderProcess.all.each do |p|
       p.destroy
     end
     redirect_to :action => 'list'

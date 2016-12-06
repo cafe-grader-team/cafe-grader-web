@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
 
   def admin_authorization
     return false unless authenticate
-    user = User.find(session[:user_id], :include => ['roles'])
+    user = User.includes(:roles).find(session[:user_id])
     unless user.admin?
       unauthorized_redirect
       return false

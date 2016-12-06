@@ -175,14 +175,14 @@ class User < ActiveRecord::Base
   end
 
   def self.find_non_admin_with_prefix(prefix='')
-    users = User.find(:all)
+    users = User.all
     return users.find_all { |u| !(u.admin?) and u.login.index(prefix)==0 }
   end
 
   # Contest information
 
   def self.find_users_with_no_contest()
-    users = User.find(:all)
+    users = User.all
     return users.find_all { |u| u.contests.length == 0 }
   end
 
@@ -281,7 +281,7 @@ class User < ActiveRecord::Base
 
   def available_problems
     if not GraderConfiguration.multicontests?
-      return Problem.find_available_problems
+      return Problem.available_problems
     else
       contest_problems = []
       pin = {}

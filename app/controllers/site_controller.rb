@@ -4,7 +4,7 @@ class SiteController < ApplicationController
 
   def login
     # Site administrator login
-    @countries = Country.find(:all, :include => :sites)
+    @countries = Country.includes(:sites).all
     @country_select = @countries.collect { |c| [c.name, c.id] }
     
     @country_select_with_all = [['Any',0]]
