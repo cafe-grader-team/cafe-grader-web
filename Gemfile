@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~>4.1.0'
+gem 'rails', '~>4.2.0'
 gem 'activerecord-session_store'
 
 gem 'select2-rails'
@@ -8,7 +8,7 @@ gem 'select2-rails'
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
-gem 'mysql2', '~> 0.3.0'
+gem 'mysql2'
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -77,5 +77,5 @@ gem 'in_place_editing'
 gem 'verification', :git => 'https://github.com/sikachu/verification.git'
 
 group :test, :development do
-  gem 'rspec-rails', '~> 2.99.0'
+  gem 'rspec-rails'
 end

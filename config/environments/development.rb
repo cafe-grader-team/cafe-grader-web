@@ -36,7 +36,7 @@ CafeGrader::Application.configure do
   config.assets.debug = true
 
   # Prevents assets from rendering twice
-  config.serve_static_assets = true
+  config.serve_static_files = true
 
   config.eager_load = false
 end
