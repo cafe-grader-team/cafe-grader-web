@@ -1,6 +1,6 @@
 class SubmissionsController < ApplicationController
   before_filter :authenticate
-  before_filter :submission_authorization, only: [:show, :direct_edit_submission]
+  before_filter :submission_authorization, only: [:show, :direct_edit_submission, :download]
 
   # GET /submissions
   # GET /submissions.json
@@ -33,6 +33,18 @@ class SubmissionsController < ApplicationController
     SubmissionViewLog.create(user_id: session[:user_id],submission_id: @submission.id) unless user.admin?
   end
 
+  def download
+    @submission = Submission.find(params[:id])
+    send_data(@submission.source, {:filename => @submission.download_filename, :type => 'text/plain'})
+  end
+
+  def compiler_msg
+    @submission = Submission.find(params[:id])
+    respond_to do |format|
+      format.js
+    end
+  end
+
   #on-site new submission on specific problem
   def direct_edit_problem
     @problem = Problem.find(params[:problem_id])
@@ -62,6 +74,7 @@ class SubmissionsController < ApplicationController
 
 
 protected
+
   def submission_authorization
     #admin always has privileged
     if @current_user.admin?

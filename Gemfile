@@ -9,6 +9,7 @@ gem 'select2-rails'
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
 gem 'mysql2'
+gem 'sqlite3'
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -45,7 +46,7 @@ gem 'best_in_place', '~> 3.0.1'
 
 # jquery addition
 gem 'jquery-rails'
-gem 'jquery-ui-sass-rails'
+gem 'jquery-ui-rails'
 gem 'jquery-timepicker-addon-rails'
 gem 'jquery-tablesorter'
 gem 'jquery-countdown-rails'

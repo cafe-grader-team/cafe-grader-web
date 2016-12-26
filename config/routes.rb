@@ -37,6 +37,10 @@ CafeGrader::Application.routes.draw do
   end
 
   resources :submissions do
+    member do
+      get 'download'
+      get 'compiler_msg'
+    end
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'
       get 'direct_edit_problem/:problem_id', to: 'submissions#direct_edit_problem', as: 'direct_edit_problem'
