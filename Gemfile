@@ -13,15 +13,14 @@ gem 'sqlite3'
 
 # Gems used only for assets and not required
 # in production environments by default.
-group :assets do
-  gem 'sass-rails'
-  gem 'coffee-rails'
+gem 'sass-rails'
+gem 'coffee-rails'
 
   # See https://github.com/sstephenson/execjs#readme for more supported runtimes
   # gem 'therubyracer', :platforms => :ruby
 
-  gem 'uglifier'
-end
+gem 'uglifier'
+
 
 # gem 'prototype-rails'
 
@@ -77,6 +76,3 @@ gem 'dynamic_form'
 gem 'in_place_editing'
 gem 'verification', :git => 'https://github.com/sikachu/verification.git'
 
-group :test, :development do
-  gem 'rspec-rails'
-end

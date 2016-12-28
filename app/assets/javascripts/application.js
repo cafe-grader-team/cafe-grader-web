@@ -12,7 +12,7 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require jquery.ui.all
+//= require jquery-ui
 //= require bootstrap-sprockets
 //= require moment
 //= require bootstrap-sortable
@@ -28,9 +28,6 @@
 //= require custom
 //= require jquery.countdown
 //-------------- addition from local_jquery -----------
-//= require jquery.ui.datepicker
-//= require jquery.ui.slider
-//= require jquery-ui-timepicker-addon
 //= require jquery-tablesorter
 //= require best_in_place
 //= require best_in_place.jquery-ui

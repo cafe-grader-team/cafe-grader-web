@@ -1,10 +1,10 @@
 GIT
   remote: https://github.com/sikachu/verification.git
-  revision: e6fe084ce16b7b5a4b1cdfca5374d125fd034a0f
+  revision: ff31697b940d7b0e2ec65f08764215c96104e76d
   specs:
     verification (1.0.3)
-      actionpack (>= 3.0.0, < 5.0)
-      activesupport (>= 3.0.0, < 5.0)
+      actionpack (>= 3.0.0, < 5.1)
+      activesupport (>= 3.0.0, < 5.1)
 
 GEM
   remote: https://rubygems.org/
@@ -51,8 +51,8 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
-    arel (6.0.3)
-    autoprefixer-rails (6.5.3.1)
+    arel (6.0.4)
+    autoprefixer-rails (6.6.0)
       execjs
     best_in_place (3.0.3)
       actionpack (>= 3.2)
@@ -68,9 +68,8 @@ GEM
     coffee-script (2.4.1)
       coffee-script-source
       execjs
-    coffee-script-source (1.11.1)
-    concurrent-ruby (1.0.2)
-    diff-lcs (1.2.5)
+    coffee-script-source (1.12.2)
+    concurrent-ruby (1.0.4)
     dynamic_form (1.1.4)
     erubis (2.7.0)
     execjs (2.7.0)
@@ -96,13 +95,12 @@ GEM
       rails-dom-testing (>= 1, < 3)
       railties (>= 4.2.0)
       thor (>= 0.14, < 2.0)
-    jquery-tablesorter (1.23.1)
+    jquery-tablesorter (1.23.3)
       railties (>= 3.2, < 6)
     jquery-timepicker-addon-rails (1.4.1)
       railties (>= 3.1)
-    jquery-ui-rails (4.0.3)
-      jquery-rails
-      railties (>= 3.1.0)
+    jquery-ui-rails (6.0.1)
+      railties (>= 3.2.16)
     json (1.8.3)
     loofah (2.0.3)
       nokogiri (>= 1.5.9)
@@ -136,9 +134,9 @@ GEM
       sprockets-rails
     rails-deprecated_sanitizer (1.0.3)
       activesupport (>= 4.2.0.alpha)
-    rails-dom-testing (1.0.7)
+    rails-dom-testing (1.0.8)
       activesupport (>= 4.2.0.beta, < 5.0)
-      nokogiri (~> 1.6.0)
+      nokogiri (~> 1.6)
       rails-deprecated_sanitizer (>= 1.0.1)
     rails-html-sanitizer (1.0.3)
       loofah (~> 2.0)
@@ -152,26 +150,9 @@ GEM
     rake (12.0.0)
     rdiscount (2.2.0.1)
     rouge (2.0.7)
-    rspec-core (3.5.4)
-      rspec-support (~> 3.5.0)
-    rspec-expectations (3.5.0)
-      diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.5.0)
-    rspec-mocks (3.5.0)
-      diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.5.0)
-    rspec-rails (3.5.2)
-      actionpack (>= 3.0)
-      activesupport (>= 3.0)
-      railties (>= 3.0)
-      rspec-core (~> 3.5.0)
-      rspec-expectations (~> 3.5.0)
-      rspec-mocks (~> 3.5.0)
-      rspec-support (~> 3.5.0)
-    rspec-support (3.5.0)
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
-    sass (3.4.22)
+    sass (3.4.23)
     sass-rails (5.0.6)
       railties (>= 4.0.0, < 6)
       sass (~> 3.1)
@@ -181,7 +162,7 @@ GEM
     select2-rails (4.0.3)
       thor (~> 0.14)
     sexp_processor (4.7.0)
-    sprockets (3.7.0)
+    sprockets (3.7.1)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
     sprockets-rails (3.2.0)
@@ -228,7 +209,6 @@ DEPENDENCIES
   rails_bootstrap_sortable
   rdiscount
   rouge
-  rspec-rails
   sass-rails
   select2-rails
   sqlite3

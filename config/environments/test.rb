@@ -36,4 +36,8 @@ CafeGrader::Application.configure do
   config.active_support.deprecation = :stderr
 
   config.eager_load = false
+
+  #test order
+  config.active_support.test_order = :sorted
+
 end
