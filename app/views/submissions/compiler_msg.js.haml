@@ -1,3 +1,4 @@
-:javascript
-  $("#compiler_msg").html("#{j @submissionhcompiler_msg}")
-  
+:plain
+  $("#compiler_msg").html("#{j @submission.compiler_message}");
+  $("#compiler").modal();
+
