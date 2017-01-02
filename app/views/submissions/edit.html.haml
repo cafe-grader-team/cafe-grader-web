@@ -28,10 +28,11 @@
       .panel.panel-info
         .panel-heading
           Latest Submission Status
+          = link_to "Refresh",get_latest_submission_status_submissions_path(@submission.user,@problem), class: "btn btn-default btn-sm", remote: true
         .panel-body
           - if @submission
             = render :partial => 'submission_short',
-              :locals => {:submission => @submission, :problem_name => @problem.name }
+              :locals => {submission: @submission, problem_name: @problem.name, problem_id: @problem.id }
   .row
     .col-md-12
       %h2 Console

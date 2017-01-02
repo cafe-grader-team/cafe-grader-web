@@ -9,18 +9,14 @@ class ReportController < ApplicationController
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
-    if GraderConfiguration["right.user_view_submission"]
-      return true;
-    end
-
-    admin_authorization
+    admin_authorization unless GraderConfiguration["right.user_view_submission"]
   }
 
   def max_score
   end
 
   def current_score
-    @problems = Problem.find_available_problems
+    @problems = Problem.available_problems
     @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
     @scorearray = calculate_max_score(@problems, @users,0,0,true)
 
@@ -46,7 +42,7 @@ class ReportController < ApplicationController
 
     #users
     @users = if params[:user] == "all" then 
-               User.find(:all, :include => [:contests, :contest_stat]) 
+               User.includes(:contests).includes(:contest_stat)
              else 
                User.includes(:contests).includes(:contest_stat).where(enabled: true)
              end
@@ -73,9 +69,9 @@ class ReportController < ApplicationController
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) 
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new

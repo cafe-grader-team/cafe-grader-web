@@ -53,6 +53,7 @@ CONFIGURATIONS =
      :description => 'If the server is in contest mode and this option is true, on the log in of the admin a menu for site selections is shown.'
    },
 
+   #---------------------------- right --------------------------------
    {
      :key => 'right.user_hall_of_fame',
      :value_type => 'boolean',
@@ -72,6 +73,20 @@ CONFIGURATIONS =
      :value_type => 'boolean',
      :default_value => 'false',
      :description => 'If true, any user can view submissions of every one.'
+   },
+
+   {
+     :key => 'right.bypass_agreement',
+     :value_type => 'boolean',
+     :default_value => 'true',
+     :description => 'When false, a user must accept usage agreement before login'
+   },
+
+   {
+     :key => 'right.heartbeat_response',
+     :value_type => 'string',
+     :default_value => 'OK',
+     :description => 'Heart beat response text'
    },
 
    # If Configuration['system.online_registration'] is true, the

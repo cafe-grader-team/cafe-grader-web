@@ -23,10 +23,8 @@ class Message < ActiveRecord::Base
   end
 
   def self.find_all_system_unreplied_messages
-    self.find(:all, 
-              :conditions => 'ISNULL(receiver_id) ' + 
-                             'AND (ISNULL(replied) OR replied=0)',
-              :order => 'created_at')
+    where('ISNULL(receiver_id) ' + 
+          'AND (ISNULL(replied) OR replied=0)')
   end
 
   def self.build_replying_message_hierarchy(*args)

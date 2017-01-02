@@ -152,7 +152,7 @@ class GraderConfiguration < ActiveRecord::Base
 
   def self.read_config
     GraderConfiguration.config_cache = {}
-    GraderConfiguration.find(:all).each do |conf|
+    GraderConfiguration.all.each do |conf|
       key = conf.key
       val = conf.value
       GraderConfiguration.config_cache[key] = GraderConfiguration.convert_type(val,conf.value_type)

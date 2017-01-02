@@ -29,7 +29,7 @@ class UserAdminController < ApplicationController
   end
 
   def active
-    sessions = ActiveRecord::SessionStore::Session.find(:all, :conditions => ["updated_at >= ?", 60.minutes.ago])
+    sessions = ActiveRecord::SessionStore::Session.where("updated_at >= ?", 60.minutes.ago)
     @users = []
     sessions.each do |session|
       if session.data[:user_id]
@@ -118,7 +118,7 @@ class UserAdminController < ApplicationController
 
   def update
     @user = User.find(params[:id])
-    if @user.update_attributes(params[:user])
+    if @user.update_attributes(user_params)
       flash[:notice] = 'User was successfully updated.'
       redirect_to :action => 'show', :id => @user
     else
@@ -135,9 +135,9 @@ class UserAdminController < ApplicationController
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) 
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
@@ -164,9 +164,9 @@ class UserAdminController < ApplicationController
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.find(:all, :include => [:contests, :contest_stat])
+    @users = User.includes(:contests).includes(:contest_stat).all
     @scorearray = Array.new
     #set up range from param
     since_id = params.fetch(:since_id, 0).to_i
@@ -201,7 +201,7 @@ class UserAdminController < ApplicationController
   end
 
   def random_all_passwords
-    users = User.find(:all)
+    users = User.all
     @prefix = params[:prefix] || ''
     @non_admin_users = User.find_non_admin_with_prefix(@prefix)
     @changed = false
@@ -324,7 +324,7 @@ class UserAdminController < ApplicationController
   # admin management
 
   def admin
-    @admins = User.find(:all).find_all {|user| user.admin? }
+    @admins = User.all.find_all {|user| user.admin? }
   end
 
   def grant_admin
@@ -535,4 +535,9 @@ class UserAdminController < ApplicationController
       end
     end
   end
+
+  private
+    def user_params
+      params.require(:user).permit(:login,:full_name,:hashed_password,:salt,:alias,:email,:site_id,:country_id,:activated,:enabled,:remark,:last_ip,:section)
+    end
 end

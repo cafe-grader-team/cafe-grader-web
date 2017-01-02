@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~>3.2'
+gem 'rails', '~>4.2.0'
+gem 'activerecord-session_store'
 
 gem 'select2-rails'
 
@@ -8,20 +9,20 @@ gem 'select2-rails'
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
 gem 'mysql2'
+gem 'sqlite3'
 
 # Gems used only for assets and not required
 # in production environments by default.
-group :assets do
-  gem 'sass-rails',   '~> 3.2.6'
-  gem 'coffee-rails', '~> 3.2.2'
+gem 'sass-rails'
+gem 'coffee-rails'
 
   # See https://github.com/sstephenson/execjs#readme for more supported runtimes
   # gem 'therubyracer', :platforms => :ruby
 
-  gem 'uglifier'
-end
+gem 'uglifier'
 
-gem 'prototype-rails'
+
+# gem 'prototype-rails'
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
@@ -44,7 +45,7 @@ gem 'best_in_place', '~> 3.0.1'
 
 # jquery addition
 gem 'jquery-rails'
-gem 'jquery-ui-sass-rails'
+gem 'jquery-ui-rails'
 gem 'jquery-timepicker-addon-rails'
 gem 'jquery-tablesorter'
 gem 'jquery-countdown-rails'
@@ -75,6 +76,3 @@ gem 'dynamic_form'
 gem 'in_place_editing'
 gem 'verification', :git => 'https://github.com/sikachu/verification.git'
 
-group :test, :development do
-  gem 'rspec-rails', '~> 2.99.0'
-end

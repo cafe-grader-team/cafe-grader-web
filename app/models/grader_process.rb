@@ -1,11 +1,7 @@
 class GraderProcess < ActiveRecord::Base
   
   def self.find_by_host_and_pid(host,pid)
-    return GraderProcess.find(:first, 
-                              :conditions => { 
-                                :host => host, 
-                                :pid => pid
-                              })
+    return GraderProcess.where(host:host).where(pid: pid).first
   end
   
   def self.register(host,pid,mode)
@@ -27,20 +23,15 @@ class GraderProcess < ActiveRecord::Base
   end
  
   def self.find_running_graders
-    GraderProcess.find(:all,
-                       :conditions => {:terminated => 0})
+    where(terminated: false)
   end
 
   def self.find_terminated_graders
-    GraderProcess.find(:all,
-                       :conditions => "`terminated`")
+    where(terminated: true)
   end
 
   def self.find_stalled_process
-    GraderProcess.find(:all,
-                       :conditions => ["(`terminated` = 0) AND active AND " + 
-                                       "(updated_at < ?)",
-                                       Time.now.gmtime - GraderProcess.stalled_time])
+    where(terminated: false).where(active: true).where("updated_at < ?",Time.now.gmtime - GraderProcess.stalled_time)
   end
   
   def report_active(task=nil)
