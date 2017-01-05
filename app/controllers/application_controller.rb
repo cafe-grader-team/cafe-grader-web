@@ -37,6 +37,15 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def testcase_authorization
+    #admin always has privileged
+    if @current_user.admin?
+      return true
+    end
+
+    unauthorized_redirect if GraderConfiguration["right.view_testcase"]
+  end
+
   protected
 
   def authenticate

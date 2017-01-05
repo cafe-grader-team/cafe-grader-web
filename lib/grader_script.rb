@@ -49,10 +49,25 @@ module GraderScript
       output = `#{cmd}`
 
       Dir.chdir(cur_dir)
-      
+
       return "import CMD: #{cmd}\n" + output
     end
     return ''
+  end
+
+  def self.call_import_testcase(problem_name)
+    if GraderScript.grader_control_enabled?
+      cur_dir = `pwd`.chomp
+      Dir.chdir(GRADER_ROOT_DIR)
+
+      script_name = File.join(GRADER_ROOT_DIR, "scripts/load_testcase")
+      cmd = "#{script_name} #{problem_name}"
+
+      output = `#{cmd}`
+
+      Dir.chdir(cur_dir)
+      return "Testcase import result:\n" + output
+    end
   end
 
 end

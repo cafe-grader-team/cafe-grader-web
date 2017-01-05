@@ -38,6 +38,9 @@ class TestdataImporter
     @log_msg << import_problem_pdf(dirname)
     @log_msg << import_full_score(dirname)
 
+    #import test data
+    @log_msg << GraderScript.call_import_testcase(@problem.name)
+
     return true
   end
 

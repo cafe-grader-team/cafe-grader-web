@@ -10,6 +10,7 @@ class GraderConfiguration < ActiveRecord::Base
   MULTICONTESTS_KEY = 'system.multicontests'
   CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
   MULTIPLE_IP_LOGIN_KEY = 'right.multiple_ip_login'
+  VIEW_TESTCASE = 'right.view_testcase'
 
   cattr_accessor :config_cache
   cattr_accessor :task_grading_info_cache
@@ -68,6 +69,10 @@ class GraderConfiguration < ActiveRecord::Base
 
   def self.show_grading_result
     return (get(SYSTEM_MODE_CONF_KEY)=='analysis')
+  end
+
+  def  self.show_testcase
+    return get(VIEW_TESTCASE)
   end
 
   def self.allow_test_request(user)
