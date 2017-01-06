@@ -1,15 +1,20 @@
 source 'https://rubygems.org'
 
+#rails
 gem 'rails', '~>4.2.0'
 gem 'activerecord-session_store'
 
-gem 'select2-rails'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
+#---------------- database ---------------------
+#the database
 gem 'mysql2'
+#for testing
 gem 'sqlite3'
+#for dumping database into yaml
+gem 'yaml_db'
 
 # Gems used only for assets and not required
 # in production environments by default.
@@ -21,7 +26,8 @@ gem 'coffee-rails'
 
 gem 'uglifier'
 
-
+gem 'haml'
+gem 'haml-rails'
 # gem 'prototype-rails'
 
 # To use ActiveModel has_secure_password
@@ -63,16 +69,20 @@ gem 'autoprefixer-rails'
 gem 'momentjs-rails'
 gem 'rails_bootstrap_sortable'
 
+#----------- user interface -----------------
+#select 2
+gem 'select2-rails'
 #ace editor
 gem 'ace-rails-ap'
+#paginator
+gem 'will_paginate', '~> 3.0.7'
 
-gem 'haml'
-gem 'haml-rails'
 gem 'mail'
 gem 'rdiscount'
-#gem 'test-unit'
-gem 'will_paginate', '~> 3.0.7'
 gem 'dynamic_form'
 gem 'in_place_editing'
 gem 'verification', :git => 'https://github.com/sikachu/verification.git'
 
+
+#---------------- testiing -----------------------
+gem 'minitest-reporters'

@@ -51,6 +51,7 @@ GEM
       minitest (~> 5.1)
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
+    ansi (1.5.0)
     arel (6.0.4)
     autoprefixer-rails (6.6.0)
       execjs
@@ -111,6 +112,11 @@ GEM
     mime-types-data (3.2016.0521)
     mini_portile2 (2.1.0)
     minitest (5.10.1)
+    minitest-reporters (1.1.13)
+      ansi
+      builder
+      minitest (>= 5.0)
+      ruby-progressbar
     momentjs-rails (2.15.1)
       railties (>= 3.1)
     multi_json (1.12.1)
@@ -149,6 +155,7 @@ GEM
     rake (12.0.0)
     rdiscount (2.2.0.1)
     rouge (2.0.7)
+    ruby-progressbar (1.8.1)
     ruby_parser (3.8.3)
       sexp_processor (~> 4.1)
     sass (3.4.23)
@@ -177,6 +184,9 @@ GEM
     uglifier (3.0.4)
       execjs (>= 0.3.0, < 3)
     will_paginate (3.0.12)
+    yaml_db (0.4.2)
+      rails (>= 3.0, < 5.1)
+      rake (>= 0.8.7)
 
 PLATFORMS
   ruby
@@ -200,6 +210,7 @@ DEPENDENCIES
   jquery-timepicker-addon-rails
   jquery-ui-rails
   mail
+  minitest-reporters
   momentjs-rails
   mysql2
   rails (~> 4.2.0)
@@ -212,6 +223,7 @@ DEPENDENCIES
   uglifier
   verification!
   will_paginate (~> 3.0.7)
+  yaml_db
 
 BUNDLED WITH
    1.13.6
