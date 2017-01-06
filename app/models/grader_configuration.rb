@@ -11,6 +11,7 @@ class GraderConfiguration < ActiveRecord::Base
   CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
   MULTIPLE_IP_LOGIN_KEY = 'right.multiple_ip_login'
   VIEW_TESTCASE = 'right.view_testcase'
+  SINGLE_USER_KEY = 'system.single_user'
 
   cattr_accessor :config_cache
   cattr_accessor :task_grading_info_cache
