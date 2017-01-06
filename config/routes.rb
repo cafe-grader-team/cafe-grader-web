@@ -3,6 +3,9 @@ CafeGrader::Application.routes.draw do
 
   root :to => 'main#login'
 
+  #logins
+  get 'login/login',  to: 'login#login'
+
   resources :contests
 
   resources :sites
@@ -18,12 +21,20 @@ CafeGrader::Application.routes.draw do
       get 'toggle'
       get 'toggle_test'
       get 'stat'
+      get 'show_testcase'
     end
     collection do
       get 'turn_all_off'
       get 'turn_all_on'
       get 'import'
       get 'manage'
+    end
+
+    resources :testcases, only: [] do
+      member do
+        get 'download_input'
+        get 'download_sol'
+      end
     end
   end
 

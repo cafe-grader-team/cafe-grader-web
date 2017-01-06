@@ -1,6 +1,7 @@
 class ProblemsController < ApplicationController
 
-  before_filter :authenticate, :authorization
+  before_action :authenticate, :authorization
+  before_action :testcase_authorization, only: [:show_testcase]
 
   in_place_edit_for :problem, :name
   in_place_edit_for :problem, :full_name
@@ -219,6 +220,10 @@ class ProblemsController < ApplicationController
       problem.contests.delete(contest)
     end
     redirect_to :action => 'manage'
+  end
+
+  def show_testcase
+    @problem = Problem.includes(:testcases).find(params[:id])
   end
 
   ##################################

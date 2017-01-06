@@ -89,6 +89,12 @@ CONFIGURATIONS =
      :description => 'Heart beat response text'
    },
 
+   {
+     :key => 'right.view_testcase',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'When true, any user can view/download test data'
+   },
    # If Configuration['system.online_registration'] is true, the
    # system allows online registration, and will use these
    # information for sending confirmation emails.

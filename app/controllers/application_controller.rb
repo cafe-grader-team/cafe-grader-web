@@ -1,7 +1,7 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
-  before_filter :current_user 
+  before_filter :current_user
 
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
@@ -35,6 +35,15 @@ class ApplicationController < ActionController::Base
       unauthorized_redirect
       return false
     end
+  end
+
+  def testcase_authorization
+    #admin always has privileged
+    if @current_user.admin?
+      return true
+    end
+
+    unauthorized_redirect if GraderConfiguration["right.view_testcase"]
   end
 
   protected

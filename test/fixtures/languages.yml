@@ -1,5 +1,36 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-one:
-  id: 1
-two:
-  id: 2
+Language_1:
+  name: c
+  pretty_name: C
+  ext: c
+  common_ext: c
+
+Language_2:
+  name: cpp
+  pretty_name: C++
+  ext: cpp
+  common_ext: cpp,cc
+
+Language_3:
+  name: pas
+  pretty_name: Pascal
+  ext: pas
+  common_ext: pas
+
+Language_4:
+  name: ruby
+  pretty_name: Ruby
+  ext: rb
+  common_ext: rb
+
+Language_5:
+  name: python
+  pretty_name: Python
+  ext: py
+  common_ext: py
+
+Language_6:
+  name: java
+  pretty_name: Java
+  ext: java
+  common_ext: java
+
