@@ -25,5 +25,5 @@
   = link_to "#{t 'main.src_link'}",{:action => 'source', :id => submission.id}, class: 'btn btn-xs btn-info'
   = link_to "#{t 'main.submissions_link'}", problem_submissions_path(problem_id), class: 'btn btn-xs btn-info'
   - if GraderConfiguration.show_testcase
-    = link_to "testcases", show_testcase_problem_path(problem_id), class: 'btn btn-xs btn-info'
+    = link_to "testcases", show_problem_testcases_path(problem_id), class: 'btn btn-xs btn-info'
 

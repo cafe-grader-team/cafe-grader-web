@@ -135,6 +135,14 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def toggle_view_testcase
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(view_testcase: !(@problem.view_testcase?) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
   def turn_all_off
     Problem.available.all.each do |problem|
       problem.available = false
@@ -220,10 +228,6 @@ class ProblemsController < ApplicationController
       problem.contests.delete(contest)
     end
     redirect_to :action => 'manage'
-  end
-
-  def show_testcase
-    @problem = Problem.includes(:testcases).find(params[:id])
   end
 
   ##################################

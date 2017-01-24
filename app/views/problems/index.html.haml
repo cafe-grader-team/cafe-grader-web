@@ -26,6 +26,9 @@
       Avail?
       %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user submits to this problem?' } [?]
     %th.text-center
+      View Data?
+      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user view the testcase of this problem?' } [?]
+    %th.text-center
       Test?
       %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user uses test interface on this problem?' } [?]
     - if GraderConfiguration.multicontests?
@@ -38,6 +41,7 @@
       %td.text-right= problem.full_score #in_place_editor_field :problem, :full_score, {}, :rows=>1
       %td= problem.date_added
       %td= toggle_button(@problem.available?, toggle_problem_path(@problem), "problem-avail-#{@problem.id}")
+      %td= toggle_button(@problem.view_testcase?, toggle_view_testcase_problem_path(@problem), "problem-view-testcase-#{@problem.id}")
       %td= toggle_button(@problem.test_allowed?, toggle_test_problem_path(@problem), "problem-test-#{@problem.id}")
       - if GraderConfiguration.multicontests?
         %td

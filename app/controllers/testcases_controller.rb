@@ -10,6 +10,14 @@ class TestcasesController < ApplicationController
     send_data @testcase.sol, type: 'text/plain', filename: "#{@testcase.problem.name}.#{@testcase.num}.sol"
   end
 
+  def show_problem
+    @problem = Problem.includes(:testcases).find(params[:problem_id])
+    unless @current_user.admin? or @problem.view_testcase
+      flash[:error] = 'You cannot view the testcase of this problem'
+      redirect_to :controller => 'main', :action => 'list'
+    end
+  end
+
 
   private
     # Use callbacks to share common setup or constraints between actions.

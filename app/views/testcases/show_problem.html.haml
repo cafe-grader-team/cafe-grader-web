@@ -14,10 +14,10 @@
       .row
         .col-md-6
           %h3 Input
-          = link_to "Download",download_input_problem_testcase_path(@problem,tc),class: 'btn btn-info btn-sm'
+          = link_to "Download",download_input_testcase_path(tc),class: 'btn btn-info btn-sm'
         .col-md-6
           %h3 Output
-          = link_to "Download",download_sol_problem_testcase_path(@problem,tc),class: 'btn btn-info btn-sm'
+          = link_to "Download",download_sol_testcase_path(tc),class: 'btn btn-info btn-sm'
       .row
         .col-md-6
           %textarea{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= tc.input

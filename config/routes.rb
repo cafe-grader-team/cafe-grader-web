@@ -20,8 +20,8 @@ CafeGrader::Application.routes.draw do
     member do
       get 'toggle'
       get 'toggle_test'
+      get 'toggle_view_testcase'
       get 'stat'
-      get 'show_testcase'
     end
     collection do
       get 'turn_all_off'
@@ -30,11 +30,15 @@ CafeGrader::Application.routes.draw do
       get 'manage'
     end
 
-    resources :testcases, only: [] do
-      member do
-        get 'download_input'
-        get 'download_sol'
-      end
+  end
+
+  resources :testcases, only: [] do
+    member do 
+      get 'download_input'
+      get 'download_sol'
+    end
+    collection do
+      get 'show_problem/:problem_id(/:test_num)' => 'testcases#show_problem', as: 'show_problem'
     end
   end
 
