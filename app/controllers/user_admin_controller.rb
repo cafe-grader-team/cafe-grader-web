@@ -74,27 +74,39 @@ class UserAdminController < ApplicationController
       if items.length>=2
         login = items[0]
         full_name = items[1]
+        remark =''
+        user_alias = ''
 
         added_random_password = false
-        if items.length>=3
+        if items.length >= 3 and items[2].chomp(" ").length > 0;
           password = items[2].chomp(" ")
-          user_alias = (items.length>=4) ? items[3] : login
         else
           password = random_password
-          user_alias = (items.length>=4) ? items[3] : login
-          added_random_password = true
+          add_random_password=true;
+        end
+
+        if items.length>= 4 and items[3].chomp(" ").length > 0;
+          user_alias = items[3].chomp(" ")
+        else
+          user_alias = login
+        end
+
+        if items.length>=5
+          remark = items[4].strip;
         end
 
         user = User.find_by_login(login)
         if (user)
           user.full_name = full_name
           user.password = password
+          user.remark = remark
         else
           user = User.new({:login => login,
                             :full_name => full_name,
                             :password => password,
                             :password_confirmation => password,
-                            :alias => user_alias})
+                            :alias => user_alias,
+                            :remark => remark})
         end
         user.activated = true
         user.save
