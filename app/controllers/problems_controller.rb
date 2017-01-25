@@ -88,7 +88,7 @@ class ProblemsController < ApplicationController
         flash[:notice] = 'Error: Uploaded file is not PDF'
         render :action => 'edit' and return
     end
-    if @problem.update_attributes(params[:problem])
+    if @problem.update_attributes(problem_params)
       flash[:notice] = 'Problem was successfully updated.'
       unless params[:file] == nil or params[:file] == ''
         flash[:notice] = 'Problem was successfully updated and a new PDF file is uploaded.'
@@ -284,5 +284,11 @@ class ProblemsController < ApplicationController
 
   def get_problems_stat
   end
+
+  private
+
+    def problem_params
+      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description)
+    end
 
 end

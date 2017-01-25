@@ -118,7 +118,7 @@ class UserAdminController < ApplicationController
         end
       end
     end
-    flash[:notice] = 'User(s) ' + note.join(', ') + 
+    flash[:success] = 'User(s) ' + note.join(', ') + 
       ' were successfully created.  ' +
       '( (+) - created with random passwords.)'   
     redirect_to :action => 'index'
