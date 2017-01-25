@@ -28,7 +28,7 @@ class ProblemsController < ApplicationController
   end
 
   def create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @description = Description.new(params[:description])
     if @description.body!=''
       if !@description.save
@@ -47,7 +47,7 @@ class ProblemsController < ApplicationController
   end
 
   def quick_create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @problem.full_name = @problem.name if @problem.full_name == ''
     @problem.full_score = 100
     @problem.available = false

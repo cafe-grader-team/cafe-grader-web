@@ -45,7 +45,7 @@ class AnnouncementsController < ApplicationController
   # POST /announcements
   # POST /announcements.xml
   def create
-    @announcement = Announcement.new(params[:announcement])
+    @announcement = Announcement.new(announcement_params)
 
     respond_to do |format|
       if @announcement.save

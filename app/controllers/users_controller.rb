@@ -52,7 +52,7 @@ class UsersController < ApplicationController
       redirect_to :controller => 'main', :action => 'login'
       return
     end
-    @user = User.new(params[:user])
+    @user = User.new(user_params)
     @user.password_confirmation = @user.password = User.random_password
     @user.activated = false
     if (@user.valid?) and (@user.save)
@@ -209,6 +209,10 @@ class UsersController < ApplicationController
     #finally, we allow only admin
     admin_authorization
   end
-  
+
+  private
+    def user_params
+      params.require(:user).permit(:login, :full_name, :email)
+    end
 
 end

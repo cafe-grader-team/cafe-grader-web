@@ -47,7 +47,7 @@ class UserAdminController < ApplicationController
   end
 
   def create
-    @user = User.new(params[:user])
+    @user = User.new(user_params)
     @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'
