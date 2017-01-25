@@ -48,7 +48,7 @@ class Task < ActiveRecord::Base
     task = nil
     begin
       Task.transaction do
-        task = Task.where(status: Task::STATUS_INQUEUE).where(lock: true).first
+        task = Task.where(status: Task::STATUS_INQUEUE).lock(true).first
         if task!=nil
           task.status = status
           task.save!
