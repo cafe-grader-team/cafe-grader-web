@@ -111,7 +111,6 @@ class ApplicationController < ActionController::Base
 
   def authorization
     return false unless authenticate
-    puts "haha 1"
     user = User.find(session[:user_id])
     unless user.roles.detect { |role|
         role.rights.detect{ |right|
@@ -119,7 +118,6 @@ class ApplicationController < ActionController::Base
             (right.action == 'all' or right.action == action_name)
         }
       }
-      puts "haha 2"
       flash[:notice] = 'You are not authorized to view the page you requested'
       #request.env['HTTP_REFERER'] ? (redirect_to :back) : (redirect_to :controller => 'login')
       redirect_to :controller => 'main', :action => 'login'
