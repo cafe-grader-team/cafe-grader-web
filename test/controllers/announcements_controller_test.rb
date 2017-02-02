@@ -3,7 +3,7 @@ require 'test_helper'
 class AnnouncementsControllerTest < ActionController::TestCase
   setup do
     @announcement = announcements(:one)
-    @request.session[:user_id] = users(:admin).id
+    @request.session[:user_id] = user(:admin).id
   end
 
   test "should get index" do
@@ -19,7 +19,7 @@ class AnnouncementsControllerTest < ActionController::TestCase
 
   test "should create announcement" do
     assert_difference('Announcement.count') do
-      post :create, announcement: {  author: 'test', body: 'haha', published: true}
+      post :create, announcement: {  }
     end
 
     assert_redirected_to announcement_path(assigns(:announcement))
@@ -36,7 +36,7 @@ class AnnouncementsControllerTest < ActionController::TestCase
   end
 
   test "should update announcement" do
-    patch :update, id: @announcement, announcement: { body: 'another body' }
+    patch :update, id: @announcement, announcement: {  }
     assert_redirected_to announcement_path(assigns(:announcement))
   end
 

@@ -550,6 +550,6 @@ class UserAdminController < ApplicationController
 
   private
     def user_params
-      params.require(:user).permit(:login,:full_name,:hashed_password,:salt,:alias,:email,:site_id,:country_id,:activated,:enabled,:remark,:last_ip,:section)
+      params.require(:user).permit(:login,:password,:password_confirmation,:email, :alias, :full_name,:remark)
     end
 end
