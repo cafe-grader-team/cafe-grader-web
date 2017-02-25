@@ -1,6 +1,6 @@
 class SubmissionsController < ApplicationController
   before_filter :authenticate
-  before_filter :submission_authorization, only: [:show, :direct_edit_submission, :download]
+  before_filter :submission_authorization, only: [:show, :direct_edit_submission, :download, :edit]
 
   # GET /submissions
   # GET /submissions.json
