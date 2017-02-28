@@ -111,6 +111,6 @@ class AnnouncementsController < ApplicationController
   private
 
     def announcement_params
-      params.require(:announcement).permit(:author, :body, :published, :frontpage, :contest_only,:title, :note)
+      params.require(:announcement).permit(:author, :body, :published, :frontpage, :contest_only, :title)
     end
 end
