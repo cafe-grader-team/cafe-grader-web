@@ -61,7 +61,9 @@ class Problem < ActiveRecord::Base
     result = Hash.new
     #total number of submission
     result[:total_sub] = Submission.where(problem_id: self.id).count
-    result[:attempted_user] = Submission.where(problem_id: self.id).group_by(:user_id)
+    result[:attempted_user] = Submission.where(problem_id: self.id).group(:user_id)
+    result[:pass] = Submission.where(problem_id: self.id).where("points >= ?",self.full_score).count
+    return result
   end
 
   def long_name

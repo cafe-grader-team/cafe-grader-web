@@ -1,8 +1,9 @@
 <h1>Adding list of users</h1>
 
 <%= form_tag :action => 'create_from_list' do %>
-<%= submit_tag 'create users' %><br/>
-List of user information in this format: <tt>user_id,name(,passwd(,alias))</tt><br/>
-Note that <tt>passwd</tt> and <tt>alias</tt> is optional.<br/>
+  <%= submit_tag 'create users',class: 'btn btn-success'%><br/>
+List of user information in this format: <tt>user_id,name(,passwd(,alias(,remark)))</tt><br/>
+Note that <tt>passwd, alias</tt> and <tt> remark </tt>is optional.<br />
+When <tt>passwd</tt> or <tt>alias</tt> is empty, the original value will be used instead.<br/>
 <%= text_area_tag 'user_list', nil, :rows => 50, :cols => 80 %>
 <% end %>

@@ -42,6 +42,7 @@
   = link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
   = link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}
   = link_to 'View administrators',{ :action => 'admin'}, { class: 'btn btn-default '}
+  = link_to 'Bulk Manage', bulk_manage_user_admin_path , { class: 'btn btn-default '}
   = link_to 'Random passwords',{ :action => 'random_all_passwords'}, { class: 'btn btn-default '}
   = link_to 'View active users',{ :action => 'active'}, { class: 'btn btn-default '}
   = link_to 'Mass mailing',{ :action => 'mass_mailing'}, { class: 'btn btn-default '}

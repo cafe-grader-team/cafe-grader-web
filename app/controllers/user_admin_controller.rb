@@ -407,6 +407,39 @@ class UserAdminController < ApplicationController
     redirect_to :action => 'mass_mailing'
   end
 
+  #bulk manage
+  def bulk_manage
+
+    begin 
+      @users = User.where('login REGEXP ?',params[:regex]) if params[:regex]
+      @users.count if @users #i don't know why I have to call count, but if I won't exception is not raised
+    rescue Exception
+      flash[:error] = 'Regular Expression is malformed'
+      @users = nil
+    end
+
+    if params[:commit]
+      @action = {}
+      @action[:set_enable] = params[:enabled]
+      @action[:enabled] = params[:enable] == "1"
+      @action[:gen_password] = params[:gen_password]
+    end
+
+    if params[:commit] == "Perform"
+      if @action[:set_enable]
+        @users.update_all(enabled: @action[:enabled])
+      end
+      if @action[:gen_password]
+        @users.each do |u|
+          password = random_password
+          u.password = password
+          u.password_confirmation = password
+          u.save
+        end
+      end
+    end
+  end
+
   protected
 
   def random_password(length=5)

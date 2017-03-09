@@ -63,13 +63,14 @@ CafeGrader::Application.routes.draw do
     end
   end
 
-  get 'tasks/view/:file.:ext' => 'tasks#view'
-  get 'tasks/download/:id/:file.:ext' => 'tasks#download'
-  get 'heartbeat/:id/edit' => 'heartbeat#edit'
+
 
   #main
   get "main/list"
   get 'main/submission(/:id)', to: 'main#submission', as: 'main_submission'
+
+  #user admin
+  get 'user_admin/bulk_manage', to: 'user_admin#bulk_manage', as: 'bulk_manage_user_admin'
 
   #report
   get 'report/current_score', to: 'report#current_score', as: 'report_current_score'
@@ -77,6 +78,12 @@ CafeGrader::Application.routes.draw do
   get "report/login"
   get 'report/max_score', to: 'report#max_score', as: 'report_max_score'
   post 'report/show_max_score', to: 'report#show_max_score', as: 'report_show_max_score'
+
+
+  #
+  get 'tasks/view/:file.:ext' => 'tasks#view'
+  get 'tasks/download/:id/:file.:ext' => 'tasks#download'
+  get 'heartbeat/:id/edit' => 'heartbeat#edit'
 
   #grader
   get 'graders/list', to: 'graders#list', as: 'grader_list'
