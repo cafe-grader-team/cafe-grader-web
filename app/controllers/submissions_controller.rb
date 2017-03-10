@@ -1,6 +1,7 @@
 class SubmissionsController < ApplicationController
-  before_filter :authenticate
-  before_filter :submission_authorization, only: [:show, :direct_edit_submission, :download, :edit]
+  before_action :authenticate
+  before_action :submission_authorization, only: [:show, :direct_edit_submission, :download, :edit]
+  before_action :admin_authorization, only: [:rejudge]
 
   # GET /submissions
   # GET /submissions.json
@@ -31,6 +32,8 @@ class SubmissionsController < ApplicationController
     #log the viewing
     user = User.find(session[:user_id])
     SubmissionViewLog.create(user_id: session[:user_id],submission_id: @submission.id) unless user.admin?
+
+    @task = @submission.task
   end
 
   def download
@@ -67,6 +70,16 @@ class SubmissionsController < ApplicationController
     puts User.find(params[:uid]).login
     puts Problem.find(params[:pid]).name
     puts 'nil' unless @submission
+    respond_to do |format|
+      format.js
+    end
+  end
+
+  # GET /submissions/:id/rejudge
+  def rejudge
+    @submission = Submission.find(params[:id])
+    @task = @submission.task
+    @task.status_inqueue! if @task
     respond_to do |format|
       format.js
     end

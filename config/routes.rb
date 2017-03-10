@@ -55,6 +55,7 @@ CafeGrader::Application.routes.draw do
     member do
       get 'download'
       get 'compiler_msg'
+      get 'rejudge'
     end
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'

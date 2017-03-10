@@ -13,6 +13,8 @@ class Submission < ActiveRecord::Base
   validate :must_have_valid_problem
   validate :must_specify_language
 
+  has_one :task
+
   before_save :assign_latest_number_if_new_recond
 
   def self.find_last_by_user_and_problem(user_id, problem_id)
