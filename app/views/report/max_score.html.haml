@@ -22,10 +22,10 @@
           Input minimum and maximum range of submission ID that should be included. A blank value for min and max means -1 and infinity, respectively.
         .form-group
           = label_tag :from, "Min"
-          = text_field_tag 'from_id', nil, class: "form-control"
+          = text_field_tag 'from_id', @since_id, class: "form-control"
         .form-group
           = label_tag :from, "Max"
-          = text_field_tag 'to_id', nil, class: "form-control"
+          = text_field_tag 'to_id', @until_id, class: "form-control"
   .col-md-4
     .panel.panel-primary
       .panel-heading

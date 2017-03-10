@@ -34,10 +34,12 @@ class ReportController < ApplicationController
     #process parameters
     #problems
     @problems = []
-    params[:problem_id].each do |id|
-      next unless id.strip != ""
-      pid = Problem.find_by_id(id.to_i)
-      @problems << pid if pid
+    if params[:problem_id]
+      params[:problem_id].each do |id|
+        next unless id.strip != ""
+        pid = Problem.find_by_id(id.to_i)
+        @problems << pid if pid
+      end
     end
 
     #users
@@ -48,11 +50,11 @@ class ReportController < ApplicationController
              end
 
     #set up range from param
-    since_id = params.fetch(:from_id, 0).to_i
-    until_id = params.fetch(:to_id, 0).to_i
+    @since_id = params.fetch(:from_id, 0).to_i
+    @until_id = params.fetch(:to_id, 0).to_i
 
     #calculate the routine
-    @scorearray = calculate_max_score(@problems, @users,since_id,until_id)
+    @scorearray = calculate_max_score(@problems, @users, @since_id, @until_id)
 
     #rencer accordingly
     if params[:button] == 'download' then
