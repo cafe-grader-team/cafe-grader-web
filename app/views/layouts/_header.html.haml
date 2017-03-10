@@ -12,15 +12,16 @@
           MAIN
       .collapse.navbar-collapse#navbar-collapse
         %ul.nav.navbar-nav
+          / submission
           - if (@current_user!=nil) and (GraderConfiguration.show_tasks_to?(@current_user))
-            //= add_menu("#{I18n.t 'menu.tasks'}", 'tasks', 'list')
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
                 = "#{I18n.t 'menu.submissions'}"
                 %span.caret
               %ul.dropdown-menu
-                = add_menu("View", 'main', 'submission')
+                = add_menu("View", 'submissions', 'index')
                 = add_menu("Self Test", 'test', 'index')
+          / hall of fame
           - if GraderConfiguration['right.user_hall_of_fame']
             = add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
           / display MODE button (with countdown in contest mode)

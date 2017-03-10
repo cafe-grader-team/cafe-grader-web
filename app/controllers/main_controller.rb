@@ -124,23 +124,6 @@ class MainController < ApplicationController
     end
   end
 
-  def submission
-    @user = User.find(session[:user_id])
-    @problems = @user.available_problems
-    if params[:id]==nil
-      @problem = nil
-      @submissions = nil
-    else
-      @problem = Problem.find_by_id(params[:id])
-      if (@problem == nil) or (not @problem.available)
-        redirect_to :action => 'list'
-        flash[:notice] = 'Error: submissions for that problem are not viewable.'
-        return
-      end
-      @submissions = Submission.find_all_by_user_problem(@user.id, @problem.id)
-    end
-  end
-
   def result
     if !GraderConfiguration.show_grading_result
       redirect_to :action => 'list' and return

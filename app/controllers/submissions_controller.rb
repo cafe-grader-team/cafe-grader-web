@@ -19,7 +19,7 @@ class SubmissionsController < ApplicationController
         flash[:notice] = 'Error: submissions for that problem are not viewable.'
         return
       end
-      @submissions = Submission.find_all_by_user_problem(@user.id, @problem.id)
+      @submissions = Submission.find_all_by_user_problem(@user.id, @problem.id).order(id: :desc)
     end
   end
 

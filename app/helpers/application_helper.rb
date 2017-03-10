@@ -28,7 +28,7 @@ module ApplicationHelper
     result = content_tag(:ul,left_menu.html_safe,class: 'nav navbar-nav') + content_tag(:ul,right_menu.html_safe,class: 'nav navbar-nav navbar-right')
   end
 
-  def add_menu(title, controller, action,html_option = {})
+  def add_menu(title, controller, action, html_option = {})
     link_option = {controller: controller, action: action}
     html_option[:class] = (html_option[:class] || '') + " active" if current_page?(link_option)
     content_tag(:li, link_to(title,link_option),html_option)
