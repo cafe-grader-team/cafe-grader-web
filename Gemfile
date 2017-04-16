@@ -86,3 +86,6 @@ gem 'verification', :git => 'https://github.com/sikachu/verification.git'
 
 #---------------- testiing -----------------------
 gem 'minitest-reporters'
+
+#---------------- for console --------------------
+gem 'fuzzy-string-match'

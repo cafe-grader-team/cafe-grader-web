@@ -9,6 +9,9 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
+    RubyInline (3.12.4)
+      ZenTest (~> 4.3)
+    ZenTest (4.11.1)
     ace-rails-ap (4.1.1)
     actionmailer (4.2.7.1)
       actionpack (= 4.2.7.1)
@@ -74,6 +77,8 @@ GEM
     dynamic_form (1.1.4)
     erubis (2.7.0)
     execjs (2.7.0)
+    fuzzy-string-match (1.0.0)
+      RubyInline (>= 3.8.6)
     globalid (0.3.7)
       activesupport (>= 4.1.0)
     haml (4.0.7)
@@ -201,6 +206,7 @@ DEPENDENCIES
   bootstrap-toggle-rails
   coffee-rails
   dynamic_form
+  fuzzy-string-match
   haml
   haml-rails
   in_place_editing
