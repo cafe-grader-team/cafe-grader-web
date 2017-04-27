@@ -88,9 +88,7 @@ CafeGrader::Application.routes.draw do
 
   #grader
   get 'graders/list', to: 'graders#list', as: 'grader_list'
-  
 
-  get 'heartbeat/:id/edit' => 'heartbeat#edit'
 
   # See how all your routes lay out with "rake routes"
 

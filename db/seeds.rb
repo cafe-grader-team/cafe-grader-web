@@ -90,6 +90,13 @@ CONFIGURATIONS =
    },
 
    {
+     :key => 'right.heartbeat_response_full',
+     :value_type => 'string',
+     :default_value => 'OK',
+     :description => 'Heart beat response text when user got full score (set this value to the empty string to disable this feature)'
+   },
+
+   {
      :key => 'right.view_testcase',
      :value_type => 'boolean',
      :default_value => 'false',

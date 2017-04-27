@@ -279,6 +279,15 @@ class User < ActiveRecord::Base
     return contest_problems
   end
 
+  def solve_all_available_problems?
+    available_problems.each do |p|
+      u = self
+      sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+      return false if !p or !sub or sub.points < p.full_score
+    end
+    return true
+  end
+
   def available_problems
     if not GraderConfiguration.multicontests?
       return Problem.available_problems
