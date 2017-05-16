@@ -88,10 +88,10 @@ class MainController < ApplicationController
 
     if @submission.valid?
       if @submission.save == false
-	flash[:notice] = 'Error saving your submission'
+        flash[:notice] = 'Error saving your submission'
       elsif Task.create(:submission_id => @submission.id, 
                         :status => Task::STATUS_INQUEUE) == false
-	flash[:notice] = 'Error adding your submission to task queue'
+        flash[:notice] = 'Error adding your submission to task queue'
       end
     else
       prepare_list_information
@@ -106,7 +106,7 @@ class MainController < ApplicationController
         (submission.problem != nil) and 
         (submission.problem.available))
       send_data(submission.source, 
-		{:filename => submission.download_filename, 
+                {:filename => submission.download_filename, 
                   :type => 'text/plain'})
     else
       flash[:notice] = 'Error viewing source'

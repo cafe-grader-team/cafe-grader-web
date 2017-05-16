@@ -1,7 +1,7 @@
 %h2 Live submit
 %br
 
-%textarea#text_haha{style: "display:none"}~ @source
+%textarea#text_sourcecode{style: "display:none"}~ @source
 .container
   .row
     .col-md-12
@@ -41,7 +41,7 @@
 :javascript
   $(document).ready(function() {
     e = ace.edit("editor")
-    e.setValue($("#text_haha").val());
+    e.setValue($("#text_sourcecode").val());
     e.gotoLine(1);
     $("#language_id").trigger('change');
     brython();
