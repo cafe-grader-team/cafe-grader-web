@@ -3,24 +3,27 @@
 
 %h1 System configuration
 
-%table.info
-  %tr.info-head
-    %th Key
-    %th Type
-    %th Value
-    %th Description
-  - @configurations.each do |conf|
-    - @grader_configuration = conf
-    %tr{:class => cycle("info-odd", "info-even")}
-      %td
-        /= in_place_editor_field :grader_configuration, :key, {}, :rows=>1
-        = @grader_configuration.key
-      %td
-        /= in_place_editor_field :grader_configuration, :value_type, {}, :rows=>1
-        = @grader_configuration.value_type
-      %td
-        = best_in_place @grader_configuration, :value, ok_button: "ok", cancel_button: "cancel"
-      %td= conf.description
+- @group.each do |g|
+  %h2= g
+  %table.table.table-striped
+    %thead
+      %th{style: 'width: 25%'} Key
+      %th{style: 'width: 10%'}Type
+      %th{style: 'width: 15%'} Value
+      %th Description
+    - @configurations.each do |conf|
+      - next if conf.key[0...(conf.key.index('.'))] != g
+      - @grader_configuration = conf
+      %tr
+        %td
+          /= in_place_editor_field :grader_configuration, :key, {}, :rows=>1
+          = @grader_configuration.key
+        %td
+          /= in_place_editor_field :grader_configuration, :value_type, {}, :rows=>1
+          = @grader_configuration.value_type
+        %td
+          = best_in_place @grader_configuration, :value, ok_button: "ok", cancel_button: "cancel"
+        %td= conf.description
 
 - if GraderConfiguration.config_cached?
   %br/

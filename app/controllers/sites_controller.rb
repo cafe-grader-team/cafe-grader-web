@@ -5,7 +5,7 @@ class SitesController < ApplicationController
   # GET /sites
   # GET /sites.xml
   def index
-    @sites = Site.find(:all, :order => 'country_id')
+    @sites = Site.order(:country_id)
 
     respond_to do |format|
       format.html # index.html.erb
@@ -65,7 +65,7 @@ class SitesController < ApplicationController
     @site.clear_start_time_if_not_started
 
     respond_to do |format|
-      if @site.update_attributes(params[:site])
+      if @site.update_attributes(site_params)
         flash[:notice] = 'Site was successfully updated.'
         format.html { redirect_to(@site) }
         format.xml  { head :ok }
@@ -87,5 +87,11 @@ class SitesController < ApplicationController
       format.xml  { head :ok }
     end
   end
+
+  private
+
+    def site_params
+      params.require(:site).permit(:name,:started,:start_time,:country_id,:password)
+    end
 
 end

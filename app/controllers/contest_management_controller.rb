@@ -11,9 +11,9 @@ class ContestManagementController < ApplicationController
       redirect_to :action => 'index' and return
     end
 
-    @users = User.find(:all)
+    @users = User.all
     @start_times = {}
-    UserContestStat.find(:all).each do |stat|
+    UserContestStat.all.each do |stat|
       @start_times[stat.user_id] = stat.started_at
     end
   end

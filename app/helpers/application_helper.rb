@@ -28,7 +28,7 @@ module ApplicationHelper
     result = content_tag(:ul,left_menu.html_safe,class: 'nav navbar-nav') + content_tag(:ul,right_menu.html_safe,class: 'nav navbar-nav navbar-right')
   end
 
-  def add_menu(title, controller, action,html_option = {})
+  def add_menu(title, controller, action, html_option = {})
     link_option = {controller: controller, action: action}
     html_option[:class] = (html_option[:class] || '') + " active" if current_page?(link_option)
     content_tag(:li, link_to(title,link_option),html_option)
@@ -194,6 +194,28 @@ TITLEBAR
   def markdown(text)
     markdown = RDiscount.new(text)
     markdown.to_html.html_safe
+  end
+
+
+  BOOTSTRAP_FLASH_MSG = {
+    success: 'alert-success',
+    error: 'alert-danger',
+    alert: 'alert-block',
+    notice: 'alert-info'
+  }
+
+  def bootstrap_class_for(flash_type)
+    BOOTSTRAP_FLASH_MSG.fetch(flash_type.to_sym, flash_type.to_s)
+  end
+
+  def flash_messages
+    flash.each do |msg_type, message|
+      concat(content_tag(:div, message, class: "alert #{bootstrap_class_for(msg_type)} fade in") do 
+              concat content_tag(:button, 'x', class: "close", data: { dismiss: 'alert' })
+              concat message 
+            end)
+    end
+    nil
   end
 
 end

@@ -3,14 +3,14 @@
   = "-"
 - else
   - unless submission.graded_at
-    =t 'main.submitted_at'
+    = t 'main.submitted_at'
     = format_short_time(submission.submitted_at.localtime)
   - else
     %strong= t 'main.graded_at'
     = "#{format_short_time(submission.graded_at.localtime)} "
     %br
     - if GraderConfiguration['ui.show_score']
-      =t 'main.score'
+      %strong=t 'main.score'
       = "#{(submission.points*100/submission.problem.full_score).to_i} "
     = " [" 
     %tt
@@ -20,7 +20,10 @@
     %strong View:
     - if GraderConfiguration.show_grading_result
       = link_to '[detailed result]', :action => 'result', :id => submission.id
-    = link_to "#{t 'main.cmp_msg'}", {:action => 'compiler_msg', :id => submission.id}, {popup: true,class: 'btn btn-xs btn-info'}
+    /= link_to "#{t 'main.cmp_msg'}", {:action => 'compiler_msg', :id => submission.id}, {popup: true,class: 'btn btn-xs btn-info'}
+    = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission.id), {popup: true,remote: true,class: 'btn btn-xs btn-info'}
   = link_to "#{t 'main.src_link'}",{:action => 'source', :id => submission.id}, class: 'btn btn-xs btn-info'
   = link_to "#{t 'main.submissions_link'}", problem_submissions_path(problem_id), class: 'btn btn-xs btn-info'
+  - if GraderConfiguration.show_testcase
+    = link_to "testcases", show_problem_testcases_path(problem_id), class: 'btn btn-xs btn-info'
 

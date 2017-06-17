@@ -1,0 +1,144 @@
+GraderConfiguration_1:
+  key: system.single_user_mode
+  value_type: boolean
+  value: 'false'
+  description: Only admins can log in to the system when running under single user mode.
+
+GraderConfiguration_2:
+  key: ui.front.title
+  value_type: string
+  value: Grader
+
+GraderConfiguration_3:
+  key: ui.front.welcome_message
+  value_type: string
+  value: Welcome!
+
+GraderConfiguration_4:
+  key: ui.show_score
+  value_type: boolean
+  value: 'true'
+
+GraderConfiguration_5:
+  key: contest.time_limit
+  value_type: string
+  value: unlimited
+  description: Time limit in format hh:mm, or "unlimited" for contests with no time
+    limits.  This config is CACHED.  Restart the server before the change can take
+    effect.
+
+GraderConfiguration_6:
+  key: system.mode
+  value_type: string
+  value: standard
+  description: Current modes are "standard", "contest", "indv-contest", and "analysis".
+
+
+GraderConfiguration_7:
+  key: contest.name
+  value_type: string
+  value: Grader
+  description: This name will be shown on the user header bar.
+
+
+GraderConfiguration_8:
+  key: contest.multisites
+  value_type: boolean
+  value: 'false'
+  description: If the server is in contest mode and this option is true, on the log
+    in of the admin a menu for site selections is shown.
+
+
+GraderConfiguration_9:
+  key: right.user_hall_of_fame
+  value_type: boolean
+  value: 'false'
+  description: If true, any user can access hall of fame page.
+
+
+GraderConfiguration_10:
+  key: right.multiple_ip_login
+  value_type: boolean
+  value: 'true'
+  description: When change from true to false, a user can login from the first IP
+    they logged into afterward.
+
+
+GraderConfiguration_11:
+  key: right.user_view_submission
+  value_type: boolean
+  value: 'false'
+  description: If true, any user can view submissions of every one.
+
+
+GraderConfiguration_12:
+  key: right.bypass_agreement
+  value_type: boolean
+  value: 'true'
+  description: When false, a user must accept usage agreement before login
+
+
+GraderConfiguration_13:
+  key: right.heartbeat_response
+  value_type: string
+  value: OK
+  description: Heart beat response text
+
+
+GraderConfiguration_14:
+  key: right.view_testcase
+  value_type: boolean
+  value: 'false'
+  description: When true, any user can view/download test data
+
+
+GraderConfiguration_15:
+  key: system.online_registration.smtp
+  value_type: string
+  value: smtp.somehost.com
+
+
+GraderConfiguration_16:
+  key: system.online_registration.from
+  value_type: string
+  value: your.email@address
+
+
+GraderConfiguration_17:
+  key: system.admin_email
+  value_type: string
+  value: admin@admin.email
+
+
+GraderConfiguration_18:
+  key: system.user_setting_enabled
+  value_type: boolean
+  value: 'true'
+  description: If this option is true, users can change their settings
+
+
+GraderConfiguration_19:
+  key: contest.test_request.early_timeout
+  value_type: boolean
+  value: 'false'
+
+
+GraderConfiguration_20:
+  key: system.multicontests
+  value_type: boolean
+  value: 'false'
+
+
+GraderConfiguration_21:
+  key: contest.confirm_indv_contest_start
+  value_type: boolean
+  value: 'false'
+
+
+GraderConfiguration_22:
+  key: contest.default_contest_name
+  value_type: string
+  value: none
+  description: New user will be assigned to this contest automatically, if it exists.  Set
+    to 'none' if there is no default contest.
+

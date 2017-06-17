@@ -1,9 +1,0 @@
-<h1>Editing problem</h1>
-
-<%= form_for @problem,url:{action: 'update'},html: {multipart: true} do %>
-  <%= render :partial => 'form' %>
-  <%= submit_tag 'Edit' %>
-<% end %>
-
-<%= link_to 'Show', :action => 'show', :id => @problem %> |
-<%= link_to 'Back', problems_path %>

@@ -2,20 +2,26 @@
   %nav
     .container-fluid
       .navbar-header
+        %button.navbar-toggle.collapsed{ data: {toggle: 'collapse', target: '#navbar-collapse'} }
+          %span.sr-only Togggle Navigation
+          %span.icon-bar
+          %span.icon-bar
+          %span.icon-bar
         %a.navbar-brand{href: main_list_path} 
           %span.glyphicon.glyphicon-home
           MAIN
-      .collapse.navbar-collapse
+      .collapse.navbar-collapse#navbar-collapse
         %ul.nav.navbar-nav
+          / submission
           - if (@current_user!=nil) and (GraderConfiguration.show_tasks_to?(@current_user))
-            //= add_menu("#{I18n.t 'menu.tasks'}", 'tasks', 'list')
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
                 = "#{I18n.t 'menu.submissions'}"
                 %span.caret
               %ul.dropdown-menu
-                = add_menu("View", 'main', 'submission')
+                = add_menu("View", 'submissions', 'index')
                 = add_menu("Self Test", 'test', 'index')
+          / hall of fame
           - if GraderConfiguration['right.user_hall_of_fame']
             = add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
           / display MODE button (with countdown in contest mode)
@@ -32,6 +38,7 @@
                 $("#countdown").countdown({until: "+#{@current_user.contest_time_left.to_i}s", layout: 'Time left: {hnn}:{mnn}:{snn}'}); 
           / admin section
           - if (@current_user!=nil) and (session[:admin])
+            / management
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
                 Manage
@@ -47,12 +54,14 @@
                 %li.divider{role: 'separator'}
                 = add_menu( 'Sites', 'sites', 'index')
                 = add_menu( 'Contests', 'contest_management', 'index')
+            / report
             %li.dropdown
               %a.dropdown-toggle{href: '#', data: {toggle:'dropdown'},  aria: {haspopup:"true", expanded:"false"}, role: "button"}
                 Report
                 %span.caret
               %ul.dropdown-menu
-                = add_menu( 'Results', 'report', 'current_score')
+                = add_menu( 'Current Score', 'report', 'current_score')
+                = add_menu( 'Score Report', 'report', 'max_score')
                 = add_menu( 'Report', 'report', 'multiple_login')
             - if (ungraded = Submission.where('graded_at is null').where('submitted_at < ?', 1.minutes.ago).count) > 0
               =link_to "#{ungraded} backlogs!",

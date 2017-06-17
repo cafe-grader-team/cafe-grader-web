@@ -11,5 +11,6 @@
 %body
   = render 'layouts/header'
 
-  = content_tag(:p,flash[:notice],class: 'alert alert-success') if flash[:notice]!=nil
+  /= content_tag(:p,flash[:notice],class: 'alert alert-success') if flash[:notice]!=nil
+  = flash_messages
   = yield

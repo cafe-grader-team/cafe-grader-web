@@ -9,18 +9,14 @@ class ReportController < ApplicationController
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
-    if GraderConfiguration["right.user_view_submission"]
-      return true;
-    end
-
-    admin_authorization
+    admin_authorization unless GraderConfiguration["right.user_view_submission"]
   }
 
   def max_score
   end
 
   def current_score
-    @problems = Problem.find_available_problems
+    @problems = Problem.available_problems
     @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
     @scorearray = calculate_max_score(@problems, @users,0,0,true)
 
@@ -38,25 +34,27 @@ class ReportController < ApplicationController
     #process parameters
     #problems
     @problems = []
-    params[:problem_id].each do |id|
-      next unless id.strip != ""
-      pid = Problem.find_by_id(id.to_i)
-      @problems << pid if pid
+    if params[:problem_id]
+      params[:problem_id].each do |id|
+        next unless id.strip != ""
+        pid = Problem.find_by_id(id.to_i)
+        @problems << pid if pid
+      end
     end
 
     #users
     @users = if params[:user] == "all" then 
-               User.find(:all, :include => [:contests, :contest_stat]) 
+               User.includes(:contests).includes(:contest_stat)
              else 
                User.includes(:contests).includes(:contest_stat).where(enabled: true)
              end
 
     #set up range from param
-    since_id = params.fetch(:min_id, 0).to_i
-    until_id = params.fetch(:max_id, 0).to_i
+    @since_id = params.fetch(:from_id, 0).to_i
+    @until_id = params.fetch(:to_id, 0).to_i
 
     #calculate the routine
-    @scorearray = calculate_max_score(@problems, @users,since_id,until_id)
+    @scorearray = calculate_max_score(@problems, @users, @since_id, @until_id)
 
     #rencer accordingly
     if params[:button] == 'download' then
@@ -73,9 +71,9 @@ class ReportController < ApplicationController
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) 
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new

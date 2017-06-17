@@ -1,13 +1,14 @@
 class ProblemsController < ApplicationController
 
-  before_filter :authenticate, :authorization
+  before_action :authenticate, :authorization
+  before_action :testcase_authorization, only: [:show_testcase]
 
   in_place_edit_for :problem, :name
   in_place_edit_for :problem, :full_name
   in_place_edit_for :problem, :full_score
 
   def index
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
@@ -27,7 +28,7 @@ class ProblemsController < ApplicationController
   end
 
   def create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @description = Description.new(params[:description])
     if @description.body!=''
       if !@description.save
@@ -46,7 +47,7 @@ class ProblemsController < ApplicationController
   end
 
   def quick_create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @problem.full_name = @problem.name if @problem.full_name == ''
     @problem.full_score = 100
     @problem.available = false
@@ -87,7 +88,7 @@ class ProblemsController < ApplicationController
         flash[:notice] = 'Error: Uploaded file is not PDF'
         render :action => 'edit' and return
     end
-    if @problem.update_attributes(params[:problem])
+    if @problem.update_attributes(problem_params)
       flash[:notice] = 'Problem was successfully updated.'
       unless params[:file] == nil or params[:file] == ''
         flash[:notice] = 'Problem was successfully updated and a new PDF file is uploaded.'
@@ -134,9 +135,16 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def toggle_view_testcase
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(view_testcase: !(@problem.view_testcase?) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
   def turn_all_off
-    Problem.find(:all,
-                 :conditions => "available = 1").each do |problem|
+    Problem.available.all.each do |problem|
       problem.available = false
       problem.save
     end
@@ -144,8 +152,7 @@ class ProblemsController < ApplicationController
   end
 
   def turn_all_on
-    Problem.find(:all,
-                 :conditions => "available = 0").each do |problem|
+    Problem.where.not(available: true).each do |problem|
       problem.available = true
       problem.save
     end
@@ -176,7 +183,7 @@ class ProblemsController < ApplicationController
   end
 
   def manage
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   def do_manage
@@ -277,5 +284,11 @@ class ProblemsController < ApplicationController
 
   def get_problems_stat
   end
+
+  private
+
+    def problem_params
+      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description)
+    end
 
 end

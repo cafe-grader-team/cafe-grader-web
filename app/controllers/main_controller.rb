@@ -45,7 +45,7 @@ class MainController < ApplicationController
     #   @hidelogin = true
     # end
 
-    @announcements = Announcement.find_for_frontpage
+    @announcements = Announcement.frontpage
     render :action => 'login', :layout => 'empty'
   end
 
@@ -88,10 +88,10 @@ class MainController < ApplicationController
 
     if @submission.valid?
       if @submission.save == false
-	flash[:notice] = 'Error saving your submission'
+        flash[:notice] = 'Error saving your submission'
       elsif Task.create(:submission_id => @submission.id, 
                         :status => Task::STATUS_INQUEUE) == false
-	flash[:notice] = 'Error adding your submission to task queue'
+        flash[:notice] = 'Error adding your submission to task queue'
       end
     else
       prepare_list_information
@@ -106,7 +106,7 @@ class MainController < ApplicationController
         (submission.problem != nil) and 
         (submission.problem.available))
       send_data(submission.source, 
-		{:filename => submission.download_filename, 
+                {:filename => submission.download_filename, 
                   :type => 'text/plain'})
     else
       flash[:notice] = 'Error viewing source'
@@ -121,23 +121,6 @@ class MainController < ApplicationController
     else
       flash[:notice] = 'Error viewing source'
       redirect_to :action => 'list'
-    end
-  end
-
-  def submission
-    @user = User.find(session[:user_id])
-    @problems = @user.available_problems
-    if params[:id]==nil
-      @problem = nil
-      @submissions = nil
-    else
-      @problem = Problem.find_by_id(params[:id])
-      if (@problem == nil) or (not @problem.available)
-        redirect_to :action => 'list'
-        flash[:notice] = 'Error: submissions for that problem are not viewable.'
-        return
-      end
-      @submissions = Submission.find_all_by_user_problem(@user.id, @problem.id)
     end
   end
 
@@ -217,9 +200,9 @@ class MainController < ApplicationController
 
   def prepare_announcements(recent=nil)
     if GraderConfiguration.show_tasks_to?(@user)
-      @announcements = Announcement.find_published(true)
+      @announcements = Announcement.published(true)
     else
-      @announcements = Announcement.find_published
+      @announcements = Announcement.published
     end
     if recent!=nil
       recent_id = recent.to_i

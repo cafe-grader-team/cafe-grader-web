@@ -29,7 +29,7 @@ class UserAdminController < ApplicationController
   end
 
   def active
-    sessions = ActiveRecord::SessionStore::Session.find(:all, :conditions => ["updated_at >= ?", 60.minutes.ago])
+    sessions = ActiveRecord::SessionStore::Session.where("updated_at >= ?", 60.minutes.ago)
     @users = []
     sessions.each do |session|
       if session.data[:user_id]
@@ -47,7 +47,7 @@ class UserAdminController < ApplicationController
   end
 
   def create
-    @user = User.new(params[:user])
+    @user = User.new(user_params)
     @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'
@@ -74,27 +74,39 @@ class UserAdminController < ApplicationController
       if items.length>=2
         login = items[0]
         full_name = items[1]
+        remark =''
+        user_alias = ''
 
         added_random_password = false
-        if items.length>=3
+        if items.length >= 3 and items[2].chomp(" ").length > 0;
           password = items[2].chomp(" ")
-          user_alias = (items.length>=4) ? items[3] : login
         else
           password = random_password
-          user_alias = (items.length>=4) ? items[3] : login
-          added_random_password = true
+          add_random_password=true;
+        end
+
+        if items.length>= 4 and items[3].chomp(" ").length > 0;
+          user_alias = items[3].chomp(" ")
+        else
+          user_alias = login
+        end
+
+        if items.length>=5
+          remark = items[4].strip;
         end
 
         user = User.find_by_login(login)
         if (user)
           user.full_name = full_name
           user.password = password
+          user.remark = remark
         else
           user = User.new({:login => login,
                             :full_name => full_name,
                             :password => password,
                             :password_confirmation => password,
-                            :alias => user_alias})
+                            :alias => user_alias,
+                            :remark => remark})
         end
         user.activated = true
         user.save
@@ -106,7 +118,7 @@ class UserAdminController < ApplicationController
         end
       end
     end
-    flash[:notice] = 'User(s) ' + note.join(', ') + 
+    flash[:success] = 'User(s) ' + note.join(', ') + 
       ' were successfully created.  ' +
       '( (+) - created with random passwords.)'   
     redirect_to :action => 'index'
@@ -118,7 +130,7 @@ class UserAdminController < ApplicationController
 
   def update
     @user = User.find(params[:id])
-    if @user.update_attributes(params[:user])
+    if @user.update_attributes(user_params)
       flash[:notice] = 'User was successfully updated.'
       redirect_to :action => 'show', :id => @user
     else
@@ -135,9 +147,9 @@ class UserAdminController < ApplicationController
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) 
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
@@ -164,9 +176,9 @@ class UserAdminController < ApplicationController
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.find(:all, :include => [:contests, :contest_stat])
+    @users = User.includes(:contests).includes(:contest_stat).all
     @scorearray = Array.new
     #set up range from param
     since_id = params.fetch(:since_id, 0).to_i
@@ -201,7 +213,7 @@ class UserAdminController < ApplicationController
   end
 
   def random_all_passwords
-    users = User.find(:all)
+    users = User.all
     @prefix = params[:prefix] || ''
     @non_admin_users = User.find_non_admin_with_prefix(@prefix)
     @changed = false
@@ -324,7 +336,7 @@ class UserAdminController < ApplicationController
   # admin management
 
   def admin
-    @admins = User.find(:all).find_all {|user| user.admin? }
+    @admins = User.all.find_all {|user| user.admin? }
   end
 
   def grant_admin
@@ -393,6 +405,39 @@ class UserAdminController < ApplicationController
     flash[:notice] = 'User(s) ' + note.join(', ') + 
       ' were successfully modified.  ' 
     redirect_to :action => 'mass_mailing'
+  end
+
+  #bulk manage
+  def bulk_manage
+
+    begin 
+      @users = User.where('login REGEXP ?',params[:regex]) if params[:regex]
+      @users.count if @users #i don't know why I have to call count, but if I won't exception is not raised
+    rescue Exception
+      flash[:error] = 'Regular Expression is malformed'
+      @users = nil
+    end
+
+    if params[:commit]
+      @action = {}
+      @action[:set_enable] = params[:enabled]
+      @action[:enabled] = params[:enable] == "1"
+      @action[:gen_password] = params[:gen_password]
+    end
+
+    if params[:commit] == "Perform"
+      if @action[:set_enable]
+        @users.update_all(enabled: @action[:enabled])
+      end
+      if @action[:gen_password]
+        @users.each do |u|
+          password = random_password
+          u.password = password
+          u.password_confirmation = password
+          u.save
+        end
+      end
+    end
   end
 
   protected
@@ -521,7 +566,7 @@ class UserAdminController < ApplicationController
             row << sc[i].login
             row << sc[i].full_name
             row << sc[i].activated
-            row << (sc[i].try(:contest_stat).try(:started_at).nil? 'no' : 'yes')
+            row << (sc[i].try(:contest_stat).try(:started_at).nil? ? 'no' : 'yes')
             row << sc[i].contests.collect {|c| c.name}.join(', ')
           else
             row << sc[i][0]
@@ -535,4 +580,9 @@ class UserAdminController < ApplicationController
       end
     end
   end
+
+  private
+    def user_params
+      params.require(:user).permit(:login,:password,:password_confirmation,:email, :alias, :full_name,:remark)
+    end
 end

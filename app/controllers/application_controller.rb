@@ -1,7 +1,7 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
-  before_filter :current_user 
+  before_filter :current_user
 
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
 
   def admin_authorization
     return false unless authenticate
-    user = User.find(session[:user_id], :include => ['roles'])
+    user = User.includes(:roles).find(session[:user_id])
     unless user.admin?
       unauthorized_redirect
       return false
@@ -35,6 +35,18 @@ class ApplicationController < ActionController::Base
       unauthorized_redirect
       return false
     end
+  end
+
+  def testcase_authorization
+    #admin always has privileged
+    puts "haha"
+    if @current_user.admin?
+      return true
+    end
+
+    puts "hehe"
+    puts GraderConfiguration["right.view_testcase"]
+    unauthorized_redirect unless GraderConfiguration["right.view_testcase"]
   end
 
   protected
@@ -101,10 +113,10 @@ class ApplicationController < ActionController::Base
     return false unless authenticate
     user = User.find(session[:user_id])
     unless user.roles.detect { |role|
-	role.rights.detect{ |right|
-	  right.controller == self.class.controller_name and
-          (right.action == 'all' or right.action == action_name)
-	}
+        role.rights.detect{ |right|
+          right.controller == self.class.controller_name and
+            (right.action == 'all' or right.action == action_name)
+        }
       }
       flash[:notice] = 'You are not authorized to view the page you requested'
       #request.env['HTTP_REFERER'] ? (redirect_to :back) : (redirect_to :controller => 'login')

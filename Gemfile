@@ -1,27 +1,34 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~>3.2'
+#rails
+gem 'rails', '~>4.2.0'
+gem 'activerecord-session_store'
 
-gem 'select2-rails'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
+#---------------- database ---------------------
+#the database
 gem 'mysql2'
+#for testing
+gem 'sqlite3'
+#for dumping database into yaml
+gem 'yaml_db'
 
 # Gems used only for assets and not required
 # in production environments by default.
-group :assets do
-  gem 'sass-rails',   '~> 3.2.6'
-  gem 'coffee-rails', '~> 3.2.2'
+gem 'sass-rails'
+gem 'coffee-rails'
 
   # See https://github.com/sstephenson/execjs#readme for more supported runtimes
   # gem 'therubyracer', :platforms => :ruby
 
-  gem 'uglifier'
-end
+gem 'uglifier'
 
-gem 'prototype-rails'
+gem 'haml'
+gem 'haml-rails'
+# gem 'prototype-rails'
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
@@ -44,7 +51,7 @@ gem 'best_in_place', '~> 3.0.1'
 
 # jquery addition
 gem 'jquery-rails'
-gem 'jquery-ui-sass-rails'
+gem 'jquery-ui-rails'
 gem 'jquery-timepicker-addon-rails'
 gem 'jquery-tablesorter'
 gem 'jquery-countdown-rails'
@@ -62,19 +69,23 @@ gem 'autoprefixer-rails'
 gem 'momentjs-rails'
 gem 'rails_bootstrap_sortable'
 
+#----------- user interface -----------------
+#select 2
+gem 'select2-rails'
 #ace editor
 gem 'ace-rails-ap'
+#paginator
+gem 'will_paginate', '~> 3.0.7'
 
-gem 'haml'
-gem 'haml-rails'
 gem 'mail'
 gem 'rdiscount'
-gem 'test-unit'
-gem 'will_paginate', '~> 3.0.7'
 gem 'dynamic_form'
 gem 'in_place_editing'
 gem 'verification', :git => 'https://github.com/sikachu/verification.git'
 
-group :test, :development do
-  gem 'rspec-rails', '~> 2.99.0'
-end
+
+#---------------- testiing -----------------------
+gem 'minitest-reporters'
+
+#---------------- for console --------------------
+gem 'fuzzy-string-match'
