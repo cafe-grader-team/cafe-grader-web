@@ -66,7 +66,7 @@ class ContestsController < ApplicationController
     @contest = Contest.find(params[:id])
 
     respond_to do |format|
-      if @contest.update_attributes(params[:contest])
+      if @contest.update_attributes(contests_params)
         flash[:notice] = 'Contest was successfully updated.'
         format.html { redirect_to(@contest) }
         format.xml  { head :ok }
@@ -88,5 +88,11 @@ class ContestsController < ApplicationController
       format.xml  { head :ok }
     end
   end
+
+  private
+
+    def contests_params
+      params.require(:contest).permit(:title,:enabled,:name)
+    end
 
 end

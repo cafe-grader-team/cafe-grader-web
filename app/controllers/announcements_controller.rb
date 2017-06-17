@@ -7,8 +7,7 @@ class AnnouncementsController < ApplicationController
   # GET /announcements
   # GET /announcements.xml
   def index
-    @announcements = Announcement.find(:all,
-                                       :order => "created_at DESC")
+    @announcements = Announcement.order(created_at: :desc)
 
     respond_to do |format|
       format.html # index.html.erb
@@ -46,7 +45,7 @@ class AnnouncementsController < ApplicationController
   # POST /announcements
   # POST /announcements.xml
   def create
-    @announcement = Announcement.new(params[:announcement])
+    @announcement = Announcement.new(announcement_params)
 
     respond_to do |format|
       if @announcement.save
@@ -66,14 +65,34 @@ class AnnouncementsController < ApplicationController
     @announcement = Announcement.find(params[:id])
 
     respond_to do |format|
-      if @announcement.update_attributes(params[:announcement])
+      if @announcement.update_attributes(announcement_params)
         flash[:notice] = 'Announcement was successfully updated.'
         format.html { redirect_to(@announcement) }
+        format.js   {}
         format.xml  { head :ok }
       else
         format.html { render :action => "edit" }
+        format.js   {}
         format.xml  { render :xml => @announcement.errors, :status => :unprocessable_entity }
       end
+    end
+  end
+
+  def toggle
+    @announcement = Announcement.find(params[:id])
+    @announcement.update_attributes( published:  !@announcement.published? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#announcement_toggle_#{@announcement.id}",button_on: @announcement.published? } }
+    end
+  end
+
+  def toggle_front
+    @announcement = Announcement.find(params[:id])
+    @announcement.update_attributes( frontpage:  !@announcement.frontpage? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#announcement_toggle_front_#{@announcement.id}",button_on: @announcement.frontpage? } }
     end
   end
 
@@ -88,4 +107,10 @@ class AnnouncementsController < ApplicationController
       format.xml  { head :ok }
     end
   end
+
+  private
+
+    def announcement_params
+      params.require(:announcement).permit(:author, :body, :published, :frontpage, :contest_only, :title)
+    end
 end

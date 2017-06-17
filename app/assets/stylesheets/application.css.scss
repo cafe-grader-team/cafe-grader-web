@@ -1,0 +1,548 @@
+/* This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or any plugin's vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any styles
+ * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
+ * file per style scope.
+ *
+ * // bootstrap says that we should not do this, but @import each file instead
+ * #   *= require_tree .
+ * #   *= require_self
+ */
+
+@import "jquery-ui";
+//@import "jquery.ui.core";
+//@import "jquery.ui.theme";
+//@import "jquery.ui.datepicker";
+//@import "jquery.ui.slider";
+@import "jquery-ui-timepicker-addon";
+@import "jquery-tablesorter/theme.metro-dark";
+@import "jquery.countdown";
+@import "tablesorter-theme.cafe";
+
+//bootstrap
+@import "bootstrap-sprockets";
+@import "bootstrap";
+@import "select2";
+@import "select2-bootstrap";
+
+//@import bootstrap3-switch
+@import "bootstrap-toggle";
+@import "bootstrap-sortable";
+
+//bootstrap navbar color (from)
+$bgDefault: #19197b;
+$bgHighlight: #06064b;
+$colDefault: #8e8eb4;
+$colHighlight: #ffffff;
+$dropDown: false;
+
+@font-face {
+    font-family: 'Glyphicons Halflings';
+    src: font-path('bootstrap/glyphicons-halflings-regular.eot');
+    src: font-path('bootstrap/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), 
+      font-path('bootstrap/glyphicons-halflings-regular.woff') format('woff'), 
+      font-path('bootstrap/glyphicons-halflings-regular.ttf') format('truetype'), 
+      font-path('bootstrap/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
+}
+
+
+.navbar-default {
+  background-color: $bgDefault;
+  border-color: $bgHighlight;
+
+  .navbar-brand {
+    color: $colDefault;
+
+    &:hover, &:focus {
+      color: $colHighlight;
+    }
+  }
+
+  .navbar-text {
+    color: $colDefault;
+  }
+
+  .navbar-nav {
+    > li {
+      > a {
+        color: $colDefault;
+
+        &:hover, &:focus {
+          color: $colHighlight;
+        }
+      }
+
+      @if $dropDown {
+        > .dropdown-menu {
+          background-color: $bgDefault;
+
+          > li {
+            > a {
+              color: $colDefault;
+
+              &:hover, &:focus {
+                color: $colHighlight;
+                background-color: $bgHighlight;
+              }
+            }
+
+            > .divider {
+              background-color: $bgHighlight;
+            }
+          }
+        }
+      }
+    }
+
+    @if $dropDown {
+      .open .dropdown-menu > .active {
+        > a, > a:hover, > a:focus {
+          color: $colHighlight;
+          background-color: $bgHighlight;
+        }
+      }
+    }
+
+    > .active {
+      > a, > a:hover, > a:focus {
+        color: $colHighlight;
+        background-color: $bgHighlight;
+      }
+    }
+
+    > .open {
+      > a, > a:hover, > a:focus {
+        color: $colHighlight;
+        background-color: $bgHighlight;
+      }
+    }
+  }
+
+  .navbar-toggle {
+    border-color: $bgHighlight;
+
+    &:hover, &:focus {
+      background-color: $bgHighlight;
+    }
+
+    .icon-bar {
+      background-color: $colDefault;
+    }
+  }
+
+  .navbar-collapse,
+  .navbar-form {
+    border-color: $colDefault;
+  }
+
+  .navbar-link {
+    color: $colDefault;
+
+    &:hover {
+      color: $colHighlight;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .navbar-default .navbar-nav .open .dropdown-menu {
+    > li > a {
+      color: $colDefault;
+
+      &:hover, &:focus {
+        color: $colHighlight;
+      }
+    }
+
+    > .active {
+      > a, > a:hover, > a:focus {
+        color: $colHighlight;
+        background-color: $bgHighlight;
+      }
+    }
+  }
+}
+
+.secondnavbar {
+  top: 50px;
+}
+
+// --------------- bootstrap file upload ----------------------
+.btn-file {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-file input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity = 0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
+
+body {
+  background: white image-url("topbg.jpg") repeat-x top center;
+
+  //font-size: 13px
+  //font-family: Tahoma, "sans-serif"
+  margin: 10px;
+  padding: 10px;
+  padding-top: 60px;
+}
+
+// ------------------ bootstrap sortable --------------------
+table.sortable th {
+  padding-right: 20px !important;
+
+  span.sign {
+    right: (-15px) !important;
+  }
+
+  &.text-right {
+    padding-left: 20px !important;
+    padding-right: 8px !important;
+
+    &:after, span.sign {
+      left: (-15px) !important;
+    }
+  }
+}
+
+input {
+  font-family: Tahoma, "sans-serif";
+}
+
+h1 {
+  font-size: 24px;
+  color: #334488;
+  line-height: 2em;
+}
+
+h2 {
+  font-size: 18px;
+  color: #5566bb;
+  line-height: 1.5em;
+}
+
+hr {
+  border-top: 1px solid #dddddd;
+  border-bottom: 1px solid #eeeeee;
+}
+
+//#a
+//  color: #6666cc
+//  text-decoration: none
+//
+//  &:link, &:visited
+//    color: #6666cc
+//    text-decoration: none
+//
+//  &:hover, &:focus
+//    color: #111166
+//    text-decoration: none
+
+div {
+  &.userbar {
+    line-height: 1.5em;
+    text-align: right;
+    font-size: 12px;
+  }
+
+  &.title {
+    padding: 10px 0px;
+    line-height: 1.5em;
+    font-size: 13px;
+
+    span.contest-over-msg {
+      font-size: 15px;
+      color: red;
+    }
+
+    table {
+      width: 100%;
+      font-weight: bold;
+    }
+
+    td {
+      &.left-col {
+        text-align: left;
+        vertical-align: top;
+        color: #444444;
+      }
+
+      &.right-col {
+        text-align: right;
+        vertical-align: top;
+        font-size: 18px;
+        color: #116699;
+      }
+    }
+  }
+}
+
+table.info {
+  margin: 10px 0;
+  border: 1px solid #666666;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  th {
+    border: 1px solid #666666;
+    line-height: 1.5em;
+    padding: 0 0.5em;
+  }
+
+  td {
+    border-left: 1px solid #666666;
+    border-right: 1px solid #666666;
+    line-height: 1.5em;
+    padding: 0 0.5em;
+  }
+}
+
+tr {
+  &.info-head {
+    background: #777777;
+    color: white;
+  }
+
+  &.info-odd {
+    background: #eeeeee;
+  }
+
+  &.info-even {
+    background: #fcfcfc;
+  }
+}
+
+@mixin basicbox {
+  background: #eeeeff;
+  border: 1px dotted #99aaee;
+  padding: 5px;
+  margin: 10px 0px;
+  color: black;
+  font-size: 13px;
+}
+
+.infobox {
+  @include basicbox;
+}
+
+.submitbox {
+  @include basicbox;
+}
+
+.errorExplanation {
+  border: 1px dotted gray;
+  color: #bb2222;
+  padding: 5px 15px 5px 15px;
+  margin-bottom: 5px;
+  background-color: white;
+  font-weight: normal;
+
+  h2 {
+    color: #cc1111;
+    font-weight: bold;
+  }
+}
+
+table.uinfo {
+  border-collapse: collapse;
+  border: 1px solid black;
+  font-size: 13px;
+}
+
+td.uinfo {
+  vertical-align: top;
+  border: 1px solid black;
+  padding: 5px;
+}
+
+th.uinfo {
+  background: lightgreen;
+  vertical-align: top;
+  text-align: right;
+  border: 1px solid black;
+  padding: 5px;
+}
+
+div {
+  &.compilermsgbody {
+    font-family: monospace;
+  }
+
+  &.task-menu {
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.75em;
+    font-weight: bold;
+    border-top: 1px dashed gray;
+    border-bottom: 1px dashed gray;
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+}
+
+table.taskdesc {
+  border: 2px solid #dddddd;
+  border-collapse: collapse;
+  margin: 10px auto;
+  width: 90%;
+  font-size: 13px;
+
+  p {
+    font-size: 13px;
+  }
+
+  tr.name {
+    border: 2px solid #dddddd;
+    background: #dddddd;
+    color: #333333;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.5em;
+    text-align: center;
+  }
+
+  td {
+    &.desc-odd {
+      padding: 5px;
+      padding-left: 20px;
+      background: #fefeee;
+    }
+
+    &.desc-even {
+      padding: 5px;
+      padding-left: 20px;
+      background: #feeefe;
+    }
+  }
+}
+
+.announcementbox {
+  margin: 10px 0px;
+  background: #bbddee;
+  padding: 1px;
+
+  span.title {
+    font-weight: bold;
+    color: #224455;
+    padding-left: 10px;
+    line-height: 1.6em;
+  }
+}
+
+.announcement {
+  margin: 2px;
+  background: white;
+  padding: 1px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.announcement p {
+  font-size: 12px;
+  margin: 2px;
+}
+
+.pub-info {
+  text-align: right;
+  font-style: italic;
+  font-size: 9px;
+
+  p {
+    text-align: right;
+    font-style: italic;
+    font-size: 9px;
+  }
+}
+
+.announcement {
+  .toggles {
+    font-weight: normal;
+    float: right;
+    font-size: 80%;
+  }
+
+  .announcement-title {
+    font-weight: bold;
+  }
+}
+
+div {
+  &.message {
+    margin: 10px 0 0;
+
+    div {
+      &.message {
+        margin: 0 0 0 30px;
+      }
+
+      &.body {
+        border: 2px solid #dddddd;
+        background: #fff8f8;
+        padding-left: 5px;
+      }
+
+      &.reply-body {
+        border: 2px solid #bbbbbb;
+        background: #fffff8;
+        padding-left: 5px;
+      }
+
+      &.stat {
+        font-size: 10px;
+        line-height: 1.75em;
+        padding: 0 5px;
+        color: #333333;
+        background: #dddddd;
+        font-weight: bold;
+      }
+
+      &.message div.stat {
+        font-size: 10px;
+        line-height: 1.75em;
+        padding: 0 5px;
+        color: #444444;
+        background: #bbbbbb;
+        font-weight: bold;
+      }
+    }
+  }
+
+  &.contest-title {
+    color: white;
+    text-align: center;
+    line-height: 2em;
+  }
+
+  &.registration-desc, &.test-desc {
+    border: 1px dotted gray;
+    background: #f5f5f5;
+    padding: 5px;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.5em;
+  }
+}
+
+h2.contest-title {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}

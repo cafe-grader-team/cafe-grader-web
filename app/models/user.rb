@@ -8,30 +8,28 @@ class User < ActiveRecord::Base
 
   has_and_belongs_to_many :roles
 
-  has_many :test_requests, :order => "submitted_at DESC"
+  has_many :test_requests, -> {order(submitted_at: DESC)}
 
-  has_many :messages, 
+  has_many :messages, -> { order(created_at: DESC) },
            :class_name => "Message",
-           :foreign_key => "sender_id", 
-           :order => 'created_at DESC'
+           :foreign_key => "sender_id"
 
-  has_many :replied_messages, 
+  has_many :replied_messages, -> { order(created_at: DESC) },
            :class_name => "Message",
-           :foreign_key => "receiver_id", 
-           :order => 'created_at DESC'
+           :foreign_key => "receiver_id"
 
   has_one :contest_stat, :class_name => "UserContestStat", :dependent => :destroy
 
   belongs_to :site
   belongs_to :country
 
-  has_and_belongs_to_many :contests, :uniq => true, :order => 'name'
+  has_and_belongs_to_many :contests, -> { order(:name); uniq}
 
-  scope :activated_users, :conditions => {:activated => true}
+  scope :activated_users, -> {where activated: true}
 
   validates_presence_of :login
   validates_uniqueness_of :login
-  validates_format_of :login, :with => /^[\_A-Za-z0-9]+$/
+  validates_format_of :login, :with => /\A[\_A-Za-z0-9]+\z/
   validates_length_of :login, :within => 3..30
 
   validates_presence_of :full_name
@@ -129,14 +127,14 @@ class User < ActiveRecord::Base
   end
 
   def self.find_non_admin_with_prefix(prefix='')
-    users = User.find(:all)
+    users = User.all
     return users.find_all { |u| !(u.admin?) and u.login.index(prefix)==0 }
   end
 
   # Contest information
 
   def self.find_users_with_no_contest()
-    users = User.find(:all)
+    users = User.all
     return users.find_all { |u| u.contests.length == 0 }
   end
 
@@ -192,7 +190,7 @@ class User < ActiveRecord::Base
 
   def update_start_time
     stat = self.contest_stat
-    if stat == nil or stat.started_at == nil
+    if stat.nil? or stat.started_at.nil?
       stat ||= UserContestStat.new(:user => self)
       stat.started_at = Time.now.gmtime
       stat.save
@@ -233,9 +231,18 @@ class User < ActiveRecord::Base
     return contest_problems
   end
 
+  def solve_all_available_problems?
+    available_problems.each do |p|
+      u = self
+      sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+      return false if !p or !sub or sub.points < p.full_score
+    end
+    return true
+  end
+
   def available_problems
     if not GraderConfiguration.multicontests?
-      return Problem.find_available_problems
+      return Problem.available_problems
     else
       contest_problems = []
       pin = {}
@@ -258,6 +265,10 @@ class User < ActiveRecord::Base
     else
       return problem_in_user_contests? problem
     end
+  end
+
+  def self.clear_last_login
+    User.update_all(:last_ip => nil)
   end
 
   protected

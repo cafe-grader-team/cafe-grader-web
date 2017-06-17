@@ -1,0 +1,77 @@
+- content_for :header do
+  = stylesheet_link_tag 'tablesorter-theme.cafe'
+  = javascript_include_tag 'local_jquery'
+
+%script{:type=>"text/javascript"}
+  $(function () {
+  $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#my_table').tablesorter({widthFixed: true, widgets: ['zebra']});
+  $('#my_table2').tablesorter({widthFixed: true, widgets: ['zebra']});
+  $('#sub_table').tablesorter({widthFixed: true, widgets: ['zebra']});
+  });
+
+%h1 Login status
+
+=render partial: 'report_menu'
+=render partial: 'date_range', locals: {param_text: 'Login date range:', title: 'Query login stat in the range'  }
+
+%h2 Suspect
+
+%table.tablesorter-cafe#my_table
+  %thead
+    %tr
+      %th login
+      %th full name
+      %th login count
+  %tbody
+    - @ml.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= link_to l[:login], controller: 'users', action: 'profile', id: l[:id]
+        %td= l[:full_name]
+        %td= l[:count]
+
+
+%h2 Multiple Logins Report
+This section reports all logins record that have either multiple ip per login or multiple login per ip.
+
+%table.tablesorter-cafe#my_table2
+  %thead
+    %tr
+      %th login
+      %th full name
+      %th IP
+      %th time
+  %tbody
+    - @mld.each do |l|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= link_to l.user[:login], controller: 'users', action: 'profile', id: l[:user_id]
+        %td= l.user[:full_name]
+        %td= l[:ip_address]
+        %td= l[:created_at]
+
+%h2 Multiple IP Submissions Report
+This section reports all submission records that have USER_ID matchs ID that logins on multiple IP
+and that have IP_ADDRESS that has multiple ID logins
+
+Be noted that when submission IP address is not available, this might exclude
+submissions that come from ID that login on multiple-login IP
+
+%table.tablesorter-cafe#sub_table
+  %thead
+    %tr
+      %th login
+      %th full name
+      %th IP
+      %th problem
+      %th Submission
+      %th time
+  %tbody
+    - @subs.each do |s|
+      %tr{class: cycle('info-even','info-odd')}
+        %td= link_to s.user[:login], controller: 'users', action: 'profile', id: s[:user_id]
+        %td= s.user[:full_name]
+        %td= s[:ip_address]
+        %td= s.problem.name
+        %td= link_to(s.id, controller: 'graders' , action: 'submission', id: s.id)
+        %td= s[:submitted_at]

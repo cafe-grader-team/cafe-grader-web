@@ -3,51 +3,62 @@
 
 = user_title_bar(@user)
 
-.announcementbox{:style => (@announcements.length==0 ? "display:none" : "")}
-  %span{:class => 'title'}
-    Announcements
-  #announcementbox-body
-    = render :partial => 'announcement', :collection => @announcements
-
-- if GraderConfiguration.show_submitbox_to?(@user)
-  .submitbox
-    = error_messages_for 'submission'
-    = render :partial => 'submission_box'
-
-
-%hr/
-
 - if (GraderConfiguration.contest_mode?) and (@user.site!=nil) and (@user.site.started!=true)
   %p=t 'main.start_soon'
 
-- if GraderConfiguration.show_tasks_to?(@user)
-  - if not GraderConfiguration.multicontests?
-    %table.info
-      %tr.info-head
-        %th
-        %th Tasks name
-        %th Full name
-        %th # of sub(s)
-        %th Results
-      = render :partial => 'problem', :collection => @problems
-  - else
-    - @contest_problems.each do |cp|
-      - if cp[:problems].length > 0
-        %h2{:class =>'contest-title'}
-          = "#{cp[:contest] ? cp[:contest].title : 'Public problems'}"
-        %table.info
-          %tr.info-head
-            %th
-            %th Tasks name
-            %th Full name
-            %th # of sub(s)
-            %th Results
-          = render :partial => 'problem', :collection => cp[:problems]
-
-
-%hr/
+.row
+  .col-md-7
+    - if GraderConfiguration.show_submitbox_to?(@user)
+      .panel.panel-primary
+        .panel-heading
+          Submission
+        .panel-body
+          = render :partial => 'submission_box'
+    - if GraderConfiguration.show_tasks_to?(@user)
+      - if not GraderConfiguration.multicontests?
+        %table.table.table-striped.table-condensed
+          %thead
+            %tr
+              %th Task name
+              %th Full name
+              %th # of sub(s)
+              %th Results
+              %th
+          %tbody
+            = render :partial => 'problem', :collection => @problems
+      - else
+        - @contest_problems.each do |cp|
+          - if cp[:problems].length > 0
+            %h2{:class =>'contest-title'}
+              = "#{cp[:contest] ? cp[:contest].title : 'Public problems'}"
+            %table.info
+              %tr.info-head
+                %th Task name
+                %th Full name
+                %th # of sub(s)
+                %th Results
+                %th
+              = render :partial => 'problem', :collection => cp[:problems]
+  .col-md-5
+    .panel.panel-info
+      .panel-heading
+        Announcement
+        = link_to 'Manage', announcements_path, class: 'btn btn-xs btn-default'
+      %ul.list-group
+        = render :partial => 'announcement', :collection => @announcements
 
 %script{:type => 'text/javascript'}
   = "Announcement.refreshUrl = '#{url_for :controller => 'main', :action => 'announcements'}';"
   Announcement.registerRefreshEventTimer();
 
+.modal.fade#compiler{tabindex: -1,role: 'dialog'}
+  .modal-dialog.modal-lg{role:'document'}
+    .modal-content
+      .modal-header
+        %button.close{type: 'button', data: {dismissed: :modal}, aria: {label: 'close'}}
+          %span{aria: {hidden: 'true'}, data: {dismiss: 'modal'}} &times;
+        %h4 Compiler message
+      .modal-body
+        %pre#compiler_msg
+      .modal-footer
+        %button.btn.btn-default{type: 'button', data: {dismiss: 'modal'}} Close

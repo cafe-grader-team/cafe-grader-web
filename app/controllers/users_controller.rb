@@ -52,7 +52,7 @@ class UsersController < ApplicationController
       redirect_to :controller => 'main', :action => 'login'
       return
     end
-    @user = User.new(params[:user])
+    @user = User.new(user_params)
     @user.password_confirmation = @user.password = User.random_password
     @user.activated = false
     if (@user.valid?) and (@user.save)
@@ -109,7 +109,7 @@ class UsersController < ApplicationController
     redirect_to :action => 'forget'
   end
 
-  def profile
+  def stat
     @user = User.find(params[:id])
     @submission = Submission.includes(:problem).where(user_id: params[:id])
 
@@ -125,12 +125,30 @@ class UsersController < ApplicationController
 
       @summary[:count] += 1
       next unless sub.problem
-      problem[sub.problem] = [problem[sub.problem], (sub.points >= sub.problem.full_score) ? 1 : 0].max
+      problem[sub.problem] = [problem[sub.problem], ( (sub.try(:points) || 0) >= sub.problem.full_score) ? 1 : 0].max
     end
 
     @histogram[:summary][:max] = [@histogram[:data].max,1].max
     @summary[:attempt] = problem.count
     problem.each_value { |v| @summary[:solve] += 1 if v == 1 }
+  end
+
+  def toggle_activate
+    @user = User.find(params[:id])
+    @user.update_attributes( activated:  !@user.activated? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_activate_user_#{@user.id}",button_on: @user.activated? } }
+    end
+  end
+
+  def toggle_enable
+    @user = User.find(params[:id])
+    @user.update_attributes( enabled:  !@user.enabled? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_enable_user_#{@user.id}",button_on: @user.enabled? } }
+    end
   end
 
   protected
@@ -191,5 +209,10 @@ class UsersController < ApplicationController
     #finally, we allow only admin
     admin_authorization
   end
-  
+
+  private
+    def user_params
+      params.require(:user).permit(:login, :full_name, :email)
+    end
+
 end

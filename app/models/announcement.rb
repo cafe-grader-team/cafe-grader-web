@@ -1,21 +1,15 @@
 class Announcement < ActiveRecord::Base
 
-  def self.find_published(contest_started=false)
+  def self.published(contest_started=false)
     if contest_started
-      Announcement.find(:all,
-                        :conditions => "(published = 1) AND (frontpage = 0)",
-                        :order => "created_at DESC")
+      where(published: true).where(frontpage: false).order(created_at: :desc)
     else
-      Announcement.find(:all,
-                        :conditions => "(published = 1) AND (frontpage = 0) AND (contest_only = 0)",
-                        :order => "created_at DESC")
+      where(published: true).where(frontpage: false).where(contest_only: false).order(created_at: :desc)
     end
   end
 
-  def self.find_for_frontpage
-    Announcement.find(:all,
-                      :conditions => "(published = 1) AND (frontpage = 1)",
-                      :order => "created_at DESC")
+  def self.frontpage
+    where(published: 1).where(frontpage: 1).order(created_at: :desc)
   end
 
 end

@@ -1,27 +1,22 @@
 class ProblemsController < ApplicationController
 
-  before_filter :authenticate, :authorization
+  before_action :authenticate, :authorization
+  before_action :testcase_authorization, only: [:show_testcase]
 
   in_place_edit_for :problem, :name
   in_place_edit_for :problem, :full_name
   in_place_edit_for :problem, :full_score
 
   def index
-    list
-    render :action => 'list'
+    @problems = Problem.order(date_added: :desc)
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, 
-                                      :create, :quick_create,
+  verify :method => :post, :only => [ :create, :quick_create,
                                       :do_manage,
                                       :do_import,
-                                      :update ],
-         :redirect_to => { :action => :list }
-
-  def list
-    @problems = Problem.find(:all, :order => 'date_added DESC')
-  end
+                                    ],
+         :redirect_to => { :action => :index }
 
   def show
     @problem = Problem.find(params[:id])
@@ -33,7 +28,7 @@ class ProblemsController < ApplicationController
   end
 
   def create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @description = Description.new(params[:description])
     if @description.body!=''
       if !@description.save
@@ -45,14 +40,14 @@ class ProblemsController < ApplicationController
     @problem.description = @description
     if @problem.save
       flash[:notice] = 'Problem was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to action: :index
     else
       render :action => 'new'
     end
   end
 
   def quick_create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @problem.full_name = @problem.name if @problem.full_name == ''
     @problem.full_score = 100
     @problem.available = false
@@ -61,10 +56,10 @@ class ProblemsController < ApplicationController
     @problem.date_added = Time.new
     if @problem.save
       flash[:notice] = 'Problem was successfully created.'
-      redirect_to :action => 'list'
+      redirect_to action: :index
     else
       flash[:notice] = 'Error saving problem'
-      redirect_to :action => 'list'
+    redirect_to action: :index
     end
   end
 
@@ -76,14 +71,14 @@ class ProblemsController < ApplicationController
   def update
     @problem = Problem.find(params[:id])
     @description = @problem.description
-    if @description == nil and params[:description][:body]!=''
+    if @description.nil? and params[:description][:body]!=''
       @description = Description.new(params[:description])
       if !@description.save
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
       end
       @problem.description = @description
-    elsif @description!=nil
+    elsif @description
       if !@description.update_attributes(params[:description])
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
@@ -93,7 +88,7 @@ class ProblemsController < ApplicationController
         flash[:notice] = 'Error: Uploaded file is not PDF'
         render :action => 'edit' and return
     end
-    if @problem.update_attributes(params[:problem])
+    if @problem.update_attributes(problem_params)
       flash[:notice] = 'Problem was successfully updated.'
       unless params[:file] == nil or params[:file] == ''
         flash[:notice] = 'Problem was successfully updated and a new PDF file is uploaded.'
@@ -120,32 +115,48 @@ class ProblemsController < ApplicationController
   end
 
   def destroy
-    Problem.find(params[:id]).destroy
-    redirect_to :action => 'list'
+    p = Problem.find(params[:id]).destroy
+    redirect_to action: :index
   end
 
   def toggle
     @problem = Problem.find(params[:id])
-    @problem.available = !(@problem.available)
-    @problem.save
+    @problem.update_attributes(available: !(@problem.available) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
+  def toggle_test
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(test_allowed: !(@problem.test_allowed?) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
+  def toggle_view_testcase
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(view_testcase: !(@problem.view_testcase?) )
+    respond_to do |format|
+      format.js { }
+    end
   end
 
   def turn_all_off
-    Problem.find(:all,
-                 :conditions => "available = 1").each do |problem|
+    Problem.available.all.each do |problem|
       problem.available = false
       problem.save
     end
-    redirect_to :action => 'list'
+    redirect_to action: :index
   end
 
   def turn_all_on
-    Problem.find(:all,
-                 :conditions => "available = 0").each do |problem|
+    Problem.where.not(available: true).each do |problem|
       problem.available = true
       problem.save
     end
-    redirect_to :action => 'list'
+    redirect_to action: :index
   end
 
   def stat
@@ -163,7 +174,7 @@ class ProblemsController < ApplicationController
     @submissions.find_each do |sub|
       d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
       @histogram[:data][d.to_i] += 1 if d < range
-      user[sub.user_id] = [user[sub.user_id], (sub.points >= @problem.full_score) ? 1 : 0].max
+      user[sub.user_id] = [user[sub.user_id], ((sub.try(:points) || 0) >= @problem.full_score) ? 1 : 0].max
     end
     @histogram[:summary][:max] = [@histogram[:data].max,1].max
 
@@ -172,7 +183,7 @@ class ProblemsController < ApplicationController
   end
 
   def manage
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   def do_manage
@@ -273,5 +284,11 @@ class ProblemsController < ApplicationController
 
   def get_problems_stat
   end
+
+  private
+
+    def problem_params
+      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description)
+    end
 
 end

@@ -53,11 +53,19 @@ CONFIGURATIONS =
      :description => 'If the server is in contest mode and this option is true, on the log in of the admin a menu for site selections is shown.'
    },
 
+   #---------------------------- right --------------------------------
    {
      :key => 'right.user_hall_of_fame',
      :value_type => 'boolean',
      :default_value => 'false',
      :description => 'If true, any user can access hall of fame page.'
+   },
+
+   {
+     :key => 'right.multiple_ip_login',
+     :value_type => 'boolean',
+     :default_value => 'true',
+     :description => 'When change from true to false, a user can login from the first IP they logged into afterward.'
    },
 
    {
@@ -67,6 +75,33 @@ CONFIGURATIONS =
      :description => 'If true, any user can view submissions of every one.'
    },
 
+   {
+     :key => 'right.bypass_agreement',
+     :value_type => 'boolean',
+     :default_value => 'true',
+     :description => 'When false, a user must accept usage agreement before login'
+   },
+
+   {
+     :key => 'right.heartbeat_response',
+     :value_type => 'string',
+     :default_value => 'OK',
+     :description => 'Heart beat response text'
+   },
+
+   {
+     :key => 'right.heartbeat_response_full',
+     :value_type => 'string',
+     :default_value => 'OK',
+     :description => 'Heart beat response text when user got full score (set this value to the empty string to disable this feature)'
+   },
+
+   {
+     :key => 'right.view_testcase',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'When true, any user can view/download test data'
+   },
    # If Configuration['system.online_registration'] is true, the
    # system allows online registration, and will use these
    # information for sending confirmation emails.

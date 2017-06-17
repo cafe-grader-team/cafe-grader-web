@@ -4,7 +4,7 @@ class Language < ActiveRecord::Base
 
   def self.cache_ext_hash
     @@languages_by_ext = {}
-    Language.find(:all).each do |language|
+    Language.all.each do |language|
       language.common_ext.split(',').each do |ext|
         @@languages_by_ext[ext] = language
       end

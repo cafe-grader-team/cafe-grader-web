@@ -1,0 +1,34 @@
+%table.table.sortable.table-striped.table-bordered.table-condensed
+  %thead
+    %tr
+      %th Login
+      %th Name
+      / %th Activated?
+      / %th Logged_in
+      / %th Contest(s)
+      %th Remark
+      - @problems.each do |p|
+        %th.text-right= p.name.gsub('_',' ')
+      %th.text-right Total
+      %th.text-right Passed
+  %tbody
+    - @scorearray.each do |sc|
+      %tr
+        - total,num_passed = 0,0
+        - sc.each_index do |i|
+          - if i == 0
+            %td= link_to sc[i].login, stat_user_path(sc[i])
+            %td= sc[i].full_name
+            / %td= sc[i].activated
+            / %td= sc[i].try(:contest_stat).try(:started_at) ? 'yes' : 'no'
+            / %td= sc[i].contests.collect {|c| c.name}.join(', ') 
+            %td= sc[i].remark
+          - else
+            %td.text-right= sc[i][0]
+            - total += sc[i][0]
+            - num_passed += 1 if sc[i][1]
+        %td.text-right= total 
+        %td.text-right= num_passed
+
+:javascript
+  $.bootstrapSortable(true,'reversed')

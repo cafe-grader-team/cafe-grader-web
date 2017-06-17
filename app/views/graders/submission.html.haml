@@ -1,67 +1,87 @@
-%style{type: "text/css"}
-  = @css_style
-:css
-  .field {
-    font-weight: bold;
-    text-align: right;
-    padding: 3px;
-  }
-
-
 %h1= "Submission: #{@submission.id}"
 
+%textarea#data{style: "display:none;"}
+  :preserve
+    #{@submission.source}
 
-%h2 Stat
-
-%table.info
-  %thead
-    %tr.info-head
-      %th Field
-      %th Value
-  %tbody
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field User:
-      %td.value
-        - if @submission.user 
-          = link_to "(#{@submission.user.login})", controller: "users", action: "profile", id: @submission.user
-          = @submission.user.full_name
-        - else
-          = "(n/a)"
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Problem:
-      %td.value
-        - if @submission.problem!=nil
-          = link_to "(#{@submission.problem.name})", controller: "problems", action: "stat", id: @submission.problem
-          = @submission.problem.full_name
-        - else
-          = "(n/a)"
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Tries:
-      %td.value= @submission.number
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Submitted:
-      %td.value #{time_ago_in_words(@submission.submitted_at)} ago (at #{@submission.submitted_at.to_formatted_s(:long)})
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Graded:
-      %td.value #{time_ago_in_words(@submission.graded_at)} ago (at #{@submission.graded_at.to_formatted_s(:long)})
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Points:
-      %td.value #{@submission.points}/#{@submission.problem.full_score}
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Comment:
-      %td.value #{@submission.grader_comment}
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Runtime (s):
-      %td.value #{@submission.max_runtime}
-    %tr{class: cycle('info-even','info-odd')}
-      %td.field Memory (kb):
-      %td.value #{@submission.peak_memory}
-    - if session[:admin]
-      %tr{class: cycle('info-even','info-odd')}
-        %td.field IP:
-        %td.value #{@submission.ip_address}
-
-%h2 Source code
 //%div.highlight{:style => "border: 1px solid black;"}
-=@formatted_code.html_safe
+//=@formatted_code.html_safe
+.containter
+  .row
+    .col-md-7
+      %h2 Source Code
+    .col-md-5
+      %h2 Stat
+  .row
+    .col-md-7
+      %div#editor{ style: "font-size: 14px; height: 400px; border-radius:5px;" }
+      :javascript
+        e = ace.edit("editor")
+        e.setOptions({ maxLines: Infinity })
+        e.setValue($("#data").text())
+        e.gotoLine(1)
+        e.getSession().setMode("#{get_ace_mode(@submission.language)}")
+        e.setReadOnly(true)
+    .col-md-5
+      %table.table.table-striped
+        %tr
+          %td.text-right
+            %strong User
+          %td
+            - if @submission.user 
+              = link_to "(#{@submission.user.login})", controller: "users", action: "profile", id: @submission.user
+              = @submission.user.full_name
+            - else
+              = "(n/a)"
+        %tr
+          %td.text-right
+            %strong Task
+          %td
+            - if @submission.problem!=nil
+              = link_to "(#{@submission.problem.name})", controller: "problems", action: "stat", id: @submission.problem
+              = @submission.problem.full_name
+            - else
+              = "(n/a)"
+        %tr
+          %td.text-right
+            %strong Tries
+          %td= @submission.number
+        %tr
+          %td.text-right
+            %strong Language
+          %td= @submission.language.pretty_name
+        %tr
+          %td.text-right
+            %strong Submitted
+          %td #{time_ago_in_words(@submission.submitted_at)} ago (at #{@submission.submitted_at.to_formatted_s(:long)})
+        %tr
+          %td.text-right
+            %strong Graded
+          - if @submission.graded_at
+            %td #{time_ago_in_words(@submission.graded_at)} ago (at #{@submission.graded_at.to_formatted_s(:long)})
+          - else
+            %td -
+        %tr
+          %td.text-right
+            %strong Points
+          %td #{@submission.points}/#{@submission.problem.full_score}
+        %tr
+          %td.text-right
+            %strong Comment
+          %td #{@submission.grader_comment}
+        %tr
+          %td.text-right
+            %strong Runtime (s)
+          %td #{@submission.max_runtime}
+        %tr
+          %td.text-right
+            %strong Memory (kb)
+          %td #{@submission.peak_memory}
+        - if session[:admin]
+          %tr
+            %td.text-right
+              %strong IP
+            %td #{@submission.ip_address}
+
+
 

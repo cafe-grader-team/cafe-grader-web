@@ -1,0 +1,77 @@
+%h1 Bulk Manage User
+
+= form_tag bulk_manage_user_admin_path
+.row
+  .col-md-6
+    .panel.panel-primary
+      .panel-title.panel-heading
+        Filter User
+      .panel-body
+        Filtering users whose login match the following MySQL regex
+        .form-group
+          = label_tag "regex", 'Regex Pattern'
+          = text_field_tag "regex", params[:regex], class: 'form-control'
+        %p
+          Example
+        %ul
+          %li
+            %code root
+            matches every user whose login contains "root"
+          %li
+            %code ^56
+            matches every user whose login starts with "56"
+          %li
+            %code 21$
+            matches every user whose login ends with "21"
+  .col-md-6
+    .panel.panel-primary
+      .panel-title.panel-heading
+        Action
+      .panel-body
+        .row.form-group
+          .col-md-6
+            %label.checkbox-inline
+              = check_box_tag "enabled", true, params[:enabled]
+              Change "Enabled" to
+          .col-md-3
+            %label.radio-inline
+              = radio_button_tag "enable", 1, params[:enable] == '1', id: 'enable-yes'
+              Yes
+          .col-md-3
+            %label.radio-inline
+              = radio_button_tag "enable", 0, params[:enable] == '0', id: 'enable-no'
+              No
+        .row.form-group
+          .col-md-6
+            %label.checkbox-inline
+              = check_box_tag "gen_password", true, params[:gen_password]
+              Generate new random password
+
+.row
+  .col-md-12
+    = submit_tag "Preview Result", class: 'btn btn-default'
+- if @users
+  .row
+    .col-md-4
+      - if @action
+        %h2 Confirmation
+        - if @action[:set_enable]
+          .alert.alert-info The following users will be set #{(@action[:enabled] ? 'enable' : 'disable')}.
+        - if @action[:gen_password]
+          .alert.alert-info The password of the following users will be randomly generated.
+  .row
+    .col-md-4
+      = submit_tag "Perform", class: 'btn btn-primary'
+  .row
+    .col-md-12
+      The pattern matches #{@users.count} following users.
+      %br
+      - @users.each do |user|
+        = user.login
+        = ' '
+        = user.full_name
+        = ' '
+        = "(#{user.remark})" if user.remark
+        %br
+
+

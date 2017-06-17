@@ -3,7 +3,7 @@
 
 %h1 Import problems
 
-%p= link_to '[Back to problem list]', :action => 'list'
+%p= link_to '[Back to problem list]', problems_path
 
 - if @problem and @problem.errors
   =error_messages_for 'problem'

@@ -13,10 +13,10 @@ john:
   salt: <%= salt %>
   activated: true
 
-mary:
-  login: mary
-  full_name: mary
-  hashed_password: <%= User.encrypt("goodbye",salt) %>
+admin:
+  login: admin
+  full_name: admin
+  hashed_password: <%= User.encrypt("admin",salt) %>
   salt: <%= salt %>
   roles: admin
   activated: true

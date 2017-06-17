@@ -1,0 +1,7 @@
+:plain
+  var t = $("#{button_id}");
+  t.removeClass('btn-default');
+  t.removeClass('btn-success');
+  t.removeClass('btn-warning');
+  t.addClass("btn-#{button_on ? 'success' : 'default'}");
+  t.text("#{button_on ? 'Yes' : 'No'}");
