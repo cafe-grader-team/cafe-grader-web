@@ -85,7 +85,6 @@ class SubmissionsController < ApplicationController
     end
   end
 
-
 protected
 
   def submission_authorization
