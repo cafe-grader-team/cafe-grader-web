@@ -1,0 +1,34 @@
+.container-fluid
+  %h1 Editing announcement
+  = error_messages_for :announcement
+  .row
+    .col-md-6
+      = form_for(@announcement) do |f|
+        .form-group
+          %label Title
+          = f.text_field :title, class: 'form-control'
+        .form-group
+          %label Notes
+          (shown internally, used to organize announcements)
+          = f.text_field :notes, class: 'form-control'
+        .form-group
+          %label Body
+          = f.text_area  :body, class: 'form-control', style: 'height: 200px;'
+        .form-group
+          %label Author
+          = f.text_field :author, class: 'form-control'
+        .checkbox
+          %label 
+            = f.check_box :published
+            Published
+        .checkbox
+          %label 
+            = f.check_box :frontpage
+            Show on front page?
+        .checkbox
+          %label 
+            = f.check_box :contest_only
+            Show only in contest?
+        = f.submit "Update", class: 'btn btn-primary'
+        = link_to 'Show', @announcement, class: 'btn btn-default'
+        = link_to 'Back', announcements_path, class: 'btn btn-default'
