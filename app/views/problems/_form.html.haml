@@ -1,0 +1,52 @@
+= error_messages_for 'problem'
+/ [form:problem]
+.form-group
+  %label{:for => "problem_name"} Name
+  = text_field 'problem', 'name', class: 'form-control'
+  %small
+    Do not directly edit the problem name, unless you know what you are doing. If you want to change the name, use the name change button in the problem management menu instead.
+.form-group
+  %label{:for => "problem_full_name"} Full name
+  = text_field 'problem', 'full_name', class: 'form-control'
+.form-group
+  %label{:for => "problem_full_score"} Full score
+  = text_field 'problem', 'full_score', class: 'form-control'
+.form-group
+  %label{:for => "problem_date_added"} Date added
+  = date_select 'problem', 'date_added', class: 'form-control'
+- # TODO: these should be put in model Problem, but I can't think of
+- #       nice default values for them.  These values look fine only
+- #       in this case (of lazily adding new problems).
+- @problem.available = true if @problem!=nil and @problem.available==nil
+- @problem.test_allowed = true if @problem!=nil and @problem.test_allowed==nil
+- @problem.output_only = false if @problem!=nil and @problem.output_only==nil
+.checkbox
+  %label{:for => "problem_available"}
+    = check_box :problem, :available
+    Available?
+.checkbox
+  %label{:for => "problem_test_allowed"} 
+    = check_box :problem, :test_allowed
+    Test allowed?
+.checkbox
+  %label{:for => "problem_output_only"}
+    = check_box :problem, :output_only
+    Output only?
+= error_messages_for 'description'
+.form-group
+  %label{:for => "description_body"} Description
+  %br/
+  = text_area :description, :body, :rows => 10, :cols => 80,class: 'form-control'
+.form-group
+  %label{:for => "description_markdowned"} Markdowned?
+  = select "description",                                            |
+    "markdowned",                                                    |
+    [['True',true],['False',false]],                                 |
+    {:selected => (@description) ? @description.markdowned : false } |
+.form-group
+  %label{:for => "problem_url"} URL
+  %br/
+  = text_field 'problem', 'url',class: 'form-control'
+%p
+  Task PDF #{file_field_tag 'file'}
+/ [eoform:problem]
