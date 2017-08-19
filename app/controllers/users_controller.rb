@@ -111,7 +111,8 @@ class UsersController < ApplicationController
 
   def stat
     @user = User.find(params[:id])
-    @submission = Submission.includes(:problem).where(user_id: params[:id])
+    @submission = Submission.joins(:problem).where(user_id: params[:id])
+    @submission = @submission.where('problems.available = true') unless current_user.admin?
 
     range = 120
     @histogram = { data: Array.new(range,0), summary: {} }

@@ -225,7 +225,7 @@ class ReportController < ApplicationController
         @by_lang[lang.pretty_name][:memory] = { avail: true, user_id: sub.user_id, value: sub.peak_memory, sub_id: sub.id }
       end
 
-      if sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value] and
+      if sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value] and sub.user and
           !sub.user.admin?
         @by_lang[lang.pretty_name][:first] = { avail: true, user_id: sub.user_id, value: sub.submitted_at, sub_id: sub.id }
       end
