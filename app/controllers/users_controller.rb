@@ -114,6 +114,7 @@ class UsersController < ApplicationController
     @submission = Submission.joins(:problem).where(user_id: params[:id])
     @submission = @submission.where('problems.available = true') unless current_user.admin?
 
+
     range = 120
     @histogram = { data: Array.new(range,0), summary: {} }
     @summary = {count: 0, solve: 0, attempt: 0}
