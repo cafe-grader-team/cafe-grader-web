@@ -9,8 +9,7 @@ class AddNumberToSubmissions < ActiveRecord::Migration
     last_problem_id = nil
     current_number = 0
 
-    Submission.find(:all, 
-                    :order => 'user_id, problem_id, submitted_at').each do |submission|
+    Submission.order('user_id, problem_id, submitted_at').each do |submission|
       if submission.user_id==last_user_id and submission.problem_id==last_problem_id
         current_number += 1
       else

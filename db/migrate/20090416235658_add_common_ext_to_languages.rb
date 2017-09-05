@@ -11,7 +11,7 @@ class AddCommonExtToLanguages < ActiveRecord::Migration
       'cpp' => 'cpp,cc',
       'pas' => 'pas' 
     }
-    Language.find(:all).each do |lang|
+    Language.all.each do |lang|
       lang.common_ext = common_ext[lang.name]
       lang.save
     end

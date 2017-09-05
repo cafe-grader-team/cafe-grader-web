@@ -4,7 +4,7 @@ class AddActivatedToUsers < ActiveRecord::Migration
 
     User.reset_column_information
 
-    User.find(:all).each do |user|
+    User.all.each do |user|
 
       # disable validation
       class <<user
