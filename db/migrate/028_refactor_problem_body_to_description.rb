@@ -3,7 +3,7 @@ class RefactorProblemBodyToDescription < ActiveRecord::Migration
     add_column :problems, :description_id, :integer
     Problem.reset_column_information
     
-    Problem.find(:all).each do |problem|
+    Problem.all.each do |problem|
       if problem.body!=nil
         description = Description.new
         description.body = problem.body
@@ -21,7 +21,7 @@ class RefactorProblemBodyToDescription < ActiveRecord::Migration
     add_column :problems, :body, :text
     Problem.reset_column_information
 
-    Problem.find(:all).each do |problem|
+    Problem.all.each do |problem|
       if problem.description_id != nil
         problem.body = Description.find(problem.description_id).body
         problem.save

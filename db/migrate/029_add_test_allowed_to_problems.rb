@@ -3,7 +3,7 @@ class AddTestAllowedToProblems < ActiveRecord::Migration
     add_column :problems, :test_allowed, :boolean
     Problem.reset_column_information
 
-    Problem.find(:all).each do |problem|
+    Problem.all.each do |problem|
       problem.test_allowed = true
       problem.save
     end
