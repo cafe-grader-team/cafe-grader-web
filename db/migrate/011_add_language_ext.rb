@@ -3,7 +3,7 @@ class AddLanguageExt < ActiveRecord::Migration
     add_column :languages, :ext, :string, :limit => 10
 
     Language.reset_column_information
-    langs = Language.find(:all)
+    langs = Language.all
     langs.each do |l|
       l.ext = l.name
       l.save
