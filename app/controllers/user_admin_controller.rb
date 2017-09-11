@@ -228,6 +228,7 @@ class UserAdminController < ApplicationController
     end
   end
 
+
   # contest management
 
   def contests
@@ -423,6 +424,8 @@ class UserAdminController < ApplicationController
       @action[:set_enable] = params[:enabled]
       @action[:enabled] = params[:enable] == "1"
       @action[:gen_password] = params[:gen_password]
+      @action[:add_group] = params[:add_group]
+      @action[:group_name] = params[:group_name]
     end
 
     if params[:commit] == "Perform"
@@ -435,6 +438,11 @@ class UserAdminController < ApplicationController
           u.password = password
           u.password_confirmation = password
           u.save
+        end
+      end
+      if @action[:add_group]
+        @uses.each do |u|
+
         end
       end
     end
