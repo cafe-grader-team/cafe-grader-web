@@ -1,5 +1,3 @@
-%p#notice= notice
-
 %p
   %b Name:
   = @group.name
@@ -13,55 +11,62 @@
 = link_to 'Back', groups_path
 
 .row
+  %h1 Group details
+.row
   .col-md-6
-    %h1 Users in this group
+    .panel.panel-default
+      .panel-heading
+        .panel-title Users in this group
+      .panel-body
+        =form_tag add_user_group_path(@group), class: 'form-inline' do
+          .form-group
+            =label_tag :user_id, "User"
+            =select_tag :user_id, options_from_collection_for_select(User.all,'id','full_name'), class: 'select2'
+          =submit_tag "Add",class: 'btn btn-primary'
 
-    =form_tag add_user_group_path(@group), class: 'form-inline' do
-      .form-group
-        =label_tag :user_id, "User"
-        =select_tag :user_id, options_from_collection_for_select(User.all,'id','full_name'), class: 'select2'
-      =submit_tag "Add",class: 'btn btn-primary'
 
+        %table.table.table-hover
+          %thead
+            %tr
+              %th Login
+              %th Full name
+              %th Remark
+              %th
 
-    %table.table.table-hover
-      %thead
-        %tr
-          %th Login
-          %th Full name
-          %th Remark
-          %th
-
-      %tbody
-        - @group.users.each do |user|
-          %tr
-            %td= user.login
-            %td= user.full_name
-            %td= user.remark
-            %td= link_to 'Remove', remove_user_group_path(@group,user), :method => :delete, :data => { :confirm => "Remove #{user.full_name}?" }, class: 'btn btn-danger'
+          %tbody
+            - @group.users.each do |user|
+              %tr
+                %td= user.login
+                %td= user.full_name
+                %td= user.remark
+                %td= link_to 'Remove', remove_user_group_path(@group,user), :method => :delete, :data => { :confirm => "Remove #{user.full_name}?" }, class: 'btn btn-danger'
   .col-md-6
-    %h1 Problems in this group
+    .panel.panel-default
+      .panel-heading
+        .panel-title Problems
+      .panel-body
 
-    =form_tag add_problem_group_path(@group), class: 'form-inline' do
-      .form-group
-        =label_tag :problem_id, "Problem"
-        =select_tag :problem_id, options_from_collection_for_select(Problem.all,'id','full_name'), class: 'select2'
-      =submit_tag "Add",class: 'btn btn-primary'
+        =form_tag add_problem_group_path(@group), class: 'form-inline' do
+          .form-group
+            =label_tag :problem_id, "Problem"
+            =select_tag :problem_id, options_from_collection_for_select(Problem.all,'id','full_name'), class: 'select2'
+          =submit_tag "Add",class: 'btn btn-primary'
 
 
-    %table.table.table-hover
-      %thead
-        %tr
-          %th name
-          %th Full name
-          %th Full score
-          %th
+        %table.table.table-hover
+          %thead
+            %tr
+              %th name
+              %th Full name
+              %th Full score
+              %th
 
-      %tbody
-        - @group.problems.each do |problem|
-          %tr
-            %td= problem.name
-            %td= problem.full_name
-            %td= problem.full_score
-            %td= link_to 'Remove', remove_problem_group_path(@group,problem), :method => :delete, :data => { :confirm => "Remove #{problem.full_name}?" }, class: 'btn btn-danger'
+          %tbody
+            - @group.problems.each do |problem|
+              %tr
+                %td= problem.name
+                %td= problem.full_name
+                %td= problem.full_score
+                %td= link_to 'Remove', remove_problem_group_path(@group,problem), :method => :delete, :data => { :confirm => "Remove #{problem.full_name}?" }, class: 'btn btn-danger'
 
 
