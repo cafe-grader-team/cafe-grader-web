@@ -317,17 +317,22 @@ class User < ActiveRecord::Base
     self.groups.each do |group|
       group.problems.where(available: true).each { |p| problem << p }
     end
-    problem.uniq!.sort! do |a,b|
-      case
-      when a.date_added < b.date_added
-        1
-      when a.date_added > b.date_added
-        -1
-      else
-        a.name <=> b.name
+    problem.uniq!
+    if problem
+      problem.sort! do |a,b|
+        case
+        when a.date_added < b.date_added
+          1
+        when a.date_added > b.date_added
+          -1
+        else
+          a.name <=> b.name
+        end
       end
+      return problem
+    else
+      return []
     end
-    return problem
   end
 
   def can_view_problem?(problem)
