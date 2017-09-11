@@ -7,6 +7,7 @@ require 'json'
 class User < ActiveRecord::Base
 
   has_and_belongs_to_many :roles
+  has_and_belongs_to_many :groups
 
   has_many :test_requests, -> {order(submitted_at: DESC)}
 
@@ -290,7 +291,11 @@ class User < ActiveRecord::Base
 
   def available_problems
     if not GraderConfiguration.multicontests?
-      return Problem.available_problems
+      if GraderConfiguration.use_problem_group?
+        return available_problems_in_group
+      else
+        return Problem.available_problems
+      end
     else
       contest_problems = []
       pin = {}
@@ -305,6 +310,14 @@ class User < ActiveRecord::Base
       other_avaiable_problems = Problem.available.find_all {|p| pin[p.id]==nil and p.contests.length==0}
       return contest_problems + other_avaiable_problems
     end
+  end
+
+  def available_problems_in_group
+    problem = []
+    self.groups.each do |group|
+      group.problems.where(available: true).each { |p| problem << p }
+    end
+    return problem.uniq
   end
 
   def can_view_problem?(problem)

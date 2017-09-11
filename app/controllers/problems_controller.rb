@@ -195,6 +195,11 @@ class ProblemsController < ApplicationController
       set_available(true)
     elsif params.has_key? 'disable_problem'
       set_available(false)
+    elsif params.has_key? 'add_group'
+      group = Group.find(params[:group_id])
+      get_problems_from_params.each do |p|
+        group.problems << p
+      end
     end
     redirect_to :action => 'manage'
   end

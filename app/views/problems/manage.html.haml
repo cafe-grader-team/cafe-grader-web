@@ -39,7 +39,7 @@
 %p= link_to '[Back to problem list]', :action => 'list'
 
 = form_tag :action=>'do_manage' do
-  .submitbox
+  .submitbox.panel
     What do you want to do to the selected problem?
     %br/
     (You can shift-click to select a range of problems)
@@ -59,8 +59,13 @@
           Add to 
           = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
           = submit_tag 'Add', :name => 'add_to_contest'
+      %li
+        Add problems to group
+        = select_tag "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'select2'
+        = submit_tag 'Add', name: 'add_group'
+          
 
-  %table
+  %table.table.table-hover
     %tr{style: "text-align: left;"}
       %th= check_box_tag 'select_all'
       %th Name

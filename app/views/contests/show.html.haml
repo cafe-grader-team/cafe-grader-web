@@ -1,0 +1,11 @@
+%h1
+  Contest: #{h @contest.title}
+.infobox
+  %b Go back to:
+  [#{link_to 'contest management', :controller => 'contest_management', :action => 'index'}]
+%p
+  %b Enabled:
+  = h @contest.enabled
+= link_to 'Edit', edit_contest_path(@contest)
+|
+= link_to 'Back', contests_path

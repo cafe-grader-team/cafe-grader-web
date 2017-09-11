@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170427070345) do
+ActiveRecord::Schema.define(version: 20170911091143) do
 
   create_table "announcements", force: :cascade do |t|
     t.string   "author",       limit: 255
@@ -78,6 +78,25 @@ ActiveRecord::Schema.define(version: 20170427070345) do
   end
 
   add_index "grader_processes", ["host", "pid"], name: "index_grader_processes_on_ip_and_pid", using: :btree
+
+  create_table "groups", force: :cascade do |t|
+    t.string "name",        limit: 255
+    t.string "description", limit: 255
+  end
+
+  create_table "groups_problems", id: false, force: :cascade do |t|
+    t.integer "problem_id", limit: 4, null: false
+    t.integer "group_id",   limit: 4, null: false
+  end
+
+  add_index "groups_problems", ["group_id", "problem_id"], name: "index_groups_problems_on_group_id_and_problem_id", using: :btree
+
+  create_table "groups_users", id: false, force: :cascade do |t|
+    t.integer "group_id", limit: 4, null: false
+    t.integer "user_id",  limit: 4, null: false
+  end
+
+  add_index "groups_users", ["user_id", "group_id"], name: "index_groups_users_on_user_id_and_group_id", using: :btree
 
   create_table "heart_beats", force: :cascade do |t|
     t.integer  "user_id",    limit: 4

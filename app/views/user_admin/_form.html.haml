@@ -1,0 +1,31 @@
+= error_messages_for 'user'
+/ [form:user]
+.form-group
+  %label.col-md-2.control-label{for: :login} Login
+  .col-md-4
+    = text_field 'user', 'login', class: 'form-control'
+.form-group
+  %label.col-md-2.control-label{for: :full_name} Full name
+  .col-md-4
+    = text_field 'user', 'full_name', class: 'form-control'
+.form-group
+  %label.col-md-2.control-label{for: :password} Password
+  .col-md-4
+    = password_field 'user', 'password', class: 'form-control'
+.form-group
+  %label.col-md-2.control-label{for: :password_confirmation} Password (confirm)
+  .col-md-4
+    = password_field 'user', 'password_confirmation', class: 'form-control'
+.form-group
+  %label.col-md-2.control-label{for: :email} E-mail
+  .col-md-4
+    = email_field 'user', 'email', class: 'form-control'
+.form-group
+  %label.col-md-2.control-label{for: :alias} Alias
+  .col-md-4
+    = text_field 'user', 'alias', class: 'form-control'
+.form-group
+  %label.col-md-2.control-label{for: :remark} Remark
+  .col-md-4
+    = text_field 'user', 'remark', class: 'form-control'
+/ [eoform:user]

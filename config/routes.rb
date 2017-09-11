@@ -29,7 +29,15 @@ CafeGrader::Application.routes.draw do
       get 'import'
       get 'manage'
     end
+  end
 
+  resources :groups do
+    member do
+      post 'add_user', to: 'groups#add_user', as: 'add_user'
+      delete 'remove_user/:user_id', to: 'groups#remove_user', as: 'remove_user'
+      post 'add_problem', to: 'groups#add_problem', as: 'add_problem'
+      delete 'remove_problem/:problem_id', to: 'groups#remove_problem', as: 'remove_problem'
+    end
   end
 
   resources :testcases, only: [] do
