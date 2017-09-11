@@ -3,7 +3,9 @@
 = form_tag( {:action => 'update', :id => @user}, {class: 'form-horizontal'}) do
   = error_messages_for 'user'
   = render partial: "form"
-  = submit_tag "Edit", class: 'btn btn-primary'
+  .form-group
+    .col-md-offset-2.col-md-4
+      = submit_tag "Edit", class: 'btn btn-primary'
 
 
 = link_to 'Show', :action => 'show', :id => @user 
