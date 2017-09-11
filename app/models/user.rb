@@ -320,9 +320,9 @@ class User < ActiveRecord::Base
     problem.uniq!.sort! do |a,b|
       case
       when a.date_added < b.date_added
-        -1
-      when a.date_added > b.date_added
         1
+      when a.date_added > b.date_added
+        -1
       else
         a.name <=> b.name
       end
