@@ -2,6 +2,7 @@ class Problem < ActiveRecord::Base
 
   belongs_to :description
   has_and_belongs_to_many :contests, :uniq => true
+  has_and_belongs_to_many :groups
   has_many :test_pairs, :dependent => :delete_all
   has_many :testcases, :dependent => :destroy
 

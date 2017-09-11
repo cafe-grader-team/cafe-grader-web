@@ -12,6 +12,7 @@ class GraderConfiguration < ActiveRecord::Base
   MULTIPLE_IP_LOGIN_KEY = 'right.multiple_ip_login'
   VIEW_TESTCASE = 'right.view_testcase'
   SINGLE_USER_KEY = 'system.single_user_mode'
+  SYSTEM_USE_PROBLEM_GROUP = 'system.use_problem_group'
 
   cattr_accessor :config_cache
   cattr_accessor :task_grading_info_cache
@@ -118,6 +119,10 @@ class GraderConfiguration < ActiveRecord::Base
   
   def self.analysis_mode?
     return get(SYSTEM_MODE_CONF_KEY) == 'analysis'
+  end
+
+  def self.use_problem_group?
+    return get(SYSTEM_USE_PROBLEM_GROUP)
   end
   
   def self.contest_time_limit

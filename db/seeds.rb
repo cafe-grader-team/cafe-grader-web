@@ -163,7 +163,16 @@ CONFIGURATIONS =
      :value_type => 'string',
      :default_value => 'none',
      :description => "New user will be assigned to this contest automatically, if it exists.  Set to 'none' if there is no default contest."
-   }
+   },
+
+   {
+     :key => 'system.use_problem_group',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => "If true, available problem to the user will be only ones associated with the group of the user."
+   },
+
+
 
   ]
 

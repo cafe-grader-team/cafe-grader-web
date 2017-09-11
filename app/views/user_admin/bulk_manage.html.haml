@@ -53,7 +53,7 @@
               Add users to group
           %label.col-md-3.control-label.text-right Group name
           .col-md-5
-            = text_field_tag "group_name", params[:group_name], id: 'group_name',class: 'form-control select2'
+            = select_tag "group_name", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'form-control select2'
 
 
 .row

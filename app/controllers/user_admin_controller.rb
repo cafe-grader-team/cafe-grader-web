@@ -440,10 +440,9 @@ class UserAdminController < ApplicationController
           u.save
         end
       end
-      if @action[:add_group]
-        @uses.each do |u|
-
-        end
+      if @action[:add_group] and @action[:group_name]
+        @group = Group.find(@action[:group_name])
+        @users.each { |user|  @group.users << user }
       end
     end
   end
