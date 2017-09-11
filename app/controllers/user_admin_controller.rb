@@ -412,7 +412,7 @@ class UserAdminController < ApplicationController
   def bulk_manage
 
     begin 
-      @users = User.where('login REGEXP ?',params[:regex]) if params[:regex]
+      @users = User.where('(login REGEXP ?) OR (remark REGEXP ?)',params[:regex],params[:regex]) if params[:regex]
       @users.count if @users #i don't know why I have to call count, but if I won't exception is not raised
     rescue Exception
       flash[:error] = 'Regular Expression is malformed'
