@@ -1,0 +1,20 @@
+%h1 Editing contest
+= form_for(@contest) do |f|
+  = f.error_messages
+  %table
+    %tr
+      %td= f.label :name
+      %td= f.text_field :name
+    %tr
+      %td= f.label :title
+      %td= f.text_field :title
+    %tr
+      %td
+      %td
+        = f.check_box :enabled
+        = f.label :enabled
+  %p
+    = f.submit 'Update'
+= link_to 'Show', @contest
+|
+= link_to 'Back', contests_path
