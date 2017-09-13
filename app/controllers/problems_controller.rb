@@ -197,10 +197,20 @@ class ProblemsController < ApplicationController
       set_available(false)
     elsif params.has_key? 'add_group'
       group = Group.find(params[:group_id])
+      ok = []
+      failed = []
       get_problems_from_params.each do |p|
-        group.problems << p
+        begin
+          group.problems << p
+          ok << p.full_name
+        rescue => e
+          failed << p.full_name
+        end
       end
+      flash[:success] = "The following problems are added to the group #{group.name}: " + ok.join(', ') if ok.count > 0
+      flash[:alert] = "The following problems are already in the group #{group.name}: " + failed.join(', ') if failed.count > 0
     end
+
     redirect_to :action => 'manage'
   end
 

@@ -52,25 +52,33 @@ class GroupsController < ApplicationController
   def remove_user
     user = User.find(params[:user_id])
     @group.users.delete(user)
-    redirect_to group_path(@group), notice: "User #{user.login} was removed from the group #{@group.name}"
+    redirect_to group_path(@group), flash: {success: "User #{user.login} was removed from the group #{@group.name}"}
   end
 
   def add_user
     user = User.find(params[:user_id])
-    @group.users << user
-    redirect_to group_path(@group), notice: "User #{user.login} was add to the group #{@group.name}"
+    begin
+      @group.users << user
+      redirect_to group_path(@group), flash: { success: "User #{user.login} was add to the group #{@group.name}"}
+    rescue => e
+      redirect_to group_path(@group), alert: e.message
+    end
   end
 
   def remove_problem
     problem = Problem.find(params[:problem_id])
     @group.problems.delete(problem)
-    redirect_to group_path(@group), notice: "Problem #{problem.name} was removed from the group #{@group.name}"
+    redirect_to group_path(@group), flash: {success: "Problem #{problem.name} was removed from the group #{@group.name}" }
   end
 
   def add_problem
     problem = Problem.find(params[:problem_id])
-    @group.problems << problem
-    redirect_to group_path(@group), notice: "Problem #{problem.name} was add to the group #{@group.name}"
+    begin
+      @group.problems << problem
+      redirect_to group_path(@group), flash: {success: "Problem #{problem.name} was add to the group #{@group.name}" }
+    rescue => e
+      redirect_to group_path(@group), alert: e.message
+    end
   end
 
   private

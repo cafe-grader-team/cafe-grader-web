@@ -36,33 +36,37 @@
 
 %h1 Manage problems
 
-%p= link_to '[Back to problem list]', :action => 'list'
+%p= link_to '[Back to problem list]', problems_path
 
 = form_tag :action=>'do_manage' do
-  .submitbox.panel
-    What do you want to do to the selected problem?
-    %br/
-    (You can shift-click to select a range of problems)
-    %ul
-      %li
-        Change date added to
-        = select_date Date.current, :prefix => 'date_added'
-        &nbsp;&nbsp;&nbsp;
-        = submit_tag 'Change', :name => 'change_date_added'
-      %li
-        Set available to
-        = submit_tag 'True', :name => 'enable_problem'
-        = submit_tag 'False', :name => 'disable_problem'
+  .panel.panel-primary
+    .panel-heading
+      Action
+    .panel-body
+      .submit-box
+        What do you want to do to the selected problem?
+        %br/
+        (You can shift-click to select a range of problems)
+        %ul
+          %li
+            Change date added to
+            = select_date Date.current, :prefix => 'date_added'
+            &nbsp;&nbsp;&nbsp;
+            = submit_tag 'Change', :name => 'change_date_added', class: 'btn btn-default'
+          %li
+            Set available to
+            = submit_tag 'True', :name => 'enable_problem', class: 'btn btn-default'
+            = submit_tag 'False', :name => 'disable_problem', class: 'btn btn-default'
 
-      - if GraderConfiguration.multicontests?
-        %li
-          Add to 
-          = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
-          = submit_tag 'Add', :name => 'add_to_contest'
-      %li
-        Add problems to group
-        = select_tag "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'select2'
-        = submit_tag 'Add', name: 'add_group'
+          - if GraderConfiguration.multicontests?
+            %li
+              Add to 
+              = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
+              = submit_tag 'Add', :name => 'add_to_contest', class: 'btn btn-default'
+          %li
+            Add problems to group
+            = select_tag "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'select2'
+            = submit_tag 'Add', name: 'add_group', class: 'btn btn-default'
           
 
   %table.table.table-hover

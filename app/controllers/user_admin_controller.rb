@@ -442,7 +442,18 @@ class UserAdminController < ApplicationController
       end
       if @action[:add_group] and @action[:group_name]
         @group = Group.find(@action[:group_name])
-        @users.each { |user|  @group.users << user }
+        ok = []
+        failed = []
+        @users.each do |user|  
+          begin
+            @group.users << user
+            ok << user.login
+          rescue => e
+            failed << user.login
+          end
+        end
+        flash[:success] = "The following users are added to the 'group #{@group.name}': " + ok.join(', ') if ok.count > 0
+        flash[:alert] = "The following users are already in the 'group #{@group.name}': " + failed.join(', ') if failed.count > 0
       end
     end
   end
