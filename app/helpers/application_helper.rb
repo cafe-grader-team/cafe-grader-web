@@ -200,7 +200,7 @@ TITLEBAR
   BOOTSTRAP_FLASH_MSG = {
     success: 'alert-success',
     error: 'alert-danger',
-    alert: 'alert-block',
+    alert: 'alert-danger',
     notice: 'alert-info'
   }
 

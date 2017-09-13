@@ -1,10 +1,10 @@
 - content_for :head do
   = stylesheet_link_tag 'problems'
-%h1 Listing problems
+%h1 Problems
 %p
-  = link_to 'New problem', new_problem_path, class: 'btn btn-default btn-sm'
-  = link_to 'Manage problems', { action: 'manage'}, class: 'btn btn-default btn-sm'
-  = link_to 'Import problems', {:action => 'import'}, class: 'btn btn-default btn-sm'
+  = link_to 'Import problems', {:action => 'import'}, class: 'btn btn-success btn-sm'
+  = link_to 'New problem', new_problem_path, class: 'btn btn-success btn-sm'
+  = link_to 'Bulk Manage', { action: 'manage'}, class: 'btn btn-info btn-sm'
   = link_to 'Turn off all problems', {:action => 'turn_all_off'}, class: 'btn btn-default btn-sm'
   = link_to 'Turn on all problems', {:action => 'turn_all_on'}, class: 'btn btn-default btn-sm'
 .submitbox
