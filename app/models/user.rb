@@ -339,11 +339,8 @@ class User < ActiveRecord::Base
   end
 
   def can_view_problem?(problem)
-    if not GraderConfiguration.multicontests?
-      return problem.available
-    else
-      return problem_in_user_contests? problem
-    end
+    return true if admin?
+    return available_problems.include? problem
   end
 
   def self.clear_last_login

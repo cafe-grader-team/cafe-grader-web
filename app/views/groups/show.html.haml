@@ -11,7 +11,8 @@
 = link_to 'Back', groups_path
 
 .row
-  %h1 Group details
+  .col-md-12
+    %h1 Group details
 .row
   .col-md-6
     .panel.panel-default
@@ -31,7 +32,7 @@
               %th Login
               %th Full name
               %th Remark
-              %th
+              %th= link_to 'Remove All', remove_all_user_group_path(@group), method: :delete, :data => { :confirm => "Remove ALL USERS from group?" }, class: 'btn btn-danger btn-sm'
 
           %tbody
             - @group.users.each do |user|
@@ -39,7 +40,7 @@
                 %td= user.login
                 %td= user.full_name
                 %td= user.remark
-                %td= link_to 'Remove', remove_user_group_path(@group,user), :method => :delete, :data => { :confirm => "Remove #{user.full_name}?" }, class: 'btn btn-danger'
+                %td= link_to 'Remove', remove_user_group_path(@group,user), :method => :delete, :data => { :confirm => "Remove #{user.full_name}?" }, class: 'btn btn-danger btn-sm'
   .col-md-6
     .panel.panel-default
       .panel-heading
@@ -59,7 +60,7 @@
               %th name
               %th Full name
               %th Full score
-              %th
+              %th= link_to 'Remove All', remove_all_problem_group_path(@group), method: :delete, :data => { :confirm => "Remove ALL PROBLEMS from group?" }, class: 'btn btn-danger btn-sm'
 
           %tbody
             - @group.problems.each do |problem|
@@ -67,6 +68,6 @@
                 %td= problem.name
                 %td= problem.full_name
                 %td= problem.full_score
-                %td= link_to 'Remove', remove_problem_group_path(@group,problem), :method => :delete, :data => { :confirm => "Remove #{problem.full_name}?" }, class: 'btn btn-danger'
+                %td= link_to 'Remove', remove_problem_group_path(@group,problem), :method => :delete, :data => { :confirm => "Remove #{problem.full_name}?" }, class: 'btn btn-danger btn-sm'
 
 

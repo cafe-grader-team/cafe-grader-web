@@ -9,7 +9,7 @@
   %br/
   = "Submission: #{@task.submission_id}"
   - if @task.submission !=nil
-    = link_to '[view submission]', :action => 'submission', :id => @task.submission.id
+    = link_to '[view submission]', submission_path( @task.submission.id )
   %br/
   = "Submitted at: #{format_short_time(@task.created_at)}"
   %br/

@@ -1,7 +1,7 @@
 class GroupsController < ApplicationController
   before_action :set_group, only: [:show, :edit, :update, :destroy,
-                                   :add_user, :remove_user,
-                                   :add_problem, :remove_problem,
+                                   :add_user, :remove_user,:remove_all_user,
+                                   :add_problem, :remove_problem,:remove_all_problem,
                                   ]
   before_action :authenticate, :admin_authorization
 
@@ -53,6 +53,16 @@ class GroupsController < ApplicationController
     user = User.find(params[:user_id])
     @group.users.delete(user)
     redirect_to group_path(@group), flash: {success: "User #{user.login} was removed from the group #{@group.name}"}
+  end
+
+  def remove_all_user
+    @group.users.clear
+    redirect_to group_path(@group), alert: 'All users removed'
+  end
+
+  def remove_all_problem
+    @group.problems.clear
+    redirect_to group_path(@group), alert: 'All problems removed'
   end
 
   def add_user
