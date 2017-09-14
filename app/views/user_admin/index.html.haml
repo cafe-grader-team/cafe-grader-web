@@ -95,7 +95,7 @@ Total #{@user_count} users |
       %td= link_to 'Clear IP', {:action => 'clear_last_ip', :id => user, :page=>params[:page]}, :confirm => 'This will reset last logging in ip of the user, are you sure?', class: 'btn btn-default btn-xs btn-block'
       %td= link_to 'Show', {:action => 'show', :id => user}, class: 'btn btn-default btn-xs btn-block'
       %td= link_to 'Edit', {:action => 'edit', :id => user}, class: 'btn btn-default btn-xs btn-block'
-      %td= link_to 'Destroy', { :action => 'destroy', :id => user }, :confirm => 'Are you sure?', :method => :delete, class: 'btn btn-danger btn-xs btn-block'
+      %td= link_to 'Destroy', user_admin_destroy_path(user), data: {confirm: 'Are you sure?'}, method: :delete, class: 'btn btn-danger btn-xs btn-block'
 %br/
 = link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
 = link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}

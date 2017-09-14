@@ -1,0 +1,7 @@
+%h1 New user
+= form_tag( {action: 'create'}, { class: 'form-horizontal'}) do
+  = render :partial => 'form'
+  .form-group
+    .col-md-offset-2.col-md-10
+      = submit_tag "Create", class: 'btn btn-primary'
+= link_to 'Back', :action => 'index'

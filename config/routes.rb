@@ -80,6 +80,8 @@ CafeGrader::Application.routes.draw do
 
   #user admin
   get 'user_admin/bulk_manage', to: 'user_admin#bulk_manage', as: 'bulk_manage_user_admin'
+  post 'user_admin', to: 'user_admin#create'
+  delete 'user_admin/:id', to: 'user_admin#destroy', as: 'user_admin_destroy'
 
   #report
   get 'report/current_score', to: 'report#current_score', as: 'report_current_score'
