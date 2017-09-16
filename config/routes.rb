@@ -1,4 +1,5 @@
 CafeGrader::Application.routes.draw do
+  resources :tags
   get "sources/direct_edit"
 
   root :to => 'main#login'

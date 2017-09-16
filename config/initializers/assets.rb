@@ -18,6 +18,6 @@ Rails.application.config.assets.precompile += ['announcement_refresh.js','effect
 Rails.application.config.assets.precompile += ['local_jquery.js','tablesorter-theme.cafe.css']
 %w( announcements submissions configurations contests contest_management graders heartbeat 
     login main messages problems report site sites sources tasks groups
-    test user_admin users ).each do |controller|
+    test user_admin users tags).each do |controller|
   Rails.application.config.assets.precompile += ["#{controller}.js", "#{controller}.css"]
 end

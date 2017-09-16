@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170911091143) do
+ActiveRecord::Schema.define(version: 20170914150742) do
 
   create_table "announcements", force: :cascade do |t|
     t.string   "author",       limit: 255
@@ -146,6 +146,15 @@ ActiveRecord::Schema.define(version: 20170911091143) do
     t.boolean "view_testcase"
   end
 
+  create_table "problems_tags", force: :cascade do |t|
+    t.integer "problem_id", limit: 4
+    t.integer "tag_id",     limit: 4
+  end
+
+  add_index "problems_tags", ["problem_id", "tag_id"], name: "index_problems_tags_on_problem_id_and_tag_id", unique: true, using: :btree
+  add_index "problems_tags", ["problem_id"], name: "index_problems_tags_on_problem_id", using: :btree
+  add_index "problems_tags", ["tag_id"], name: "index_problems_tags_on_tag_id", using: :btree
+
   create_table "rights", force: :cascade do |t|
     t.string "name",       limit: 255
     t.string "controller", limit: 255
@@ -218,6 +227,14 @@ ActiveRecord::Schema.define(version: 20170911091143) do
 
   add_index "submissions", ["user_id", "problem_id", "number"], name: "index_submissions_on_user_id_and_problem_id_and_number", unique: true, using: :btree
   add_index "submissions", ["user_id", "problem_id"], name: "index_submissions_on_user_id_and_problem_id", using: :btree
+
+  create_table "tags", force: :cascade do |t|
+    t.string   "name",        limit: 255,   null: false
+    t.text     "description", limit: 65535
+    t.boolean  "public"
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+  end
 
   create_table "tasks", force: :cascade do |t|
     t.integer  "submission_id", limit: 4
@@ -299,4 +316,6 @@ ActiveRecord::Schema.define(version: 20170911091143) do
 
   add_index "users", ["login"], name: "index_users_on_login", unique: true, using: :btree
 
+  add_foreign_key "problems_tags", "problems"
+  add_foreign_key "problems_tags", "tags"
 end
