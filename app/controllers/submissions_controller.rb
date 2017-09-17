@@ -1,6 +1,6 @@
 class SubmissionsController < ApplicationController
   before_action :authenticate
-  before_action :submission_authorization, only: [:show, :direct_edit_submission, :download, :edit]
+  before_action :submission_authorization, only: [:show, :download, :edit]
   before_action :admin_authorization, only: [:rejudge]
 
   # GET /submissions
@@ -51,10 +51,13 @@ class SubmissionsController < ApplicationController
   #on-site new submission on specific problem
   def direct_edit_problem
     @problem = Problem.find(params[:problem_id])
+    unless @current_user.can_view_problem?(@problem)
+      unauthorized_redirect
+      return
+    end
     @source = ''
-    if (params[:user_id])
-      u = User.find(params[:user_id])
-      @submission = Submission.find_last_by_user_and_problem(u.id,@problem.id)
+    if (params[:view_latest])
+      sub = Submission.find_last_by_user_and_problem(@current_user.id,@problem.id)
       @source = @submission.source.to_s if @submission and @submission.source
     end
     render 'edit'
@@ -99,8 +102,7 @@ protected
     end
 
     sub = Submission.find(params[:id])
-    if sub.problem.available?
-      puts "sub = #{sub.user.id}, current = #{@current_user.id}"
+    if @current_user.available_problems.include? sub.problem
       return true if GraderConfiguration["right.user_view_submission"] or sub.user == @current_user
     end
 

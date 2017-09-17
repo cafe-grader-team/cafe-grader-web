@@ -152,7 +152,7 @@ class Submission < ActiveRecord::Base
       return if self.user.admin?
 
       #check if user has the right to submit the problem
-      errors.add('problem',"must be valid.") if (!self.user.available_problem.include?(self.problem)) and (self.new_record?)
+      errors.add('problem',"must be valid.") if (!self.user.available_problems.include?(self.problem)) and (self.new_record?)
     end
   end
 
