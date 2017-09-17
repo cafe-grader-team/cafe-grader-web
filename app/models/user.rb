@@ -292,6 +292,7 @@ class User < ActiveRecord::Base
     return true
   end
 
+  #get a list of available problem
   def available_problems
     if not GraderConfiguration.multicontests?
       if GraderConfiguration.use_problem_group?

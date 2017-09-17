@@ -11,6 +11,7 @@
     .col-md-8
       %div#editor{style: 'height: 500px; border-radius: 7px; font-size: 14px;'}
     .col-md-4
+      - # submission form
       = form_tag({controller: :main, :action => 'submit'}, :multipart => true, class: 'form') do
 
         = hidden_field_tag 'editor_text', @source
@@ -25,6 +26,7 @@
         .form-group
           = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
             data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}
+      - # latest submission status
       .panel.panel-info
         .panel-heading
           Latest Submission Status

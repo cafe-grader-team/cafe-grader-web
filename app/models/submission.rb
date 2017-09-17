@@ -137,7 +137,7 @@ class Submission < ActiveRecord::Base
 
     # for output_only tasks
     return if self.problem!=nil and self.problem.output_only
-    
+
     if self.language==nil
       errors.add('source',"Cannot detect language. Did you submit a correct source file?") unless self.language!=nil
     end
@@ -147,8 +147,12 @@ class Submission < ActiveRecord::Base
     return if self.source==nil
     if self.problem==nil
       errors.add('problem',"must be specified.")
-    elsif (!self.problem.available) and (self.new_record?)
-      errors.add('problem',"must be valid.")
+    else
+      #admin always have right
+      return if self.user.admin?
+
+      #check if user has the right to submit the problem
+      errors.add('problem',"must be valid.") if (!self.user.available_problem.include?(self.problem)) and (self.new_record?)
     end
   end
 

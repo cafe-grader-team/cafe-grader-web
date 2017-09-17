@@ -52,6 +52,11 @@ class SubmissionsController < ApplicationController
   def direct_edit_problem
     @problem = Problem.find(params[:problem_id])
     @source = ''
+    if (params[:user_id])
+      u = User.find(params[:user_id])
+      @submission = Submission.find_last_by_user_and_problem(u.id,@problem.id)
+      @source = @submission.source.to_s if @submission and @submission.source
+    end
     render 'edit'
   end
 

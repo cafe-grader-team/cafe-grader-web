@@ -86,7 +86,7 @@ class MainController < ApplicationController
       render :action => 'list' and return
     end
 
-    if @submission.valid?
+    if @submission.valid?(@current_user)
       if @submission.save == false
         flash[:notice] = 'Error saving your submission'
       elsif Task.create(:submission_id => @submission.id, 

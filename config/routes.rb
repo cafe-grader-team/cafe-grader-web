@@ -73,7 +73,7 @@ CafeGrader::Application.routes.draw do
     end
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'
-      get 'direct_edit_problem/:problem_id', to: 'submissions#direct_edit_problem', as: 'direct_edit_problem'
+      get 'direct_edit_problem/:problem_id(/:user_id)', to: 'submissions#direct_edit_problem', as: 'direct_edit_problem'
       get 'get_latest_submission_status/:uid/:pid', to: 'submissions#get_latest_submission_status', as: 'get_latest_submission_status'
     end
   end
