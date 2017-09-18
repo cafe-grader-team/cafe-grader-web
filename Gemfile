@@ -65,9 +65,11 @@ gem 'bootstrap-switch-rails'
 gem 'bootstrap-toggle-rails'
 gem 'autoprefixer-rails'
 
-#bootstrap sortable
+#more bootstrp add-on
 gem 'momentjs-rails'
 gem 'rails_bootstrap_sortable'
+gem 'bootstrap-datepicker-rails'
+gem 'bootstrap3-datetimepicker-rails'
 
 #----------- user interface -----------------
 #select 2
