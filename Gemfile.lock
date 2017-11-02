@@ -61,10 +61,14 @@ GEM
     best_in_place (3.0.3)
       actionpack (>= 3.2)
       railties (>= 3.2)
+    bootstrap-datepicker-rails (1.7.1.1)
+      railties (>= 3.0)
     bootstrap-sass (3.2.0.2)
       sass (~> 3.2)
     bootstrap-switch-rails (3.3.3)
     bootstrap-toggle-rails (2.2.1.0)
+    bootstrap3-datetimepicker-rails (4.17.47)
+      momentjs-rails (>= 2.8.1)
     builder (3.2.2)
     coffee-rails (4.2.1)
       coffee-script (>= 2.2.0)
@@ -97,6 +101,11 @@ GEM
     i18n (0.7.0)
     in_place_editing (1.2.0)
     jquery-countdown-rails (2.0.2)
+    jquery-datatables-rails (3.4.0)
+      actionpack (>= 3.1)
+      jquery-rails
+      railties (>= 3.1)
+      sass-rails
     jquery-rails (4.2.1)
       rails-dom-testing (>= 1, < 3)
       railties (>= 4.2.0)
@@ -201,9 +210,11 @@ DEPENDENCIES
   activerecord-session_store
   autoprefixer-rails
   best_in_place (~> 3.0.1)
+  bootstrap-datepicker-rails
   bootstrap-sass (~> 3.2.0)
   bootstrap-switch-rails
   bootstrap-toggle-rails
+  bootstrap3-datetimepicker-rails
   coffee-rails
   dynamic_form
   fuzzy-string-match
@@ -211,6 +222,7 @@ DEPENDENCIES
   haml-rails
   in_place_editing
   jquery-countdown-rails
+  jquery-datatables-rails
   jquery-rails
   jquery-tablesorter
   jquery-timepicker-addon-rails
@@ -232,4 +244,4 @@ DEPENDENCIES
   yaml_db
 
 BUNDLED WITH
-   1.13.6
+   1.15.4
