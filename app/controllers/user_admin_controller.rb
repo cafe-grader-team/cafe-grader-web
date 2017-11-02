@@ -24,6 +24,7 @@ class UserAdminController < ApplicationController
       @users = User.paginate :page => params[:page]
       @paginated = true
     end
+    @users = User.all
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
     @contests = Contest.enabled
   end
