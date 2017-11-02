@@ -36,7 +36,7 @@
 =render partial: 'application/bar_graph', locals: {histogram: @histogram, param: {bar_width: 7}}
 
 
-%table.tablesorter-cafe#submission_table
+%table#submission_table.table.table-striped
   %thead
     %tr
       %th ID
@@ -64,3 +64,7 @@
 
 
 
+:javascript
+  $("#submission_table").DataTable({
+    paging: false
+  });

@@ -25,9 +25,9 @@
 
 %h2 Submissions
 - if @submissions and @submissions.count > 0
-  %table.info#main_table
+  %table#main_table.table.table-condensed.table-striped
     %thead
-      %tr.info-head
+      %tr
         %th ID
         %th Login
         %th Name
@@ -40,14 +40,18 @@
       - @submissions.each do |sub|
         - next unless sub.user
         - row_odd,curr = !row_odd, sub.user if curr != sub.user
-        %tr{class: row_odd ? "info-odd" : "info-even"}
+        %tr
           %td= link_to sub.id, submission_path(sub)
           %td= link_to sub.user.login, stat_user_path(sub.user)
           %td= sub.user.full_name
-          %td= time_ago_in_words(sub.submitted_at) + " ago"
+          %td{data: {order: sub.submitted_at}}= time_ago_in_words(sub.submitted_at) + " ago"
           %td= sub.points
           %td.fix-width= sub.grader_comment
           %td= sub.ip_address
 - else
   No submission
 
+:javascript
+  $("#main_table").DataTable({
+    paging: false
+  });
