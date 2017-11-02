@@ -1,24 +1,35 @@
 %h1 Editing site
 = error_messages_for :site
 = form_for(@site) do |f|
-  %p
-    %b Name
-    %br/
-    = f.text_field :name
-  %p
-    %b Password
-    %br/
-    = f.text_field :password
-  %p
-    %b Started
-    %br/
-    = f.check_box :started
-  %p
-    %b Start time
-    %br/
-    = f.datetime_select :start_time, :include_blank => true
-  %p
-    = f.submit "Update"
+  .row
+    .col-md-4
+      .form-group.field
+        = f.label :name, "Name"
+        = f.text_field :name, class: 'form-control'
+      .form-group.field
+        = f.label :password, "Password"
+        = f.text_field :password, class: 'form-control'
+      .form-group.field
+        = f.label :started, "Started"
+        = f.check_box :started, class: 'form-control'
+      .form-group.field
+        = f.label :start_time, "Start time"
+        -# = f.datetime_select :start_time, :include_blank => true
+        .input-group.date
+          = f.text_field :start_time, class:'form-control' , value: (@site.start_time ? @site.start_time.strftime('%d/%b/%Y %H:%M') : '')
+          %span.input-group-addon
+            %span.glyphicon.glyphicon-calendar
+      .actions
+        = f.submit "Update", class: 'btn btn-primary'
+    .col-md-8
+
 = link_to 'Show', @site
 |
 = link_to 'Back', sites_path
+
+
+:javascript
+  $('.input-group.date').datetimepicker({
+    format: 'DD/MMM/YYYY HH:mm',
+  });
+

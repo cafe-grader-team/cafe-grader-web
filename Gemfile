@@ -66,7 +66,8 @@ gem 'bootstrap-toggle-rails'
 gem 'autoprefixer-rails'
 gem 'momentjs-rails'
 gem 'rails_bootstrap_sortable'
-gem 'bootstrap3-datetimepicker-rails', '~> 4.17.47'
+gem 'bootstrap-datepicker-rails'
+gem 'bootstrap3-datetimepicker-rails'
 gem 'jquery-datatables-rails'
 
 #----------- user interface -----------------

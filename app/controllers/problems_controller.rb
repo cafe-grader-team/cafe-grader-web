@@ -258,10 +258,7 @@ class ProblemsController < ApplicationController
 
   def change_date_added
     problems = get_problems_from_params
-    year = params[:date_added][:year].to_i
-    month = params[:date_added][:month].to_i
-    day = params[:date_added][:day].to_i
-    date = Date.new(year,month,day)
+    date = Date.parse(params[:date_added])
     problems.each do |p|
       p.date_added = date
       p.save

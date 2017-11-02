@@ -47,22 +47,26 @@
         What do you want to do to the selected problem?
         %br/
         (You can shift-click to select a range of problems)
-        %ul
+        %ul.form-inline
           %li
             Change date added to
-            = select_date Date.current, :prefix => 'date_added'
+            .input-group.date
+              = text_field_tag :date_added, class: 'form-control'
+              %span.input-group-addon
+                %span.glyphicon.glyphicon-calendar
+            -# = select_date Date.current, :prefix => 'date_added'
             &nbsp;&nbsp;&nbsp;
-            = submit_tag 'Change', :name => 'change_date_added', class: 'btn btn-default'
+            = submit_tag 'Change', :name => 'change_date_added', class: 'btn btn-primary btn-sm'
           %li
             Set available to
-            = submit_tag 'True', :name => 'enable_problem', class: 'btn btn-default'
-            = submit_tag 'False', :name => 'disable_problem', class: 'btn btn-default'
+            = submit_tag 'True', :name => 'enable_problem', class: 'btn btn-primary btn-sm'
+            = submit_tag 'False', :name => 'disable_problem', class: 'btn btn-primary btn-sm'
 
           - if GraderConfiguration.multicontests?
             %li
               Add to 
               = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
-              = submit_tag 'Add', :name => 'add_to_contest', class: 'btn btn-default'
+              = submit_tag 'Add', :name => 'add_to_contest', class: 'btn btn-primary btn-sm'
           %li
             Add problems to group
             = select_tag "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'select2'
@@ -92,3 +96,12 @@
           %td
             - problem.contests.each do |contest|
               = "(#{contest.name} [#{link_to 'x', :action => 'remove_contest', :id => problem.id, :contest_id => contest.id }])"
+
+:javascript
+  $('.input-group.date').datetimepicker({
+    format: 'DD/MMM/YYYY',
+    showTodayButton: true,
+    widgetPositioning: {horizontal: 'auto', vertical: 'bottom'},
+
+  });
+
