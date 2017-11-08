@@ -8,8 +8,9 @@ class TestdataImporter
     @problem = problem
   end
 
-  def import_from_file(tempfile, 
-                       time_limit, 
+  #Create or update problem according to the parameter
+  def import_from_file(tempfile,
+                       time_limit,
                        memory_limit,
                        checker_name='text',
                        import_to_db=false)
@@ -52,6 +53,7 @@ class TestdataImporter
     return filename.slice(i..len)
   end
 
+  # extract an archive file located at +tempfile+ to the +raw_dir+
   def extract(tempfile)
     testdata_filename = save_testdata_file(tempfile)
     ext = TestdataImporter.long_ext(tempfile.original_filename)

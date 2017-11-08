@@ -27,7 +27,7 @@
           = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
             data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}
       - # latest submission status
-      .panel.panel-info
+      .panel{class: (@submission && @submission.graded_at) ? "panel-info" : "panel-warning"}
         .panel-heading
           Latest Submission Status
           = link_to "Refresh",get_latest_submission_status_submissions_path(@submission.user,@problem), class: "btn btn-default btn-sm", remote: true if @submission
