@@ -32,6 +32,7 @@
         %th Login
         %th Name
         %th Submitted_at
+        %th language
         %th Points
         %th comment
         %th IP
@@ -45,6 +46,7 @@
           %td= link_to sub.user.login, stat_user_path(sub.user)
           %td= sub.user.full_name
           %td{data: {order: sub.submitted_at}}= time_ago_in_words(sub.submitted_at) + " ago"
+          %td= sub.language.name
           %td= sub.points
           %td.fix-width= sub.grader_comment
           %td= sub.ip_address

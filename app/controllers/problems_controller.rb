@@ -165,7 +165,7 @@ class ProblemsController < ApplicationController
       redirect_to :controller => 'main', :action => 'list'
       return
     end
-    @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
+    @submissions = Submission.includes(:user).includes(:language).where(problem_id: params[:id]).order(:user_id,:id)
 
     #stat summary
     range =65
