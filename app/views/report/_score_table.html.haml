@@ -12,6 +12,9 @@
       %th.text-right Total
       %th.text-right Passed
   %tbody
+    - sum = Array.new(@scorearray[0].count,0)
+    - nonzero = Array.new(@scorearray[0].count,0)
+    - full = Array.new(@scorearray[0].count,0)
     - @scorearray.each do |sc|
       %tr
         - total,num_passed = 0,0
@@ -27,8 +30,40 @@
             %td.text-right= sc[i][0]
             - total += sc[i][0]
             - num_passed += 1 if sc[i][1]
+            - sum[i] += sc[i][0]
+            - nonzero[i] += 1 if sc[i][0] > 0
+            - full[i] += 1 if sc[i][1]
         %td.text-right= total 
         %td.text-right= num_passed
+    %tfoot
+      %tr
+        %td Summation
+        %td
+        %td
+        - sum.each.with_index do |s,i|
+          - next if i == 0
+          %td.text-right= number_with_delimiter(s)
+        %td
+        %td
+      %tr
+        %td partial solver
+        %td
+        %td
+        - nonzero.each.with_index do |s,i|
+          - next if i == 0
+          %td.text-right= number_with_delimiter(s)
+        %td
+        %td
+      %tr
+        %td Full solver
+        %td
+        %td
+        - full.each.with_index do |s,i|
+          - next if i == 0
+          %td.text-right= number_with_delimiter(s)
+        %td
+        %td
+
 
 :javascript
   $.bootstrapSortable(true,'reversed')
