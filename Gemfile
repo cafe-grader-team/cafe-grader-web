@@ -59,15 +59,16 @@ gem 'jquery-countdown-rails'
 #syntax highlighter
 gem 'rouge'
 
-#add bootstrap
+#bootstrap add-ons
 gem 'bootstrap-sass', '~> 3.2.0'
 gem 'bootstrap-switch-rails'
 gem 'bootstrap-toggle-rails'
 gem 'autoprefixer-rails'
-
-#bootstrap sortable
 gem 'momentjs-rails'
 gem 'rails_bootstrap_sortable'
+gem 'bootstrap-datepicker-rails'
+gem 'bootstrap3-datetimepicker-rails'
+gem 'jquery-datatables-rails'
 
 #----------- user interface -----------------
 #select 2

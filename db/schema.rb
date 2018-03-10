@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170427070345) do
+ActiveRecord::Schema.define(version: 20170914150742) do
 
   create_table "announcements", force: :cascade do |t|
     t.string   "author",       limit: 255
@@ -79,6 +79,25 @@ ActiveRecord::Schema.define(version: 20170427070345) do
 
   add_index "grader_processes", ["host", "pid"], name: "index_grader_processes_on_ip_and_pid", using: :btree
 
+  create_table "groups", force: :cascade do |t|
+    t.string "name",        limit: 255
+    t.string "description", limit: 255
+  end
+
+  create_table "groups_problems", id: false, force: :cascade do |t|
+    t.integer "problem_id", limit: 4, null: false
+    t.integer "group_id",   limit: 4, null: false
+  end
+
+  add_index "groups_problems", ["group_id", "problem_id"], name: "index_groups_problems_on_group_id_and_problem_id", using: :btree
+
+  create_table "groups_users", id: false, force: :cascade do |t|
+    t.integer "group_id", limit: 4, null: false
+    t.integer "user_id",  limit: 4, null: false
+  end
+
+  add_index "groups_users", ["user_id", "group_id"], name: "index_groups_users_on_user_id_and_group_id", using: :btree
+
   create_table "heart_beats", force: :cascade do |t|
     t.integer  "user_id",    limit: 4
     t.string   "ip_address", limit: 255
@@ -126,6 +145,15 @@ ActiveRecord::Schema.define(version: 20170427070345) do
     t.string  "description_filename", limit: 255
     t.boolean "view_testcase"
   end
+
+  create_table "problems_tags", force: :cascade do |t|
+    t.integer "problem_id", limit: 4
+    t.integer "tag_id",     limit: 4
+  end
+
+  add_index "problems_tags", ["problem_id", "tag_id"], name: "index_problems_tags_on_problem_id_and_tag_id", unique: true, using: :btree
+  add_index "problems_tags", ["problem_id"], name: "index_problems_tags_on_problem_id", using: :btree
+  add_index "problems_tags", ["tag_id"], name: "index_problems_tags_on_tag_id", using: :btree
 
   create_table "rights", force: :cascade do |t|
     t.string "name",       limit: 255
@@ -199,6 +227,14 @@ ActiveRecord::Schema.define(version: 20170427070345) do
 
   add_index "submissions", ["user_id", "problem_id", "number"], name: "index_submissions_on_user_id_and_problem_id_and_number", unique: true, using: :btree
   add_index "submissions", ["user_id", "problem_id"], name: "index_submissions_on_user_id_and_problem_id", using: :btree
+
+  create_table "tags", force: :cascade do |t|
+    t.string   "name",        limit: 255,   null: false
+    t.text     "description", limit: 65535
+    t.boolean  "public"
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+  end
 
   create_table "tasks", force: :cascade do |t|
     t.integer  "submission_id", limit: 4
@@ -280,4 +316,6 @@ ActiveRecord::Schema.define(version: 20170427070345) do
 
   add_index "users", ["login"], name: "index_users_on_login", unique: true, using: :btree
 
+  add_foreign_key "problems_tags", "problems"
+  add_foreign_key "problems_tags", "tags"
 end

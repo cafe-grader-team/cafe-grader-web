@@ -8,6 +8,10 @@ class User < ActiveRecord::Base
 
   has_and_belongs_to_many :roles
 
+  #has_and_belongs_to_many :groups
+  has_many :groups_users, class_name: GroupUser
+  has_many :groups, :through => :groups_users
+
   has_many :test_requests, -> {order(submitted_at: DESC)}
 
   has_many :messages, -> { order(created_at: DESC) },
@@ -240,9 +244,14 @@ class User < ActiveRecord::Base
     return true
   end
 
+  #get a list of available problem
   def available_problems
     if not GraderConfiguration.multicontests?
-      return Problem.available_problems
+      if GraderConfiguration.use_problem_group?
+        return available_problems_in_group
+      else
+        return Problem.available_problems
+      end
     else
       contest_problems = []
       pin = {}
@@ -259,12 +268,32 @@ class User < ActiveRecord::Base
     end
   end
 
-  def can_view_problem?(problem)
-    if not GraderConfiguration.multicontests?
-      return problem.available
-    else
-      return problem_in_user_contests? problem
+  def available_problems_in_group
+    problem = []
+    self.groups.each do |group|
+      group.problems.where(available: true).each { |p| problem << p }
     end
+    problem.uniq!
+    if problem
+      problem.sort! do |a,b|
+        case
+        when a.date_added < b.date_added
+          1
+        when a.date_added > b.date_added
+          -1
+        else
+          a.name <=> b.name
+        end
+      end
+      return problem
+    else
+      return []
+    end
+  end
+
+  def can_view_problem?(problem)
+    return true if admin?
+    return available_problems.include? problem
   end
 
   def self.clear_last_login

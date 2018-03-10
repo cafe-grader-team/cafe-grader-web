@@ -1,4 +1,5 @@
 CafeGrader::Application.routes.draw do
+  resources :tags
   get "sources/direct_edit"
 
   root :to => 'main#login'
@@ -29,7 +30,20 @@ CafeGrader::Application.routes.draw do
       get 'import'
       get 'manage'
     end
+  end
 
+  resources :groups do
+    member do
+      post 'add_user', to: 'groups#add_user', as: 'add_user'
+      delete 'remove_user/:user_id', to: 'groups#remove_user', as: 'remove_user'
+      delete 'remove_all_user', to: 'groups#remove_all_user', as: 'remove_all_user'
+      post 'add_problem', to: 'groups#add_problem', as: 'add_problem'
+      delete 'remove_problem/:problem_id', to: 'groups#remove_problem', as: 'remove_problem'
+      delete 'remove_all_problem', to: 'groups#remove_all_problem', as: 'remove_all_problem'
+    end
+    collection do
+
+    end
   end
 
   resources :testcases, only: [] do
@@ -59,7 +73,7 @@ CafeGrader::Application.routes.draw do
     end
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'
-      get 'direct_edit_problem/:problem_id', to: 'submissions#direct_edit_problem', as: 'direct_edit_problem'
+      get 'direct_edit_problem/:problem_id(/:user_id)', to: 'submissions#direct_edit_problem', as: 'direct_edit_problem'
       get 'get_latest_submission_status/:uid/:pid', to: 'submissions#get_latest_submission_status', as: 'get_latest_submission_status'
     end
   end
@@ -72,6 +86,8 @@ CafeGrader::Application.routes.draw do
 
   #user admin
   get 'user_admin/bulk_manage', to: 'user_admin#bulk_manage', as: 'bulk_manage_user_admin'
+  post 'user_admin', to: 'user_admin#create'
+  delete 'user_admin/:id', to: 'user_admin#destroy', as: 'user_admin_destroy'
 
   #report
   get 'report/current_score', to: 'report#current_score', as: 'report_current_score'

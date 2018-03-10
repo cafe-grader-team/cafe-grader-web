@@ -165,7 +165,7 @@ class ProblemsController < ApplicationController
       redirect_to :controller => 'main', :action => 'list'
       return
     end
-    @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
+    @submissions = Submission.includes(:user).includes(:language).where(problem_id: params[:id]).order(:user_id,:id)
 
     #stat summary
     range =65
@@ -195,7 +195,26 @@ class ProblemsController < ApplicationController
       set_available(true)
     elsif params.has_key? 'disable_problem'
       set_available(false)
+    elsif params.has_key? 'add_group'
+      group = Group.find(params[:group_id])
+      ok = []
+      failed = []
+      get_problems_from_params.each do |p|
+        begin
+          group.problems << p
+          ok << p.full_name
+        rescue => e
+          failed << p.full_name
+        end
+      end
+      flash[:success] = "The following problems are added to the group #{group.name}: " + ok.join(', ') if ok.count > 0
+      flash[:alert] = "The following problems are already in the group #{group.name}: " + failed.join(', ') if failed.count > 0
+    elsif params.has_key? 'add_tags'
+      get_problems_from_params.each do |p|
+        p.tag_ids += params[:tag_ids]
+      end
     end
+
     redirect_to :action => 'manage'
   end
 
@@ -243,10 +262,7 @@ class ProblemsController < ApplicationController
 
   def change_date_added
     problems = get_problems_from_params
-    year = params[:date_added][:year].to_i
-    month = params[:date_added][:month].to_i
-    day = params[:date_added][:day].to_i
-    date = Date.new(year,month,day)
+    date = Date.parse(params[:date_added])
     problems.each do |p|
       p.date_added = date
       p.save
@@ -288,7 +304,7 @@ class ProblemsController < ApplicationController
   private
 
     def problem_params
-      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description)
+      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description, tag_ids:[])
     end
 
 end

@@ -1,10 +1,10 @@
 - content_for :head do
   = stylesheet_link_tag 'problems'
-%h1 Listing problems
+%h1 Problems
 %p
-  = link_to 'New problem', new_problem_path, class: 'btn btn-default btn-sm'
-  = link_to 'Manage problems', { action: 'manage'}, class: 'btn btn-default btn-sm'
-  = link_to 'Import problems', {:action => 'import'}, class: 'btn btn-default btn-sm'
+  = link_to 'Import problems', {:action => 'import'}, class: 'btn btn-success btn-sm'
+  = link_to 'New problem', new_problem_path, class: 'btn btn-success btn-sm'
+  = link_to 'Bulk Manage', { action: 'manage'}, class: 'btn btn-info btn-sm'
   = link_to 'Turn off all problems', {:action => 'turn_all_off'}, class: 'btn btn-default btn-sm'
   = link_to 'Turn on all problems', {:action => 'turn_all_on'}, class: 'btn btn-default btn-sm'
 .submitbox
@@ -21,6 +21,10 @@
     %th Name
     %th Full name
     %th.text-right Full score
+    %th Tags
+    %th 
+      Submit
+      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Admin can always submit to any problem' } [?]
     %th Date added
     %th.text-center
       Avail?
@@ -37,8 +41,15 @@
     %tr{:class => "#{(problem.available) ? "success" : "danger"}", :id => "prob-#{problem.id}", :name => "prob-#{problem.id}"}
       - @problem=problem
       %td= problem.name #in_place_editor_field :problem, :name, {}, :rows=>1
-      %td= problem.full_name #in_place_editor_field :problem, :full_name, {}, :rows=>1
+      %td
+        = problem.full_name #in_place_editor_field :problem, :full_name, {}, :rows=>1
+        = link_to_description_if_any "[#{t 'main.problem_desc'}] <span class='glyphicon glyphicon-file'></span>".html_safe, problem
       %td.text-right= problem.full_score #in_place_editor_field :problem, :full_score, {}, :rows=>1
+      %td
+        - problem.tags.each do |t|
+          - #%button.btn.btn-default.btn-xs= t.name
+          %span.label.label-default= t.name
+      %td= link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-xs btn-primary'
       %td= problem.date_added
       %td= toggle_button(@problem.available?, toggle_problem_path(@problem), "problem-avail-#{@problem.id}")
       %td= toggle_button(@problem.view_testcase?, toggle_view_testcase_problem_path(@problem), "problem-view-testcase-#{@problem.id}")

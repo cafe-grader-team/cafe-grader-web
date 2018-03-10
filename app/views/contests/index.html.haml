@@ -1,0 +1,27 @@
+%h1 Listing contests
+.infobox
+  %b Go back to:
+  [#{link_to 'contest management', :controller => 'contest_management', :action => 'index'}]
+%p= link_to 'New contest', new_contest_path, class: 'btn btn-success'
+%table.table.table-striped
+  %tr
+    %th Name
+    %th Title
+    %th Enabled
+    %th
+    %th
+    %th
+
+  - @contests.each do |contest|
+    - @contest = contest
+    %tr
+      -#%td= in_place_editor_field :contest, :name, {}, :rows => 1
+      -#%td= in_place_editor_field :contest, :title, {}, :rows => 1
+      -#%td= in_place_editor_field :contest, :enabled, {}, :rows => 1
+      %td= best_in_place @contest, :name
+      %td= best_in_place @contest, :title
+      %td= best_in_place @contest, :enabled
+      %td= link_to 'Show', contest
+      %td= link_to 'Edit', edit_contest_path(contest)
+      %td= link_to 'Destroy', contest, :confirm => 'Are you sure?', :method => :delete
+%br/

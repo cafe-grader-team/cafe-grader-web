@@ -12,10 +12,14 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require dataTables/jquery.dataTables
+//= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery-ui
 //= require bootstrap-sprockets
 //= require moment
+//= require moment/th
 //= require bootstrap-sortable
+//= require bootstrap-datetimepicker
 //= require select2
 //= require ace-rails-ap
 //= require ace/mode-c_cpp
@@ -32,6 +36,8 @@
 //= require best_in_place
 //= require best_in_place.jquery-ui
 //= require brython
+//= require bootstrap-datepicker
+//= require bootstrap-datetimepicker
 
 // since this is after blank line, it is not downloaded
 //x= require prototype
