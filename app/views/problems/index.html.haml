@@ -21,6 +21,7 @@
     %th Name
     %th Full name
     %th.text-right Full score
+    %th Tags
     %th 
       Submit
       %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Admin can always submit to any problem' } [?]
@@ -44,6 +45,10 @@
         = problem.full_name #in_place_editor_field :problem, :full_name, {}, :rows=>1
         = link_to_description_if_any "[#{t 'main.problem_desc'}] <span class='glyphicon glyphicon-file'></span>".html_safe, problem
       %td.text-right= problem.full_score #in_place_editor_field :problem, :full_score, {}, :rows=>1
+      %td
+        - problem.tags.each do |t|
+          - #%button.btn.btn-default.btn-xs= t.name
+          %span.label.label-default= t.name
       %td= link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-xs btn-primary'
       %td= problem.date_added
       %td= toggle_button(@problem.available?, toggle_problem_path(@problem), "problem-avail-#{@problem.id}")

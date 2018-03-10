@@ -41,6 +41,8 @@ class TagsController < ApplicationController
 
   # DELETE /tags/1
   def destroy
+    #remove any association
+    ProblemTag.where(tag_id: @tag.id).destroy_all
     @tag.destroy
     redirect_to tags_url, notice: 'Tag was successfully destroyed.'
   end

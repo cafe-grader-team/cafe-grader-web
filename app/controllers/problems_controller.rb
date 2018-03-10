@@ -209,6 +209,10 @@ class ProblemsController < ApplicationController
       end
       flash[:success] = "The following problems are added to the group #{group.name}: " + ok.join(', ') if ok.count > 0
       flash[:alert] = "The following problems are already in the group #{group.name}: " + failed.join(', ') if failed.count > 0
+    elsif params.has_key? 'add_tags'
+      get_problems_from_params.each do |p|
+        p.tag_ids += params[:tag_ids]
+      end
     end
 
     redirect_to :action => 'manage'
@@ -300,7 +304,7 @@ class ProblemsController < ApplicationController
   private
 
     def problem_params
-      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description)
+      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description, tag_ids:[])
     end
 
 end
