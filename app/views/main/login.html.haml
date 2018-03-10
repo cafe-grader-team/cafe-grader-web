@@ -1,12 +1,11 @@
 %h1= GraderConfiguration['ui.front.title']
 
-%table
-  %tr
-    %td
-      - if @announcements.length!=0
-        .announcementbox{:style => 'margin-top: 0px'}
-          %span{:class => 'title'}
-            Announcements
-          = render :partial => 'announcement', :collection => @announcements
-    %td{:style => 'vertical-align: top; width: 40%; padding-left: 20px;'}
-      = render :partial => 'login_box'
+.row
+  .col-md-6
+    - if @announcements.length!=0
+      .announcementbox{:style => 'margin-top: 0px'}
+        %span{:class => 'title'}
+          Announcements
+        = render :partial => 'announcement', :collection => @announcements
+  .col-md-4{style: "padding-left: 20px;"}
+    = render :partial => 'login_box'

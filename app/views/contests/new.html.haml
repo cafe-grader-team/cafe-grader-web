@@ -1,0 +1,18 @@
+%h1 New contest
+= form_for(@contest) do |f|
+  = f.error_messages
+  %p
+    = f.label :name
+    %br/
+    = f.text_field :name
+  %p
+    = f.label :title
+    %br/
+    = f.text_field :title
+  %p
+    = f.label :enabled
+    %br/
+    = f.check_box :enabled
+  %p
+    = f.submit 'Create'
+= link_to 'Back', contests_path

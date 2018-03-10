@@ -24,6 +24,7 @@ class UserAdminController < ApplicationController
       @users = User.paginate :page => params[:page]
       @paginated = true
     end
+    @users = User.all
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
     @contests = Contest.enabled
   end
@@ -228,6 +229,7 @@ class UserAdminController < ApplicationController
     end
   end
 
+
   # contest management
 
   def contests
@@ -411,7 +413,7 @@ class UserAdminController < ApplicationController
   def bulk_manage
 
     begin 
-      @users = User.where('login REGEXP ?',params[:regex]) if params[:regex]
+      @users = User.where('(login REGEXP ?) OR (remark REGEXP ?)',params[:regex],params[:regex]) if params[:regex]
       @users.count if @users #i don't know why I have to call count, but if I won't exception is not raised
     rescue Exception
       flash[:error] = 'Regular Expression is malformed'
@@ -423,6 +425,8 @@ class UserAdminController < ApplicationController
       @action[:set_enable] = params[:enabled]
       @action[:enabled] = params[:enable] == "1"
       @action[:gen_password] = params[:gen_password]
+      @action[:add_group] = params[:add_group]
+      @action[:group_name] = params[:group_name]
     end
 
     if params[:commit] == "Perform"
@@ -436,6 +440,21 @@ class UserAdminController < ApplicationController
           u.password_confirmation = password
           u.save
         end
+      end
+      if @action[:add_group] and @action[:group_name]
+        @group = Group.find(@action[:group_name])
+        ok = []
+        failed = []
+        @users.each do |user|  
+          begin
+            @group.users << user
+            ok << user.login
+          rescue => e
+            failed << user.login
+          end
+        end
+        flash[:success] = "The following users are added to the 'group #{@group.name}': " + ok.join(', ') if ok.count > 0
+        flash[:alert] = "The following users are already in the 'group #{@group.name}': " + failed.join(', ') if failed.count > 0
       end
     end
   end

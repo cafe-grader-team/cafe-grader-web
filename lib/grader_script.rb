@@ -33,6 +33,7 @@ module GraderScript
     GraderScript.call_grader "#{env} test_request -err-log &"
   end
 
+  #call the import problem script
   def self.call_import_problem(problem_name, 
                                problem_dir,
                                time_limit=1,

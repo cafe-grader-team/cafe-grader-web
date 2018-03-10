@@ -1,0 +1,26 @@
+%h1 Tags
+
+= link_to 'New Tag', new_tag_path, class: 'btn btn-success'
+
+%table.table.table-hover
+  %thead
+    %tr
+      %th Name
+      %th Description
+      %th Public
+      %th
+      %th
+      %th
+
+  %tbody
+    - @tags.each do |tag|
+      %tr
+        %td= tag.name
+        %td= tag.description
+        %td= tag.public
+        %td= link_to 'Show', tag
+        %td= link_to 'Edit', edit_tag_path(tag)
+        %td= link_to 'Destroy', tag, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+

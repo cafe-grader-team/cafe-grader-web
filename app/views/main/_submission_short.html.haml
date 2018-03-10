@@ -13,7 +13,7 @@
       %strong=t 'main.score'
       = "#{(submission.points*100/submission.problem.full_score).to_i} "
     = " [" 
-    %tt
+    %tt.grader-comment
       = submission.grader_comment
     = "]"
     %br

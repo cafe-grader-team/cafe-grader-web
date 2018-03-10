@@ -1,22 +1,6 @@
 class GradersController < ApplicationController
 
-  before_filter :admin_authorization, except: [ :submission ]
-  before_filter(only: [:submission]) {
-    #check if authenticated
-    return false unless authenticate
-
-    #admin always has privileged
-    if @current_user.admin?
-      return true
-    end
-
-    if GraderConfiguration["right.user_view_submission"] and Submission.find(params[:id]).problem.available?
-      return true
-    else
-      unauthorized_redirect
-      return false
-    end
-  }
+  before_filter :admin_authorization
 
   verify :method => :post, :only => ['clear_all', 
                                      'start_exam',
@@ -77,25 +61,6 @@ class GradersController < ApplicationController
     @task = Task.find(params[:id])
   end
 
-  def submission
-    @submission = Submission.find(params[:id])
-    formatter = Rouge::Formatters::HTML.new(css_class: 'highlight', line_numbers: true )
-    lexer = case @submission.language.name
-      when "c"      then Rouge::Lexers::C.new
-      when "cpp"    then Rouge::Lexers::Cpp.new
-      when "pas"    then Rouge::Lexers::Pas.new
-      when "ruby"   then Rouge::Lexers::Ruby.new
-      when "python" then Rouge::Lexers::Python.new
-      when "java"   then Rouge::Lexers::Java.new
-      when "php"    then Rouge::Lexers::PHP.new
-    end
-    @formatted_code = formatter.format(lexer.lex(@submission.source))
-    @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
-
-    user = User.find(session[:user_id])
-    SubmissionViewLog.create(user_id: session[:user_id],submission_id: @submission.id) unless user.admin?
-
-  end
 
   # various grader controls
 

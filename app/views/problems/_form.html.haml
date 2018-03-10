@@ -12,6 +12,9 @@
   %label{:for => "problem_full_score"} Full score
   = text_field 'problem', 'full_score', class: 'form-control'
 .form-group
+  %label{:for => "problem_full_score"} Tags
+  = collection_select(:problem, :tag_ids, Tag.all, :id, :name,  {}, {multiple: true, class: 'form-control select2'})
+.form-group
   %label{:for => "problem_date_added"} Date added
   = date_select 'problem', 'date_added', class: 'form-control'
 - # TODO: these should be put in model Problem, but I can't think of

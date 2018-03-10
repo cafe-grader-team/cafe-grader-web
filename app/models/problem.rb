@@ -2,6 +2,14 @@ class Problem < ActiveRecord::Base
 
   belongs_to :description
   has_and_belongs_to_many :contests, :uniq => true
+
+  #has_and_belongs_to_many :groups
+  has_many :groups_problems, class_name: GroupProblem
+  has_many :groups, :through => :groups_problems
+
+  has_many :problems_tags, class_name: ProblemTag
+  has_many :tags, through: :problems_tags
+
   has_many :test_pairs, :dependent => :delete_all
   has_many :testcases, :dependent => :destroy
 
