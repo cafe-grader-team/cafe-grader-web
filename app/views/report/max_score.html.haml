@@ -33,11 +33,11 @@
       .panel-body
         .radio
           %label
-            = radio_button_tag 'users', 'all', true
+            = radio_button_tag 'users', 'all', (params[:users] == "all")
             All users
         .radio
           %label
-            = radio_button_tag 'users', 'enabled'
+            = radio_button_tag 'users', 'enabled', (params[:users] == "enabled")
             Only enabled users
 .row
   .col-md-12

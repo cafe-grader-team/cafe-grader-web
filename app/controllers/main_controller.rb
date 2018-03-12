@@ -97,7 +97,7 @@ class MainController < ApplicationController
       prepare_list_information
       render :action => 'list' and return
     end
-    redirect_to :action => 'list'
+    redirect_to edit_submission_path(@submission)
   end
 
   def source

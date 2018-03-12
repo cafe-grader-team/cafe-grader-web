@@ -52,6 +52,8 @@ class ReportController < ApplicationController
     #set up range from param
     @since_id = params.fetch(:from_id, 0).to_i
     @until_id = params.fetch(:to_id, 0).to_i
+    @since_id = nil if @since_id == 0
+    @until_id = nil if @until_id == 0
 
     #calculate the routine
     @scorearray = calculate_max_score(@problems, @users, @since_id, @until_id)

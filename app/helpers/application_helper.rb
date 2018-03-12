@@ -85,11 +85,10 @@ module ApplicationHelper
   end
 
   def format_short_time(time)
-    now = Time.now.gmtime
+    now = Time.zone.now
     st = ''
-    if (time.yday != now.yday) or
-	(time.year != now.year)
-      st = time.strftime("%x ")
+    if (time.yday != now.yday) or (time.year != now.year)
+      st = time.strftime("%d/%m/%y ")
     end
     st + time.strftime("%X")
   end
@@ -98,6 +97,10 @@ module ApplicationHelper
     return '' if duration==nil
     d = duration.to_f
     return Time.at(d).gmtime.strftime("%X")
+  end
+
+  def format_full_time_ago(time)
+    st = time_ago_in_words(time) + ' ago (' + format_short_time(time) + ')'
   end
 
   def read_textfile(fname,max_size=2048)
