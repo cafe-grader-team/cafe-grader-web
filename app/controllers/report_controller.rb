@@ -4,7 +4,7 @@ class ReportController < ApplicationController
 
   before_filter :authenticate
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score]
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score, :current_score]
 
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
