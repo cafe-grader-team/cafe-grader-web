@@ -19,9 +19,12 @@
         .form-group
           = label_tag "Task:"
           = text_field_tag 'asdf', "#{@problem.long_name}", class: 'form-control', disabled: true
+        .form-group
+          = label_tag "Description:"
+          = link_to_description_if_any "[download] <span class='glyphicon glyphicon-file'></span>".html_safe, @problem
 
         .form-group
-          = label_tag 'Language'
+          = label_tag 'Language:'
           = select_tag 'language_id', options_from_collection_for_select(Language.all, 'id', 'pretty_name', @lang_id || Language.find_by_pretty_name("Python").id || Language.first.id), class: 'form-control select', style: "width: 100px"
         .form-group
           = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
