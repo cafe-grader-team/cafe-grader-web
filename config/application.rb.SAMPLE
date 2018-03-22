@@ -47,23 +47,25 @@ module CafeGrader
     # like if you have constraints or database-specific column types
     # config.active_record.schema_format = :sql
 
-    # Enforce whitelist mode for mass assignment.
-    # This will create an empty whitelist of attributes available for mass-assignment for all models
-    # in your app. As such, your models will need to explicitly whitelist or blacklist accessible
-    # parameters by using an attr_accessible or attr_protected declaration.
-    config.active_record.whitelist_attributes = false
-
     # Enable the asset pipeline
     config.assets.enabled = true
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
 
+    # ---------------- IMPORTANT ----------------------
+    # If we deploy the app into a subdir name "grader", be sure to do "rake assets:precompile RAILS_RELATIVE_URL_ROOT=/grader"
+    # moreover, using the following line instead also known to works 
+    #config.action_controller.relative_url_root = '/grader'
+
+    #font path
+    config.assets.paths << "#{Rails}/vendor/assets/fonts"
+
     config.assets.precompile += ['announcement_refresh.js','effects.js','site_update.js']
     config.assets.precompile += ['local_jquery.js','tablesorter-theme.cafe.css']
-    %w( announcements configurations contests contest_management graders heartbeat 
+    %w( announcements submissions configurations contests contest_management graders heartbeat 
         login main messages problems report site sites sources tasks 
-        test user_admin users ).each do |controller|
+        test user_admin users testcases).each do |controller|
       config.assets.precompile += ["#{controller}.js", "#{controller}.css"]
     end
   end

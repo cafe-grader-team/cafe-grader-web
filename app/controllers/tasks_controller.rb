@@ -26,7 +26,7 @@ class TasksController < ApplicationController
   # this has problem-level access control
   def download
     problem = Problem.find(params[:id])
-    if !problem or !problem.available or !@user.can_view_problem? problem
+    unless @current_user.can_view_problem? problem
       redirect_to :action => 'index' and return
     end
 

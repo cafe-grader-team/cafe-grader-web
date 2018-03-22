@@ -1,24 +1,81 @@
+require 'csv'
+
 class ReportController < ApplicationController
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize]
+  before_filter :authenticate
+
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score, :current_score]
 
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
 
-    if GraderConfiguration["right.user_view_submission"]
-      return true;
+    admin_authorization unless GraderConfiguration["right.user_view_submission"]
+  }
+
+  def max_score
+  end
+
+  def current_score
+    @problems = Problem.available_problems
+    @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
+    @scorearray = calculate_max_score(@problems, @users,0,0,true)
+
+    #rencer accordingly
+    if params[:button] == 'download' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      #render template: 'user_admin/user_stat'
+      render 'current_score'
+    end
+  end
+
+  def show_max_score
+    #process parameters
+    #problems
+    @problems = []
+    if params[:problem_id]
+      params[:problem_id].each do |id|
+        next unless id.strip != ""
+        pid = Problem.find_by_id(id.to_i)
+        @problems << pid if pid
+      end
     end
 
-    admin_authorization
-  }
+    #users
+    @users = if params[:user] == "all" then 
+               User.includes(:contests).includes(:contest_stat)
+             else 
+               User.includes(:contests).includes(:contest_stat).where(enabled: true)
+             end
+
+    #set up range from param
+    @since_id = params.fetch(:from_id, 0).to_i
+    @until_id = params.fetch(:to_id, 0).to_i
+    @since_id = nil if @since_id == 0
+    @until_id = nil if @until_id == 0
+
+    #calculate the routine
+    @scorearray = calculate_max_score(@problems, @users, @since_id, @until_id)
+
+    #rencer accordingly
+    if params[:button] == 'download' then
+      csv = gen_csv_from_scorearray(@scorearray,@problems)
+      send_data csv, filename: 'max_score.csv'
+    else
+      #render template: 'user_admin/user_stat'
+      render 'max_score'
+    end
+
+  end
 
   def score
     if params[:commit] == 'download csv'
       @problems = Problem.all
     else
-      @problems = Problem.find_available_problems
+      @problems = Problem.available_problems
     end
-    @users = User.includes(:contests, :contest_stat).where(enabled: true) #find(:all, :include => [:contests, :contest_stat]).where(enabled: true)
+    @users = User.includes(:contests, :contest_stat).where(enabled: true) 
     @scorearray = Array.new
     @users.each do |u|
       ustat = Array.new
@@ -170,7 +227,7 @@ class ReportController < ApplicationController
         @by_lang[lang.pretty_name][:memory] = { avail: true, user_id: sub.user_id, value: sub.peak_memory, sub_id: sub.id }
       end
 
-      if sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value] and
+      if sub.submitted_at and sub.submitted_at < @by_lang[lang.pretty_name][:first][:value] and sub.user and
           !sub.user.admin?
         @by_lang[lang.pretty_name][:first] = { avail: true, user_id: sub.user_id, value: sub.submitted_at, sub_id: sub.id }
       end
@@ -400,5 +457,65 @@ ORDER BY submitted_at
 
   end
 
+  protected
+
+  def calculate_max_score(problems, users,since_id,until_id, get_last_score = false)
+    scorearray = Array.new
+    users.each do |u|
+      ustat = Array.new
+      ustat[0] = u
+      problems.each do |p|
+        unless get_last_score
+          #get max score
+          max_points = 0
+          Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
+            max_points = sub.points if sub and sub.points and (sub.points > max_points)
+          end
+          ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
+        else
+          #get latest score
+          sub = Submission.find_last_by_user_and_problem(u.id,p.id)
+          if (sub!=nil) and (sub.points!=nil) and p and p.full_score
+            ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
+          else
+            ustat << [0,false]
+          end
+        end
+      end
+      scorearray << ustat
+    end
+    return scorearray
+  end
+
+  def gen_csv_from_scorearray(scorearray,problem)
+    CSV.generate do |csv|
+      #add header
+      header = ['User','Name', 'Activated?', 'Logged in', 'Contest']
+      problem.each { |p| header << p.name }
+      header += ['Total','Passed']
+      csv << header
+      #add data
+      scorearray.each do |sc|
+        total = num_passed = 0
+        row = Array.new
+        sc.each_index do |i|
+          if i == 0
+            row << sc[i].login
+            row << sc[i].full_name
+            row << sc[i].activated
+            row << (sc[i].try(:contest_stat).try(:started_at)!=nil ? 'yes' : 'no')
+            row << sc[i].contests.collect {|c| c.name}.join(', ')
+          else
+            row << sc[i][0]
+            total += sc[i][0]
+            num_passed += 1 if sc[i][1]
+          end
+        end
+        row << total 
+        row << num_passed
+        csv << row
+      end
+    end
+  end
 
 end

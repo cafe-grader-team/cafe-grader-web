@@ -16,8 +16,7 @@
 require 'fileutils'
 
 class TestRequest < Task
-
-  set_table_name "test_requests"
+  self.table_name = "test_requests"
 
   belongs_to :user
   belongs_to :problem
@@ -38,9 +37,7 @@ class TestRequest < Task
     # since there will be only one grader grading TestRequest
     # we do not need locking (hopefully)
     
-    test_request = TestRequest.find(:first, 
-                                    :order => "created_at", 
-                                    :conditions => {:status=> Task::STATUS_INQUEUE})
+    test_request = TestRequest.where(status: Task::STATUS_INQUEUE).first
     if test_request!=nil
       test_request.status = status
       test_request.save!

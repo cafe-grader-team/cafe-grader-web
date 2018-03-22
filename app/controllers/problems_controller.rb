@@ -1,21 +1,21 @@
 class ProblemsController < ApplicationController
 
-  before_filter :authenticate, :authorization
+  before_action :authenticate, :authorization
+  before_action :testcase_authorization, only: [:show_testcase]
 
   in_place_edit_for :problem, :name
   in_place_edit_for :problem, :full_name
   in_place_edit_for :problem, :full_score
 
   def index
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [ :destroy, 
-                                      :create, :quick_create,
+  verify :method => :post, :only => [ :create, :quick_create,
                                       :do_manage,
                                       :do_import,
-                                      :update ],
+                                    ],
          :redirect_to => { :action => :index }
 
   def show
@@ -28,7 +28,7 @@ class ProblemsController < ApplicationController
   end
 
   def create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @description = Description.new(params[:description])
     if @description.body!=''
       if !@description.save
@@ -47,7 +47,7 @@ class ProblemsController < ApplicationController
   end
 
   def quick_create
-    @problem = Problem.new(params[:problem])
+    @problem = Problem.new(problem_params)
     @problem.full_name = @problem.name if @problem.full_name == ''
     @problem.full_score = 100
     @problem.available = false
@@ -71,14 +71,14 @@ class ProblemsController < ApplicationController
   def update
     @problem = Problem.find(params[:id])
     @description = @problem.description
-    if @description == nil and params[:description][:body]!=''
+    if @description.nil? and params[:description][:body]!=''
       @description = Description.new(params[:description])
       if !@description.save
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
       end
       @problem.description = @description
-    elsif @description!=nil
+    elsif @description
       if !@description.update_attributes(params[:description])
         flash[:notice] = 'Error saving description'
         render :action => 'edit' and return
@@ -88,7 +88,7 @@ class ProblemsController < ApplicationController
         flash[:notice] = 'Error: Uploaded file is not PDF'
         render :action => 'edit' and return
     end
-    if @problem.update_attributes(params[:problem])
+    if @problem.update_attributes(problem_params)
       flash[:notice] = 'Problem was successfully updated.'
       unless params[:file] == nil or params[:file] == ''
         flash[:notice] = 'Problem was successfully updated and a new PDF file is uploaded.'
@@ -115,8 +115,8 @@ class ProblemsController < ApplicationController
   end
 
   def destroy
-    Problem.find(params[:id]).destroy
-      redirect_to action: :index
+    p = Problem.find(params[:id]).destroy
+    redirect_to action: :index
   end
 
   def toggle
@@ -135,9 +135,16 @@ class ProblemsController < ApplicationController
     end
   end
 
+  def toggle_view_testcase
+    @problem = Problem.find(params[:id])
+    @problem.update_attributes(view_testcase: !(@problem.view_testcase?) )
+    respond_to do |format|
+      format.js { }
+    end
+  end
+
   def turn_all_off
-    Problem.find(:all,
-                 :conditions => "available = 1").each do |problem|
+    Problem.available.all.each do |problem|
       problem.available = false
       problem.save
     end
@@ -145,8 +152,7 @@ class ProblemsController < ApplicationController
   end
 
   def turn_all_on
-    Problem.find(:all,
-                 :conditions => "available = 0").each do |problem|
+    Problem.where.not(available: true).each do |problem|
       problem.available = true
       problem.save
     end
@@ -159,7 +165,7 @@ class ProblemsController < ApplicationController
       redirect_to :controller => 'main', :action => 'list'
       return
     end
-    @submissions = Submission.includes(:user).where(problem_id: params[:id]).order(:user_id,:id)
+    @submissions = Submission.includes(:user).includes(:language).where(problem_id: params[:id]).order(:user_id,:id)
 
     #stat summary
     range =65
@@ -177,7 +183,7 @@ class ProblemsController < ApplicationController
   end
 
   def manage
-    @problems = Problem.find(:all, :order => 'date_added DESC')
+    @problems = Problem.order(date_added: :desc)
   end
 
   def do_manage
@@ -189,7 +195,26 @@ class ProblemsController < ApplicationController
       set_available(true)
     elsif params.has_key? 'disable_problem'
       set_available(false)
+    elsif params.has_key? 'add_group'
+      group = Group.find(params[:group_id])
+      ok = []
+      failed = []
+      get_problems_from_params.each do |p|
+        begin
+          group.problems << p
+          ok << p.full_name
+        rescue => e
+          failed << p.full_name
+        end
+      end
+      flash[:success] = "The following problems are added to the group #{group.name}: " + ok.join(', ') if ok.count > 0
+      flash[:alert] = "The following problems are already in the group #{group.name}: " + failed.join(', ') if failed.count > 0
+    elsif params.has_key? 'add_tags'
+      get_problems_from_params.each do |p|
+        p.tag_ids += params[:tag_ids]
+      end
     end
+
     redirect_to :action => 'manage'
   end
 
@@ -237,10 +262,7 @@ class ProblemsController < ApplicationController
 
   def change_date_added
     problems = get_problems_from_params
-    year = params[:date_added][:year].to_i
-    month = params[:date_added][:month].to_i
-    day = params[:date_added][:day].to_i
-    date = Date.new(year,month,day)
+    date = Date.parse(params[:date_added])
     problems.each do |p|
       p.date_added = date
       p.save
@@ -278,5 +300,11 @@ class ProblemsController < ApplicationController
 
   def get_problems_stat
   end
+
+  private
+
+    def problem_params
+      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description, tag_ids:[])
+    end
 
 end

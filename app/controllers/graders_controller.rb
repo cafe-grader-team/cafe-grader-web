@@ -1,15 +1,6 @@
 class GradersController < ApplicationController
 
-  before_filter :admin_authorization, except: [ :submission ]
-  before_filter(only: [:submission]) {
-    return false unless authenticate
-
-    if GraderConfiguration["right.user_view_submission"]
-      return true;
-    end
-
-    admin_authorization
-  }
+  before_filter :admin_authorization
 
   verify :method => :post, :only => ['clear_all', 
                                      'start_exam',
@@ -28,11 +19,10 @@ class GradersController < ApplicationController
 
     @terminated_processes = GraderProcess.find_terminated_graders
     
-    @last_task = Task.find(:first,
-                           :order => 'created_at DESC')
-    @last_test_request = TestRequest.find(:first,
-                                          :order => 'created_at DESC')
+    @last_task = Task.last
+    @last_test_request = TestRequest.last
     @submission = Submission.order("id desc").limit(20)
+    @backlog_submission = Submission.where('graded_at is null')
   end
 
   def clear
@@ -49,7 +39,7 @@ class GradersController < ApplicationController
   end
 
   def clear_all
-    GraderProcess.find(:all).each do |p|
+    GraderProcess.all.each do |p|
       p.destroy
     end
     redirect_to :action => 'list'
@@ -71,25 +61,6 @@ class GradersController < ApplicationController
     @task = Task.find(params[:id])
   end
 
-  def submission
-    @submission = Submission.find(params[:id])
-    formatter = Rouge::Formatters::HTML.new(css_class: 'highlight', line_numbers: true )
-    lexer = case @submission.language.name
-      when "c"      then Rouge::Lexers::C.new
-      when "cpp"    then Rouge::Lexers::Cpp.new
-      when "pas"    then Rouge::Lexers::Pas.new
-      when "ruby"   then Rouge::Lexers::Ruby.new
-      when "python" then Rouge::Lexers::Python.new
-      when "java"   then Rouge::Lexers::Java.new
-      when "php"    then Rouge::Lexers::PHP.new
-    end
-    @formatted_code = formatter.format(lexer.lex(@submission.source))
-    @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
-
-    user = User.find(session[:user_id])
-    SubmissionViewLog.create(user_id: session[:user_id],submission_id: @submission.id) unless user.admin?
-
-  end
 
   # various grader controls
 

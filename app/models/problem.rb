@@ -2,19 +2,29 @@ class Problem < ActiveRecord::Base
 
   belongs_to :description
   has_and_belongs_to_many :contests, :uniq => true
+
+  #has_and_belongs_to_many :groups
+  has_many :groups_problems, class_name: GroupProblem
+  has_many :groups, :through => :groups_problems
+
+  has_many :problems_tags, class_name: ProblemTag
+  has_many :tags, through: :problems_tags
+
   has_many :test_pairs, :dependent => :delete_all
+  has_many :testcases, :dependent => :destroy
 
   validates_presence_of :name
-  validates_format_of :name, :with => /^\w+$/
+  validates_format_of :name, :with => /\A\w+\z/
   validates_presence_of :full_name
 
-  scope :available, :conditions => {:available => true}
+  scope :available, -> { where(available: true) }
 
   DEFAULT_TIME_LIMIT = 1
   DEFAULT_MEMORY_LIMIT = 32
 
-  def self.find_available_problems
-    Problem.available.all(:order => "date_added DESC, name ASC")
+  def self.available_problems
+    available.order(date_added: :desc).order(:name)
+    #Problem.available.all(:order => "date_added DESC, name ASC")
   end
 
   def self.create_from_import_form_params(params, old_problem=nil)
@@ -59,7 +69,9 @@ class Problem < ActiveRecord::Base
     result = Hash.new
     #total number of submission
     result[:total_sub] = Submission.where(problem_id: self.id).count
-    result[:attempted_user] = Submission.where(problem_id: self.id).group_by(:user_id)
+    result[:attempted_user] = Submission.where(problem_id: self.id).group(:user_id)
+    result[:pass] = Submission.where(problem_id: self.id).where("points >= ?",self.full_score).count
+    return result
   end
 
   def long_name

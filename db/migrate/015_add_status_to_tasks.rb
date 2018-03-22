@@ -4,7 +4,7 @@ class AddStatusToTasks < ActiveRecord::Migration
     add_column :tasks, :updated_at, :datetime
 
     Task.reset_column_information
-    Task.find(:all).each do |task|
+    Task.all.each do |task|
       task.status_complete
       task.save
     end

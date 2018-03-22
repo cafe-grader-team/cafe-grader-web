@@ -1,0 +1,22 @@
+%h1 Groups
+
+%p
+  = link_to 'New Group', new_group_path, class: 'btn btn-primary'
+%table.table.table-hover
+  %thead
+    %tr
+      %th Name
+      %th Description
+      %th
+      %th
+
+  %tbody
+    - @groups.each do |group|
+      %tr
+        %td= group.name
+        %td= group.description
+        %td= link_to 'View', group, class: 'btn btn-default'
+        %td= link_to 'Destroy', group, :method => :delete, :data => { :confirm => 'Are you sure?' }, class: 'btn btn-danger'
+
+%br
+

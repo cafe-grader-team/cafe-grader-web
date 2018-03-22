@@ -12,22 +12,26 @@
     %hr/
 
   %div{ :style => "border: solid 1px gray; padding: 4px; background: #eeeeff;"}
-    = form_tag :controller => 'login', :action => 'login' do
-      %table
-        %tr
-          %td{:align => "right"} 
-            ="#{t 'login_label'}:"
-          %td= text_field_tag 'login'
-        %tr
-          %td{:align => "right"} 
-            ="#{t 'password_label'}:"
-          %td= password_field_tag
-        - unless GraderConfiguration['right.bypass_agreement']
-          %tr
-            %td{:align => "right"}= check_box_tag 'accept_agree'
-            %td ยอมรับข้อตกลงการใช้งาน
-        
-      = submit_tag t('login.login_submit')
+    = form_tag login_login_path, {class: 'form-horizontal'} do
+      .form-group
+        =label_tag :login, "Login",class: 'col-sm-3 control-label'
+        .col-sm-9
+          =text_field_tag :login, nil, class: 'form-control'
+      .form-group
+        =label_tag :password, "Password", class: 'col-sm-3 control-label'
+        .col-sm-9
+          =password_field_tag :password, nil, class: 'form-control'
+      - unless GraderConfiguration['right.bypass_agreement']
+        .form-group
+          .col-sm-offset-3.col-sm-9
+            .checkbox
+              %label
+                = check_box_tag 'accept_agree'
+                ยอมรับข้อตกลงการใช้งาน
+
+      .form-group
+        .col-sm-offset-3.col-sm-9
+          = submit_tag t('login.login_submit'), class: 'btn btn-primary'
 %br/
 
 - if GraderConfiguration['system.online_registration']

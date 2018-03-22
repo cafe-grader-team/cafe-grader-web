@@ -36,50 +36,83 @@
 
 %h1 Manage problems
 
-%p= link_to '[Back to problem list]', :action => 'list'
+%p= link_to '[Back to problem list]', problems_path
 
 = form_tag :action=>'do_manage' do
-  .submitbox
-    What do you want to do to the selected problem?
-    %br/
-    (You can shift-click to select a range of problems)
-    %ul
-      %li
-        Change date added to
-        = select_date Date.current, :prefix => 'date_added'
-        &nbsp;&nbsp;&nbsp;
-        = submit_tag 'Change', :name => 'change_date_added'
-      %li
-        Set available to
-        = submit_tag 'True', :name => 'enable_problem'
-        = submit_tag 'False', :name => 'disable_problem'
+  .panel.panel-primary
+    .panel-heading
+      Action
+    .panel-body
+      .submit-box
+        What do you want to do to the selected problem?
+        %br/
+        (You can shift-click to select a range of problems)
+        %ul.form-inline
+          %li
+            Change "Date added" to
+            .input-group.date
+              = text_field_tag :date_added, class: 'form-control'
+              %span.input-group-addon
+                %span.glyphicon.glyphicon-calendar
+            -# = select_date Date.current, :prefix => 'date_added'
+            &nbsp;&nbsp;&nbsp;
+            = submit_tag 'Change', :name => 'change_date_added', class: 'btn btn-primary btn-sm'
+          %li
+            Set "Available" to
+            = submit_tag 'True', :name => 'enable_problem', class: 'btn btn-primary btn-sm'
+            = submit_tag 'False', :name => 'disable_problem', class: 'btn btn-primary btn-sm'
 
-      - if GraderConfiguration.multicontests?
-        %li
-          Add to 
-          = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
-          = submit_tag 'Add', :name => 'add_to_contest'
+          - if GraderConfiguration.multicontests?
+            %li
+              Add selected problems to contest
+              = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
+              = submit_tag 'Add', :name => 'add_to_contest', class: 'btn btn-primary btn-sm'
+          %li
+            Add selected problems to user group
+            = select_tag "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'select2'
+            = submit_tag 'Add', name: 'add_group', class: 'btn btn-primary'
+          %li
+            Add the following tags to the selected problems
+            = select_tag "tag_ids", options_from_collection_for_select( Tag.all, 'id','name'), id: 'tags_name',class: 'select2', multiple: true, data: {placeholder: 'Select tags by clicking', width: "200px"}
+            = submit_tag 'Add', name: 'add_tags', class: 'btn btn-primary'
 
-  %table
-    %tr{style: "text-align: left;"}
-      %th= check_box_tag 'select_all'
-      %th Name
-      %th Full name
-      %th Available
-      %th Date added
-      - if GraderConfiguration.multicontests?
-        %th Contests
-
-    - num = 0
-    - for problem in @problems
-      - num += 1
-      %tr{:id => "row-prob-#{problem.id}", :name=> "prob-#{problem.id}"}
-        %td= check_box_tag "prob-#{problem.id}-#{num}"
-        %td= problem.name
-        %td= problem.full_name
-        %td= problem.available
-        %td= problem.date_added
+  %table.table.table-hover.datatable
+    %thead
+      %tr{style: "text-align: left;"}
+        %th= check_box_tag 'select_all'
+        %th Name
+        %th Full name
+        %th Tags
+        %th Available
+        %th Date added
         - if GraderConfiguration.multicontests?
+          %th Contests
+
+    %tbody
+      - num = 0
+      - for problem in @problems
+        - num += 1
+        %tr{:id => "row-prob-#{problem.id}", :name=> "prob-#{problem.id}"}
+          %td= check_box_tag "prob-#{problem.id}-#{num}"
+          %td= problem.name
+          %td= problem.full_name
           %td
-            - problem.contests.each do |contest|
-              = "(#{contest.name} [#{link_to 'x', :action => 'remove_contest', :id => problem.id, :contest_id => contest.id }])"
+            - problem.tags.each do |t|
+              %span.label.label-default= t.name
+          %td= problem.available
+          %td= problem.date_added
+          - if GraderConfiguration.multicontests?
+            %td
+              - problem.contests.each do |contest|
+                = "(#{contest.name} [#{link_to 'x', :action => 'remove_contest', :id => problem.id, :contest_id => contest.id }])"
+
+:javascript
+  $('.input-group.date').datetimepicker({
+    format: 'DD/MMM/YYYY',
+    showTodayButton: true,
+    widgetPositioning: {horizontal: 'auto', vertical: 'bottom'},
+
+  });
+  $('.datatable').DataTable({
+    paging: false
+  });

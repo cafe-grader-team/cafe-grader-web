@@ -28,8 +28,8 @@
           %br/
         = h announcement.body
       %td= h announcement.author
-      %td= toggle_button(announcement.published?, toggle_announcement_url(@announcement), "announcement_toggle_#{@announcement.id}", {size: 'btn-sm'})
-      %td= toggle_button(announcement.frontpage?, toggle_front_announcement_url(@announcement), "announcement_toggle_front_#{@announcement.id}", {size: 'btn-sm'})
+      %td= toggle_button(announcement.published?, toggle_announcement_path(@announcement), "announcement_toggle_#{@announcement.id}", {size: 'btn-sm'})
+      %td= toggle_button(announcement.frontpage?, toggle_front_announcement_path(@announcement), "announcement_toggle_front_#{@announcement.id}", {size: 'btn-sm'})
       %td= link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-block btn-sm btn-info'
       %td= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete, class: "btn btn-block btn-sm btn-danger"
 %br

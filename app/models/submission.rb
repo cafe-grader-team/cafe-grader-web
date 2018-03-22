@@ -13,14 +13,12 @@ class Submission < ActiveRecord::Base
   validate :must_have_valid_problem
   validate :must_specify_language
 
+  has_one :task
+
   before_save :assign_latest_number_if_new_recond
 
   def self.find_last_by_user_and_problem(user_id, problem_id)
-    last_sub = find(:first, 
-                    :conditions => {:user_id => user_id,
-                      :problem_id => problem_id},
-                    :order => 'number DESC')
-    return last_sub
+    where("user_id = ? AND problem_id = ?",user_id,problem_id).last
   end
 
   def self.find_all_last_by_problem(problem_id)
@@ -36,14 +34,14 @@ class Submission < ActiveRecord::Base
 
   def self.find_in_range_by_user_and_problem(user_id, problem_id,since_id,until_id)
     records = Submission.where(problem_id: problem_id,user_id: user_id)
-    records = records.where('id >= ?',since_id) if since_id > 0
-    records = records.where('id <= ?',until_id) if until_id > 0
+    records = records.where('id >= ?',since_id) if since_id and since_id > 0
+    records = records.where('id <= ?',until_id) if until_id and until_id > 0
     records.all
   end
 
   def self.find_last_for_all_available_problems(user_id)
     submissions = Array.new
-    problems = Problem.find_available_problems
+    problems = Problem.available_problems
     problems.each do |problem|
       sub = Submission.find_last_by_user_and_problem(user_id, problem.id)
       submissions << sub if sub!=nil
@@ -52,20 +50,11 @@ class Submission < ActiveRecord::Base
   end
 
   def self.find_by_user_problem_number(user_id, problem_id, number)
-    Submission.find(:first,
-                    :conditions => {
-                      :user_id => user_id,
-                      :problem_id => problem_id,
-                      :number => number
-                    })
+    where("user_id = ? AND problem_id = ? AND number = ?",user_id,problem_id,number).first
   end
 
   def self.find_all_by_user_problem(user_id, problem_id)
-    Submission.find(:all,
-                    :conditions => {
-                      :user_id => user_id,
-                      :problem_id => problem_id,
-                    })
+    where("user_id = ? AND problem_id = ?",user_id,problem_id)
   end
 
   def download_filename
@@ -148,7 +137,7 @@ class Submission < ActiveRecord::Base
 
     # for output_only tasks
     return if self.problem!=nil and self.problem.output_only
-    
+
     if self.language==nil
       errors.add('source',"Cannot detect language. Did you submit a correct source file?") unless self.language!=nil
     end
@@ -158,8 +147,12 @@ class Submission < ActiveRecord::Base
     return if self.source==nil
     if self.problem==nil
       errors.add('problem',"must be specified.")
-    elsif (!self.problem.available) and (self.new_record?)
-      errors.add('problem',"must be valid.")
+    else
+      #admin always have right
+      return if self.user.admin?
+
+      #check if user has the right to submit the problem
+      errors.add('problem',"must be valid.") if (!self.user.available_problems.include?(self.problem)) and (self.new_record?)
     end
   end
 

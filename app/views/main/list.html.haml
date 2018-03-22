@@ -43,6 +43,7 @@
     .panel.panel-info
       .panel-heading
         Announcement
+        = link_to 'Manage', announcements_path, class: 'btn btn-xs btn-default'
       %ul.list-group
         = render :partial => 'announcement', :collection => @announcements
 
@@ -50,3 +51,14 @@
   = "Announcement.refreshUrl = '#{url_for :controller => 'main', :action => 'announcements'}';"
   Announcement.registerRefreshEventTimer();
 
+.modal.fade#compiler{tabindex: -1,role: 'dialog'}
+  .modal-dialog.modal-lg{role:'document'}
+    .modal-content
+      .modal-header
+        %button.close{type: 'button', data: {dismissed: :modal}, aria: {label: 'close'}}
+          %span{aria: {hidden: 'true'}, data: {dismiss: 'modal'}} &times;
+        %h4 Compiler message
+      .modal-body
+        %pre#compiler_msg
+      .modal-footer
+        %button.btn.btn-default{type: 'button', data: {dismiss: 'modal'}} Close

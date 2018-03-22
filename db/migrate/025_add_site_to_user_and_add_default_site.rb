@@ -7,7 +7,7 @@ class AddSiteToUserAndAddDefaultSite < ActiveRecord::Migration
     add_column :users, :site_id, :integer
     User.reset_column_information
 
-    User.find(:all).each do |user|
+    User.all.each do |user|
 
       class << user
         def valid?

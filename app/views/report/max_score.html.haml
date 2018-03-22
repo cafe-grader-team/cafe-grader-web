@@ -1,0 +1,49 @@
+%h1 Maximum score
+
+= form_tag report_show_max_score_path
+.row
+  .col-md-4
+    .panel.panel-primary
+      .panel-heading
+        Problems
+      .panel-body
+        %p
+          Select problem(s) that we wish to know the score.
+        = label_tag :problem_id, "Problems"
+        = select_tag 'problem_id[]',
+            options_for_select(Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]},params[:problem_id]),
+            { class: 'select2 form-control', multiple: "true" }
+  .col-md-4
+    .panel.panel-primary
+      .panel-heading
+        Submission range
+      .panel-body
+        %p
+          Input minimum and maximum range of submission ID that should be included. A blank value for min and max means -1 and infinity, respectively.
+        .form-group
+          = label_tag :from, "Min"
+          = text_field_tag 'from_id', @since_id, class: "form-control"
+        .form-group
+          = label_tag :from, "Max"
+          = text_field_tag 'to_id', @until_id, class: "form-control"
+  .col-md-4
+    .panel.panel-primary
+      .panel-heading
+        Users
+      .panel-body
+        .radio
+          %label
+            = radio_button_tag 'users', 'all', (params[:users] == "all")
+            All users
+        .radio
+          %label
+            = radio_button_tag 'users', 'enabled', (params[:users] == "enabled")
+            Only enabled users
+.row
+  .col-md-12
+    = button_tag 'Show', class: "btn btn-primary btn-large", value: "show"
+    = button_tag 'Download CSV', class: "btn btn-primary btn-large", value: "download"
+
+- if @scorearray
+  %h2 Result
+  =render "score_table"

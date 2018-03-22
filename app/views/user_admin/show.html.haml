@@ -1,0 +1,14 @@
+%h1 User information
+- for column in User.content_columns
+  %p
+    %b
+      = column.human_name
+      \:
+    = h @user.send(column.name)
+%p
+  %strong Group
+  \:
+  = @user.groups.map{ |x| link_to(x.name,group_path(x)).html_safe}.join(', ').html_safe
+= link_to 'Edit', :action => 'edit', :id => @user
+|
+= link_to 'Back', :action => 'index'

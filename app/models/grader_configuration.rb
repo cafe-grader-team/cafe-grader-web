@@ -10,6 +10,9 @@ class GraderConfiguration < ActiveRecord::Base
   MULTICONTESTS_KEY = 'system.multicontests'
   CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
   MULTIPLE_IP_LOGIN_KEY = 'right.multiple_ip_login'
+  VIEW_TESTCASE = 'right.view_testcase'
+  SINGLE_USER_KEY = 'system.single_user_mode'
+  SYSTEM_USE_PROBLEM_GROUP = 'system.use_problem_group'
 
   cattr_accessor :config_cache
   cattr_accessor :task_grading_info_cache
@@ -70,6 +73,10 @@ class GraderConfiguration < ActiveRecord::Base
     return (get(SYSTEM_MODE_CONF_KEY)=='analysis')
   end
 
+  def  self.show_testcase
+    return get(VIEW_TESTCASE)
+  end
+
   def self.allow_test_request(user)
     mode = get(SYSTEM_MODE_CONF_KEY)
     early_timeout = get(TEST_REQUEST_EARLY_TIMEOUT_KEY)
@@ -113,6 +120,10 @@ class GraderConfiguration < ActiveRecord::Base
   def self.analysis_mode?
     return get(SYSTEM_MODE_CONF_KEY) == 'analysis'
   end
+
+  def self.use_problem_group?
+    return get(SYSTEM_USE_PROBLEM_GROUP)
+  end
   
   def self.contest_time_limit
     contest_time_str = GraderConfiguration[CONTEST_TIME_LIMIT_KEY]
@@ -152,7 +163,7 @@ class GraderConfiguration < ActiveRecord::Base
 
   def self.read_config
     GraderConfiguration.config_cache = {}
-    GraderConfiguration.find(:all).each do |conf|
+    GraderConfiguration.all.each do |conf|
       key = conf.key
       val = conf.value
       GraderConfiguration.config_cache[key] = GraderConfiguration.convert_type(val,conf.value_type)

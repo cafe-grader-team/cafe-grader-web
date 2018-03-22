@@ -1,10 +1,16 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery
 
-  before_filter :current_user 
+  before_filter :current_user
 
   SINGLE_USER_MODE_CONF_KEY = 'system.single_user_mode'
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
+
+  #report and redirect for unauthorized activities
+  def unauthorized_redirect
+    flash[:notice] = 'You are not authorized to view the page you requested'
+    redirect_to :controller => 'main', :action => 'login'
+  end
 
   # Returns the current logged-in user (if any).
   def current_user
@@ -14,10 +20,9 @@ class ApplicationController < ActionController::Base
 
   def admin_authorization
     return false unless authenticate
-    user = User.find(session[:user_id], :include => ['roles'])
+    user = User.includes(:roles).find(session[:user_id])
     unless user.admin?
-      flash[:notice] = 'You are not authorized to view the page you requested'
-      redirect_to :controller => 'main', :action => 'login' unless user.admin?
+      unauthorized_redirect
       return false
     end
     return true
@@ -27,10 +32,18 @@ class ApplicationController < ActionController::Base
     return false unless authenticate
     user = User.find(session[:user_id])
     unless user.roles.detect { |role| allowed_roles.member?(role.name) }
-      flash[:notice] = 'You are not authorized to view the page you requested'
-      redirect_to :controller => 'main', :action => 'login'
+      unauthorized_redirect
       return false
     end
+  end
+
+  def testcase_authorization
+    #admin always has privileged
+    if @current_user.admin?
+      return true
+    end
+
+    unauthorized_redirect unless GraderConfiguration["right.view_testcase"]
   end
 
   protected
@@ -45,27 +58,28 @@ class ApplicationController < ActionController::Base
       return false
     end
 
+
     # check if run in single user mode
     if GraderConfiguration[SINGLE_USER_MODE_CONF_KEY]
-      user = User.find_by_id(session[:user_id])
-      if user==nil or (not user.admin?)
+      if @current_user==nil or (not @current_user.admin?)
         flash[:notice] = 'You cannot log in at this time'
-        redirect_to :controller => 'main', :action => 'login'
-        return false
-      end
-      unless user.enabled?
-        flash[:notice] = 'Your account is disabled'
         redirect_to :controller => 'main', :action => 'login'
         return false
       end
       return true
     end
 
+    # check if the user is enabled
+    unless @current_user.enabled? or @current_user.admin?
+      flash[:notice] = 'Your account is disabled'
+      redirect_to :controller => 'main', :action => 'login'
+      return false
+    end
+
     if GraderConfiguration.multicontests? 
-      user = User.find(session[:user_id])
-      return true if user.admin?
+      return true if @current_user.admin?
       begin
-        if user.contest_stat(true).forced_logout
+        if @current_user.contest_stat(true).forced_logout
           flash[:notice] = 'You have been automatically logged out.'
           redirect_to :controller => 'main', :action => 'index'
         end
@@ -97,10 +111,10 @@ class ApplicationController < ActionController::Base
     return false unless authenticate
     user = User.find(session[:user_id])
     unless user.roles.detect { |role|
-	role.rights.detect{ |right|
-	  right.controller == self.class.controller_name and
-          (right.action == 'all' or right.action == action_name)
-	}
+        role.rights.detect{ |right|
+          right.controller == self.class.controller_name and
+            (right.action == 'all' or right.action == action_name)
+        }
       }
       flash[:notice] = 'You are not authorized to view the page you requested'
       #request.env['HTTP_REFERER'] ? (redirect_to :back) : (redirect_to :controller => 'login')
