@@ -127,8 +127,12 @@ class GradersController < ApplicationController
   end
 
   def stop_all
-    GraderScript.stop_graders(GraderProcess.find_running_graders + 
-                              GraderProcess.find_stalled_process)
+    @grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading queue" | grep -v grep | awk '{print $2}'`.split("\n")
+    @grader_pidlist.each do |p|
+      `kill #{p}`
+    end
+    #GraderScript.stop_graders(GraderProcess.find_running_graders + 
+    #                          GraderProcess.find_stalled_process)
     flash[:notice] = 'Graders stopped.  They may not disappear now, but they should disappear shortly.'
     redirect_to :action => 'list'
   end
@@ -156,7 +160,7 @@ class GradersController < ApplicationController
 
   def auto_mode
     @grader_refresh_process = fork do
-      exec "/bin/bash --login #{GRADER_ROOT_DIR}/scripts/grader-refresh.sh"
+      exec "/bin/bash #{GRADER_ROOT_DIR}/scripts/grader-refresh.sh"
     end
     Process.detach(@grader_refresh_process)
     flash[:notice] = 'Switched to Automatically Managed Mode.'
