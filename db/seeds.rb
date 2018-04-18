@@ -102,6 +102,14 @@ CONFIGURATIONS =
      :default_value => 'false',
      :description => 'When true, any user can view/download test data'
    },
+
+   {
+     :key => 'right.user_view_others',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'If true, any user can access other users\' statistics'
+   },
+
    # If Configuration['system.online_registration'] is true, the
    # system allows online registration, and will use these
    # information for sending confirmation emails.
@@ -166,13 +174,22 @@ CONFIGURATIONS =
    },
 
    {
-     :key => 'system.use_problem_group',
+     :key => 'system.user_scoreboard_enabled',
      :value_type => 'boolean',
-     :default_value => 'false',
-     :description => "If true, available problem to the user will be only ones associated with the group of the user."
+     :default_value => 'true'
    },
 
+   {
+     :key => 'system.admin_hide_score',
+     :value_type => 'boolean',
+     :default_value => 'true'
+   },
 
+   {
+     :key => 'system.default_grader_amount',
+     :value_type => 'integer',
+     :default_value => '2'
+   }
 
   ]
 
@@ -254,12 +271,12 @@ end
 
 def seed_more_languages
   Language.delete_all
-  Language.create( name: 'c', pretty_name: 'C', ext: 'c', common_ext: 'c' )
-  Language.create( name: 'cpp', pretty_name: 'C++', ext: 'cpp', common_ext: 'cpp,cc' )
-  Language.create( name: 'pas', pretty_name: 'Pascal', ext: 'pas', common_ext: 'pas' )
-  Language.create( name: 'ruby', pretty_name: 'Ruby', ext: 'rb', common_ext: 'rb' )
-  Language.create( name: 'python', pretty_name: 'Python', ext: 'py', common_ext: 'py' )
-  Language.create( name: 'java', pretty_name: 'Java', ext: 'java', common_ext: 'java' )
+  Language.create( id: 4, name: 'c', pretty_name: 'C', ext: 'c', common_ext: 'c' )
+  Language.create( id: 5, name: 'cpp', pretty_name: 'C++', ext: 'cpp', common_ext: 'cpp,cc' )
+  Language.create( id: 6, name: 'pas', pretty_name: 'Pascal', ext: 'pas', common_ext: 'pas' )
+  Language.create( id: 7, name: 'ruby', pretty_name: 'Ruby', ext: 'rb', common_ext: 'rb' )
+  Language.create( id: 8, name: 'python', pretty_name: 'Python', ext: 'py', common_ext: 'py' )
+  Language.create( id: 9, name: 'java', pretty_name: 'Java', ext: 'java', common_ext: 'java' )
 end
 
 seed_config
