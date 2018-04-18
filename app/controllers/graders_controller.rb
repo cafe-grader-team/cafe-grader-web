@@ -150,10 +150,14 @@ class GradersController < ApplicationController
     @grader_refresh_pidlist.each do |p|
       `kill #{p}`
     end
+    flash[:notice] = 'Switched to Manual Mode.'
+    redirect_to :action => 'list'
   end
 
   def auto_mode
     `/bin/bash #{GRADER_ROOT}/grader-refresh.sh`
+    flash[:notice] = 'Switched to Automatically Managed Mode.'
+    redirect_to :action => 'list'
   end
 
 end
