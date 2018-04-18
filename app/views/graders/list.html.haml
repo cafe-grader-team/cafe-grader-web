@@ -14,6 +14,10 @@
     =link_to 'Start Graders in exam env', { action: 'start_exam'}, class: 'btn btn-default', method: 'post'
     =link_to 'Stop all running Graders', { action: 'stop_all'}, class: 'btn btn-default', method: 'post'
     =link_to 'Clear all data', { action: 'clear_all'}, class: 'btn btn-default', method: 'post'
+    - if @grader_refresh_processes_amount >= 1
+      =link_to 'Switch to manual mode', { action: 'manual_mode'}, class: 'btn btn-danger', method: 'post'
+    - else
+      =link_to 'Switch to auto mode', { action: 'auto_mode'}, class: 'btn btn-success', method: 'post'
 
 .row
   .col-md-6

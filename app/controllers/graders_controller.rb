@@ -30,6 +30,7 @@ class GradersController < ApplicationController
   end
 
   def list
+    @grader_refresh_processes_amount = `ps aux | grep grader-refresh.sh | grep -v grep | wc -l`.to_i
     @grader_processes = GraderProcess.find_running_graders
     @stalled_processes = GraderProcess.find_stalled_process
 
@@ -144,4 +145,11 @@ class GradersController < ApplicationController
     redirect_to :action => 'list'
   end
 
+  def manual_mode
+    @grader_refresh_pidlist = `ps aux | grep grader-refresh.sh | grep -v grep | awk '{print $2}'`.split("\n")
+    @grader_refresh_pidlist.each do |p|
+      `kill #{p}`
+
+  def auto_mode
+    `/bin/bash #{GRADER_ROOT}/grader-refresh.sh`
 end
