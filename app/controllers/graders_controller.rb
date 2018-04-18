@@ -1,6 +1,22 @@
 class GradersController < ApplicationController
 
-  before_filter :admin_authorization
+  before_filter :admin_authorization, except: [ :submission ]
+  before_filter(only: [:submission]) {
+    #check if authenticated
+    return false unless authenticate
+
+    #admin always has privileged
+    if @current_user.admin?
+      return true
+    end
+
+    if GraderConfiguration["right.user_view_submission"] and Submission.find(params[:id]).problem.available?
+      return true
+    else
+      unauthorized_redirect
+      return false
+    end
+  }
 
   verify :method => :post, :only => ['clear_all', 
                                      'start_exam',
@@ -18,7 +34,26 @@ class GradersController < ApplicationController
     @stalled_processes = GraderProcess.find_stalled_process
 
     @terminated_processes = GraderProcess.find_terminated_graders
-    
+    @grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading queue" | grep -v grep | awk '{print $2}'`.split("\n")
+    @grader_processes.each do |proc|
+      lc = `ps aux | grep "cafe_grader" | grep "grader grading queue" | grep #{proc.pid} | wc -l`.to_i
+      if lc < 1
+        #throw "Process #{proc.pid} which has #{lc-1} instances should have been killed already!"
+        GraderScript.stop_grader(proc.pid)
+      end
+    end
+    @grader_pidlist.each do |p|
+      unless GraderProcess.exists?(pid: p)
+        GraderProcess.register("ubuntu-plum-host",p,"queue")
+      end
+    end
+    @grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading test_request" | grep -v grep | awk '{print $2}'`.split("\n")
+    @grader_pidlist.each do |p|
+      unless GraderProcess.exists?(pid: p)
+        GraderProcess.register("ubuntu-plum-host",p,"test_request")
+      end
+    end
+    @grader_processes = GraderProcess.find_running_graders
     @last_task = Task.last
     @last_test_request = TestRequest.last
     @submission = Submission.order("id desc").limit(20)
@@ -61,6 +96,25 @@ class GradersController < ApplicationController
     @task = Task.find(params[:id])
   end
 
+  def submission
+    @submission = Submission.find(params[:id])
+    formatter = Rouge::Formatters::HTML.new(css_class: 'highlight', line_numbers: true )
+    lexer = case @submission.language.name
+      when "c"      then Rouge::Lexers::C.new
+      when "cpp"    then Rouge::Lexers::Cpp.new
+      when "pas"    then Rouge::Lexers::Pas.new
+      when "ruby"   then Rouge::Lexers::Ruby.new
+      when "python" then Rouge::Lexers::Python.new
+      when "java"   then Rouge::Lexers::Java.new
+      when "php"    then Rouge::Lexers::PHP.new
+    end
+    @formatted_code = formatter.format(lexer.lex(@submission.source))
+    @css_style = Rouge::Themes::ThankfulEyes.render(scope: '.highlight')
+
+    user = User.find(session[:user_id])
+    SubmissionViewLog.create(user_id: session[:user_id],submission_id: @submission.id) unless user.admin?
+
+  end
 
   # various grader controls
 
