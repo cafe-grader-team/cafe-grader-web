@@ -35,23 +35,11 @@ class GradersController < ApplicationController
     @stalled_processes = GraderProcess.find_stalled_process
 
     @terminated_processes = GraderProcess.find_terminated_graders
-    @grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading queue" | grep -v grep | awk '{print $2}'`.split("\n")
     @grader_processes.each do |proc|
       lc = `ps aux | grep "cafe_grader" | grep "grader grading queue" | grep #{proc.pid} | wc -l`.to_i
       if lc < 1
         #throw "Process #{proc.pid} which has #{lc-1} instances should have been killed already!"
         GraderScript.stop_grader(proc.pid)
-      end
-    end
-    @grader_pidlist.each do |p|
-      unless GraderProcess.exists?(pid: p)
-        GraderProcess.register("ubuntu-plum-host",p,"queue")
-      end
-    end
-    @grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading test_request" | grep -v grep | awk '{print $2}'`.split("\n")
-    @grader_pidlist.each do |p|
-      unless GraderProcess.exists?(pid: p)
-        GraderProcess.register("ubuntu-plum-host",p,"test_request")
       end
     end
     @grader_processes = GraderProcess.find_running_graders
