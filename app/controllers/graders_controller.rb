@@ -156,7 +156,7 @@ class GradersController < ApplicationController
 
   def auto_mode
     @grader_refresh_process = fork do
-      exec "/bin/bash #{GRADER_ROOT_DIR}/scripts/grader-refresh.sh"
+      exec "/bin/bash --login #{GRADER_ROOT_DIR}/scripts/grader-refresh.sh"
     end
     Process.detach(@grader_refresh_process)
     flash[:notice] = 'Switched to Automatically Managed Mode.'
