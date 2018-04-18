@@ -155,7 +155,10 @@ class GradersController < ApplicationController
   end
 
   def auto_mode
-    `/bin/bash #{GRADER_ROOT}/grader-refresh.sh`
+    @grader_refresh_process = fork do
+      exec "/bin/bash #{GRADER_ROOT_DIR}/scripts/grader-refresh.sh"
+    end
+    Process.detach(@grader_refresh_process)
     flash[:notice] = 'Switched to Automatically Managed Mode.'
     redirect_to :action => 'list'
   end

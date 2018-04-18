@@ -17,8 +17,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.string   "author",       limit: 255
     t.text     "body",         limit: 65535
     t.boolean  "published"
-    t.datetime "created_at",                                 null: false
-    t.datetime "updated_at",                                 null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.boolean  "frontpage",                  default: false
     t.boolean  "contest_only",               default: false
     t.string   "title",        limit: 255
@@ -28,8 +28,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
   create_table "contests", force: :cascade do |t|
     t.string   "title",      limit: 255
     t.boolean  "enabled"
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.string   "name",       limit: 255
   end
 
@@ -45,23 +45,23 @@ ActiveRecord::Schema.define(version: 20170914150742) do
 
   create_table "countries", force: :cascade do |t|
     t.string   "name",       limit: 255
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "descriptions", force: :cascade do |t|
     t.text     "body",       limit: 65535
     t.boolean  "markdowned"
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "grader_configurations", force: :cascade do |t|
     t.string   "key",         limit: 255
     t.string   "value_type",  limit: 255
     t.string   "value",       limit: 255
-    t.datetime "created_at",                null: false
-    t.datetime "updated_at",                null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.text     "description", limit: 65535
   end
 
@@ -70,14 +70,14 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.integer  "pid",        limit: 4
     t.string   "mode",       limit: 255
     t.boolean  "active"
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.integer  "task_id",    limit: 4
     t.string   "task_type",  limit: 255
     t.boolean  "terminated"
   end
 
-  add_index "grader_processes", ["host", "pid"], name: "index_grader_processes_on_ip_and_pid", using: :btree
+  add_index "grader_processes", ["host", "pid"], name: "index_grader_processes_on_host_and_pid", using: :btree
 
   create_table "groups", force: :cascade do |t|
     t.string "name",        limit: 255
@@ -101,8 +101,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
   create_table "heart_beats", force: :cascade do |t|
     t.integer  "user_id",    limit: 4
     t.string   "ip_address", limit: 255
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.string   "status",     limit: 255
   end
 
@@ -118,8 +118,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
   create_table "logins", force: :cascade do |t|
     t.integer  "user_id",    limit: 4
     t.string   "ip_address", limit: 255
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -128,8 +128,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.integer  "replying_message_id", limit: 4
     t.text     "body",                limit: 65535
     t.boolean  "replied"
-    t.datetime "created_at",                        null: false
-    t.datetime "updated_at",                        null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "problems", force: :cascade do |t|
@@ -192,8 +192,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.string   "name",       limit: 255
     t.boolean  "started"
     t.datetime "start_time"
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.integer  "country_id", limit: 4
     t.string   "password",   limit: 255
   end
@@ -201,8 +201,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
   create_table "submission_view_logs", force: :cascade do |t|
     t.integer  "user_id",       limit: 4
     t.integer  "submission_id", limit: 4
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "submissions", force: :cascade do |t|
@@ -249,8 +249,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.integer  "problem_id", limit: 4
     t.text     "input",      limit: 16777215
     t.text     "solution",   limit: 16777215
-    t.datetime "created_at",                  null: false
-    t.datetime "updated_at",                  null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "test_requests", force: :cascade do |t|
@@ -261,13 +261,13 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.string   "output_file_name", limit: 255
     t.string   "running_stat",     limit: 255
     t.integer  "status",           limit: 4
-    t.datetime "updated_at",                     null: false
+    t.datetime "updated_at"
     t.datetime "submitted_at"
     t.datetime "compiled_at"
     t.text     "compiler_message", limit: 65535
     t.datetime "graded_at"
     t.string   "grader_comment",   limit: 255
-    t.datetime "created_at",                     null: false
+    t.datetime "created_at"
     t.float    "running_time",     limit: 24
     t.string   "exit_status",      limit: 255
     t.integer  "memory_usage",     limit: 4
@@ -291,8 +291,8 @@ ActiveRecord::Schema.define(version: 20170914150742) do
   create_table "user_contest_stats", force: :cascade do |t|
     t.integer  "user_id",       limit: 4
     t.datetime "started_at"
-    t.datetime "created_at",              null: false
-    t.datetime "updated_at",              null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.boolean  "forced_logout"
   end
 
@@ -308,10 +308,10 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.boolean  "activated",                   default: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "section",         limit: 255
     t.boolean  "enabled",                     default: true
     t.string   "remark",          limit: 255
     t.string   "last_ip",         limit: 255
-    t.string   "section",         limit: 255
   end
 
   add_index "users", ["login"], name: "index_users_on_login", unique: true, using: :btree
