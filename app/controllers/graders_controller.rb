@@ -149,7 +149,10 @@ class GradersController < ApplicationController
     @grader_refresh_pidlist = `ps aux | grep grader-refresh.sh | grep -v grep | awk '{print $2}'`.split("\n")
     @grader_refresh_pidlist.each do |p|
       `kill #{p}`
+  end
 
   def auto_mode
     `/bin/bash #{GRADER_ROOT}/grader-refresh.sh`
+  end
+
 end
