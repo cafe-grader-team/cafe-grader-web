@@ -64,6 +64,7 @@ class GradersController < ApplicationController
 
   def clear_all
     GraderProcess.all.each do |p|
+      `kill #{p.pid}`
       p.destroy
     end
     redirect_to :action => 'list'
