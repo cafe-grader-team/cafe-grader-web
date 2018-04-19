@@ -39,7 +39,7 @@ class GradersController < ApplicationController
       lc = `ps aux | grep "cafe_grader" | grep "grader grading queue" | grep #{proc.pid} | wc -l`.to_i
       if lc < 1
         #throw "Process #{proc.pid} which has #{lc-1} instances should have been killed already!"
-        GraderScript.stop_grader(proc.pid)
+        proc.terminate
       end
     end
     @grader_processes = GraderProcess.find_running_graders
@@ -116,12 +116,12 @@ class GradersController < ApplicationController
   end
 
   def stop_all
-    @grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading queue" | grep -v grep | awk '{print $2}'`.split("\n")
-    @grader_pidlist.each do |p|
-      `kill #{p}`
-    end
-    #GraderScript.stop_graders(GraderProcess.find_running_graders + 
-    #                          GraderProcess.find_stalled_process)
+    #@grader_pidlist = `ps aux | grep cafe_grader | grep "grader grading queue" | grep -v grep | awk '{print $2}'`.split("\n")
+    #@grader_pidlist.each do |p|
+    #  `kill #{p}`
+    #end
+    GraderScript.stop_graders(GraderProcess.find_running_graders + 
+                              GraderProcess.find_stalled_process)
     flash[:notice] = 'Graders stopped.  They may not disappear now, but they should disappear shortly.'
     redirect_to :action => 'list'
   end
