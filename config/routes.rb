@@ -60,7 +60,7 @@ CafeGrader::Application.routes.draw do
 
   resources :users do
     member do
-      get 'toggle_activate', 'toggle_enable'
+      get 'toggle_activate', 'toggle_enable', 'toggle_show_score'
       get 'stat'
     end
   end
