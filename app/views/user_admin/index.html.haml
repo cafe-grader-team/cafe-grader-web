@@ -78,6 +78,9 @@
     %th 
       Enabled
       %sup{class: 'text-primary',data: {toggle: 'tooltip', placement: 'top'}, title: 'Allow the user to login?' } [?]
+    %th
+      Show Score in Scoreboard
+      %sup{class: 'text-primary',data: {toggle: 'tooltip', placement: 'top'}, title: 'Show result in scoreboard?' } [?]
     %th Last IP
     %th
     %th
@@ -91,6 +94,7 @@
       %td= user.remark
       %td= toggle_button(user.activated?, toggle_activate_user_path(user),"toggle_activate_user_#{user.id}")
       %td= toggle_button(user.enabled?, toggle_enable_user_path(user),"toggle_enable_user_#{user.id}")
+      %td= toggle_button(user.show_score?, toggle_show_score_user_path(user),"toggle_show_score_user_#{user.id}")
       %td= user.last_ip
       %td= link_to 'Clear IP', {:action => 'clear_last_ip', :id => user, :page=>params[:page]}, :confirm => 'This will reset last logging in ip of the user, are you sure?', class: 'btn btn-default btn-xs btn-block'
       %td= link_to 'Show', {:action => 'show', :id => user}, class: 'btn btn-default btn-xs btn-block'

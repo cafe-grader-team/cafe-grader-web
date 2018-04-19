@@ -152,6 +152,15 @@ class UsersController < ApplicationController
     end
   end
 
+  def toggle_show_score
+    @user = User.find(params[:id])
+    @user.update_attributes( show_score:  !@user.show_score? )
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_show_score_user_#{@user.id}",button_on: @user.show_score? } }
+    end
+  end
+
   protected
 
   def verify_online_registration
