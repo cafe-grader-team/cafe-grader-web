@@ -8,6 +8,7 @@ en:
   full_name_label: 'Full name'
   email_label: 'E-mail'
   password_label: 'Password'
+  confirm_password_label: 'Confirm Password'
 
   go_ahead_to: "Go ahead to "
   go_back_to: "Go back to "

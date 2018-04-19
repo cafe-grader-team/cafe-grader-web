@@ -53,17 +53,10 @@ class UsersController < ApplicationController
       return
     end
     @user = User.new(user_params)
-    @user.password_confirmation = @user.password = User.random_password
-    @user.activated = false
+    @user.activated = true
     if (@user.valid?) and (@user.save)
-      if send_confirmation_email(@user)
-        render :action => 'new_splash', :layout => 'empty'
-      else
-        @admin_email = GraderConfiguration['system.admin_email']
-        render :action => 'email_error', :layout => 'empty'
-      end
+      render :action => 'new_splash', :layout => 'empty'
     else
-      @user.errors.add(:base,"Email cannot be blank") if @user.email==''
       render :action => 'new', :layout => 'empty'
     end
   end
@@ -222,7 +215,7 @@ class UsersController < ApplicationController
 
   private
     def user_params
-      params.require(:user).permit(:login, :full_name, :email)
+      params.require(:user).permit(:login, :full_name, :password, :password_confirmation)
     end
 
 end

@@ -24,13 +24,12 @@
       %td= f.text_field :full_name
     %tr
       %td{:align => "right"}
-        = "#{t 'email_label'}:"
-      %td= f.email_field :email
+        = "#{t 'password_label'}:"
+      %td= f.password_field :password
     %tr
-      %td
-      %td 
-        %small
-          =t('registration.email_guide').html_safe
+      %td{:align => "right"}
+        = "#{t 'confirm_password_label'}:"
+      %td= f.password_field :password_confirmation
     %tr
       %td/
       %td
