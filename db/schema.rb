@@ -310,6 +310,7 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.datetime "updated_at"
     t.string   "section",         limit: 255
     t.boolean  "enabled",                     default: true
+    t.boolean  "show_score",                  default: true
     t.string   "remark",          limit: 255
     t.string   "last_ip",         limit: 255
   end

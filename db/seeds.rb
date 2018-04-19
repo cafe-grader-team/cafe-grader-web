@@ -174,13 +174,7 @@ CONFIGURATIONS =
    },
 
    {
-     :key => 'system.user_scoreboard_enabled',
-     :value_type => 'boolean',
-     :default_value => 'true'
-   },
-
-   {
-     :key => 'system.admin_hide_score',
+     :key => 'right.user_view_scoreboard',
      :value_type => 'boolean',
      :default_value => 'true'
    },

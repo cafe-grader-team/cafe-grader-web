@@ -21,6 +21,7 @@ th:
     submissions: 'โปรแกรมที่ส่ง'
     test: 'ทดสอบโปรแกรม'
     hall_of_fame: 'หอเกียรติยศ'
+    scoreboard: 'ตารางคะแนนน'
     help: 'ความช่วยเหลือ'
     settings: 'เปลี่ยนรหัสผ่าน'
     log_out: 'ออกจากระบบ'

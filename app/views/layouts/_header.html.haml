@@ -24,6 +24,10 @@
           / hall of fame
           - if GraderConfiguration['right.user_hall_of_fame']
             = add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
+          / scoreboard
+          - unless (@current_user!=nil) and (session[:admin])
+            - if GraderConfiguration['right.user_view_scoreboard']
+              = add_menu("#{I18.t 'menu.scoreboard'}", 'report', 'current_score')
           / display MODE button (with countdown in contest mode)
           - if GraderConfiguration.analysis_mode?
             %div.navbar-btn.btn.btn-success#countdown= "ANALYSIS MODE"

@@ -4,11 +4,15 @@ class ReportController < ApplicationController
 
   before_filter :authenticate
 
-  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score, :current_score]
+  before_filter :admin_authorization, only: [:login_stat,:submission_stat, :stuck, :cheat_report, :cheat_scruntinize, :show_max_score]
+
+  before_filter(only: [:current_score]) { |c|
+    return false unless authenticate
+    admin_authorization unless GraderConfiguration["right.user_view_scoreboard"]
+  }
 
   before_filter(only: [:problem_hof]) { |c|
     return false unless authenticate
-
     admin_authorization unless GraderConfiguration["right.user_view_submission"]
   }
 
@@ -17,7 +21,7 @@ class ReportController < ApplicationController
 
   def current_score
     @problems = Problem.available_problems
-    @users = User.includes(:contests).includes(:contest_stat).where(enabled: true)
+    @users = User.includes(:contests).includes(:contest_stat).where(enabled: true).where(show_score: true)
     @scorearray = calculate_max_score(@problems, @users,0,0,true)
 
     #rencer accordingly
