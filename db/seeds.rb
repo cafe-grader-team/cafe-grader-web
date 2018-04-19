@@ -113,6 +113,14 @@ CONFIGURATIONS =
    # If Configuration['system.online_registration'] is true, the
    # system allows online registration, and will use these
    # information for sending confirmation emails.
+   
+   {
+     :key => 'system.online_registration',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'If true, the system allows online registration.'
+   },
+
    {
      :key => 'system.online_registration.smtp',
      :value_type => 'string',
