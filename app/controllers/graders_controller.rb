@@ -39,7 +39,8 @@ class GradersController < ApplicationController
       lc = `ps aux | grep "cafe_grader" | grep "grader grading queue" | grep #{proc.pid} | wc -l`.to_i
       if lc < 1
         #throw "Process #{proc.pid} which has #{lc-1} instances should have been killed already!"
-        proc.terminate
+        flash[:notice] << '[DEBUG] Destroying #{proc.pid}'
+        proc.destroy
       end
     end
     @grader_processes = GraderProcess.find_running_graders
