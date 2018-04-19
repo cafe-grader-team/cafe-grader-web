@@ -31,17 +31,17 @@ class GradersController < ApplicationController
 
   def list
     @grader_refresh_processes_amount = `ps aux | grep grader-refresh.sh | grep -v grep | wc -l`.to_i
-    @grader_processes = GraderProcess.find_running_graders
     @stalled_processes = GraderProcess.find_stalled_process
-
     @terminated_processes = GraderProcess.find_terminated_graders
+
     GraderProcess.find_running_graders.each do |proc|
-      lc = `ps aux | grep "cafe_grader" | grep "grader grading queue" | grep #{proc.pid} | grep -v grep | wc -l`.to_i
+      lc = `ps aux | grep "cafe_grader" | grep "grader grading" | grep #{proc.pid} | grep -v grep | wc -l`.to_i
       if lc < 1
         #throw "Process #{proc.pid} which has #{lc-1} instances should have been killed already!"
         proc.terminate
       end
     end
+
     @grader_processes = GraderProcess.find_running_graders
     @last_task = Task.last
     @last_test_request = TestRequest.last
