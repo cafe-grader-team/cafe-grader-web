@@ -35,7 +35,7 @@ class GradersController < ApplicationController
     @stalled_processes = GraderProcess.find_stalled_process
 
     @terminated_processes = GraderProcess.find_terminated_graders
-    @grader_processes.each do |proc|
+    GraderProcess.find_running_graders.each do |proc|
       lc = `ps aux | grep "cafe_grader" | grep "grader grading queue" | grep #{proc.pid} | wc -l`.to_i
       if lc < 1
         #throw "Process #{proc.pid} which has #{lc-1} instances should have been killed already!"
