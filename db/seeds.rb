@@ -186,9 +186,15 @@ CONFIGURATIONS =
    },
 
    {
-     :key => 'system.default_grader_amount',
+     :key => 'system.default_grader_queue_amount',
      :value_type => 'integer',
-     :default_value => '2'
+     :default_value => '1'
+   },
+   
+   {
+     :key => 'system.default_grader_test_request_amount',
+     :value_type => 'integer',
+     :default_value => '1'
    }
 
   ]
