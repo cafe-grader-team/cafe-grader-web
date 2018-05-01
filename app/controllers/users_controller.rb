@@ -16,6 +16,9 @@ class UsersController < ApplicationController
                                                        :retrieve_password]
   before_filter :authenticate, :profile_authorization, only: [:profile]
 
+  before_filter :admin_authorization, only: [:stat, :toggle_activate, :toggle_enable]
+
+
   verify :method => :post, :only => [:chg_passwd],
          :redirect_to => { :action => :index }
 
