@@ -19,10 +19,20 @@
         .form-group
           = label_tag "Task:"
           = text_field_tag 'asdf', "#{@problem.long_name}", class: 'form-control', disabled: true
+        .form-group
+          = label_tag "Description:"
+          = link_to_description_if_any "[download] <span class='glyphicon glyphicon-file'></span>".html_safe, @problem
 
         .form-group
-          = label_tag 'Language'
+          = label_tag 'Language:'
           = select_tag 'language_id', options_from_collection_for_select(Language.all, 'id', 'pretty_name', @lang_id || Language.find_by_pretty_name("Python").id || Language.first.id), class: 'form-control select', style: "width: 100px"
+        .form-group
+          .input-group
+            %span.input-group-btn
+              %span.btn.btn-default.btn-file
+                Browse
+                = file_field_tag 'load_file'
+            = text_field_tag '' , nil, {readonly: true, class: 'form-control'}
         .form-group
           = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
             data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}
@@ -47,8 +57,23 @@
     e.setValue($("#text_sourcecode").val());
     e.gotoLine(1);
     $("#language_id").trigger('change');
-    brython();
+
+    $("#load_file").on('change',function(evt) {
+      var file = evt.target.files[0];
+      var reader = new FileReader();
+      reader.onload =  function(theFile) {
+        var e = ace.edit("editor")
+        e.setValue(theFile.target.result);
+        e.gotoLine(1);
+      };
+      reader.readAsText(file)
+    });
+
+    //brython();
   });
+
+
+
 
 
 %script#__main__{type:'text/python3'}
