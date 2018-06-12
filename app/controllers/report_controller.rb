@@ -43,7 +43,7 @@ class ReportController < ApplicationController
     end
 
     #users
-    @users = if params[:user] == "all" then 
+    @users = if params[:users] == "all" then 
                User.includes(:contests).includes(:contest_stat)
              else 
                User.includes(:contests).includes(:contest_stat).where(enabled: true)
