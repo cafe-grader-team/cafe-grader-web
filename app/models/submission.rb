@@ -8,7 +8,7 @@ class Submission < ActiveRecord::Base
   before_validation :assign_language
 
   validates_presence_of :source
-  validates_length_of :source, :maximum => 100_000, :allow_blank => true, :message => 'too long'
+  validates_length_of :source, :maximum => 100_000, :allow_blank => true, :message => 'code too long, the limit is 100,000 bytes'
   validates_length_of :source, :minimum => 1, :allow_blank => true, :message => 'too short'
   validate :must_have_valid_problem
   validate :must_specify_language
