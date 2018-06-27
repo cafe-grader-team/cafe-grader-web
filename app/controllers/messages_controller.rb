@@ -29,7 +29,7 @@ class MessagesController < ApplicationController
 
   def create
     user = User.find(session[:user_id])
-    @message = Message.new(params[:message])
+    @message = Message.new(params[:message].permit( :body ))
     @message.sender = user
     if @message.body == '' or !@message.save
       flash[:notice] = 'An error occurred'
@@ -41,7 +41,7 @@ class MessagesController < ApplicationController
 
   def reply
     user = User.find(session[:user_id])
-    @message = Message.new(params[:r_message])
+    @message = Message.new(params[:r_message].permit( :body, :receiver_id, :replying_message_id, :commit))
     @message.sender = user
     if @message.body == '' or !@message.save
       flash[:notice] = 'An error occurred'

@@ -12,13 +12,13 @@ class User < ActiveRecord::Base
   has_many :groups_users, class_name: GroupUser
   has_many :groups, :through => :groups_users
 
-  has_many :test_requests, -> {order(submitted_at: DESC)}
+  has_many :test_requests, -> {order(submitted_at: :desc)}
 
-  has_many :messages, -> { order(created_at: DESC) },
+  has_many :messages, -> { order(created_at: :desc) },
            :class_name => "Message",
            :foreign_key => "sender_id"
 
-  has_many :replied_messages, -> { order(created_at: DESC) },
+  has_many :replied_messages, -> { order(created_at: :desc) },
            :class_name => "Message",
            :foreign_key => "receiver_id"
 

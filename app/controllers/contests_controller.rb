@@ -46,7 +46,7 @@ class ContestsController < ApplicationController
   # POST /contests
   # POST /contests.xml
   def create
-    @contest = Contest.new(params[:contest])
+    @contest = Contest.new(params[:contest].permit( :name, :title, :enabled, :commit))
 
     respond_to do |format|
       if @contest.save
