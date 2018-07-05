@@ -100,7 +100,7 @@ The deploy is divided into two parts: Installing Passenger and deploying the app
 
     cafe@grader:~$ sudo /usr/bin/passenger-config validate-install
 
-Deploying the app. First, we determine the exact location of our ruby that is installed via RVM. 
+2. Deploying the app. First, we determine the exact location of our ruby that is installed via RVM. 
 
     cafe@grader:~$ passenger-config about ruby-command
 passenger-config was invoked through the following Ruby interpreter:
@@ -141,5 +141,5 @@ As the last step, we restart apache again and the site is ready to be used.
 
     cafe@grader:~$ sudo apache2ctl restart
     
- Now it is done, you can login to the grader with user 'root' and password 'ioionrails'
+Now it is done, you can login to the grader with user 'root' and password 'ioionrails'
 
