@@ -8,28 +8,30 @@ Installing cafe-grader can be done in the following steps.
 4. Install cafe-grader from github
 5. Deploy cafe-grader on apache with Phusion Passenger
 
+Very important!!! All commands should be run from a normal user. 
+
 The detail of each step are provided as follows.
 
-=== Install MySQL 5
+=== 1. Install MySQL 5
 
 Install MySQL server for the server.
 
     cafe@grader:~$ sudo apt install mysql-server
 
-Next, we will connect to mysql as root and set up the database. You can choose your DATABASENAME, USERNAME and PASSWORD.
+Next, we will connect to mysql as root and set up the database. You can choose your DATABASENAME, USERNAME and PASSWORD as you wish.
 
     cafe@grader:~$ sudo mysql -u root
 
     mysql> create database DATABASENAME;
     Query OK, 1 row affected (0.00 sec)
 
-    mysql> grant all privileges on grader.* to USERNAME@localhost identified by 'PASSWORD';
+    mysql> grant all privileges on DATABASENAME.* to USERNAME@localhost identified by 'PASSWORD';
     Query OK, 0 rows affected, 1 warning (0.00 sec)
 
     mysql> flush privileges;
     Query OK, 0 rows affected (0.00 sec)
 
-=== Install RVM
+=== 2. Install RVM
 
 Since Ubuntu has dedicated package for RVM we will use that. Just follow instruction given in https://github.com/rvm/ubuntu_rvm. For your convenience, the step are reproduced here.
 
@@ -47,13 +49,13 @@ This is very important. You have to logout and login again since RVM change a lo
 
 If you are using GUI version of Ubuntu, be sure to have Gnome Terminal (or any other terminal you are using) perform login every time. This can be done by mark the check box "Run command as a login shell" in Gnome terminal or by adding --login to bash. 
 
-=== Install necessary package
+=== 3. Install necessary package
 
     cafe@grader:~$ sudo apt install libmysqlclient-dev default-jdk unzip nodejs php7.2-cli apache2 dirmngr gnupg apache2-dev
 
 curl build-essential
 
-=== Install cafe-grader
+=== 4. Install cafe-grader
 
 First, ensure that RVM is installed correctly.
 
@@ -78,13 +80,13 @@ If Everything is OK, stop the WEBrick by Ctrl-C.
 
 We are almost done. The last step is to set up apache and Phusion so that cafe-grader is served by apache. 
 
-=== Deploy cafe-grader on Phusion passenger via apache
+=== 5. Deploy cafe-grader on Phusion passenger via apache
 
 This will install a Passenger mod for apache. You can start by visiting https://www.phusionpassenger.com/library/walkthroughs/deploy/ruby/ownserver/apache/oss/install_passenger_main.html and fllow through the guide. We have reproduce the step here for Ubuntu 18.04. For other version, please select the appropriate one on the previous link.
 
 The deploy is divided into two parts: Installing Passenger and deploying the app.
 
-1. Installing Passenger as a mod for apache via PPA and enable it.  
+==== 5.1. Installing Passenger as a mod for apache via PPA and enable it.  
 
     cafe@grader:~$ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 561F9B9CAC40B2F7
     cafe@grader:~$ sudo apt-get install -y apt-transport-https ca-certificates
@@ -100,7 +102,7 @@ The deploy is divided into two parts: Installing Passenger and deploying the app
 
     cafe@grader:~$ sudo /usr/bin/passenger-config validate-install
 
-2. Deploying the app. First, we determine the exact location of our ruby that is installed via RVM. 
+==== 5.2. Deploying the app. First, we determine the exact location of our ruby that is installed via RVM. 
 
     cafe@grader:~$ passenger-config about ruby-command
 passenger-config was invoked through the following Ruby interpreter:
