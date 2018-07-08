@@ -1,261 +1,147 @@
-== Welcome to Rails
+== Installation
 
-Rails is a web-application framework that includes everything needed to create
-database-backed web applications according to the Model-View-Control pattern.
+Installing cafe-grader can be done in the following steps.
 
-This pattern splits the view (also called the presentation) into "dumb"
-templates that are primarily responsible for inserting pre-built data in between
-HTML tags. The model contains the "smart" domain objects (such as Account,
-Product, Person, Post) that holds all the business logic and knows how to
-persist themselves to a database. The controller handles the incoming requests
-(such as Save New Account, Update Product, Show Post) by manipulating the model
-and directing data to the view.
+1. Set up database. We need MySQL 5 database name, username and password.
+2. Install RVM. cafe-grader runs on Ruby on Rails and the best way to install it is to use RVM.
+3. Install necessary package for the system
+4. Install cafe-grader from github
+5. Deploy cafe-grader on apache with Phusion Passenger
 
-In Rails, the model is handled by what's called an object-relational mapping
-layer entitled Active Record. This layer allows you to present the data from
-database rows as objects and embellish these data objects with business logic
-methods. You can read more about Active Record in
-link:files/vendor/rails/activerecord/README.html.
+Very important!!! All commands should be run from a normal user. 
 
-The controller and view are handled by the Action Pack, which handles both
-layers by its two parts: Action View and Action Controller. These two layers
-are bundled in a single package due to their heavy interdependence. This is
-unlike the relationship between the Active Record and Action Pack that is much
-more separate. Each of these packages can be used independently outside of
-Rails. You can read more about Action Pack in
-link:files/vendor/rails/actionpack/README.html.
+The detail of each step are provided as follows.
 
+=== 1. Install MySQL 5
 
-== Getting Started
+Install MySQL server for the server.
 
-1. At the command prompt, create a new Rails application:
-       <tt>rails new myapp</tt> (where <tt>myapp</tt> is the application name)
+    cafe@grader:~$ sudo apt install mysql-server
 
-2. Change directory to <tt>myapp</tt> and start the web server:
-       <tt>cd myapp; rails server</tt> (run with --help for options)
+Next, we will connect to mysql as root and set up the database. You can choose your DATABASENAME, USERNAME and PASSWORD as you wish.
 
-3. Go to http://localhost:3000/ and you'll see:
-       "Welcome aboard: You're riding Ruby on Rails!"
+    cafe@grader:~$ sudo mysql -u root
 
-4. Follow the guidelines to start developing your application. You can find
-the following resources handy:
+    mysql> create database DATABASENAME;
+    Query OK, 1 row affected (0.00 sec)
 
-* The Getting Started Guide: http://guides.rubyonrails.org/getting_started.html
-* Ruby on Rails Tutorial Book: http://www.railstutorial.org/
+    mysql> grant all privileges on DATABASENAME.* to USERNAME@localhost identified by 'PASSWORD';
+    Query OK, 0 rows affected, 1 warning (0.00 sec)
 
+    mysql> flush privileges;
+    Query OK, 0 rows affected (0.00 sec)
 
-== Debugging Rails
+=== 2. Install RVM
 
-Sometimes your application goes wrong. Fortunately there are a lot of tools that
-will help you debug it and get it back on the rails.
+Since Ubuntu has dedicated package for RVM we will use that. Just follow instruction given in https://github.com/rvm/ubuntu_rvm. For your convenience, the step are reproduced here.
 
-First area to check is the application log files. Have "tail -f" commands
-running on the server.log and development.log. Rails will automatically display
-debugging and runtime information to these files. Debugging info will also be
-shown in the browser on requests from 127.0.0.1.
+First, we install necessary package for installing RVM.
 
-You can also log your own messages directly into the log file from your code
-using the Ruby logger class from inside your controllers. Example:
+    cafe@grader:~$ sudo apt install software-properties-common
 
-  class WeblogController < ActionController::Base
-    def destroy
-      @weblog = Weblog.find(params[:id])
-      @weblog.destroy
-      logger.info("#{Time.now} Destroyed Weblog ID ##{@weblog.id}!")
-    end
-  end
+Second, we add the custom PPA, update the system and install RVM.
 
-The result will be a message in your log file along the lines of:
+    cafe@grader:~$ sudo apt-add-repository -y ppa:rael-gc/rvm
+    cafe@grader:~$ sudo apt-get update
+    cafe@grader:~$ sudo apt-get install rvm
 
-  Mon Oct 08 14:22:29 +1000 2007 Destroyed Weblog ID #1!
+This is very important. You have to logout and login again since RVM change a lots of system. 
 
-More information on how to use the logger is at http://www.ruby-doc.org/core/
+If you are using GUI version of Ubuntu, be sure to have Gnome Terminal (or any other terminal you are using) perform login every time. This can be done by mark the check box "Run command as a login shell" in Gnome terminal or by adding --login to bash. 
 
-Also, Ruby documentation can be found at http://www.ruby-lang.org/. There are
-several books available online as well:
+=== 3. Install necessary package
 
-* Programming Ruby: http://www.ruby-doc.org/docs/ProgrammingRuby/ (Pickaxe)
-* Learn to Program: http://pine.fm/LearnToProgram/ (a beginners guide)
+    cafe@grader:~$ sudo apt install libmysqlclient-dev default-jdk unzip nodejs php7.2-cli apache2 dirmngr gnupg apache2-dev
 
-These two books will bring you up to speed on the Ruby language and also on
-programming in general.
+curl build-essential
 
+=== 4. Install cafe-grader
 
-== Debugger
+First, ensure that RVM is installed correctly.
 
-Debugger support is available through the debugger command when you start your
-Mongrel or WEBrick server with --debugger. This means that you can break out of
-execution at any point in the code, investigate and change the model, and then,
-resume execution! You need to install ruby-debug to run the server in debugging
-mode. With gems, use <tt>sudo gem install ruby-debug</tt>. Example:
+    cafe@grader:~$ rvm
+    
+If you get a result similar to this.
 
-  class WeblogController < ActionController::Base
-    def index
-      @posts = Post.all
-      debugger
-    end
-  end
+    Command 'rvm' not found, but there are 21 similar ones.
 
-So the controller will accept the action, run the first line, then present you
-with a IRB prompt in the server window. Here you can do things like:
+It is very likely that you have not re-login or you are using bash without --login. Please do so and re-read the installation of RVM on Ubuntu https://github.com/rvm/ubuntu_rvm again.
 
-  >> @posts.inspect
-  => "[#<Post:0x14a6be8
-          @attributes={"title"=>nil, "body"=>nil, "id"=>"1"}>,
-       #<Post:0x14a6620
-          @attributes={"title"=>"Rails", "body"=>"Only ten..", "id"=>"2"}>]"
-  >> @posts.first.title = "hello from a debugger"
-  => "hello from a debugger"
+Next, we will let the install script do the work of installing cafe-grader. Please prepare the DATABASENAME, USERNAME and PASSWORD as the script will ask for that. Make sure that you run the script from the home directory of the user.
 
-...and even better, you can examine how your runtime objects actually work:
+    cafe@grader:~$ wget https://github.com/cafe-grader-team/cafe-grader-judge-scripts/raw/master/installer/install.sh
+    cafe@grader:~$ . ./install.sh
 
-  >> f = @posts.first
-  => #<Post:0x13630c4 @attributes={"title"=>nil, "body"=>nil, "id"=>"1"}>
-  >> f.
-  Display all 152 possibilities? (y or n)
+After installation is finished, grader is ready to run in development mode via WEBrick. We will try that by the following command which will start a grader accessible via http://localhost:3000/. You can try logging in to the system and verify that it is actually work.
 
-Finally, when you're ready to resume execution, you can enter "cont".
+cafe@grader:~/cafe_grader/web$ rails s
+
+If Everything is OK, stop the WEBrick by Ctrl-C.
+
+We are almost done. The last step is to set up apache and Phusion so that cafe-grader is served by apache. 
+
+=== 5. Deploy cafe-grader on Phusion passenger via apache
+
+This will install a Passenger mod for apache. You can start by visiting https://www.phusionpassenger.com/library/walkthroughs/deploy/ruby/ownserver/apache/oss/install_passenger_main.html and fllow through the guide. We have reproduce the step here for Ubuntu 18.04. For other version, please select the appropriate one on the previous link.
+
+The deploy is divided into two parts: Installing Passenger and deploying the app.
+
+==== 5.1. Installing Passenger as a mod for apache via PPA and enable it.  
+
+    cafe@grader:~$ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 561F9B9CAC40B2F7
+    cafe@grader:~$ sudo apt-get install -y apt-transport-https ca-certificates
+    cafe@grader:~$ sudo sh -c 'echo deb https://oss-binaries.phusionpassenger.com/apt/passenger bionic main > /etc/apt/sources.list.d/passenger.list'
+    cafe@grader:~$ sudo apt-get update
+    cafe@grader:~$ sudo apt-get install -y libapache2-mod-passenger
+    cafe@grader:~$ sudo a2enmod passenger
 
 
-== Console
+    cafe@grader:~$ sudo apache2ctl restart
 
-The console is a Ruby shell, which allows you to interact with your
-application's domain model. Here you'll have all parts of the application
-configured, just like it is when the application is running. You can inspect
-domain models, change values, and save to the database. Starting the script
-without arguments will launch it in the development environment.
+    Finally, we should check that passenger is installed correctly. Run the following command and fix anything as suggested by the command.
 
-To start the console, run <tt>rails console</tt> from the application
-directory.
+    cafe@grader:~$ sudo /usr/bin/passenger-config validate-install
 
-Options:
+==== 5.2. Deploying the app. First, we determine the exact location of our ruby that is installed via RVM. 
 
-* Passing the <tt>-s, --sandbox</tt> argument will rollback any modifications
-  made to the database.
-* Passing an environment name as an argument will load the corresponding
-  environment. Example: <tt>rails console production</tt>.
+    cafe@grader:~$ passenger-config about ruby-command
+passenger-config was invoked through the following Ruby interpreter:
+  Command: /home/cafe/.rvm/gems/ruby-2.3.7/wrappers/ruby
+  Version: ruby 2.3.7p456 (2018-03-28 revision 63024) [x86_64-linux]
+  To use in Apache: PassengerRuby /home/cafe/.rvm/gems/ruby-2.3.7/wrappers/ruby
+  To use in Nginx : passenger_ruby /home/cafe/.rvm/gems/ruby-2.3.7/wrappers/ruby
+  To use with Standalone: /home/cafe/.rvm/gems/ruby-2.3.7/wrappers/ruby /usr/bin/passenger start
 
-To reload your controllers and models after launching the console run
-<tt>reload!</tt>
+Then, take note of the path after "Command". For this guide, it is /home/cafe/.rvm/gems/ruby-2.3.7/wrappers/ruby 
 
-More information about irb can be found at:
-link:http://www.rubycentral.org/pickaxe/irb.html
+Assuming that cafe-grader is installed at /home/cafe/cafe_grader, we will edit the Apache's site config file /etc/apache2/site-enabled/000-default.conf as follow.
+
+    <VirtualHost *:80>
+        #ServerName www.example.com
+
+        ServerAdmin webmaster@localhost
+        # dont forget to change the document root
+        DocumentRoot /home/cafe/cafe_grader/web/public
+    
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        # add Passenger
+        PassengerRuby /home/cafe/.rvm/gems/ruby-2.3.7/wrappers/ruby
+
+        # our cafe-grader app
+        <Directory /home/cafe/cafe_grader/web/public>
+                Allow from all
+                Options -MultiViews
+                Require all granted
+        </Directory>
+    </VirtualHost>
 
 
-== dbconsole
+Be noted that we make 3 modifications: 1) change DocumentRoot, 2) add PassengerRuby option and add 3) Directory directive
+As the last step, we restart apache again and the site is ready to be used.
 
-You can go to the command line of your database directly through <tt>rails
-dbconsole</tt>. You would be connected to the database with the credentials
-defined in database.yml. Starting the script without arguments will connect you
-to the development database. Passing an argument will connect you to a different
-database, like <tt>rails dbconsole production</tt>. Currently works for MySQL,
-PostgreSQL and SQLite 3.
+    cafe@grader:~$ sudo apache2ctl restart
+    
+Now it is done, you can login to the grader with user 'root' and password 'ioionrails'
 
-== Description of Contents
-
-The default directory structure of a generated Ruby on Rails application:
-
-  |-- app
-  |   |-- assets
-  |       |-- images
-  |       |-- javascripts
-  |       `-- stylesheets
-  |   |-- controllers
-  |   |-- helpers
-  |   |-- mailers
-  |   |-- models
-  |   `-- views
-  |       `-- layouts
-  |-- config
-  |   |-- environments
-  |   |-- initializers
-  |   `-- locales
-  |-- db
-  |-- doc
-  |-- lib
-  |   `-- tasks
-  |-- log
-  |-- public
-  |-- script
-  |-- test
-  |   |-- fixtures
-  |   |-- functional
-  |   |-- integration
-  |   |-- performance
-  |   `-- unit
-  |-- tmp
-  |   |-- cache
-  |   |-- pids
-  |   |-- sessions
-  |   `-- sockets
-  `-- vendor
-      |-- assets
-          `-- stylesheets
-      `-- plugins
-
-app
-  Holds all the code that's specific to this particular application.
-
-app/assets
-  Contains subdirectories for images, stylesheets, and JavaScript files.
-
-app/controllers
-  Holds controllers that should be named like weblogs_controller.rb for
-  automated URL mapping. All controllers should descend from
-  ApplicationController which itself descends from ActionController::Base.
-
-app/models
-  Holds models that should be named like post.rb. Models descend from
-  ActiveRecord::Base by default.
-
-app/views
-  Holds the template files for the view that should be named like
-  weblogs/index.html.erb for the WeblogsController#index action. All views use
-  eRuby syntax by default.
-
-app/views/layouts
-  Holds the template files for layouts to be used with views. This models the
-  common header/footer method of wrapping views. In your views, define a layout
-  using the <tt>layout :default</tt> and create a file named default.html.erb.
-  Inside default.html.erb, call <% yield %> to render the view using this
-  layout.
-
-app/helpers
-  Holds view helpers that should be named like weblogs_helper.rb. These are
-  generated for you automatically when using generators for controllers.
-  Helpers can be used to wrap functionality for your views into methods.
-
-config
-  Configuration files for the Rails environment, the routing map, the database,
-  and other dependencies.
-
-db
-  Contains the database schema in schema.rb. db/migrate contains all the
-  sequence of Migrations for your schema.
-
-doc
-  This directory is where your application documentation will be stored when
-  generated using <tt>rake doc:app</tt>
-
-lib
-  Application specific libraries. Basically, any kind of custom code that
-  doesn't belong under controllers, models, or helpers. This directory is in
-  the load path.
-
-public
-  The directory available for the web server. Also contains the dispatchers and the
-  default HTML files. This should be set as the DOCUMENT_ROOT of your web
-  server.
-
-script
-  Helper scripts for automation and generation.
-
-test
-  Unit and functional tests along with fixtures. When using the rails generate
-  command, template test files will be generated for you and placed in this
-  directory.
-
-vendor
-  External libraries that the application depends on. Also includes the plugins
-  subdirectory. If the app has frozen rails, those gems also go here, under
-  vendor/rails/. This directory is in the load path.
