@@ -187,7 +187,7 @@ class ProblemsController < ApplicationController
   end
 
   def do_manage
-    if params.has_key? 'change_date_added'
+    if params.has_key? 'change_date_added' and params[:date_added].strip.empty? == false
       change_date_added
     elsif params.has_key? 'add_to_contest'
       add_to_contest

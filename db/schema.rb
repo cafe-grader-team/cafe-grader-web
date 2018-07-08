@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170914150742) do
+ActiveRecord::Schema.define(version: 20180612102327) do
 
   create_table "announcements", force: :cascade do |t|
     t.string   "author",       limit: 255
@@ -209,7 +209,7 @@ ActiveRecord::Schema.define(version: 20170914150742) do
     t.integer  "user_id",               limit: 4
     t.integer  "problem_id",            limit: 4
     t.integer  "language_id",           limit: 4
-    t.text     "source",                limit: 65535
+    t.text     "source",                limit: 16777215
     t.binary   "binary",                limit: 65535
     t.datetime "submitted_at"
     t.datetime "compiled_at"
