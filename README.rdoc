@@ -51,9 +51,7 @@ If you are using GUI version of Ubuntu, be sure to have Gnome Terminal (or any o
 
 === 3. Install necessary package
 
-    cafe@grader:~$ sudo apt install libmysqlclient-dev default-jdk unzip nodejs php7.2-cli apache2 dirmngr gnupg apache2-dev
-
-curl build-essential
+    cafe@grader:~$ sudo apt install libmysqlclient-dev default-jdk unzip nodejs php-cli apache2 dirmngr gnupg apache2-dev
 
 === 4. Install cafe-grader
 
