@@ -304,7 +304,7 @@ class ProblemsController < ApplicationController
   private
 
     def problem_params
-      params.require(:problem).permit(:name, :full_name, :full_score, :date_added, :available, :test_allowed,:output_only, :url, :description, tag_ids:[])
+      params.require(:problem).permit(:name, :full_name, :full_score, :change_date_added, :date_added, :available, :test_allowed,:output_only, :url, :description, tag_ids:[])
     end
 
 end
