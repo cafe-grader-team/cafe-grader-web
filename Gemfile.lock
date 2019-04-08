@@ -63,7 +63,7 @@ GEM
       railties (>= 3.2)
     bootstrap-datepicker-rails (1.7.1.1)
       railties (>= 3.0)
-    bootstrap-sass (3.2.0.2)
+    bootstrap-sass (3.2.0.4)
       sass (~> 3.2)
     bootstrap-switch-rails (3.3.3)
     bootstrap-toggle-rails (2.2.1.0)
