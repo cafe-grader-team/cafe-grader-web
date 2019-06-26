@@ -13,6 +13,8 @@ class Problem < ActiveRecord::Base
   has_many :test_pairs, :dependent => :delete_all
   has_many :testcases, :dependent => :destroy
 
+  has_many :submissions
+
   validates_presence_of :name
   validates_format_of :name, :with => /\A\w+\z/
   validates_presence_of :full_name

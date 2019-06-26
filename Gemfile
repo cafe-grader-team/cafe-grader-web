@@ -60,7 +60,8 @@ gem 'jquery-countdown-rails'
 gem 'rouge'
 
 #bootstrap add-ons
-gem 'bootstrap-sass', '~> 3.2.0'
+gem 'bootstrap-sass', '~> 3.4.1'
+gem 'sassc-rails', '>= 2.1.0'
 gem 'bootstrap-switch-rails'
 gem 'bootstrap-toggle-rails'
 gem 'autoprefixer-rails'
