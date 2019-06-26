@@ -29,7 +29,7 @@
 *.swp
 
 #ignore rvm setting file
-.ruby-gemset
-.ruby-version
+#.ruby-gemset
+#.ruby-version
 
 /config/secrets.yml

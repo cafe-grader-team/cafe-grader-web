@@ -5,13 +5,13 @@
 -#%p
   -#You can edit your alias and e-mails.  Just click on the text and edit it.
 
-%table.uinfo
+%table.table.table-bordered{:style => "width:30%"}
   %tr
-    %th.uinfo Login
-    %td.uinfo= @user.login
+    %th Login
+    %td= @user.login
   %tr
-    %th.uinfo Full name
-    %td.uinfo= @user.full_name
+    %th Full name
+    %td= @user.full_name
   -#%tr
     -#%th.uinfo Alias
     -#%td.uinfo= in_place_editor_field :user, 'alias_for_editing', {}, :rows => 1
@@ -19,17 +19,18 @@
     -#%th.uinfo E-mail
     -#%td.uinfo= in_place_editor_field :user, 'email_for_editing', {}, :rows => 1
   %tr
-    %th.uinfo Password
-    %td.uinfo
+    %th Password
+    %td
       = form_tag :action => 'chg_passwd', :method => 'post' do
         %table
           %tr
-            %td= password_field_tag 'passwd'
+            %td
+              %input{:type => "password", :class => "form-control", :name => "passwd", :id => "passwd"}
             %td (new)
           %tr
-            %td= password_field_tag 'passwd_verify'
+            %td
+              %input{:type => "password", :class => "form-control", :name => "passwd_verify", :id => "passwd_verify"}
             %td (verify)
           %tr
             %td{:colspan => "2"}
-              = submit_tag 'change password'
-
+              %input{:type => "button", :class => "btn btn-default", :name => "commit", :value => "Change Password"}
