@@ -28,3 +28,6 @@ ALLOW_TEST_PAIR_IMPORT = false
 
 # Uncomment so that configuration is read only once when the server is loaded
 # CONFIGURATION_CACHE_ENABLED = true
+
+# Uncomment to allow authentication and user import from programming.in.th
+# LoginController.add_authenticator(ProgrammingAuthenticator.new)

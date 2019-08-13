@@ -1,5 +1,7 @@
 class LoginController < ApplicationController
 
+  @@authenticators = []
+  
   def index
     # show login screen
     reset_session
@@ -7,7 +9,7 @@ class LoginController < ApplicationController
   end
 
   def login
-    user = User.authenticate(params[:login], params[:password])
+    user = get_authenticated_user(params[:login], params[:password])
     unless user
       flash[:notice] = 'Wrong password'
       redirect_to :controller => 'main', :action => 'login'
@@ -60,4 +62,24 @@ class LoginController < ApplicationController
     end
   end
 
+  def self.add_authenticator(authenticator)
+    @@authenticators << authenticator
+  end
+  
+  protected
+
+  def get_authenticated_user(login, password)
+    if @@authenticators.empty? 
+      return User.authenticate(login, password)
+    else
+      user = nil
+      @@authenticators.each do |authenticator|
+        if not user
+          user = authenticator.authenticate(login, password)
+        end
+      end
+      return user
+    end
+  end
+  
 end
