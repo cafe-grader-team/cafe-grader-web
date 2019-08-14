@@ -72,7 +72,7 @@ class LoginController < ApplicationController
     if @@authenticators.empty? 
       return User.authenticate(login, password)
     else
-      user = nil
+      user = User.authenticate(login, password)
       @@authenticators.each do |authenticator|
         if not user
           user = authenticator.authenticate(login, password)
