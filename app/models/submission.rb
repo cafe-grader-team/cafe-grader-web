@@ -127,8 +127,10 @@ class Submission < ActiveRecord::Base
   end
 
   def assign_language
-    self.language = Submission.find_language_in_source(self.source,
-                                                       self.source_filename)
+    if self.language == nil
+      self.language = Submission.find_language_in_source(self.source,
+                                                         self.source_filename)
+    end
   end
 
   # validation codes
@@ -138,8 +140,8 @@ class Submission < ActiveRecord::Base
     # for output_only tasks
     return if self.problem!=nil and self.problem.output_only
 
-    if self.language==nil
-      errors.add('source',"Cannot detect language. Did you submit a correct source file?") unless self.language!=nil
+    if self.language == nil
+      errors.add('source',"Cannot detect language. Did you submit a correct source file?")
     end
   end
 
