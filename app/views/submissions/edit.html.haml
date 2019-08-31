@@ -59,7 +59,9 @@
           %span{aria: {hidden: 'true'}, data: {dismiss: 'modal'}} &times;
         %h4 Compiler message
       .modal-body
-        %pre#compiler_msg= @submission.compiler_message
+      %pre#compiler_msg
+        - if @submission
+          = @submission.compiler_message
       .modal-footer
         %button.btn.btn-default{type: 'button', data: {dismiss: 'modal'}} Close
 
