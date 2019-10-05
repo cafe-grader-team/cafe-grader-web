@@ -102,6 +102,14 @@ CONFIGURATIONS =
      :default_value => 'false',
      :description => 'When true, any user can view/download test data'
    },
+   
+   {
+     :key => 'system.online_registration',
+     :value_type => 'boolean',
+     :default_value => 'false',
+     :description => 'This option enables online registration.'
+   },
+
    # If Configuration['system.online_registration'] is true, the
    # system allows online registration, and will use these
    # information for sending confirmation emails.
