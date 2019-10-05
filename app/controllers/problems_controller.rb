@@ -29,7 +29,7 @@ class ProblemsController < ApplicationController
 
   def create
     @problem = Problem.new(problem_params)
-    @description = Description.new(params[:description])
+    @description = Description.new(description_params)
     if @description.body!=''
       if !@description.save
         render :action => new and return
@@ -252,6 +252,10 @@ class ProblemsController < ApplicationController
   ##################################
   protected
 
+  def description_params
+    params.require(:description).permit(:body, :markdowned)
+  end
+  
   def allow_test_pair_import?
     if defined? ALLOW_TEST_PAIR_IMPORT
       return ALLOW_TEST_PAIR_IMPORT
