@@ -40,7 +40,7 @@ class User < ActiveRecord::Base
   validates_length_of :full_name, :minimum => 1
   
   validates_presence_of :password, :if => :password_required?
-  validates_length_of :password, :within => 4..20, :if => :password_required?
+  validates_length_of :password, :within => 4..50, :if => :password_required?
   validates_confirmation_of :password, :if => :password_required?
 
   validates_format_of :email, 
