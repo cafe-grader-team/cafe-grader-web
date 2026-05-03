@@ -58,7 +58,13 @@ The system operates in either **contest mode** or **group mode** (configured via
 - **User** — has roles (admin, group_editor, reporter) via HABTM; scoped access to problems/contests
 - **Problem** — programming problems with test cases, statements, attachments
 - **Dataset** — test case sets for a problem (one is "live" at a time); contains Testcase records
-- **Submission** — user code submissions; tracked through states: submitted → evaluating → done/error
+- **Submission** — user code submissions; tracked through states: submitted → evaluating → done/error. `grader_comment` is a per-testcase result string (one character per testcase, in `Dataset#testcases.display_order`):
+  - `P` — pass (full credit)
+  - `T` — time limit exceeded
+  - `x` — invalid operation (segmentation fault) or memory limit exceeded
+  - `-` — wrong answer
+  - `s` — partial credit on this testcase
+  When diffing two grading runs (e.g. legacy vs migrated), only `T -> P` and `x -> P` transitions are usually benign — they reflect machine-speed or memory differences. All other transitions reflect real score changes worth investigating.
 - **Contest** — time-bound competitions with users and problems
 - **Group** — organizes problems and users (alternative to contests)
 - **Job** — grading jobs (compile, evaluate, score) processed by external judge workers

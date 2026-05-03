@@ -31,7 +31,28 @@
       "Bash(bin/rails runner:*)",
       "Bash(grep:*)",
       "Bash(unzip:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(cat)",
+      "Bash(ruby /tmp/diff_inline.rb)",
+      "Bash(ruby -c script/migrate_2023/migrate_tasks_v2.rb)",
+      "Bash(ruby -c script/migrate_2023/test_v2.rb)",
+      "Bash(ruby -c script/migrate_2023/testcase_to_activestorage_v2.rb)",
+      "Bash(ruby -c script/migrate_2023/sanity_capture.rb)",
+      "Bash(ruby -c script/migrate_2023/sanity_verify.rb)",
+      "Bash(ruby *)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/o64_may21_blindwalk/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/o64_may21_blindwalk/script/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/mar15_maxflow/lib/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/mar15_maxflow/script/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/oct19_twoarrays/lib/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/oct19_twoarrays/script/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/ioi10_quality/lib/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/ioi10_quality/script/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/o62_mar_c1_socks/lib/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/o62_mar_c1_socks/script/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/balkan11_decrypt/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/balkan11_decrypt/script/**)",
+      "Read(//home/dae/cafe-grader/old-judge/ev/ioi16_aliens/script/**)"
     ]
   }
 }
