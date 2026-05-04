@@ -113,7 +113,18 @@ class ProblemsController < ApplicationController
     @problem.output_only = false
     @problem.date_added = Time.zone.now
 
-    if @problem.save
+    # Wrap problem creation + default dataset + live_dataset assignment in a
+    # transaction so a partial half-create can't happen. The default dataset
+    # is required because problem_for_manage (used by index/manage) joins on
+    # :datasets — a dataset-less problem is invisible to those views.
+    success = Problem.transaction do
+      next false unless @problem.save
+      ds = @problem.datasets.create!(name: @problem.get_next_dataset_name)
+      @problem.update!(live_dataset: ds)
+      true
+    end
+
+    if success
       @toast = {title: 'Problem created',
                 body:  "Problem <code>#{@problem.name}</code> was successfully created.",
                 type:  :notice}

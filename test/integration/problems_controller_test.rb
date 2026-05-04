@@ -71,9 +71,12 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
 
   test "admin can quick_create problem" do
     sign_in_as("admin", "admin")
-    assert_difference "Problem.count" do
+    assert_difference ["Problem.count", "Dataset.count"] do
       post quick_create_problems_path, params: { problem: { name: "qcprob" } }, as: :turbo_stream
     end
+    prob = Problem.find_by(name: "qcprob")
+    assert prob, "new problem should be persisted"
+    assert prob.live_dataset, "new problem should have a live dataset assigned"
     assert_response :success
   end
 
