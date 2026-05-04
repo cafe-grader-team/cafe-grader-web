@@ -5,7 +5,7 @@
 .registration-desc
   =t 'registration.description'
 
-= error_messages_for :user, :header_message => (t 'registration.errors.header')
+= render 'application/error_for_model', model: @user
 
 %table
   = form_for @user, :url => { :action => 'register' } do |f|

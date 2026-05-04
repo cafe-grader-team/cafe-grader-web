@@ -69,7 +69,6 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "non-owner cannot view another user's compiler message" do
-    skip "FIXME: SubmissionsController#compiler_msg has NO authorization check (not in any can_view_* before_action). Any authenticated user can read another user's compiler output. Add :compiler_msg to the can_view_submission before_action list."
     sign_in_as("john", "hello")
     sub = submissions(:sub1_by_admin)
     post compiler_msg_submission_path(sub), as: :turbo_stream

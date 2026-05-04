@@ -21,7 +21,7 @@ class ConfigurationsController < ApplicationController
   end
 
   def reload
-    GraderConfiguration.reload
+    GraderConfiguration.read_config
     redirect_to action: 'index'
   end
 

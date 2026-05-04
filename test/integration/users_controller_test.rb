@@ -61,39 +61,27 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new renders when online_registration is on" do
-    skip "FIXME: UsersController#new uses `layout: 'empty'` but no `app/views/layouts/empty.html.haml` exists. Either add the layout or change the controller to use the application layout."
+    skip "FIXME: users/new.html.haml form_for posts to action: 'register', but the users resource only routes :new — register/confirm/forget/retrieve_password actions exist on the controller but have no routes. Online registration is non-functional end-to-end. Add `post 'register'`, `get 'confirm'`, `get 'forget'`, `post 'retrieve_password'` to the users resource block."
     with_online_registration("true")
     get new_user_path
     assert_response :success
   end
 
   # --- Confirm activation key ---
-  #
-  # confirm renders with `layout: 'empty'`, which doesn't exist (see also the
-  # users#new skip above). Until the layout is added, both branches of confirm
-  # crash on render before persisting the activation. Auth-key check itself
-  # is verified separately on the User model.
+
+  test "confirm with invalid activation key does not activate" do
+    user = users(:john)
+    user.update_columns(activated: false)
+    get "/users/confirm", params: { login: user.login, activation: "wrongkey" }
+    assert_not user.reload.activated?
+  end
 
   test "confirm with valid activation key activates an inactive user" do
-    skip "FIXME: UsersController#confirm renders layout 'empty' which doesn't exist."
+    skip "FIXME: confirm calls @user.valid? before save, but the john fixture (and others) lack email/other fields the User model considers required when not freshly registered. Need to either tighten the User model's validation contexts or update the fixture."
     user = users(:john)
     user.update_columns(activated: false)
     key = user.activation_key
     get "/users/confirm", params: { login: user.login, activation: key }
     assert user.reload.activated?
-  end
-
-  test "confirm with invalid activation key does not activate" do
-    user = users(:john)
-    user.update_columns(activated: false)
-    # The render crashes (missing 'empty' layout), but the activation logic
-    # short-circuits before render: an invalid key sets @result = :failed
-    # without saving, so the user stays inactive.
-    begin
-      get "/users/confirm", params: { login: user.login, activation: "wrongkey" }
-    rescue ActionView::MissingTemplate
-      # expected — layout 'empty' missing
-    end
-    assert_not user.reload.activated?
   end
 end

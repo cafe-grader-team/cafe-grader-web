@@ -48,7 +48,6 @@ class ReportControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can access cheat_report" do
-    skip "FIXME: report/cheat_report.html.haml references missing asset 'tablesorter-theme.cafe.css'. Either restore the asset or remove the reference."
     sign_in_as("admin", "admin")
     get "/report/cheat_report"
     assert_response :success

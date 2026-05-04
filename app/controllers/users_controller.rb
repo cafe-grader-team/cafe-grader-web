@@ -63,8 +63,7 @@ class UsersController < ApplicationController
 
   def new
     @user = User.new
-    render action: 'new', layout: 'empty'
-  end
+    render action: 'new'  end
 
   def register
     if params[:cancel]
@@ -76,15 +75,12 @@ class UsersController < ApplicationController
     @user.activated = false
     if (@user.valid?) and (@user.save)
       if send_confirmation_email(@user)
-        render action: 'new_splash', layout: 'empty'
-      else
+        render action: 'new_splash'      else
         @admin_email = GraderConfiguration['system.admin_email']
-        render action: 'email_error', layout: 'empty'
-      end
+        render action: 'email_error'      end
     else
       @user.errors.add(:base, "Email cannot be blank") if @user.email==''
-      render action: 'new', layout: 'empty'
-    end
+      render action: 'new'    end
   end
 
   def confirm
@@ -102,12 +98,10 @@ class UsersController < ApplicationController
     else
       @result = :failed
     end
-    render action: 'confirm', layout: 'empty'
-  end
+    render action: 'confirm'  end
 
   def forget
-    render action: 'forget', layout: 'empty'
-  end
+    render action: 'forget'  end
 
   def retrieve_password
     email = params[:email]

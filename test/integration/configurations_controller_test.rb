@@ -54,7 +54,6 @@ class ConfigurationsControllerTest < ActionDispatch::IntegrationTest
   # --- Collection actions ---
 
   test "admin can reload config cache" do
-    skip "FIXME: ConfigurationsController#reload calls GraderConfiguration.reload, which doesn't exist as a class method. Likely meant GraderConfiguration.read_config or GraderConfiguration.instance_variable_set(:@config_cache, nil)."
     sign_in_as("admin", "admin")
     get reload_grader_configuration_index_path
     assert_response :redirect

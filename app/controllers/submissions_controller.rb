@@ -8,7 +8,7 @@ class SubmissionsController < ApplicationController
   before_action :set_problem, only: %i[ edit direct_edit_problem rejudge set_tag ]
   before_action :set_language, only: %i[ edit direct_edit_problem ]
 
-  before_action :can_view_submission, only: [:show, :show_comments, :download, :edit, :evaluations]
+  before_action :can_view_submission, only: [:show, :show_comments, :download, :edit, :evaluations, :compiler_msg]
   before_action :can_view_problem, only: [ :direct_edit_problem ]
   before_action :can_edit_problem, only: [:rejudge, :set_tag]
 
