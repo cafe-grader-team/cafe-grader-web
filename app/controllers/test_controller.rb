@@ -4,10 +4,6 @@ class TestController < ApplicationController
   before_action :admin_authorization
 
 
-  def index
-    prepare_index_information
-  end
-
   def submit
     @user = User.find(session[:user_id])
 

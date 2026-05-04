@@ -38,9 +38,8 @@ Rails.application.routes.draw do
     post :index_query, on: :collection
   end
 
-  resources :tags do
+  resources :tags, except: [:show] do
     post :toggle_public, on: :member
-    post :toggle_primary, on: :member
     post :index_query, on: :collection
   end
 
@@ -87,7 +86,6 @@ Rails.application.routes.draw do
   end
 
   resources :sites
-  resources :test
 
   resources :audit_logs, only: [:index, :show]
 

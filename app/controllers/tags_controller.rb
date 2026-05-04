@@ -1,8 +1,7 @@
 class TagsController < ApplicationController
   before_action :stimulus_controller
   before_action :admin_authorization
-  before_action :set_tag, only: [:show, :edit, :update, :destroy,
-                                 :toggle_public, :toggle_primary]
+  before_action :set_tag, only: [:edit, :update, :destroy, :toggle_public]
 
   # GET /tags
   def index
@@ -11,10 +10,6 @@ class TagsController < ApplicationController
 
   def index_query
     @tags = Tag.all
-  end
-
-  # GET /tags/1
-  def show
   end
 
   # GET /tags/new
@@ -50,13 +45,6 @@ class TagsController < ApplicationController
   def toggle_public
     @tag.update(public: !@tag.public)
     @toast = {title: "Tag #{@tag.name}", body: "public updated"}
-    render 'turbo_toast'
-  end
-
-  # POST /tags/1/toggle_public
-  def toggle_primary
-    @tag.update(primary: !@tag.primary)
-    @toast = {title: "Tag #{@tag.name}", body: "primary updated"}
     render 'turbo_toast'
   end
 

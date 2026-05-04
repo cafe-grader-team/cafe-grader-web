@@ -1,6 +1,5 @@
 class HeartbeatController < ApplicationController
   before_action :check_valid_login
-  before_action :admin_authorization, only: [:index]
 
   def edit
     res = GraderConfiguration['right.heartbeat_response']
@@ -19,10 +18,5 @@ class HeartbeatController < ApplicationController
     else
       render plain: (GraderConfiguration['right.heartbeat_response'] || 'OK')
     end
-  end
-
-  def index
-    @hb = HeartBeat.where("updated_at >= ?",Time.zone.now-2.hours).includes(:user).order(:user_id).all
-    @num = HeartBeat.where("updated_at >= ?",Time.zone.now-5.minutes).count(:user_id,distinct: true)
   end
 end

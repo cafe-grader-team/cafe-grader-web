@@ -34,13 +34,6 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "admin can show a tag" do
-    skip "FIXME: app/views/tags/ has no show.html.haml — tags#show returns 406. Either add the template or remove the action."
-    sign_in_as("admin", "admin")
-    get tag_path(tags(:tag_easy))
-    assert_response :success
-  end
-
   test "admin can edit tag" do
     sign_in_as("admin", "admin")
     get edit_tag_path(tags(:tag_easy))
@@ -76,15 +69,6 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
     was = t.public
     post toggle_public_tag_path(t), as: :turbo_stream
     assert_equal !was, t.reload.public
-  end
-
-  test "admin can toggle primary" do
-    skip "FIXME: tags table has no `primary` column (only `public`, `kind`, etc.) but TagsController#toggle_primary calls @tag.update(primary: ...) — broken. Either add the column or remove the action+route."
-    sign_in_as("admin", "admin")
-    t = tags(:tag_easy)
-    was = t.primary
-    post toggle_primary_tag_path(t), as: :turbo_stream
-    assert_equal !was, t.reload.primary
   end
 
   # --- Datatable JSON ---

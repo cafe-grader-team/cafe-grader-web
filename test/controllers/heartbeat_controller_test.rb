@@ -16,21 +16,4 @@ class HeartbeatControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  # ============================================================
-  # Routing concern — currently DEAD
-  #
-  # HeartbeatController defines `index` and protects it via
-  # `before_action :admin_authorization`, but routes.rb only routes
-  # `get 'heartbeat/:id/edit'`. There is no route to `index`, so the
-  # action is dead code. Either:
-  #   - Add `resources :heartbeat, only: [:index]` (or similar) to
-  #     routes.rb and write a real test here, or
-  #   - Delete the `index` action.
-  # ============================================================
-
-  test "heartbeat index route is missing (DEAD action)" do
-    assert_raises(ActionController::UrlGenerationError) do
-      get url_for(controller: "heartbeat", action: "index", only_path: true)
-    end
-  end
 end
