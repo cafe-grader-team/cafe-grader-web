@@ -4,8 +4,12 @@
       %small.text-secondary.text-uppercase.fw-bold.ls-1 Management
       %h2.fw-bold.text-dark.mb-0 Problems
 
-    .d-flex.flex-wrap.gap-2
+    .d-flex.flex-wrap.gap-2.align-items-center
       = link_to mdi(:add, 'me-1') + 'Import', {action: 'import'}, class: 'btn btn-sm btn-success'
+      = form_with url: quick_create_problems_path, scope: :problem,
+                  html: {class: 'd-flex gap-1 align-items-center', data: {turbo: true}} do |f|
+        = f.text_field :name, placeholder: 'New problem name', class: 'form-control form-control-sm', style: 'width: 12rem'
+        = f.submit 'Quick Create', class: 'btn btn-sm btn-outline-success'
       = link_to mdi(:settings, 'me-1') + 'Manage', { action: 'manage'}, class: 'btn btn-sm btn-outline-secondary'
       - if @current_user.admin?
         = link_to 'All Off', {action: 'turn_all_off'}, class: 'btn btn-sm btn-outline-secondary'
