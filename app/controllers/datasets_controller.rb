@@ -91,7 +91,8 @@ class DatasetsController < ApplicationController
   # turbo
   def file_view
     att = ActiveStorage::Attachment.where(record: @dataset, id: params[:att_id]).first
-    render partial: 'msg_modal_show', locals: {do_popup: true, header_msg: att.filename, body_msg: "<pre>#{att.download}</pre>".html_safe}
+    text = ERB::Util.html_escape(att.download)
+    render partial: 'msg_modal_show', locals: {do_popup: true, header_msg: att.filename, body_msg: "<pre>#{text}</pre>".html_safe}
   end
 
   def file_download
