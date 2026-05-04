@@ -256,17 +256,21 @@ class UserAdminController < ApplicationController
   # admin management
 
   def admin
-    @admins = Role.where(name: 'admin').take.users
-    @tas = Role.where(name: 'ta').take.users
+    @admins = Role.find_by(name: 'admin')&.users || User.none
+    @tas = Role.find_by(name: 'ta')&.users || User.none
   end
 
   def admin_query
-    render json: {data: Role.where(name: 'admin').take.users}
+    render json: {data: Role.find_by(name: 'admin')&.users || User.none}
+  end
+
+  def ta_query
+    render json: {data: Role.find_by(name: 'ta')&.users || User.none}
   end
 
   # TURBO_STREAM
   def modify_role
-    @toast = {title: "Modify admin"}
+    @toast = {title: "Modify role"}
 
     user = User.find(params[:id])
     role = Role.find_by_name(params[:role])
@@ -275,7 +279,7 @@ class UserAdminController < ApplicationController
       @toast[:type] = :alert
       render 'turbo_toast' and return
     end
-    if params[:commit] == 'Grant'
+    if params[:command] == 'grant'
       # grant role
       if user.roles.where(name: role.name).any?
         @toast[:body] = "User '#{user.login}' already has the role '#{role.name}'"
@@ -287,12 +291,12 @@ class UserAdminController < ApplicationController
     else
       # revoke role
       if user.login == 'root' && role.name == 'admin'
-        @toast[:body] = 'You cannot revoke admisnistrator permission from root.'
+        @toast[:body] = 'You cannot revoke administrator permission from root.'
         @toast[:type] = :alert
         render 'turbo_toast' and return
       end
       if user == @current_user && role.name == 'admin'
-        @toast[:body] = 'You cannot revoke your own admisnistrator role'
+        @toast[:body] = 'You cannot revoke your own administrator role'
         @toast[:type] = :alert
         render 'turbo_toast' and return
       end

@@ -232,6 +232,7 @@ Rails.application.routes.draw do
       get 'new_list'
       get 'admin'
       post 'admin_query'
+      post 'ta_query'
       get 'active'
       get 'mass_mailing'
       match 'modify_role', via: [:get, :post]

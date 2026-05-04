@@ -32,6 +32,8 @@
       "Bash(grep:*)",
       "Bash(unzip:*)",
       "Bash(find:*)",
+      "Bash(python3 *)",
+      "Bash(bin/rails assets:precompile)"
     ]
   }
 }

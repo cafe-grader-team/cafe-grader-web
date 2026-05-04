@@ -1,42 +1,37 @@
-%h1 Administrators
-.mb-3.d-flex.gap-1.align-items-center.align-middle
-  [
-  = link_to "#{mdi(:arrow_back)} Back".html_safe, user_admin_index_path, class: 'mx-1 gap-1 d-flex align-items-center text-decoration-none'
-  ]
-.row{data: {controller: 'init-ui-component'}}
-  .col-md-6
-    .card
-      .card-body
-        %h4 Administrators
-        = form_tag modify_role_user_admin_index_path, 'data-user-admin--admin-target': 'userForm', class: 'form-inline', data: {turbo: true, action: 'turbo:submit-end->user-admin--admin#afterUserAction'}  do
-          = hidden_field_tag :role, 'admin'
-          = hidden_field_tag :command, 'grant', 'data-user-admin--admin-target': 'userFormCommand'
-          .row.row-cols-lg-auto.g-3.align-items-center
-            .col
-              .form-check
-                %label.form-check-label Grant admin role to
-            .col
-              = select_tag :id, options_from_collection_for_select(User.all,'id','login_with_name'), id: :user_id, class: 'select2', 'data-user-admin--admin-target': 'userFormUserID', multiple: false, style: 'width: 20rem';
-            .col
-              = submit_tag 'Grant', class: 'btn btn-primary'
-        %br
-        %table#main-table.table.table-condense.table-hover.table-striped
-          %thead{:class => 'info-head'}
-            %th Login
-            %th Full name
-            %th
-  .col-md-6
-    .card.bg-warning-subtle.shadow-sm.mb-3
-      .card-body
-        %h4 
-          .mi.fill help
-          Usage
-        %ul.mb-0
-          %li
-            Administrators always have all rights to the system. They can log in anytime and can view and see all problems. 
-          %li
-            Only Administrators can create / delete users. Make a user as administrator only when they really need this permission.
-          %li
-            If the system is used by various group of problem setters, it is better to grant
-            %strong Editor
-            role to some user in the group.
+.row.my-2{data: {controller: 'init-ui-component'}}
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Access Control
+      %h2.fw-bold.text-dark.mb-0 Administrators &amp; TAs
+
+    .d-flex.flex-wrap.gap-2
+      = link_to "#{mdi(:arrow_back, 'me-1')}Back".html_safe, user_admin_index_path, class: 'btn btn-flex btn-outline-secondary'
+  .col-md-7.mb-3
+    = render partial: 'admin_help'
+
+.row.g-3{data: {controller: 'init-ui-component'}}
+  - [{role: 'admin', title: 'Administrators', table_id: 'admin-table', query_url: admin_query_user_admin_index_path},
+     {role: 'ta',    title: 'TAs',            table_id: 'ta-table',    query_url: ta_query_user_admin_index_path}].each do |panel|
+    .col-md-6
+      .card.shadow-sm
+        .card-body
+          %h4= panel[:title]
+          = form_tag modify_role_user_admin_index_path, class: 'role-form', data: {turbo: true, role_table: panel[:table_id], action: 'turbo:submit-end->user-admin--admin#afterUserAction'} do
+            = hidden_field_tag :role, panel[:role]
+            = hidden_field_tag :command, 'grant', class: 'role-command'
+            .row.row-cols-lg-auto.g-3.align-items-center
+              .col
+                %label.form-check-label= "Grant #{panel[:role]} role to"
+              .col
+                = select_tag :id, options_from_collection_for_select(User.all, 'id', 'login_with_name'),
+                             id: "#{panel[:role]}_user_id",
+                             class: 'select2 role-user-select', multiple: false, style: 'width: 20rem'
+              .col
+                = submit_tag 'Grant', class: 'btn btn-primary',
+                             data: {action: 'click->user-admin--admin#setGrantCommand'}
+          %br
+          %table.role-table.table.table-condense.table-hover{id: panel[:table_id], data: {query_url: panel[:query_url], role: panel[:role]}}
+            %thead{:class => 'info-head'}
+              %th Login
+              %th Full name
+              %th.text-end Action

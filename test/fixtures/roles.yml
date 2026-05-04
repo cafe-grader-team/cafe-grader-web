@@ -2,3 +2,7 @@
 admin:
   name: admin
   rights: graders_right, user_admin_right, problems_right
+
+ta:
+  name: ta
+  rights:

@@ -80,4 +80,127 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
     assert User.find_by_login("bulkuser1")
     assert User.find_by_login("bulkuser2")
   end
+
+  # --- Admin / TA role panel ---
+
+  test "non-admin cannot access admin role panel" do
+    sign_in_as("john", "hello")
+    get admin_user_admin_index_path
+    assert_redirected_to list_main_path
+  end
+
+  test "admin can access admin role panel" do
+    sign_in_as("admin", "admin")
+    get admin_user_admin_index_path
+    assert_response :success
+    # both panels rendered with unique select ids
+    assert_match 'id="admin_user_id"', response.body
+    assert_match 'id="ta_user_id"', response.body
+    # no duplicate id="id" left over from the old single-form layout
+    assert_no_match(/<select[^>]*id="id"/, response.body)
+  end
+
+  test "admin_query returns admin role users as JSON" do
+    sign_in_as("admin", "admin")
+    post admin_query_user_admin_index_path
+    assert_response :success
+    logins = JSON.parse(response.body).fetch("data").map { |u| u["login"] }
+    assert_includes logins, "admin"
+  end
+
+  test "ta_query returns ta role users as JSON" do
+    sign_in_as("admin", "admin")
+    users(:mary).roles << roles(:ta)
+    post ta_query_user_admin_index_path
+    assert_response :success
+    logins = JSON.parse(response.body).fetch("data").map { |u| u["login"] }
+    assert_includes logins, "mary"
+    assert_not_includes logins, "admin"
+  end
+
+  test "ta_query returns empty data when ta role row is missing" do
+    sign_in_as("admin", "admin")
+    Role.find_by(name: "ta").destroy
+    post ta_query_user_admin_index_path
+    assert_response :success
+    assert_equal [], JSON.parse(response.body).fetch("data")
+  end
+
+  test "modify_role grants admin role" do
+    sign_in_as("admin", "admin")
+    user = users(:mary)
+    assert_not user.roles.exists?(name: "admin")
+    post modify_role_user_admin_index_path,
+         params: { id: user.id, role: "admin", command: "grant" },
+         as: :turbo_stream
+    assert_response :success
+    assert user.reload.roles.exists?(name: "admin")
+  end
+
+  test "modify_role grants ta role" do
+    sign_in_as("admin", "admin")
+    user = users(:mary)
+    post modify_role_user_admin_index_path,
+         params: { id: user.id, role: "ta", command: "grant" },
+         as: :turbo_stream
+    assert_response :success
+    assert user.reload.roles.exists?(name: "ta")
+  end
+
+  test "modify_role revokes role" do
+    sign_in_as("admin", "admin")
+    user = users(:mary)
+    user.roles << roles(:ta)
+    post modify_role_user_admin_index_path,
+         params: { id: user.id, role: "ta", command: "revoke" },
+         as: :turbo_stream
+    assert_response :success
+    assert_not user.reload.roles.exists?(name: "ta")
+  end
+
+  test "modify_role refuses to revoke admin from root" do
+    sign_in_as("admin", "admin")
+    root = User.create!(login: "root", full_name: "Root", password: "rootroot",
+                        password_confirmation: "rootroot", email: "root@root.com",
+                        activated: true)
+    root.roles << roles(:admin)
+    post modify_role_user_admin_index_path,
+         params: { id: root.id, role: "admin", command: "revoke" },
+         as: :turbo_stream
+    assert_response :success
+    assert root.reload.roles.exists?(name: "admin"), "admin role should remain on root"
+  end
+
+  test "modify_role refuses self-revocation of admin" do
+    sign_in_as("admin", "admin")
+    me = users(:admin)
+    post modify_role_user_admin_index_path,
+         params: { id: me.id, role: "admin", command: "revoke" },
+         as: :turbo_stream
+    assert_response :success
+    assert me.reload.roles.exists?(name: "admin"), "admin should not be able to revoke own admin role"
+  end
+
+  test "modify_role grant is idempotent" do
+    sign_in_as("admin", "admin")
+    user = users(:mary)
+    user.roles << roles(:admin)
+    before = user.roles.where(name: "admin").count
+    post modify_role_user_admin_index_path,
+         params: { id: user.id, role: "admin", command: "grant" },
+         as: :turbo_stream
+    assert_response :success
+    assert_equal before, user.reload.roles.where(name: "admin").count
+  end
+
+  test "modify_role with unknown role does not change user roles" do
+    sign_in_as("admin", "admin")
+    user = users(:mary)
+    before = user.roles.pluck(:name).sort
+    post modify_role_user_admin_index_path,
+         params: { id: user.id, role: "nonexistent", command: "grant" },
+         as: :turbo_stream
+    assert_response :success
+    assert_equal before, user.reload.roles.pluck(:name).sort
+  end
 end
