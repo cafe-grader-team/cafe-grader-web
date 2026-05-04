@@ -128,7 +128,7 @@ class SubmissionsController < ApplicationController
     render partial: "msg_modal_show", locals: {do_popup: true, header_msg: "Compiler message for ##{@submission.id}", body_msg: "<pre>#{@submission.compiler_message}</pre>".html_safe}
   end
 
-  # GET /submissions/:id/rejudge
+  # POST /submissions/:id/rejudge
   def rejudge
     if @submission.problem.viva_exam?
       @submission.viva_grade&.destroy
@@ -138,9 +138,8 @@ class SubmissionsController < ApplicationController
       # add lower priority job
       @submission.add_judge_job(@submission.problem.live_dataset, -10)
     end
-    respond_to do |format|
-      format.js
-    end
+    @toast = {title: 'Rejudge', body: "Submission ##{@submission.id} is added to judge queue. It will be re-judged soon."}
+    render 'turbo_toast'
   end
 
   def set_tag

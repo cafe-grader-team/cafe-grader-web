@@ -31,15 +31,14 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
   test "normal user cannot rejudge" do
     sign_in_as("john", "hello")
     sub = submissions(:add1_by_admin)
-    get rejudge_submission_path(sub)
+    post rejudge_submission_path(sub)
     assert_redirected_to list_main_path
   end
 
   test "admin can rejudge" do
-    skip "FIXME: rejudge.js endpoint returns 422 in tests; investigate add_judge_job + format.js interaction. Action requires :js format and the .js.haml view must render."
     sign_in_as("admin", "admin")
     sub = submissions(:add1_by_admin)
-    get "#{rejudge_submission_path(sub)}.js"
+    post rejudge_submission_path(sub), as: :turbo_stream
     assert_response :success
   end
 

@@ -26,4 +26,6 @@
       .card.shadow-sm.mb-3
         .card-body
           %h5 Admin
-          = link_to 'Re-grade', rejudge_submission_path(@submission), data: {remote: true}, class: 'btn btn-warning btn-sm'
+          = button_to 'Re-grade', rejudge_submission_path(@submission),
+              class: 'btn btn-warning btn-sm',
+              form: {class: 'd-inline', data: {turbo: true}}

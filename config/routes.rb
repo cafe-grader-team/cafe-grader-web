@@ -251,7 +251,7 @@ Rails.application.routes.draw do
     member do
       get 'download'
       post 'compiler_msg'
-      get 'rejudge'
+      post 'rejudge'
       get 'set_tag'
       post 'evaluations'
       # viva exam

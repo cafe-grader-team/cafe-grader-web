@@ -112,7 +112,9 @@
               .col-auto
                 %strong ADMIN Section
               .col-auto
-                = link_to "Rejudge", rejudge_submission_path, data: {remote: true}, class: 'btn btn-warning btn-sm'
+                = button_to "Rejudge", rejudge_submission_path(@submission),
+                    class: 'btn btn-warning btn-sm',
+                    form: {class: 'd-inline', data: {turbo: true}}
               .col-auto
                 = link_to "Testcase", show_problem_testcases_path(@submission.problem_id), data: {turbo: false}, class: 'btn btn-sm btn-primary'
               .col-auto
