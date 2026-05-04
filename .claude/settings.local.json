@@ -33,7 +33,10 @@
       "Bash(unzip:*)",
       "Bash(find:*)",
       "Bash(python3 *)",
-      "Bash(bin/rails assets:precompile)"
+      "Bash(bin/rails assets:precompile)",
+      "Bash(ruby -Itest /tmp/rejudge_debug.rb)",
+      "Bash(awk ' *)",
+      "Bash(git ls-remote *)"
     ]
   }
 }

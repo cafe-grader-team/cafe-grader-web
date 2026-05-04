@@ -10,7 +10,7 @@ Cafe-Grader is an online programming contest and assignment grading platform (us
 
 - **Ruby 3.4.4, Rails 8.0.0** (with `load_defaults 7.0`)
 - **MySQL** (primary DB: `grader`, queue DB: `grader_queue`)
-- **Propshaft** asset pipeline, **ImportMap** for JS, **cssbundling-rails** with Sass for CSS
+- **Propshaft** asset pipeline, **ImportMap** for JS, **dartsass-rails** for CSS (no Node/yarn dependency)
 - **Hotwire** (Turbo + Stimulus), jQuery (legacy), Bootstrap 5
 - **HAML** templates
 - **Solid Queue** for background jobs, **Solid Cache**, **Solid Cable**
@@ -24,7 +24,7 @@ bin/dev                          # uses Procfile.dev via foreman
 
 # Or run individually:
 bin/rails server                 # web server on port 3000
-yarn build:css --watch           # Sass compilation
+bin/rails dartsass:watch         # CSS compilation (dartsass-rails)
 bin/rails solid_queue:start      # background job queue
 
 # Database
