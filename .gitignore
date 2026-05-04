@@ -67,3 +67,10 @@
 
 /app/assets/builds/*
 #!/app/assets/builds/.keep
+
+# migrate_2023 runtime artifacts (anomaly log, captured baseline,
+# sanity / verify / compare reports, test harness reports)
+/script/migrate_2023/migrate_anomalies.log
+/script/migrate_2023/sanity_baseline.json
+/script/migrate_2023/sanity_report_*
+/script/migrate_2023/test_v2_report_*
