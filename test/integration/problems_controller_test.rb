@@ -70,11 +70,21 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can quick_create problem" do
-    skip "FIXME: quick_create silently fails to save (likely a Problem validation we haven't pinned down). Investigate Problem validations or add full_name to the test params."
     sign_in_as("admin", "admin")
     assert_difference "Problem.count" do
-      get quick_create_problems_path, params: { problem: { name: "qcprob" } }
+      post quick_create_problems_path, params: { problem: { name: "qcprob" } }, as: :turbo_stream
     end
+    assert_response :success
+  end
+
+  test "quick_create with invalid name does not create a problem" do
+    sign_in_as("admin", "admin")
+    assert_no_difference "Problem.count" do
+      # blank name fails Problem validation
+      post quick_create_problems_path, params: { problem: { name: "" } }, as: :turbo_stream
+    end
+    # action still renders 200 with an error toast
+    assert_response :success
   end
 
   test "admin can update problem" do

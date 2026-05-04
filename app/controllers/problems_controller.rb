@@ -107,18 +107,24 @@ class ProblemsController < ApplicationController
 
   def quick_create
     @problem = Problem.new(problem_params)
-    @problem.full_name = @problem.name if @problem.full_name == ''
+    @problem.full_name = @problem.name if @problem.full_name.blank?
     @problem.available = false
     @problem.test_allowed = true
     @problem.output_only = false
-    @problem.date_added = Time.new
+    @problem.date_added = Time.zone.now
+
     if @problem.save
-      flash[:notice] = 'Problem was successfully created.'
-      redirect_to action: :index
+      @toast = {title: 'Problem created',
+                body:  "Problem <code>#{@problem.name}</code> was successfully created.",
+                type:  :notice}
+      @event_dispatcher = {event_name: 'datatable:reload', event_detail: {}}
     else
-      flash[:notice] = 'Error saving problem'
-      redirect_to action: :index
+      @toast = {title: 'Quick create failed',
+                body:  "Could not create problem.",
+                errors: @problem.errors.full_messages,
+                type:  :alert}
     end
+    render 'turbo_toast'
   end
 
   def edit
