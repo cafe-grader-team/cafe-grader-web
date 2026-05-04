@@ -11,50 +11,6 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.0].define(version: 1) do
-  create_table "languages", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "name", limit: 10
-    t.string "pretty_name"
-    t.string "ext", limit: 10
-  end
-
-  create_table "problems", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "name", limit: 30
-    t.string "full_name"
-    t.integer "full_score"
-    t.date "date_added"
-    t.boolean "available"
-  end
-
-  create_table "rights", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "name"
-    t.string "controller"
-    t.string "action"
-  end
-
-  create_table "rights_roles", id: false, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "right_id"
-    t.integer "role_id"
-    t.index ["role_id"], name: "index_rights_roles_on_role_id"
-  end
-
-  create_table "roles", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "name"
-  end
-
-  create_table "roles_users", id: false, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "role_id"
-    t.integer "user_id"
-    t.index ["user_id"], name: "index_roles_users_on_user_id"
-  end
-
-  create_table "sessions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.string "session_id"
-    t.text "data"
-    t.datetime "updated_at", precision: nil
-    t.index ["session_id"], name: "index_sessions_on_session_id"
-    t.index ["updated_at"], name: "index_sessions_on_updated_at"
-  end
-
   create_table "solid_queue_blocked_executions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "job_id", null: false
     t.string "queue_name", null: false
@@ -174,26 +130,6 @@ ActiveRecord::Schema[8.0].define(version: 1) do
     t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
     t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
-  end
-
-  create_table "submissions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "user_id"
-    t.integer "problem_id"
-    t.integer "language_id"
-    t.text "source"
-    t.binary "binary"
-    t.datetime "submitted_at", precision: nil
-    t.datetime "compiled_at", precision: nil
-    t.text "compiler_message"
-    t.datetime "graded_at", precision: nil
-    t.integer "points"
-    t.text "grader_comment"
-    t.index ["user_id", "problem_id"], name: "index_submissions_on_user_id_and_problem_id"
-  end
-
-  create_table "tasks", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.integer "submission_id"
-    t.datetime "created_at", precision: nil
   end
 
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

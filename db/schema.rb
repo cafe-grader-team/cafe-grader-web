@@ -43,8 +43,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.string "author"
     t.text "body", size: :medium
     t.boolean "published"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.boolean "frontpage", default: false
     t.boolean "contest_only", default: false
     t.string "title"
@@ -54,7 +54,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.index ["group_id"], name: "index_announcements_on_group_id"
   end
 
-  create_table "audit_logs", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "audit_logs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "user_id"
     t.string "actor_note"
     t.string "auditable_type", null: false
@@ -100,8 +100,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
   create_table "contests", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name"
     t.boolean "enabled"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.string "description"
     t.datetime "start"
     t.datetime "stop"
@@ -141,8 +141,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
 
   create_table "countries", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "datasets", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -163,8 +163,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
   create_table "descriptions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.text "body", size: :medium
     t.boolean "markdowned"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "evaluations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -185,8 +185,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.string "key"
     t.string "value_type"
     t.string "value"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.text "description", size: :medium
   end
 
@@ -195,8 +195,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.integer "pid"
     t.string "mode"
     t.boolean "active"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "task_id"
     t.string "job_type"
     t.boolean "terminated"
@@ -216,14 +216,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.boolean "hidden", default: false
   end
 
-  create_table "groups_problems", charset: "latin1", force: :cascade do |t|
+  create_table "groups_problems", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "problem_id", null: false
     t.integer "group_id", null: false
     t.boolean "enabled", default: true
     t.index ["group_id", "problem_id"], name: "index_groups_problems_on_group_id_and_problem_id"
   end
 
-  create_table "groups_users", charset: "latin1", force: :cascade do |t|
+  create_table "groups_users", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "group_id", null: false
     t.integer "user_id", null: false
     t.integer "role", default: 0
@@ -231,7 +231,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.index ["user_id", "group_id"], name: "index_groups_users_on_user_id_and_group_id"
   end
 
-  create_table "heart_beats", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "heart_beats", id: :integer, charset: "latin1", force: :cascade do |t|
     t.integer "user_id"
     t.string "ip_address"
     t.datetime "created_at", precision: nil, null: false
@@ -263,7 +263,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.boolean "binary", default: false
   end
 
-  create_table "logins", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "logins", id: :integer, charset: "latin1", force: :cascade do |t|
     t.integer "user_id"
     t.string "ip_address"
     t.datetime "created_at", precision: nil, null: false
@@ -278,11 +278,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.integer "replying_message_id"
     t.text "body", size: :medium
     t.boolean "replied"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
-  create_table "problem_stats", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "problem_stats", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "problem_id", null: false
     t.integer "sub_count", default: 0, null: false
     t.integer "solved_count", default: 0, null: false
@@ -318,7 +318,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.index ["live_dataset_id"], name: "index_problems_on_live_dataset_id"
   end
 
-  create_table "problems_tags", id: :integer, charset: "latin1", force: :cascade do |t|
+  create_table "problems_tags", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "problem_id"
     t.integer "tag_id"
     t.index ["problem_id", "tag_id"], name: "index_problems_tags_on_problem_id_and_tag_id", unique: true
@@ -348,32 +348,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.index ["user_id"], name: "index_roles_users_on_user_id"
   end
 
-  create_table "score_submissions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.bigint "dataset_id", null: false
-    t.bigint "submission_id", null: false
-    t.decimal "point", precision: 8, scale: 4
-    t.integer "status", limit: 1, default: 0, null: false
-    t.float "max_runtime"
-    t.integer "peak_memory"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["dataset_id"], name: "index_score_submissions_on_dataset_id"
-    t.index ["submission_id"], name: "index_score_submissions_on_submission_id"
-  end
-
-  create_table "score_users", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
-    t.bigint "dataset_id", null: false
-    t.bigint "user_id", null: false
-    t.decimal "point", precision: 8, scale: 4
-    t.integer "status", limit: 1, default: 0, null: false
-    t.float "max_runtime"
-    t.integer "peak_memory"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["dataset_id"], name: "index_score_users_on_dataset_id"
-    t.index ["user_id"], name: "index_score_users_on_user_id"
-  end
-
   create_table "sessions", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "session_id"
     t.text "data", size: :medium
@@ -386,13 +360,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.string "name"
     t.boolean "started"
     t.datetime "start_time", precision: nil
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
     t.integer "country_id"
     t.string "password"
   end
 
-  create_table "submission_view_logs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+  create_table "submission_view_logs", id: :integer, charset: "latin1", force: :cascade do |t|
     t.integer "user_id"
     t.integer "submission_id"
     t.datetime "created_at", precision: nil, null: false
@@ -452,8 +426,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.integer "problem_id"
     t.text "input", size: :long
     t.text "solution", size: :long
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "test_requests", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -464,13 +438,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.string "output_file_name"
     t.string "running_stat"
     t.integer "status"
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil
     t.datetime "submitted_at", precision: nil
     t.datetime "compiled_at", precision: nil
     t.text "compiler_message", size: :medium
     t.datetime "graded_at", precision: nil
     t.string "grader_comment"
-    t.datetime "created_at", precision: nil, null: false
+    t.datetime "created_at", precision: nil
     t.float "running_time"
     t.string "exit_status"
     t.integer "memory_usage"
@@ -496,9 +470,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
   create_table "user_contest_stats", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "user_id"
     t.datetime "started_at", precision: nil
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.boolean "forced_logout"
+    t.datetime "created_at", precision: nil
+    t.datetime "updated_at", precision: nil
   end
 
   create_table "users", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -513,10 +486,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_22_120000) do
     t.boolean "activated", default: false
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
+    t.string "section"
     t.boolean "enabled", default: true
     t.string "remark"
     t.string "last_ip"
-    t.string "section"
     t.integer "default_language_id"
     t.datetime "last_heartbeat"
     t.index ["login"], name: "index_users_on_login", unique: true
