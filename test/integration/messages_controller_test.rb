@@ -2,14 +2,8 @@ require "test_helper"
 
 class MessagesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    # Message validates `belongs_to :receiver` (no optional:), so we always
-    # set both sides. System messages would normally have receiver_id=nil
-    # but creating one in tests requires `save(validate: false)`.
-    @msg = Message.new(sender: users(:john), receiver: users(:admin), body: "hello")
-    @msg.save(validate: false)
-
-    @system_msg = Message.new(sender: users(:john), receiver_id: nil, body: "system message")
-    @system_msg.save(validate: false)
+    @msg = Message.create!(sender: users(:john), receiver: users(:admin), body: "hello")
+    @system_msg = Message.create!(sender: users(:john), receiver_id: nil, body: "system message")
   end
 
   # --- Authorization ---
@@ -75,16 +69,10 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "admin hide endpoint redirects to console" do
+  test "admin can hide a message" do
     sign_in_as("admin", "admin")
     get hide_message_path(@msg)
     assert_redirected_to action: "console"
-    # Note: hide() does `message.replied = true; message.save`, but Message
-    # declares `belongs_to :replying_message` without `optional: true`, so
-    # every save without a replying_message fails validation silently. The
-    # `replied=true` is therefore NOT persisted in production either. To
-    # assert the side effect, fix Message first (add `optional: true` to
-    # the three `belongs_to` declarations) and then add:
-    #   assert @msg.reload.replied
+    assert @msg.reload.replied
   end
 end

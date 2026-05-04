@@ -34,7 +34,6 @@ class SitesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can view new site form" do
-    skip "FIXME: sites/new.html.haml uses Rails 2-era `error_messages_for` helper (removed). Either modernize the view or delete the multi-site feature entirely."
     sign_in_as("admin", "admin")
     get new_site_path
     assert_response :success

@@ -109,7 +109,7 @@ class VivaSessionsController < ApplicationController
   private
 
   def set_problem
-    @problem = Problem.find(params[:problem_id])
+    @problem = Problem.find(params[:id] || params[:problem_id])
   end
 
   def set_submission

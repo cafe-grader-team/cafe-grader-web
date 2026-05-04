@@ -66,24 +66,15 @@ class LanguagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================
-  # Authorization tests — currently FAILING
-  #
-  # LanguagesController has NO before_action for authentication or
-  # admin_authorization. The tests below document the expected scope
-  # but are skipped until the controller is patched.
-  #
-  # Fix: add `before_action :admin_authorization` at the class level.
-  # Then remove the `skip` lines below.
+  # Authorization tests
   # ============================================================
 
   test "unauthenticated user cannot list languages" do
-    skip "FIXME: LanguagesController has no auth — see Phase 1 audit"
     get languages_path
     assert_redirected_to login_main_path
   end
 
   test "unauthenticated user cannot create a language" do
-    skip "FIXME: LanguagesController has no auth — see Phase 1 audit"
     assert_no_difference("Language.count") do
       post languages_path, params: { language: { name: "evil", pretty_name: "Evil", ext: "ev", common_ext: "ev" } }
     end
@@ -91,14 +82,12 @@ class LanguagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "unauthenticated user cannot update a language" do
-    skip "FIXME: LanguagesController has no auth — see Phase 1 audit"
     patch language_path(languages(:Language_c)), params: { language: { pretty_name: "Pwned" } }
     assert_redirected_to login_main_path
     assert_equal "C", languages(:Language_c).reload.pretty_name
   end
 
   test "unauthenticated user cannot destroy a language" do
-    skip "FIXME: LanguagesController has no auth — see Phase 1 audit"
     lang = Language.create!(name: "victim", pretty_name: "Victim", ext: "v", common_ext: "v")
     assert_no_difference("Language.count") do
       delete language_path(lang)
@@ -107,7 +96,6 @@ class LanguagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "normal user cannot create a language" do
-    skip "FIXME: LanguagesController has no auth — see Phase 1 audit"
     sign_in_as("john", "hello")
     assert_no_difference("Language.count") do
       post languages_path, params: { language: { name: "evil", pretty_name: "Evil", ext: "ev", common_ext: "ev" } }
@@ -116,7 +104,6 @@ class LanguagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "group editor cannot create a language" do
-    skip "FIXME: LanguagesController has no auth — see Phase 1 audit"
     sign_in_as("mary", "mary")
     assert_no_difference("Language.count") do
       post languages_path, params: { language: { name: "evil", pretty_name: "Evil", ext: "ev", common_ext: "ev" } }

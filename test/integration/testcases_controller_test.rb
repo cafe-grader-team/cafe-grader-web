@@ -23,7 +23,6 @@ class TestcasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "normal user can show problem testcases when right.view_testcase=true" do
-    skip "FIXME: testcases/show_problem.html.haml:35 calls tc.inp_file.download.force_encoding(...) which crashes when fixtures lack Active Storage attachments. Either attach files in setup or refactor the view to handle nil."
     set_grader_config("right.view_testcase", "true")
     problems(:prob_add).update!(view_testcase: true)
     sign_in_as("john", "hello")
@@ -32,7 +31,6 @@ class TestcasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can always show problem testcases" do
-    skip "FIXME: testcases/show_problem.html.haml:35 calls tc.inp_file.download.force_encoding(...) which crashes when fixtures lack Active Storage attachments."
     sign_in_as("admin", "admin")
     get show_problem_testcases_path(problem_id: problems(:prob_add).id)
     assert_response :success

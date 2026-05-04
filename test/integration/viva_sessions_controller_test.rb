@@ -48,15 +48,10 @@ class VivaSessionsControllerTest < ActionDispatch::IntegrationTest
 
   # --- start failure paths ---
 
-  test "start currently 404s due to params[:problem_id]/[:id] mismatch" do
-    # FIXME: The route `POST /problems/:id/viva/start` passes the problem in
-    # params[:id], but VivaSessionsController#set_problem reads
-    # params[:problem_id], so Problem.find(nil) raises RecordNotFound (404).
-    # Expected behavior: redirect to list_main_path with "not a viva exam"
-    # alert. Fix: change set_problem to use params[:id] for the start action,
-    # or rename the route param. Then update this test to expect a redirect.
+  test "start redirects when problem is not a viva exam" do
     sign_in_as("admin", "admin")
+    # prob_add has mode default (general), not viva_exam
     post viva_start_problem_path(problems(:prob_add))
-    assert_response :not_found
+    assert_redirected_to list_main_path
   end
 end

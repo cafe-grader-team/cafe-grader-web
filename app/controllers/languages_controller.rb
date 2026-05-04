@@ -1,4 +1,5 @@
 class LanguagesController < ApplicationController
+  before_action :admin_authorization
   before_action :set_language, only: %i[ show edit update destroy ]
   before_action :prevent_editing_read_only, only: %i[ update destroy ]
 

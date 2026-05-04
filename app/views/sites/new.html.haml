@@ -1,5 +1,5 @@
 %h1 New site
-= error_messages_for :site
+= render 'application/error_for_model', model: @site
 = form_for(@site) do |f|
   %p
     %b Name
