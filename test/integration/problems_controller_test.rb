@@ -46,6 +46,17 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "problems without any dataset still appear on index" do
+    sign_in_as("admin", "admin")
+    # Build a Problem with no associated Dataset. The previous INNER JOIN
+    # in problem_for_manage would silently drop this row from the list;
+    # the LEFT JOIN should let it through.
+    Problem.create!(name: "orphan", full_name: "Orphan Problem")
+    get problems_path
+    assert_response :success
+    assert_match "orphan", response.body
+  end
+
   test "admin can access import form" do
     sign_in_as("admin", "admin")
     get import_problems_path

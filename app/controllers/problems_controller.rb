@@ -470,7 +470,10 @@ class ProblemsController < ApplicationController
       tc_count_sql = Testcase.joins(:dataset).group('datasets.problem_id').select('datasets.problem_id,count(testcases.id) as tc_count').to_sql
       ms_count_sql = Submission.where(tag: 'model').group(:problem_id).select('count(*) as ms_count, problem_id').to_sql
       hint_count_sql = Comment.hints.group(:commentable_id).select('commentable_id as problem_id, count(commentable_id) as count').to_sql
-      return @problems = user.problems_for_action(:edit).joins(:datasets)
+      # left_joins (not joins) so that problems without any Dataset still appear
+      # in the list with dataset_count = 0, instead of being silently filtered
+      # out by an INNER JOIN.
+      return @problems = user.problems_for_action(:edit).left_joins(:datasets)
         .joins("LEFT JOIN (#{tc_count_sql}  ) TC ON problems.id = TC.problem_id")
         .joins("LEFT JOIN (#{ms_count_sql}  ) MS ON problems.id = MS.problem_id")
         .joins("LEFT JOIN (#{hint_count_sql}) HC ON problems.id = HC.problem_id")
