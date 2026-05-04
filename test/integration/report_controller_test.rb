@@ -41,7 +41,7 @@ class ReportControllerTest < ActionDispatch::IntegrationTest
   # --- Stuck / cheat reports ---
 
   test "admin can access stuck report" do
-    skip "FIXME: ReportController#stuck (line 365) does `>=` on a nil — the action expects a query param that's missing on a bare GET. Either make the param required or default it."
+    skip "LOW: ReportController#stuck (line 365) does `>=` on a nil — the action expects a query param that's missing on a bare GET. Admin-only diagnostic report; rarely used. Fix by defaulting the param when next touched."
     sign_in_as("admin", "admin")
     get "/report/stuck"
     assert_response :success
@@ -54,7 +54,7 @@ class ReportControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "admin can access multiple_login report" do
-    skip "FIXME: ReportController#multiple_login (line 382) emits SQL incompatible with MySQL only_full_group_by mode (selects submissions.id without aggregation in a GROUP BY query)."
+    skip "LOW: ReportController#multiple_login (line 382) emits SQL incompatible with MySQL only_full_group_by mode (selects submissions.id without aggregation in a GROUP BY query). Admin-only cheat-detection report; rarely used. Wrap the bare submissions.id in MIN()/ANY_VALUE() or restructure the query."
     sign_in_as("admin", "admin")
     get "/report/multiple_login"
     assert_response :success

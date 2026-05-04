@@ -61,7 +61,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new renders when online_registration is on" do
-    skip "FIXME: users/new.html.haml form_for posts to action: 'register', but the users resource only routes :new — register/confirm/forget/retrieve_password actions exist on the controller but have no routes. Online registration is non-functional end-to-end. Add `post 'register'`, `get 'confirm'`, `get 'forget'`, `post 'retrieve_password'` to the users resource block."
+    skip "POSTPONED: users/new.html.haml form_for posts to action: 'register', but the users resource only routes :new — register/confirm/forget/retrieve_password actions exist on the controller but have no routes. Online registration is non-functional end-to-end. Whole register/confirm/forget flow needs a product decision before re-enabling; spec TBD. To restore: add `post 'register'`, `get 'confirm'`, `get 'forget'`, `post 'retrieve_password'` to the users resource block."
     with_online_registration("true")
     get new_user_path
     assert_response :success
@@ -77,7 +77,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "confirm with valid activation key activates an inactive user" do
-    skip "FIXME: confirm calls @user.valid? before save, but the john fixture (and others) lack email/other fields the User model considers required when not freshly registered. Need to either tighten the User model's validation contexts or update the fixture."
+    skip "POSTPONED: confirm calls @user.valid? before save, but the john fixture (and others) lack email/other fields the User model considers required when not freshly registered. Tied to the register/confirm flow which is itself postponed (see new-form skip). Fix when the register flow is reactivated."
     user = users(:john)
     user.update_columns(activated: false)
     key = user.activation_key
