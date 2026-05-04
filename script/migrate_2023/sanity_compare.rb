@@ -17,6 +17,7 @@
 # Older baselines without grader_comment fall back to "score_mismatch".
 
 require 'json'
+require 'csv'
 
 INPUT_PATH = File.expand_path('sanity_baseline.json', __dir__)
 TOLERANCE  = (ENV['TOLERANCE'] || '0.01').to_f
@@ -209,3 +210,29 @@ File.write(report_path, JSON.pretty_generate({
 }))
 puts ''
 puts "Report saved to: #{report_path}"
+
+# Also write a CSV (one row per result) for spreadsheet review.
+csv_path = report_path.sub(/\.json\z/, '.csv')
+CSV.open(csv_path, 'w', write_headers: true, headers: %w[
+  sub_id problem_name kind user_id language_id classification
+  expected actual delta status baseline_comment current_comment
+]) do |csv|
+  results.each do |r|
+    e = r[:entry]
+    csv << [
+      e['sub_id'],
+      e['problem_name'],
+      e['kind'],
+      e['user_id'],
+      e['language_id'],
+      r[:classification].to_s,
+      e['expected_pct'],
+      r[:actual],
+      r[:delta]&.round(4),
+      r[:status],
+      e['baseline_grader_comment'],
+      r[:current_comment],
+    ]
+  end
+end
+puts "CSV saved to:    #{csv_path}"
