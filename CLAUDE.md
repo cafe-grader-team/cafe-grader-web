@@ -158,6 +158,10 @@ AuditLog.record!(auditable: @contest,                 # one manual row
 - Primary: `grader` — application data
 - Queue: `grader_queue` — Solid Queue tables (migrations in `db/queue_migrate/`)
 
+## Testing Notes
+
+- **System tests + Turbo login:** the login form (`_login_box.html.haml`) uses `form_with`, which submits via Turbo. Capybara's `click_on 'Login'` returns once the click event fires, *before* Turbo's async fetch lands and replaces the page. A bare `visit some_path` immediately after will race the login and end up on the wrong page. In the local `login` helper for any new system test, sync after the click (e.g. `assert_current_path list_main_path, wait: 5`) before doing anything else.
+
 ## Key Configuration
 
 - `config/worker.yml` — judge worker settings
@@ -169,6 +173,12 @@ AuditLog.record!(auditable: @contest,                 # one manual row
 
 - **Icons:** Use the custom `.mi` class (e.g., `<span class="mi">edit</span>`) to render Google Material Symbols. Do *not* use raw SVGs or standard `material-icons` classes, as `.mi` is deeply integrated and optimized via `my_custom.scss`.
 - **Tooltips & JavaScript UI:** Any element requiring Bootstrap JS (like `data-bs-toggle="tooltip"`) **MUST** be placed inside a parent container that possesses the `data-controller="init-ui-component"` Stimulus attribute. This guarantees the tooltip perfectly survives Hotwire/Turbo Frame reloads.
+- **Server-mutating clicks (Turbo Streams):** Any click that performs a server-side action (toggle, delete, bulk-action, rejudge, etc.) MUST use a `<form>`, never `link_to ..., data: {remote: true}`. The codebase disables Turbo's link-driving (`Turbo.session.drive = false` in `app/javascript/application.js`), so every mutating form must opt in explicitly with `form: {data: {turbo: true}}`. Two sub-patterns:
+  - **Flavor A (default) — `button_to` directly.** Use for one-shot actions where the URL/params are statically known. Example: dropdown bulk actions in `contests/show.html.haml`; the Rejudge button in `submissions/show.html.haml`. Pattern: `button_to "Label", path, class: 'btn ...', form: {class: 'd-inline', data: {turbo: true}}`.
+  - **Flavor B — hidden form + Stimulus controller.** Use only when many similar controls hit the same endpoint with different per-row params, or when the visible control isn't a `<button>` (e.g. a checkbox switch). One hidden `form_with` lives once on the page; visible controls have `data-action="<stim>#<method>"` and the Stimulus controller fills hidden fields and submits. Examples: per-problem switches on `problems/index.html.haml`, per-row do_user/do_problem actions on `contests/show.html.haml`.
+  - **Confirmations** use `'turbo-confirm': '...'` on the form's `data` (replaces the legacy `data-confirm`).
+  - **Response shape — toast feedback.** The standard response is `@toast = {title: '...', body: '...', type: :notice}` and `render 'turbo_toast'`. Rails falls back to the shared `app/views/application/turbo_toast.turbo_stream.haml`, which appends a Bootstrap toast to `#toast-area` via the `_toast` partial. Toast types: `:notice` (default), `:alert`, `:warning`. Avoid ad-hoc alert divs prepended to `#main-content` — that's the legacy `.js.haml` shape.
+- **Select2 in repeated forms:** When rendering the same `select_tag` (or `f.select`) in a loop — e.g. one form per role / group / role-panel — pass an explicit unique `id:`. Without it, Rails auto-generates `id="<name>"` for every iteration, the duplicate DOM ids are invalid HTML, and Select2 silently fails to wrap the second select while the first still works.
 - **Vertical Rhythm (Spacing):** When defining the structural gaps between major cards or column sections, strictly normalize on `.mb-4` (24px) to ensure perfect horizontal alignment and grid consistency across the Left and Right panes.
 - **Stateless Dismissals:** For transient, short-lived UI states (like dismissing an "Updated" notification badge during a contest), use lightweight, cookie-based JavaScript rather than storing read-states in the primary `grader` database.
 - **Admin Controls:** When creating buttons exposed only to administrators (e.g., manage, edit, delete), use the elevated, icon-based pill button pattern: `class="btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center"`. This should be paired with a Material Symbol inside (`<span class="mi">icon_name</span>`) and an active Bootstrap tooltip pointing out the action (`data-bs-toggle="tooltip" title="..."`).
