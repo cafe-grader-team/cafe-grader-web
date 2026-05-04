@@ -140,12 +140,21 @@ class UserAdminController < ApplicationController
     redirect_to action: 'index'
   end
 
+  # GET — renders the import form / result page. The form posts to
+  # do_import. (Currently no view in the codebase actually contains the
+  # upload form; only the result template exists. Added form would belong
+  # in app/views/user_admin/import.html.haml above the result section.)
   def import
-    if params[:file]==''
-      flash[:notice] = 'Error importing no file'
-      redirect_to action: 'index' and return
+  end
+
+  # POST — process an uploaded YAML file; render the import result.
+  def do_import
+    if params[:file].blank?
+      flash[:notice] = 'Error: no file uploaded'
+      redirect_to action: 'import' and return
     end
     import_from_file(params[:file])
+    render :import
   end
 
   # contest management

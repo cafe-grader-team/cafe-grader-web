@@ -227,6 +227,7 @@ Rails.application.routes.draw do
       match 'bulk_manage', via: [:get, :post]
       get 'bulk_mail'
       get 'import'
+      post 'do_import'
       get 'new_list'
       get 'admin'
       post 'admin_query'

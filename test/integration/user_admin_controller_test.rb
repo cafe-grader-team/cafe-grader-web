@@ -37,11 +37,16 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
 
   # --- Forms ---
 
-  test "admin can access import form" do
-    skip "FIXME: UserAdminController#import calls import_from_file unconditionally and raises TypeError when no file is uploaded. The form-rendering and file-handling logic should be separated."
+  test "admin can access import page" do
     sign_in_as("admin", "admin")
     get import_user_admin_index_path
     assert_response :success
+  end
+
+  test "do_import without a file redirects back to import" do
+    sign_in_as("admin", "admin")
+    post do_import_user_admin_index_path
+    assert_redirected_to action: "import"
   end
 
   test "admin can access mass mailing form" do
