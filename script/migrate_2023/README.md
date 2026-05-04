@@ -171,18 +171,31 @@ About 40 ev problems put their grader-side support files in `<ev>/lib/`:
 - A main `.cpp`/`.c` that calls into student code. Often `grader.cpp` but sometimes `<problem>_private.cpp` (pandemic), `<problem>libpriv.cpp` (househouse), `sockslib.cpp`, etc.
 - Stale or model-implementation files that are NOT compiled with the student's submission (e.g. blindwalk has `blindwalk.cpp` and `bwalk_graph.cpp` in lib/ but the legacy compile script only links `grader.cpp`).
 
-`ProblemImporter#read_cpp_extras` only globs `*.h` non-recursively from the root, and its main detection only matches the hardcoded list `[main.cpp, main_grader.cpp, grader.cpp]`. Both gaps are filled by `migrate_tasks_v2.rb#attach_lib_managers`, which uses **`script/compile`** as the source of truth:
+`ProblemImporter#read_cpp_extras` only globs `*.h` non-recursively from the root, and its main detection only matches the hardcoded list `[main.cpp, main_grader.cpp, grader.cpp]`. Both gaps are filled by `migrate_tasks_v2.rb#attach_managers_from_compile`, which uses **`script/compile`** as the source of truth.
 
-1. **Parse `script/compile`** to find every `/lib/<filename>` reference. These are the source files the legacy judge compiles alongside the student submission. Examples:
-   - blindwalk: `[grader.cpp]`
-   - pandemic: `[pandelib_private.cpp]`
-   - ioi10_quality: `[grader.c, grader.cpp]`
-2. **Attach all `.h`/`.hpp` files** from `lib/` (for the include path).
-3. **Attach `.c`/`.cpp` files only if listed by the compile script** (so blindwalk's stale `blindwalk.cpp` and `bwalk_graph.cpp` are excluded; pandemic's `pandelib_private.cpp` is included).
-4. **Override `dataset.main_filename`** to the compile-script-named source if it differs from what `read_cpp_extras` set. Also flips `Problem.compilation_type` to `with_managers`.
-5. **Skip** backups (`~`, `.bak`, `.org`, `.mod\d+`), already-attached files, and files whose basename stem matches the `REAL_CHECK_SCRIPT` target (those are checker source, not student-side).
+**Parsing rules** (`parse_compile_refs`): the regex captures `/judge/ev/<problem>/<subdir>(/<subdir>)*/<file.ext>` triples — handling four real variants:
 
-Run output shows `attached lib/ managers: <list>` and `set main_filename = '<file>' (from compile script)` per problem. Summary counters: `lib/ managers attached`, `main_filename set/changed`.
+| Variant | Example | Captured |
+|---|---|---|
+| Single subdir | `/judge/ev/blindwalk/lib/grader.cpp` | `(blindwalk, lib, grader.cpp)` |
+| `script/`-based | `/judge/ev/balkan11_decrypt/script/grader.cpp` | `(balkan11_decrypt, script, grader.cpp)` |
+| Cross-problem refs | `_s4` problem points at `/judge/ev/o63_jun17_malwarex/lib/grader.cpp` | `(o63_jun17_malwarex, lib, grader.cpp)` |
+| Nested subdirs | `/judge/ev/ioi95_wires/script/wirelib/wirelib.cpp` | `(ioi95_wires, script/wirelib, wirelib.cpp)` |
+
+Extension alternation is ordered LONGEST FIRST (`cpp\|cc\|hpp\|hxx\|hh\|c\|h`) so `grader.cpp` doesn't get captured as `grader.c`.
+
+**Attachment rules:**
+
+1. Each `(problem, subdir)` from compile becomes a directory to scan, resolved against `<ev_root>/<problem>/<subdir>`. Cross-problem refs hit the sibling problem's actual files.
+2. Falls back to `<self>/lib/` if compile has no refs and that dir exists.
+3. **Headers** (`.h .hpp .hxx .hh`) attached unconditionally (include path).
+4. **Source** files (`.c .cpp .cc`) attached only if listed in compile (avoids stale model code like blindwalk's `blindwalk.cpp` / `bwalk_graph.cpp`).
+5. Skip backups (`~`, `.bak`, `.org`, `.mod\d+`), already-attached files, and files whose stem matches the REAL_CHECK_SCRIPT target.
+6. **`dataset.main_filename`** set/overridden to the compile-referenced `.cpp`/`.c` (preferring `.cpp` if both exist).
+7. **`Problem.submission_filename`** defaults to `'student.cpp'` for the legacy ev convention (student source compiled as a separate translation unit alongside grader; `student.h` produces compilation_error since the file would be passed to g++ as a top-level translation unit).
+8. Cross-problem ref where the resolved path doesn't exist on disk → anomaly `compile_ref_path_missing` logged, no fatal failure.
+
+Run output: `attached managers: <list>` and `set main_filename = ...` per problem. Cross-problem refs show as `<other_problem>/<subdir>/<file>` so they stand out in the log.
 
 ### Patching already-migrated problems
 
@@ -255,6 +268,7 @@ Written append-mode to `migrate_anomalies.log`. Entries are timestamped, key=val
 | `missing_testcase_file` | `test_cases/N/` exists but `input-N.txt` or `answer-N.txt` is missing. Skipped, kept going. |
 | `cfg_run_block_incomplete` | A `run X do ... end` block in `all_tests.cfg` had `tests` but no `scores` (or vice versa). Affected testcases keep import-time defaults. |
 | `real_check_script_missing` | `REAL_CHECK_SCRIPT` named a target file that doesn't exist. Dataset gets `evaluation_type = custom_cafe` but no checker file. |
+| `compile_ref_path_missing` | `script/compile` references a `<problem>/<subdir>` path that doesn't exist on disk (e.g., a typo in a cross-problem reference). Skipped. |
 
 The end-of-run summary in `main` prints the path if any anomalies were logged. Clean it before a fresh test cycle:
 

@@ -257,60 +257,69 @@ def read_managers_from_ev(prob_ev_dir, ds, memory_limit: 512, time_limit: 1)
   attach_managers_from_compile(prob_ev_dir, ds)
 end
 
-# Parse the legacy script/compile for references to source/header files in the
-# problem's own subdirectories. The legacy convention puts manager code in
-# either lib/ (most problems) or script/ (a handful), and the compile command
-# is the source of truth for which files are linked alongside the student
-# submission.
+# Parse the legacy script/compile for references to source/header files in any
+# problem subdirectory — including:
+#   * single subdir (lib/, script/)              — most cases
+#   * nested subdir (script/wirelib/)            — ioi95_wires
+#   * cross-problem refs (/judge/ev/OTHER/lib/)  — malwarex_s4 family
 #
 # Returns:
-#   { source_refs: { 'lib' => ['grader.cpp'], ... },
-#     include_subdirs: ['lib', 'script'] }
+#   { sources: [{problem:, subdir:, filename:}, ...],
+#     include_dirs: [{problem:, subdir:}, ...] }
+#
+# Extension alternation is ordered LONGEST FIRST so 'cpp' matches before 'c'
+# (otherwise grader.cpp gets captured as 'grader.c' — past bug).
 def parse_compile_refs(prob_ev_dir)
   compile_path = prob_ev_dir + 'script' + 'compile'
-  return { source_refs: {}, include_subdirs: [] } unless compile_path.exist?
+  return { sources: [], include_dirs: [] } unless compile_path.exist?
   content = File.binread(compile_path)
 
-  # /judge/ev/<problem>/<subdir>/<filename.ext>
-  matches = content.scan(%r{/judge/ev/[\w.+-]+/(\w+)/([\w.+-]+\.(?:c|cpp|cc|h|hpp))}i)
-  source_refs = Hash.new { |h, k| h[k] = [] }
-  matches.each { |sub, fn| source_refs[sub] << fn }
-  source_refs.each_value(&:uniq!)
+  source_re = %r{/judge/ev/([\w.+-]+)/(\w+(?:/\w+)*)/([\w.+-]+\.(?:cpp|cc|hpp|hxx|hh|c|h))}i
+  sources = content.scan(source_re).map { |prob, sub, fn|
+    { problem: prob, subdir: sub, filename: fn }
+  }.uniq
 
-  include_subdirs = content.scan(%r{-I\s*/judge/ev/[\w.+-]+/(\w+)/?}i).flatten.uniq
+  include_re = %r{-I\s*/judge/ev/([\w.+-]+)/(\w+(?:/\w+)*)/?}i
+  include_dirs = content.scan(include_re).map { |prob, sub|
+    { problem: prob, subdir: sub }
+  }.uniq
 
-  { source_refs: source_refs, include_subdirs: include_subdirs }
+  { sources: sources, include_dirs: include_dirs }
 end
 
-# Attach helper files from the problem's manager subdirectories (lib/ or script/
-# or whatever the compile script references) and override main_filename when
-# the compile script names a non-standard main (e.g. pandemic uses
-# pandelib_private.cpp; ProblemImporter only looks for grader.cpp/main.cpp/
-# main_grader.cpp).
+# Attach helper files from the manager directories named by the compile script
+# (lib/, script/, nested subdirs, even another problem's directory) and override
+# main_filename when the compile script names a non-standard main.
 #
 # Decisions:
-#   * Manager subdir(s) come from script/compile (any path matching
-#     /judge/ev/<name>/<subdir>/<file>). Falls back to lib/ if it exists and
-#     the compile script doesn't reference any subdir.
-#   * Within each manager subdir:
-#     - .h / .hpp / .hxx / .hh files are attached (they're on the include path).
-#     - .c / .cpp / .cc files are attached only if listed in the compile script
-#       (avoids attaching stale model code that isn't linked).
-#   * Backups (~, .bak, .org, .mod\d*) and ELF binaries (filtered by extension)
-#     are skipped.
-#   * Files sharing a basename stem with the REAL_CHECK_SCRIPT target are
-#     skipped (those are checker source, not student-side).
+#   * Each (problem, subdir) tuple from the compile script becomes a directory
+#     to scan. Resolved against the actual filesystem path
+#     <ev_root>/<problem>/<subdir> — this lets the malwarex_s* family pick up
+#     o63_jun17_malwarex/lib/ correctly.
+#   * Falls back to <self>/lib/ if compile script has no refs and that dir exists.
+#   * Within each scanned directory:
+#     - .h / .hpp / .hxx / .hh attached (include path).
+#     - .c / .cpp / .cc attached only if listed in the compile script
+#       (avoids stale model code that isn't actually linked).
+#   * Backups (~, .bak, .org, .mod\d*) skipped.
+#   * Files sharing a basename stem with REAL_CHECK_SCRIPT's target are skipped
+#     (those are checker code).
 #   * main_filename is set/overridden to the compile-referenced .cpp (or .c).
+#   * submission_filename defaults to 'student.cpp' for the legacy ev convention
+#     (student source compiled as a separate translation unit alongside grader).
 def attach_managers_from_compile(prob_ev_dir, ds)
   parsed = parse_compile_refs(prob_ev_dir)
-  source_refs = parsed[:source_refs]
-  include_subdirs = parsed[:include_subdirs]
+  sources = parsed[:sources]
+  include_dirs = parsed[:include_dirs]
 
-  source_dirs = (source_refs.keys + include_subdirs).uniq
-  if source_dirs.empty? && (prob_ev_dir + 'lib').directory?
-    source_dirs = ['lib']    # backwards-compat for problems with lib/ but no compile-script ref
+  scan_dirs = (sources.map { |s| { problem: s[:problem], subdir: s[:subdir] } } +
+               include_dirs).uniq
+  if scan_dirs.empty? && (prob_ev_dir + 'lib').directory?
+    scan_dirs = [{ problem: prob_ev_dir.basename.to_s, subdir: 'lib' }]
   end
-  return if source_dirs.empty?
+  return if scan_dirs.empty?
+
+  ev_root = prob_ev_dir.parent
 
   ds.reload
   existing = ds.managers.map { |m| m.filename.to_s }
@@ -323,12 +332,21 @@ def attach_managers_from_compile(prob_ev_dir, ds)
   end
 
   attached = []
-  source_dirs.each do |subdir|
-    dir = prob_ev_dir + subdir
-    next unless dir.directory?
-    refs_in_dir = source_refs[subdir] || []
+  scan_dirs.each do |dir_ref|
+    fs_dir = ev_root + dir_ref[:problem] + dir_ref[:subdir]
+    unless fs_dir.directory?
+      log_anomaly('compile_ref_path_missing',
+                  problem: ds.problem.name,
+                  ref_problem: dir_ref[:problem],
+                  ref_subdir: dir_ref[:subdir],
+                  expected_path: fs_dir.to_s)
+      next
+    end
 
-    Dir["#{dir}/*"].sort.each do |fn|
+    refs_in_dir = sources.select { |s| s[:problem] == dir_ref[:problem] && s[:subdir] == dir_ref[:subdir] }
+                         .map { |s| s[:filename] }
+
+    Dir["#{fs_dir}/*"].sort.each do |fn|
       pn = Pathname.new(fn)
       next unless pn.file?
       basename = pn.basename.to_s
@@ -345,13 +363,16 @@ def attach_managers_from_compile(prob_ev_dir, ds)
 
       ds.managers.attach(io: File.open(pn), filename: basename)
       existing << basename
-      attached << "#{subdir}/#{basename}"
+      label = (dir_ref[:problem] == prob_ev_dir.basename.to_s) ?
+              "#{dir_ref[:subdir]}/#{basename}" :
+              "#{dir_ref[:problem]}/#{dir_ref[:subdir]}/#{basename}"
+      attached << label
     end
   end
 
-  all_refs = source_refs.values.flatten
-  inferred_main = all_refs.find { |f| f.end_with?('.cpp', '.cc') } ||
-                  all_refs.find { |f| f.end_with?('.c') }
+  all_filenames = sources.map { |s| s[:filename] }
+  inferred_main = all_filenames.find { |f| f.end_with?('.cpp', '.cc') } ||
+                  all_filenames.find { |f| f.end_with?('.c') }
   if inferred_main && ds.main_filename != inferred_main
     if ds.main_filename.present?
       puts "  override main_filename: '#{ds.main_filename}' -> '#{inferred_main}' (from compile script)"
@@ -360,7 +381,7 @@ def attach_managers_from_compile(prob_ev_dir, ds)
     end
     ds.update_columns(main_filename: inferred_main)
     problem_updates = { compilation_type: 'with_managers' }
-    problem_updates[:submission_filename] = 'student.h' if ds.problem.submission_filename.blank?
+    problem_updates[:submission_filename] = 'student.cpp' if ds.problem.submission_filename.blank?
     ds.problem.update(problem_updates)
     STATS[:lib_main_filename_set] += 1
   end
