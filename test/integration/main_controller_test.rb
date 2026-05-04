@@ -47,4 +47,30 @@ class MainControllerTest < ActionDispatch::IntegrationTest
     get help_main_path
     assert_response :success
   end
+
+  # --- Dead actions (no routes) ---
+  #
+  # MainController defines `source`, `load_output`, `confirm_contest_start`,
+  # and `error` actions, but none are routed in config/routes.rb. The
+  # singular `resource :main` block only routes login/logout/list/help/submit
+  # /submission/prob_grop. These actions are therefore unreachable; either
+  # add routes or remove the actions.
+
+  test "main#source is not routed (DEAD action)" do
+    assert_raises(ActionController::UrlGenerationError) do
+      url_for(controller: "main", action: "source", only_path: true)
+    end
+  end
+
+  test "main#load_output is not routed (DEAD action)" do
+    assert_raises(ActionController::UrlGenerationError) do
+      url_for(controller: "main", action: "load_output", only_path: true)
+    end
+  end
+
+  test "main#confirm_contest_start is not routed (DEAD action)" do
+    assert_raises(ActionController::UrlGenerationError) do
+      url_for(controller: "main", action: "confirm_contest_start", only_path: true)
+    end
+  end
 end

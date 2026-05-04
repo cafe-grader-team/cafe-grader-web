@@ -59,4 +59,71 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
       delete contest_path(contest)
     end
   end
+
+  # --- Cross-permission ---
+
+  test "group editor (mary) can view their contest" do
+    sign_in_as("mary", "mary")
+    get contest_path(contests(:contest_a))
+    assert_response :success
+  end
+
+  test "group editor (mary) cannot view a contest they don't own" do
+    sign_in_as("mary", "mary")
+    get contest_path(contests(:contest_b))
+    assert_response :redirect
+  end
+
+  # --- Member actions ---
+
+  test "admin can clone a contest" do
+    sign_in_as("admin", "admin")
+    assert_difference "Contest.count", +1 do
+      get clone_contest_path(contests(:contest_a))
+    end
+  end
+
+  test "admin can view contest score report" do
+    sign_in_as("admin", "admin")
+    get view_contest_path(contests(:contest_a))
+    assert_response :success
+  end
+
+  test "admin can query contest scores as JSON" do
+    sign_in_as("admin", "admin")
+    post view_query_contest_path(contests(:contest_a))
+    assert_response :success
+  end
+
+  test "admin can query contest users as JSON" do
+    sign_in_as("admin", "admin")
+    post show_users_query_contest_path(contests(:contest_a))
+    assert_response :success
+  end
+
+  test "admin can query contest problems as JSON" do
+    sign_in_as("admin", "admin")
+    post show_problems_query_contest_path(contests(:contest_a))
+    assert_response :success
+  end
+
+  # --- Collection actions ---
+
+  test "admin can change system mode" do
+    sign_in_as("admin", "admin")
+    post set_system_mode_contests_path, params: { mode: "standard" }
+    assert_response :redirect
+  end
+
+  test "non-admin cannot change system mode" do
+    sign_in_as("mary", "mary")
+    post set_system_mode_contests_path, params: { mode: "standard" }
+    assert_response :redirect
+  end
+
+  test "user_check_in returns JSON heartbeat" do
+    sign_in_as("james", "morning")
+    post user_check_in_contests_path
+    assert_response :success
+  end
 end

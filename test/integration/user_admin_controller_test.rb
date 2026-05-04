@@ -1,6 +1,67 @@
 require "test_helper"
 
 class UserAdminControllerTest < ActionDispatch::IntegrationTest
+  # --- Index_query (Datatable JSON) ---
+
+  test "admin can query user list as JSON" do
+    sign_in_as("admin", "admin")
+    post index_query_user_admin_index_path, as: :json
+    assert_response :success
+  end
+
+  # --- Stat ---
+
+  test "admin can view user stat" do
+    sign_in_as("admin", "admin")
+    get stat_user_admin_path(users(:john))
+    assert_response :success
+  end
+
+  # --- Toggle enable/activate ---
+
+  test "admin can toggle user enable" do
+    sign_in_as("admin", "admin")
+    u = users(:john)
+    was = u.enabled
+    get toggle_enable_user_admin_path(u), as: :js
+    assert_equal !was, u.reload.enabled
+  end
+
+  test "admin can clear last_ip" do
+    sign_in_as("admin", "admin")
+    u = users(:john)
+    u.update_column(:last_ip, "deadbeef")
+    get clear_last_ip_user_admin_path(u)
+    assert_nil u.reload.last_ip
+  end
+
+  # --- Forms ---
+
+  test "admin can access import form" do
+    skip "FIXME: UserAdminController#import calls import_from_file unconditionally and raises TypeError when no file is uploaded. The form-rendering and file-handling logic should be separated."
+    sign_in_as("admin", "admin")
+    get import_user_admin_index_path
+    assert_response :success
+  end
+
+  test "admin can access mass mailing form" do
+    sign_in_as("admin", "admin")
+    get mass_mailing_user_admin_index_path
+    assert_response :success
+  end
+
+  test "admin can access bulk_manage form (GET)" do
+    sign_in_as("admin", "admin")
+    get bulk_manage_user_admin_index_path
+    assert_response :success
+  end
+
+  test "admin can access active page" do
+    sign_in_as("admin", "admin")
+    get active_user_admin_index_path
+    assert_response :success
+  end
+
   # --- Authorization ---
 
   test "unauthenticated user is redirected" do
