@@ -35,28 +35,42 @@ module Llm
 
     def messages_array
       msgs = [{role: 'system', content: assemble_system_prompt}]
+      msgs << {role: 'user', content: scenario_message}
       msgs.concat(prior_turn_messages)
-      msgs << {role: 'user', content: '(begin the interview)'} if prior_turn_messages.empty?
       msgs
+    end
+
+    def scenario_message
+      @problem.description.to_s.strip.presence || '(begin the interview)'
     end
 
     def assemble_system_prompt
       prompt    = @problem.viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
       grounding = @problem.viva_grounding_tags.map(&:grounding_payload).reject(&:blank?).join("\n\n---\n\n")
+      has_scenario = @problem.description.to_s.strip.present?
 
       sections = []
       sections << prompt unless prompt.blank?
       sections << "## Grounding Material\n\n#{grounding}" unless grounding.blank?
+      if has_scenario
+        sections << 'The first user message contains the scenario or list of scenarios for this exam. ' \
+                    'If multiple scenarios are listed, choose one (per any selection rule above; otherwise pick at random). ' \
+                    'Repeat the chosen scenario back to the student verbatim, then begin the viva based on it.'
+      end
       sections << "When you are satisfied you have enough signal to grade the student, append exactly `#{DONE_SENTINEL}` at the very end of your final message to end the interview."
       sections.join("\n\n")
     end
 
+    # OpenAI chat-completions only accepts system/user/assistant/tool roles, so we
+    # remap our DB role enum (which keeps `student` for transcript display) when
+    # building the wire message list.
     def prior_turn_messages
       @prior_turn_messages ||= @submission.viva_turns.ordered.filter_map do |t|
         next if t.id == @turn&.id
         next if t.processing? || t.error?
         next if t.system?
-        {role: t.role, content: t.content.to_s}
+        wire_role = t.student? ? 'user' : t.role
+        {role: wire_role, content: t.content.to_s}
       end
     end
 

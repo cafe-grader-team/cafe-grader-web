@@ -23,17 +23,30 @@ module Llm
     def prepare_data
       {
         model:      @model,
-        messages:   [
-          {role: 'system', content: grading_system_prompt},
-          {role: 'user',   content: transcript_payload}
-        ],
+        messages:   messages_array,
         max_tokens: MAX_TOKENS
       }
+    end
+
+    def messages_array
+      [
+        {role: 'system', content: grading_system_prompt},
+        {role: 'user',   content: scenario_message},
+        {role: 'user',   content: transcript_payload}
+      ]
+    end
+
+    def scenario_message
+      @problem.description.to_s.strip.presence || '(no scenario provided)'
     end
 
     def grading_system_prompt
       <<~PROMPT
         You are a strict but fair grader for an oral programming exam. Evaluate the student's understanding based on the interview transcript.
+
+        You will receive two user messages, in this order:
+          1. The scenario the student was interviewed on.
+          2. The interview transcript to grade.
 
         Respond ONLY with valid JSON matching this schema (no markdown fences, no prose):
         {
@@ -57,9 +70,14 @@ module Llm
       [prompt, grounding].reject(&:blank?).join("\n\n")
     end
 
+    # Student turns are remapped from the DB role enum to the OpenAI wire role,
+    # so the transcript reads USER:/ASSISTANT: rather than mixing in STUDENT:.
     def transcript_payload
       turns = @submission.viva_turns.ordered.reject { |t| t.system? || t.processing? || t.error? }
-      lines = turns.map { |t| "#{t.role.upcase}: #{t.content}" }
+      lines = turns.map do |t|
+        wire_role = t.student? ? 'user' : t.role
+        "#{wire_role.upcase}: #{t.content}"
+      end
       "Transcript:\n\n#{lines.join("\n\n")}"
     end
 

@@ -69,13 +69,18 @@ Each turn of the viva (and the final grading call) builds a chat-completion requ
 ]
 ```
 
-The **system prompt** is composed of three sections, in order, separated by blank lines. Empty sections are omitted.
+The **system prompt** is composed of these sections, in order, separated by blank lines. Empty sections are omitted.
 
 ```
 <llm_prompt tags joined>
 
 ## Grounding Material
 <viva_grounding tags joined, including extracted PDF text>
+
+The first user message contains the scenario or list of scenarios for this exam.
+If multiple scenarios are listed, choose one (per any selection rule above; otherwise pick at random).
+Repeat the chosen scenario back to the student verbatim, then begin the viva based on it.
+[only included when problem.description is non-blank]
 
 When you are satisfied you have enough signal to grade the student,
 append exactly `[[VIVA_DONE]]` at the very end of your final message
@@ -85,8 +90,9 @@ to end the interview.
 A few properties of this design worth noting:
 
 - **The scenario is a user message, not a system rule.** This keeps "what to interview about" cleanly separated from "how to interview." It also lets `llm_prompt` instructions reference the user message naturally (*"the first user message will list the scenarios; pick one"*).
+- **The DB role enum is `student`; on the wire we send `user`.** `VivaTurn` rows store `role: student` so the transcript view can render student bubbles, but every message handed to the LLM remaps `student → user` to conform to the OpenAI chat-completions role schema.
 - **No interview state lives outside the database.** The transcript of `VivaTurn` rows is the source of truth; every LLM call is rebuilt from the system prompt + first-user(description) + the persisted turns. There is no hidden conversation state on the provider side.
-- **The grader sees the same scenario as the interviewer.** The grading call uses the same system-prompt assembly so the rubric is applied to the same scenario the student was actually asked about.
+- **The grader sees the same scenario as the interviewer.** The grading call sends three messages: a system prompt with rubric/grounding, a first user message containing the scenario, and a second user message containing the transcript. The grader's system prompt only describes this layout; it does not include the "repeat the scenario back" instruction (the grader does not converse).
 
 ---
 
