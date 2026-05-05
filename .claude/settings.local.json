@@ -32,12 +32,15 @@
       "Bash(grep:*)",
       "Bash(unzip:*)",
       "Bash(find:*)",
-      "Bash(python3 *)",
-      "Bash(bin/rails assets:precompile)",
-      "Bash(ruby -Itest /tmp/rejudge_debug.rb)",
-      "Bash(awk ' *)",
-      "Bash(git ls-remote *)",
-      "Bash(bin/rails test:system)"
+      "Bash(awk '/create_table \"contests\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"problems\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"grader_configurations\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"datasets\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"testcases\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"users\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"contests_problems\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(awk '/create_table \"contests_users\"/,/^  end/' /home/dae/cafe-grader/web/db/schema.rb)",
+      "Bash(bin/rails db:migrate:status)"
     ]
   }
 }

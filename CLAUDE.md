@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Cafe-Grader is an online programming contest and assignment grading platform (used at Chulalongkorn University). Students submit code, which is automatically compiled and evaluated against test cases. Instructors manage problems, contests, groups, and view reports.
 
+## Version Control
+
+Local VCS is **Mercurial (hg)**, mirrored to **GitHub** via the **hg-git** extension. Use `hg` for all local operations (`hg status`, `hg commit`, `hg diff`, `hg push`). Issues and PRs live on GitHub — use the `gh` CLI for those (e.g., `gh issue close 51`).
+
 ## Tech Stack
 
 - **Ruby 3.4.4, Rails 8.0.0** (with `load_defaults 7.0`)
