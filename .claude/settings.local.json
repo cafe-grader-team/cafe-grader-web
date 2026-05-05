@@ -36,7 +36,8 @@
       "Bash(bin/rails assets:precompile)",
       "Bash(ruby -Itest /tmp/rejudge_debug.rb)",
       "Bash(awk ' *)",
-      "Bash(git ls-remote *)"
+      "Bash(git ls-remote *)",
+      "Bash(bin/rails test:system)"
     ]
   }
 }
