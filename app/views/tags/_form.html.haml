@@ -3,7 +3,7 @@
   = f.input :name
   = f.input :description, input_html: {style: 'height: 7rem', class: 'mb-4'}
   = f.input :public, wrapper: :horizontal_boolean
-  = f.input :kind, label: 'Type', collection: Tag.kinds.keys.map { |key| [I18n.t("activerecord.attributes.tag.kinds.#{key}"), key] }, include_blank: false, wrapper: :horizontal_form, input_html: { style: 'max-width: 300px;' }
+  = f.input :kind, label: 'Type', collection: Tag.kinds.keys.map { |key| [I18n.t("activerecord.attributes.tag.kinds.#{key}"), key] }, include_blank: false, wrapper: :horizontal_select, input_html: { style: 'max-width: 300px;' }
   = f.input :color, as: :color, input_html: {class: 'form-control-color', style: 'max-width: 100px;'}
   -# kind specifc params
   - if @tag.kind == 'llm_prompt'

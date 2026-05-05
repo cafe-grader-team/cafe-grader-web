@@ -166,6 +166,7 @@ Cheers!
           normal: Normal tag
           topic: Topic tag
           llm_prompt: Prompt For LLM Assist
+          viva_grounding: Viva Exam Grounding
       evaluation:
         results:
           waiting: Judging
