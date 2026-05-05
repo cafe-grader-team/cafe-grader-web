@@ -6,6 +6,7 @@ class AnnouncementsTest < ApplicationSystemTestCase
     fill_in "Login", with: "admin"
     fill_in "Password", with: "admin"
     click_on "Login"
+    assert_current_path list_main_path, wait: 5
 
     assert_text "MAIN"
     assert_text "Submission"
@@ -14,9 +15,9 @@ class AnnouncementsTest < ApplicationSystemTestCase
       click_on "Manage"
       click_on "Announcements"
     end
-    assert_text "+ Add announcement"
+    assert_text "Add Announcement"
 
-    click_on "Add announcement", match: :first
+    click_on "Add Announcement", match: :first
 
     fill_in 'Title', with: 'test'
     fill_in 'Body', with: 'test body 12345'
@@ -34,6 +35,7 @@ class AnnouncementsTest < ApplicationSystemTestCase
     fill_in "Login", with: "admin"
     fill_in "Password", with: "admin"
     click_on "Login"
+    assert_current_path list_main_path, wait: 5
 
     visit edit_announcement_path(announcements(:one))
 

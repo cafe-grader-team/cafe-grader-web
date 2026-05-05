@@ -11,7 +11,7 @@ class SubmissionsTest < ApplicationSystemTestCase
     #admin can add new submission regardless of availability of the problem
     login('admin','admin')
     visit direct_edit_problem_submissions_path(problems(:prob_sub))
-    assert_text 'Live submit'
+    assert_text 'Latest Submission Status'
     find('.ace_text-input',visible: false).set "test code (will cause compilation error)"
     click_on 'Submit'
     page.accept_confirm
@@ -21,7 +21,7 @@ class SubmissionsTest < ApplicationSystemTestCase
     #normal user can submit available problem
     login('john','hello')
     visit direct_edit_problem_submissions_path(problems(:prob_add))
-    assert_text 'Live submit'
+    assert_text 'Latest Submission Status'
     find('.ace_text-input',visible: false).set "test code (will cause compilation error)"
     click_on 'Submit'
     page.accept_confirm
@@ -40,7 +40,7 @@ class SubmissionsTest < ApplicationSystemTestCase
     #view own submission
     within 'header' do
       click_on 'Submission'
-      click_on 'View'
+      click_link 'View'
     end
     click_on 'Go'
 
@@ -123,5 +123,6 @@ class SubmissionsTest < ApplicationSystemTestCase
     fill_in "Login", with: username
     fill_in "Password", with: password
     click_on "Login"
+    assert_current_path list_main_path, wait: 5
   end
 end

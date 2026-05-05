@@ -131,6 +131,7 @@ class ProblemsManageTest < ApplicationSystemTestCase
     fill_in "Login", with: username
     fill_in "Password", with: password
     click_on "Login"
+    assert_current_path list_main_path, wait: 5
   end
 
   def select2_select(text, from:)

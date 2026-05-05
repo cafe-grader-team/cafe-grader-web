@@ -15,9 +15,9 @@ class UsersTest < ApplicationSystemTestCase
     end
 
     assert_text "Users"
-    assert_text "New user"
+    assert_text "Add User"
 
-    click_on "New user", match: :first
+    click_on "Add User", match: :first
     fill_in 'Login', with: 'test1'
     fill_in 'Full name', with: 'test1 McTestface'
     fill_in 'e-mail', with: 'a@a.com'
@@ -36,7 +36,7 @@ class UsersTest < ApplicationSystemTestCase
 
     fill_in 'Alias', with: 'hahaha'
     fill_in 'Remark', with: 'section 2'
-    click_on 'Update User'
+    click_on 'Save Changes'
 
     assert_text 'section 2'
   end
@@ -48,7 +48,7 @@ class UsersTest < ApplicationSystemTestCase
       click_on 'Users', match: :first
     end
 
-    click_on 'New list of users', match: :first
+    click_on 'Import Users', match: :first
     find(:css, 'textarea').fill_in with:"abc1,Boaty McBoatface,abcdef,alias1,remark1,\nabc2,Boaty2 McSecond,acbdef123,aias2,remark2"
     click_on 'Create following users'
 
@@ -63,7 +63,7 @@ class UsersTest < ApplicationSystemTestCase
       click_on 'Users', match: :first
     end
 
-    click_on "View administrator"
+    click_on "Admins"
     fill_in 'login', with: 'john'
     click_on "Grant"
 
@@ -98,10 +98,10 @@ class UsersTest < ApplicationSystemTestCase
     login 'john', 'hello'
     visit profile_users_path
 
-    fill_in 'password', with: newpassword
-    fill_in 'password_confirmation', with: newpassword
+    fill_in 'user_password', with: newpassword
+    fill_in 'user_password_confirmation', with: newpassword
 
-    click_on 'Edit'
+    find('button[type="submit"]').click
 
     visit logout_main_path
     login 'john', 'hello'
@@ -117,5 +117,6 @@ class UsersTest < ApplicationSystemTestCase
     fill_in "Login", with: username
     fill_in "Password", with: password
     click_on "Login"
+    assert_current_path list_main_path, wait: 5
   end
 end
