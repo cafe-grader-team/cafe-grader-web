@@ -21,6 +21,7 @@ module Auditable
 
   def write_audit!(action)
     return if Current.audit_disabled
+    return unless AuditLog.table_exists?
     diff = build_audit_diff(action)
     return if action == "update" && diff.empty?
 
