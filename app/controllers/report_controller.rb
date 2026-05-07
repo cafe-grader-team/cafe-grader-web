@@ -195,7 +195,7 @@ class ReportController < ApplicationController
 
     jobs_scope.each do |job|
       arguments = job.arguments['arguments']
-      if job.class_name.safe_constantize&.<(Llm::SubmissionAssistJob) && arguments.present?
+      if job.class_name.safe_constantize&.<(Llm::RequestJob) && arguments.present?
         gid_string = arguments.first.values.last
         if gid_string.is_a?(String)
           job_submission_map[job.id] = gid_string
@@ -212,7 +212,7 @@ class ReportController < ApplicationController
       gid_string = job_submission_map[job.id]
       # Pass the pre-loaded submission (or nil) to the presenter
       submission = gid_string ? submissions_hash[gid_string] : nil
-      SubmissionAssistJobPresenter.new(job, submission)
+      Llm::RequestJobPresenter.new(job, submission)
     end
 
     # @jobs[i] is now a presenter object of the job

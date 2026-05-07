@@ -75,17 +75,26 @@ class GradersController < ApplicationController
   end
 
   # solid_queue dashboard
+  QUEUE_STATUSES = %w[all pending failed finished].freeze
+
   def queues
+    @status = QUEUE_STATUSES.include?(params[:status]) ? params[:status] : 'all'
+    @statuses = QUEUE_STATUSES
   end
 
   def queues_query
     jobs_scope = SolidQueue::Job.all
-    if params[:status].present?
-      jobs_scope = jobs_scope
+    case params[:status]
+    when 'failed'
+      jobs_scope = jobs_scope.failed
+    when 'finished'
+      jobs_scope = jobs_scope.finished
+    when 'pending'
+      jobs_scope = jobs_scope.where(finished_at: nil).where.missing(:failed_execution)
     end
 
-    raw_jobs = jobs_scope.order(created_at: :desc).first(500)
-    @jobs = raw_jobs.map { |job| SubmissionAssistJobPresenter.new(job) }
+    raw_jobs = jobs_scope.includes(:failed_execution).order(created_at: :desc).first(500)
+    @jobs = raw_jobs.map { |job| Llm::RequestJobPresenter.new(job) }
   end
 
   private

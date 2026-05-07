@@ -1,5 +1,5 @@
 module Llm
-  class VivaGradeAssistJob < SubmissionAssistJob
+  class VivaGradeAssistJob < RequestJob
     private
 
     # The concrete viva grade service class is configured in config/llm.yml via

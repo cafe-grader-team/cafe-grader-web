@@ -2,7 +2,7 @@ module Llm
   # Abstract base: grades a completed viva transcript against the problem's rubric
   # and writes VivaGrade + updates Submission. Provider-agnostic; speaks OpenAI-compatible
   # chat-completion shape. Deployment branches provide a concrete #execute_call subclass.
-  class VivaGradeAssist < SubmissionAssist
+  class VivaGradeAssist < Request
     MAX_TOKENS    = 2048
     DEFAULT_MODEL = nil
 

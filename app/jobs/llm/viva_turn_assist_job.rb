@@ -1,5 +1,5 @@
 module Llm
-  class VivaTurnAssistJob < SubmissionAssistJob
+  class VivaTurnAssistJob < RequestJob
     private
 
     # The concrete viva turn service class is configured in config/llm.yml via

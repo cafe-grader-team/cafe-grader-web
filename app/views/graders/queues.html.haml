@@ -1,9 +1,14 @@
 %h1 Solid Queue (Latest jobs)
 
+.btn-group.mb-3{role: 'group', 'aria-label': 'Status filter'}
+  - @statuses.each do |s|
+    = link_to s.titleize, queues_grader_processes_path(status: (s == 'all' ? nil : s)),
+      class: "btn btn-sm btn-outline-secondary #{'active' if @status == s}"
+
 %div{ data: { turbo: true,
       controller: 'datatables--init init-ui-component',
       'datatables--init-config-name-value': 'solidQueueJob',
-      'datatables--init-ajax-url-value': queues_query_grader_processes_path
+      'datatables--init-ajax-url-value': queues_query_grader_processes_path(status: @status)
     }
   }
   %table#table.table.table-hover

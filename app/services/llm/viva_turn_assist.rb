@@ -5,7 +5,7 @@ module Llm
   #
   # Deployment-specific branches must provide a concrete subclass that implements #execute_call
   # (e.g. Llm::VivaTurnGenieAssist on the chula_cp branch). See Llm::VivaTurnAssistJob for wiring.
-  class VivaTurnAssist < SubmissionAssist
+  class VivaTurnAssist < Request
     DONE_SENTINEL = '[[VIVA_DONE]]'.freeze
     MAX_TOKENS    = 2048
     DEFAULT_MODEL = nil
