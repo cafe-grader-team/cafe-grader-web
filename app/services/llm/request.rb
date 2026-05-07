@@ -91,6 +91,24 @@ module Llm
       "#{exception.class.name}: #{exception.message}"
     end
 
+    # Collapse consecutive messages of the same role into one (contents joined
+    # with a blank line). OpenAI-compatible chat-completion endpoints generally
+    # expect alternating user/assistant turns after the system message; some
+    # downstream models (notably Anthropic Claude) reject consecutive same-role
+    # messages outright. Subclasses that build a string-content messages array
+    # (the viva subclasses) should call this before returning. Messages whose
+    # content isn't a String (e.g., the multimodal content arrays used by
+    # CommentAssist) are left untouched — joining those with "\n\n" would
+    # corrupt the wire shape.
+    def consolidate_role_runs(messages)
+      messages.chunk_while do |a, b|
+        a[:role] == b[:role] && a[:content].is_a?(String) && b[:content].is_a?(String)
+      end.map do |group|
+        next group.first if group.size == 1
+        {role: group.first[:role], content: group.map { |m| m[:content] }.join("\n\n")}
+      end
+    end
+
     def prepare_data
       raise NotImplementedError, "#{self.class} must implement #prepare_data"
     end

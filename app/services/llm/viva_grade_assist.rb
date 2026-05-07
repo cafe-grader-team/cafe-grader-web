@@ -29,11 +29,12 @@ module Llm
     end
 
     def messages_array
-      [
+      msgs = [
         {role: 'system', content: grading_system_prompt},
         {role: 'user',   content: scenario_message},
         {role: 'user',   content: transcript_payload}
       ]
+      consolidate_role_runs(msgs)
     end
 
     def scenario_message
@@ -44,9 +45,7 @@ module Llm
       <<~PROMPT
         You are a strict but fair grader for an oral programming exam. Evaluate the student's understanding based on the interview transcript.
 
-        You will receive two user messages, in this order:
-          1. The scenario the student was interviewed on.
-          2. The interview transcript to grade.
+        The user message contains the scenario the student was interviewed on (at the top), followed by the interview transcript to grade (below).
 
         Respond ONLY with valid JSON matching this schema (no markdown fences, no prose):
         {
@@ -66,6 +65,8 @@ module Llm
 
     def assemble_context
       prompt    = @problem.viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
+      raise RuntimeError, "There is no llm_prompt tag attached to problem '#{@problem.name}' — viva needs a prompt tag" if prompt.blank?
+
       grounding = @problem.viva_grounding_tags.map(&:grounding_payload).reject(&:blank?).join("\n\n---\n\n")
       [prompt, grounding].reject(&:blank?).join("\n\n")
     end

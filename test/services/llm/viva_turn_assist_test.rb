@@ -10,6 +10,13 @@ class Llm::VivaTurnAssistTest < ActiveSupport::TestCase
     @problem = @submission.problem
     # update_columns bypasses the after_save PDF-generation callback that we don't want firing in unit tests
     @problem.update_columns(description: "Scenario A\nScenario B")
+    # Viva requires at least one llm_prompt tag on the problem; assemble_system_prompt
+    # raises without it. Content doesn't matter for these tests.
+    prompt_tag = Tag.find_or_create_by!(name: 'test_llm_prompt') do |t|
+      t.kind = :llm_prompt
+      t.params = 'You are a viva interviewer.'
+    end
+    @problem.tags << prompt_tag unless @problem.tags.include?(prompt_tag)
     @assist = Llm::VivaTurnAssist.new(submission: @submission, turn: @placeholder)
   end
 
@@ -30,13 +37,14 @@ class Llm::VivaTurnAssistTest < ActiveSupport::TestCase
 
   test "student turns are remapped to role: user on the wire" do
     student = @submission.viva_turns.create!(role: :student, status: :ok, content: 'my answer')
-    assistant = @submission.viva_turns.create!(role: :assistant, status: :ok, content: 'next question')
+    @submission.viva_turns.create!(role: :assistant, status: :ok, content: 'next question')
     msgs = @assist.send(:messages_array)
 
-    student_msg = msgs.find { |m| m[:content] == 'my answer' }
-    assistant_msg = msgs.find { |m| m[:content] == 'next question' }
-    assert_equal 'user',      student_msg[:role]
-    assert_equal 'assistant', assistant_msg[:role]
+    # consolidate_role_runs merges the consecutive user turns (scenario + answer)
+    user_msg      = msgs.find { |m| m[:role] == 'user' && m[:content].include?('my answer') }
+    assistant_msg = msgs.find { |m| m[:role] == 'assistant' && m[:content] == 'next question' }
+    assert user_msg,      'expected a user message containing "my answer"'
+    assert assistant_msg, 'expected the assistant message'
     # sanity: DB row still has student role
     assert student.student?
   end

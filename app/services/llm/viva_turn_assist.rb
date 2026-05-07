@@ -37,7 +37,7 @@ module Llm
       msgs = [{role: 'system', content: assemble_system_prompt}]
       msgs << {role: 'user', content: scenario_message}
       msgs.concat(prior_turn_messages)
-      msgs
+      consolidate_role_runs(msgs)
     end
 
     def scenario_message
@@ -46,11 +46,13 @@ module Llm
 
     def assemble_system_prompt
       prompt    = @problem.viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
+      raise RuntimeError, "There is no llm_prompt tag attached to problem '#{@problem.name}' — viva needs a prompt tag" if prompt.blank?
+
       grounding = @problem.viva_grounding_tags.map(&:grounding_payload).reject(&:blank?).join("\n\n---\n\n")
       has_scenario = @problem.description.to_s.strip.present?
 
       sections = []
-      sections << prompt unless prompt.blank?
+      sections << prompt
       sections << "## Grounding Material\n\n#{grounding}" unless grounding.blank?
       if has_scenario
         sections << 'The first user message contains the scenario or list of scenarios for this exam. ' \
