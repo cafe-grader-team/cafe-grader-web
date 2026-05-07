@@ -159,16 +159,13 @@ class Problem < ApplicationRecord
     tags.where(kind: :llm_prompt)
   end
 
-  # Required-section markers a viva problem's llm_prompt + description must
-  # contain. Keeping this as a constant so it's easy to relax / extend without
-  # rewriting the validation method.
+  # Required-section markers a viva problem's llm_prompt content must
+  # contain. Keeping this as a constant so it's easy to relax / extend
+  # without rewriting the validation method. The scenario itself is
+  # delivered to the model via the attached statement PDF, not via
+  # problem.description, so we don't validate the description text.
   VIVA_PROMPT_REQUIRED_SECTIONS = {
     /^#+\s*Rubric\b/im => "an llm_prompt section starting with '# Rubric' (or ##/###)"
-  }.freeze
-  VIVA_DESCRIPTION_REQUIRED_FIELDS = {
-    /Topic\s*:/i                                  => "a 'Topic:' line",
-    /Max\s+Turns?\s*:/i                           => "a 'Max Turns:' line",
-    /(Target\s+Difficulty|Difficulty)\s*:/i       => "a 'Target Difficulty:' line"
   }.freeze
 
   # Returns an array of human-readable error strings if the problem isn't
@@ -186,15 +183,6 @@ class Problem < ApplicationRecord
     else
       VIVA_PROMPT_REQUIRED_SECTIONS.each do |pattern, label|
         errors << "llm_prompt is missing #{label}" unless prompt =~ pattern
-      end
-    end
-
-    desc = description.to_s
-    if desc.blank?
-      errors << "Problem description (the scenario) is blank"
-    else
-      VIVA_DESCRIPTION_REQUIRED_FIELDS.each do |pattern, label|
-        errors << "Scenario is missing #{label}" unless desc =~ pattern
       end
     end
 
