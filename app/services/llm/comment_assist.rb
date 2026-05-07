@@ -9,6 +9,11 @@ module Llm
   class CommentAssist < Request
     DEFAULT_MODEL = nil
 
+    # Score-penalty deducted from Submission#points when a student requests LLM help.
+    # This is a pedagogical "cost" (paid in score), not an API/dollar cost.
+    # Subclasses may override per-deployment.
+    ASSIST_COST = 10
+
     def initialize(submission:, comment:, model: nil, **args)
       super(submission: submission, **args)
       @record = comment
@@ -32,8 +37,7 @@ module Llm
       @parsed_body = JSON.parse(response.body)
       validate_response_body!
 
-      usage = @parsed_body['usage'] || {}
-      @record.cost         = compute_cost(usage)
+      @record.cost         = self.class::ASSIST_COST
       @record.llm_response = response.body
       @record.status       = 'ok'
       @record.update!(parse_response)
@@ -47,11 +51,6 @@ module Llm
       @record.body += "<div class='alert alert-danger'> <h5>Request failed</h5> #{@error} </div>"
       @record.status = 'error'
       @record.save!
-    end
-
-    # Subclasses override to reflect their provider's pricing.
-    def compute_cost(_usage)
-      0.0
     end
 
     def validate_response_body!
