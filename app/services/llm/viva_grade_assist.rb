@@ -97,23 +97,30 @@ module Llm
     def handle_response(response)
       parsed = JSON.parse(response.body)
       text   = parsed.dig('choices', 0, 'message', 'content').to_s
-      json   = text.match(/\{.*\}/m)&.[](0)
-      raise ResponseError.new('no JSON object found in response', body: response&.body) unless json
+      usage  = parsed['usage'] || {}
 
-      data  = JSON.parse(json)
-      usage = parsed['usage'] || {}
-
+      # Persist what we know about the upstream response BEFORE any further
+      # parsing. This way a downstream failure (model returned prose instead
+      # of JSON, body cut off mid-object, schema mismatch, etc.) leaves a
+      # paper trail an admin can inspect via @submission.viva_grade.llm_response_raw.
       grade = @submission.viva_grade || @submission.build_viva_grade
       grade.assign_attributes(
-        score_json:       data['rubric']&.to_json,
-        total_points:     data['total_points'],
-        narrative:        data['narrative'],
         llm_model:        parsed['model'] || @model,
         llm_response_raw: response.body,
         cost:             compute_cost(usage),
         graded_at:        Time.zone.now
       )
       grade.save!
+
+      json = extract_json_object(text)
+      raise ResponseError.new('no JSON object found in grader response', body: response&.body) unless json
+      data = JSON.parse(json)
+
+      grade.update!(
+        score_json:   data['rubric']&.to_json,
+        total_points: data['total_points'],
+        narrative:    data['narrative']
+      )
 
       @submission.update!(
         points:         data['total_points'],
@@ -131,6 +138,25 @@ module Llm
 
     def compute_cost(_usage)
       0.0
+    end
+
+    # Pulls the first balanced top-level JSON object out of model text.
+    # Tolerates leading/trailing prose (the model's "here's my grade:"
+    # preamble) and ```json fenced code blocks. Returns nil when no
+    # valid object is found — the model returned pure prose, or the
+    # response was truncated before a closing brace, etc.
+    def extract_json_object(text)
+      stripped = text.to_s.gsub(/```(?:json)?\s*/i, '').gsub(/\s*```/, '')
+      start = stripped.index('{')
+      return nil unless start
+
+      depth = 0
+      stripped[start..].each_char.with_index do |ch, i|
+        depth += 1 if ch == '{'
+        depth -= 1 if ch == '}'
+        return stripped[start, i + 1] if depth.zero?
+      end
+      nil
     end
   end
 end
