@@ -42,13 +42,39 @@ module Llm
     #   turn = sub.viva_turns.last
     #   pp Llm::VivaTurnGenieAssist.preview(submission: sub, turn: turn)
     #
-    # Returns a hash regardless of whether prepare_data normally yields a
-    # hash (viva subclasses) or a JSON-encoded string (CommentAssist family),
-    # so it's always inspectable via `pp` / `JSON.pretty_generate`.
-    def self.preview(**args)
+    # Returns a hash with symbol keys regardless of whether prepare_data
+    # yields a hash (viva subclasses) or a JSON-encoded string (CommentAssist
+    # family), so it's always inspectable via `pp` / `JSON.pretty_generate`.
+    #
+    # Long base64 attachments (PDFs encoded as image_url) are redacted to a
+    # short "<MIME base64, ~XKB redacted>" placeholder by default — pass
+    # `redact: false` to see the literal data URI.
+    def self.preview(redact: true, **args)
       data = new(**args).send(:prepare_data)
-      data.is_a?(String) ? JSON.parse(data) : data
+      data = JSON.parse(data, symbolize_names: true) if data.is_a?(String)
+      redact ? redact_long_attachments(data) : data
     end
+
+    # Walk a payload's messages array and replace long base64-encoded
+    # data: URIs in image_url content parts with a short placeholder.
+    # Keys are assumed to be symbols (preview normalizes to symbol keys
+    # via symbolize_names: true on JSON.parse).
+    def self.redact_long_attachments(data)
+      return data unless data.is_a?(Hash) && data[:messages].is_a?(Array)
+      data[:messages].each do |msg|
+        next unless msg[:content].is_a?(Array)
+        msg[:content].each do |part|
+          next unless part.is_a?(Hash) && part[:type] == "image_url"
+          url = part[:image_url]
+          next unless url.is_a?(String) && url.length > 500 && url.start_with?("data:")
+          mime = url[/\Adata:([^;]+);/, 1] || "binary"
+          kb   = (url.length / 1024.0).round
+          part[:image_url] = "<#{mime} base64, ~#{kb}KB redacted>"
+        end
+      end
+      data
+    end
+    private_class_method :redact_long_attachments
 
     def initialize(submission:, **args)
       @submission = submission
