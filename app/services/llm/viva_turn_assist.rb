@@ -44,33 +44,42 @@ module Llm
       @problem.description.to_s.strip.presence || '(begin the interview)'
     end
 
-    # The first user message carries the scenario text. If the problem has a
-    # statement PDF attached, the message becomes a multimodal content array
-    # so the LLM can see the actual problem document; otherwise it stays a
-    # plain string for simpler wire shape.
+    # The first user message carries the "case at hand": scenario text, any
+    # grounding material from viva_grounding tags, and the problem PDF if
+    # attached. Returns a plain string when there's only the scenario (simpler
+    # wire shape); otherwise a multimodal content array.
     def build_first_user_content
+      parts = [{type: 'text', text: scenario_message}]
+      grounding = grounding_block
+      parts << {type: 'text', text: grounding} if grounding
       pdf = pdf_attachment
-      return scenario_message unless pdf
-      [{type: 'text', text: scenario_message}, pdf]
+      parts << pdf if pdf
+      parts.length == 1 ? scenario_message : parts
+    end
+
+    # Concatenated viva_grounding tag payloads, with a markdown header so the
+    # model can identify the section. Returns nil when no grounding tags exist.
+    def grounding_block
+      grounding = @problem.viva_grounding_tags.map(&:grounding_payload).reject(&:blank?).join("\n\n---\n\n")
+      return nil if grounding.blank?
+      "## Grounding Material\n\n#{grounding}"
+    end
+
+    # Backend-injected protocol directive. The model MUST include this exact
+    # sentinel in its final message to trigger Llm::VivaGradeAssistJob via
+    # the parsing in handle_response. Kept centralized here (rather than
+    # baked into every llm_prompt tag) because it's a code contract, not
+    # prompt-author guidance.
+    def done_sentinel_directive
+      "When you are satisfied you have enough signal to grade the student, " \
+        "append exactly `#{DONE_SENTINEL}` at the very end of your final message to end the interview."
     end
 
     def assemble_system_prompt
-      prompt    = @problem.viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
+      prompt = @problem.viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
       raise RuntimeError, "There is no llm_prompt tag attached to problem '#{@problem.name}' — viva needs a prompt tag" if prompt.blank?
 
-      grounding = @problem.viva_grounding_tags.map(&:grounding_payload).reject(&:blank?).join("\n\n---\n\n")
-      has_scenario = @problem.description.to_s.strip.present?
-
-      sections = []
-      sections << prompt
-      sections << "## Grounding Material\n\n#{grounding}" unless grounding.blank?
-      if has_scenario
-        sections << 'The first user message contains the scenario or list of scenarios for this exam. ' \
-                    'If multiple scenarios are listed, choose one (per any selection rule above; otherwise pick at random). ' \
-                    'Repeat the chosen scenario back to the student verbatim, then begin the viva based on it.'
-      end
-      sections << "When you are satisfied you have enough signal to grade the student, append exactly `#{DONE_SENTINEL}` at the very end of your final message to end the interview."
-      sections.join("\n\n")
+      [prompt, done_sentinel_directive].join("\n\n")
     end
 
     # OpenAI chat-completions only accepts system/user/assistant/tool roles, so we

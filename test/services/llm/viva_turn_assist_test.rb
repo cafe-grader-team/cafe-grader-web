@@ -56,18 +56,28 @@ class Llm::VivaTurnAssistTest < ActiveSupport::TestCase
     assert_equal 2, msgs.length
   end
 
-  test "scenario instruction is included in system prompt iff description is present" do
-    sys_with = @assist.send(:assemble_system_prompt)
-    assert_includes sys_with, 'first user message contains the scenario'
-
-    @problem.update_columns(description: '')
-    fresh   = Llm::VivaTurnAssist.new(submission: @submission, turn: @placeholder)
-    sys_off = fresh.send(:assemble_system_prompt)
-    refute_includes sys_off, 'first user message contains the scenario'
+  test "system prompt is just llm_prompt tag content + [[VIVA_DONE]] directive" do
+    sys = @assist.send(:assemble_system_prompt)
+    # the test setup attaches a tag with params 'You are a viva interviewer.'
+    assert_includes sys, 'You are a viva interviewer.'
+    assert_includes sys, '[[VIVA_DONE]]'
+    # backend no longer injects scenario-handling guidance — that's the prompt's job
+    refute_includes sys, 'first user message contains the scenario'
   end
 
-  test "system prompt always ends with the [[VIVA_DONE]] sentinel instruction" do
-    sys = @assist.send(:assemble_system_prompt)
-    assert_includes sys, '[[VIVA_DONE]]'
+  test "grounding material is added to first user message when viva_grounding tags exist" do
+    grounding_tag = Tag.find_or_create_by!(name: 'test_viva_grounding') do |t|
+      t.kind = :viva_grounding
+      t.params = 'Reference: trees have nodes and edges.'
+    end
+    @problem.tags << grounding_tag unless @problem.tags.include?(grounding_tag)
+
+    msgs = @assist.send(:messages_array)
+    user_msg = msgs[1]
+    # With grounding, the first user message becomes a content array
+    assert_kind_of Array, user_msg[:content]
+    grounding_part = user_msg[:content].find { |p| p[:type] == 'text' && p[:text].include?('Grounding Material') }
+    assert grounding_part, 'expected a Grounding Material text part in the first user message'
+    assert_includes grounding_part[:text], 'trees have nodes'
   end
 end
