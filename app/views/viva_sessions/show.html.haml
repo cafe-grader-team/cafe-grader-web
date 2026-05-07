@@ -2,25 +2,30 @@
 
 .row
   .col-lg-8
-    %h5= @submission.problem.full_name
     = render partial: 'viva_session', locals: {submission: @submission, turns: @turns, viva_grade: @viva_grade, pending_turn: @pending_turn, finished: @finished}
   .col-lg-4
     .card.shadow-sm.mb-3
       .card-body
         %h4 Viva Info
         .row.mb-2
+          .col-5.text-end.text-secondary Problem
+          .col
+            = @submission.problem.full_name
+            - if @submission.problem.statement.attached?
+              = link_to mdi(:description, 'md-18 text-muted ms-1'), download_by_type_problem_path(@submission.problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', title: 'Download problem statement (PDF)', data: {'bs-toggle': 'tooltip'}
+        .row.mb-2
           .col-5.text-end.text-secondary User
           .col= @submission.user.login
         .row.mb-2
           .col-5.text-end.text-secondary Started
-          .col #{time_ago_in_words(@submission.submitted_at)} ago
+          .col= "#{time_ago_in_words(@submission.submitted_at)} ago"
         .row.mb-2
           .col-5.text-end.text-secondary Status
           .col= @submission.status
         - if @submission.points
           .row.mb-2
             .col-5.text-end.text-secondary Points
-            .col #{@submission.points}/100
+            .col= "#{@submission.points}/100"
 
     - if @current_user.can_edit_problem?(@submission.problem)
       .card.shadow-sm.mb-3
