@@ -10,9 +10,15 @@ module Llm
     # Placeholder record was deleted between enqueue and run — nothing to mark.
     discard_on ActiveJob::DeserializationError
 
-    def perform(*args, **kwargs)
-      Rails.logger.info "Starting #{service_class.name}"
-      service_class.call(*args, **kwargs)
+    # Convention: every concrete LLM job is enqueued with the submission as
+    # the first positional argument plus per-service kwargs (e.g., turn:,
+    # comment:, model:). The service classes accept submission as a kwarg, so
+    # we re-thread it. Don't change to `*args, **kwargs` pass-through —
+    # Llm::Request.call is kwargs-only and the positional would crash with
+    # "wrong number of arguments (given 1, expected 0)".
+    def perform(submission, **job_args)
+      Rails.logger.info "Starting #{service_class.name} for Submission ##{submission.id}"
+      service_class.call(submission: submission, **job_args)
     rescue => e
       Rails.logger.error "Service #{service_class.name} failed: #{e.class}: #{e.message}"
       raise
