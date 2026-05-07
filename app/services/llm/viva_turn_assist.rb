@@ -104,7 +104,7 @@ module Llm
     end
 
     def handle_error
-      @turn&.update(status: :error, content: "LLM error: #{@error}")
+      @turn&.update!(status: :error, content: "LLM error: #{@error}")
     end
 
     # Subclasses should override to reflect their provider's pricing.
