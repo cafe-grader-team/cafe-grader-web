@@ -1,26 +1,30 @@
-# This list the available llm service and its subclass that provide the service
-
-
-
-# key is the classname, value is the available models (as comma separated)
-# For example:
-#   ChatGTP: ChatGPT ChatGPT-4o,ChatGPT-o3
-# means that the class Llm::ChatGTP provides a services for ChatGPT-4o and ChatGPT-o3 models.
-# We also assume that there is a class Llm::GenieAssistJob which is the active job class for the task
+# LLM configuration. The shared `llm_services` anchor below is merged into
+# every environment block; that's how the keys actually get loaded by
+# `Rails.application.config_for(:llm)`. Keys placed at the top level (outside
+# the anchor) are ignored.
 #
-# Also see config/initializer/cafe_grader.rb
+# Two kinds of keys live in the anchor:
+#
+# 1) Per-model service registrations — `<ClassName>: <comma-separated models>`.
+#    The cafe_grader initializer reads these and builds
+#    Rails.configuration.llm[:provider] so that lookups like
+#    `provider["gemini-2.5-pro"].constantize` resolve to `Llm::GenieAssist`.
+#    See config/initializers/cafe_grader.rb.
+#
+# 2) Direct viva-service overrides — `viva_turn_service` / `viva_grade_service`.
+#    These name a concrete subclass of Llm::VivaTurnAssist / Llm::VivaGradeAssist
+#    that the matching job will instantiate. On master both are unset, so the
+#    abstract bases raise NotImplementedError at call time (intentional). On
+#    chula_cp they point at Llm::VivaTurnGenieAssist / Llm::VivaGradeGenieAssist.
+
 llm_services: &services
+  # Per-model service registrations
   # ChatGPTAssist: ChatGPT-4o,ChatGPT-o3
   # GenieAssist: gemini-2.5-pro,Claude-3.5-Sonnet
 
-# Viva Exam — point these at deployment-specific concrete subclasses of
-# Llm::VivaTurnAssist / Llm::VivaGradeAssist. On master both are unset,
-# so the abstract bases raise NotImplementedError at call time (intentional).
-# Example on chula_cp:
-#   viva_turn_service:  Llm::VivaTurnGenieAssist
-#   viva_grade_service: Llm::VivaGradeGenieAssist
-viva_turn_service:
-viva_grade_service:
+  # Direct viva service overrides (leave blank on master)
+  viva_turn_service:
+  viva_grade_service:
 
 development:
   <<: *services
