@@ -22,6 +22,9 @@
         .row.mb-2
           .col-5.text-end.text-secondary Status
           .col= @submission.status
+        .row.mb-2
+          .col-5.text-end.text-secondary Turns
+          .col= @submission.viva_turns.where(role: :student).count
         - if @submission.points
           .row.mb-2
             .col-5.text-end.text-secondary Points
@@ -31,6 +34,8 @@
       .card.shadow-sm.mb-3
         .card-body
           %h5 Admin
-          = button_to 'Re-grade', rejudge_submission_path(@submission),
-              class: 'btn btn-warning btn-sm',
-              form: {class: 'd-inline', data: {turbo: true}}
+          .d-flex.flex-wrap.gap-2
+            = link_to 'Submission details', submission_path(@submission), class: 'btn btn-outline-secondary btn-sm'
+            = button_to 'Re-grade', rejudge_submission_path(@submission),
+                class: 'btn btn-warning btn-sm',
+                form: {class: 'd-inline', data: {turbo: true}}
