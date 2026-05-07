@@ -159,6 +159,52 @@ class Problem < ApplicationRecord
     tags.where(kind: :llm_prompt)
   end
 
+  # Required-section markers a viva problem's llm_prompt + description must
+  # contain. Keeping this as a constant so it's easy to relax / extend without
+  # rewriting the validation method.
+  VIVA_PROMPT_REQUIRED_SECTIONS = {
+    /^#+\s*Rubric\b/im => "an llm_prompt section starting with '# Rubric' (or ##/###)"
+  }.freeze
+  VIVA_DESCRIPTION_REQUIRED_FIELDS = {
+    /Topic\s*:/i                                  => "a 'Topic:' line",
+    /Max\s+Turns?\s*:/i                           => "a 'Max Turns:' line",
+    /(Target\s+Difficulty|Difficulty)\s*:/i       => "a 'Target Difficulty:' line"
+  }.freeze
+
+  # Returns an array of human-readable error strings if the problem isn't
+  # set up correctly to run a viva — empty array means good to go. Called
+  # from VivaSessionsController#start before any LLM work happens, so the
+  # student gets a clear flash message instead of the viva starting in a
+  # half-configured state.
+  def viva_setup_errors
+    return [] unless viva_exam?
+    errors = []
+
+    prompt = viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
+    if prompt.blank?
+      errors << "Problem has no llm_prompt tag attached"
+    else
+      VIVA_PROMPT_REQUIRED_SECTIONS.each do |pattern, label|
+        errors << "llm_prompt is missing #{label}" unless prompt =~ pattern
+      end
+    end
+
+    desc = description.to_s
+    if desc.blank?
+      errors << "Problem description (the scenario) is blank"
+    else
+      VIVA_DESCRIPTION_REQUIRED_FIELDS.each do |pattern, label|
+        errors << "Scenario is missing #{label}" unless desc =~ pattern
+      end
+    end
+
+    errors
+  end
+
+  def viva_setup_valid?
+    viva_setup_errors.empty?
+  end
+
   def can_view_testcase
     GraderConfiguration.show_testcase && self.view_testcase
   end

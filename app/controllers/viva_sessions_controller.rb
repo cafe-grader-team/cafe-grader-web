@@ -20,6 +20,13 @@ class VivaSessionsController < ApplicationController
       redirect_to list_main_path, alert: 'Viva language is not seeded. Run Language.seed.' and return
     end
 
+    setup_errors = @problem.viva_setup_errors
+    if setup_errors.any?
+      redirect_to list_main_path,
+                  alert: "Cannot start viva for '#{@problem.name}' — problem setup is incomplete: #{setup_errors.join('; ')}"
+      return
+    end
+
     submission = nil
     placeholder = nil
     Submission.transaction do
