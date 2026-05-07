@@ -299,6 +299,25 @@ TITLEBAR
     # Kramdown::Document.new(text).to_html.html_safe
   end
 
+  # Safe markdown renderer for untrusted/LLM-generated content. Strips raw
+  # HTML in the input (filter_html: true) so a student can't prompt-inject
+  # the model into emitting <script> etc. and have it execute in an admin's
+  # browser. Use this for viva turns, AI-comment bodies, and anything else
+  # where the markdown source isn't authored by a trusted user.
+  def safe_markdown(text)
+    renderer = Redcarpet::Render::HTML.new(prettify: true, filter_html: true)
+    parser   = Redcarpet::Markdown.new(
+      renderer,
+      fenced_code_blocks: true,
+      tables:             true,
+      autolink:           true,
+      strikethrough:      true,
+      no_intra_emphasis:  true,
+      lax_spacing:        true
+    )
+    parser.render(text.to_s).html_safe
+  end
+
 
   BOOTSTRAP_FLASH_MSG = {
     success: 'alert-success',

@@ -17,7 +17,7 @@
             %strong Error:
             = simple_format(turn.content.to_s)
         - else
-          = simple_format(turn.content.to_s)
+          .markdown-body= safe_markdown(turn.content.to_s)
         - if @current_user&.admin? && turn.cost
           .text-secondary.small.mt-1.border-top.pt-1
             #{turn.llm_model}
