@@ -34,6 +34,22 @@ module Llm
       new(**args).call
     end
 
+    # Build the LLM payload (the body that #execute_call would POST) WITHOUT
+    # making the network call or touching any DB record. Useful from the
+    # Rails console to debug prompt assembly:
+    #
+    #   sub  = Submission.find(922236)
+    #   turn = sub.viva_turns.last
+    #   pp Llm::VivaTurnGenieAssist.preview(submission: sub, turn: turn)
+    #
+    # Returns a hash regardless of whether prepare_data normally yields a
+    # hash (viva subclasses) or a JSON-encoded string (CommentAssist family),
+    # so it's always inspectable via `pp` / `JSON.pretty_generate`.
+    def self.preview(**args)
+      data = new(**args).send(:prepare_data)
+      data.is_a?(String) ? JSON.parse(data) : data
+    end
+
     def initialize(submission:, **args)
       @submission = submission
       @problem    = submission.problem
