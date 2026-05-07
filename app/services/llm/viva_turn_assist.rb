@@ -35,13 +35,23 @@ module Llm
 
     def messages_array
       msgs = [{role: 'system', content: assemble_system_prompt}]
-      msgs << {role: 'user', content: scenario_message}
+      msgs << {role: 'user', content: build_first_user_content}
       msgs.concat(prior_turn_messages)
       consolidate_role_runs(msgs)
     end
 
     def scenario_message
       @problem.description.to_s.strip.presence || '(begin the interview)'
+    end
+
+    # The first user message carries the scenario text. If the problem has a
+    # statement PDF attached, the message becomes a multimodal content array
+    # so the LLM can see the actual problem document; otherwise it stays a
+    # plain string for simpler wire shape.
+    def build_first_user_content
+      pdf = pdf_attachment
+      return scenario_message unless pdf
+      [{type: 'text', text: scenario_message}, pdf]
     end
 
     def assemble_system_prompt

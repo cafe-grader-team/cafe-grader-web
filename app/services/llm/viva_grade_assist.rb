@@ -31,7 +31,7 @@ module Llm
     def messages_array
       msgs = [
         {role: 'system', content: grading_system_prompt},
-        {role: 'user',   content: scenario_message},
+        {role: 'user',   content: build_scenario_content},
         {role: 'user',   content: transcript_payload}
       ]
       consolidate_role_runs(msgs)
@@ -39,6 +39,14 @@ module Llm
 
     def scenario_message
       @problem.description.to_s.strip.presence || '(no scenario provided)'
+    end
+
+    # Scenario block sent to the grader. Includes the problem PDF (if attached)
+    # alongside the scenario text so the grader can see the actual problem.
+    def build_scenario_content
+      pdf = pdf_attachment
+      return scenario_message unless pdf
+      [{type: 'text', text: scenario_message}, pdf]
     end
 
     def grading_system_prompt

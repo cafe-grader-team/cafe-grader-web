@@ -140,23 +140,6 @@ module Llm
       }
     end
 
-    def pdf_attachment
-      return nil unless problem.statement.attached?
-      return nil unless problem.statement.content_type == 'application/pdf'
-
-      pdf_binary  = problem.statement.download
-      encoded_pdf = Base64.strict_encode64(pdf_binary)
-
-      {
-        type:      "image_url",  # API spec uses 'image_url' for this content type
-        image_url: "data:application/pdf;base64,#{encoded_pdf}"
-      }
-    rescue => e
-      msg = "Failed to build PDF attachment for Problem ##{problem.id}: #{e.message}"
-      Rails.logger.error msg
-      raise RuntimeError, msg
-    end
-
     def get_prompts_from_problem_tags
       @submission.problem.tags.where(kind: 'llm_prompt').map { |tag| tag.params }
     end
