@@ -27,6 +27,16 @@ class VivaSessionsController < ApplicationController
       return
     end
 
+    # Defensive: if the user already has an active (non-archived) viva
+    # submission for this problem, the Start Viva button shouldn't be
+    # visible — but a stale browser tab or a direct curl POST could land
+    # here anyway. Refuse with a clear flash.
+    if @problem.submissions.where(user: @current_user, viva_archived_at: nil).exists?
+      redirect_to list_main_path,
+                  alert: "You already have an active viva session for '#{@problem.name}'. An admin can archive it from the viva page if you need to retake."
+      return
+    end
+
     submission = nil
     placeholder = nil
     Submission.transaction do

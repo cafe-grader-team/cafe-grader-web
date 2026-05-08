@@ -4,13 +4,13 @@ class SubmissionsController < ApplicationController
 
   before_action :check_valid_login
 
-  before_action :set_submission, only: [:show, :show_comments, :download, :compiler_msg, :rejudge, :set_tag, :edit, :evaluations]
-  before_action :set_problem, only: %i[ edit direct_edit_problem rejudge set_tag ]
+  before_action :set_submission, only: [:show, :show_comments, :download, :compiler_msg, :rejudge, :set_tag, :edit, :evaluations, :archive_viva]
+  before_action :set_problem, only: %i[ edit direct_edit_problem rejudge set_tag archive_viva ]
   before_action :set_language, only: %i[ edit direct_edit_problem ]
 
   before_action :can_view_submission, only: [:show, :show_comments, :download, :edit, :evaluations, :compiler_msg]
   before_action :can_view_problem, only: [ :direct_edit_problem ]
-  before_action :can_edit_problem, only: [:rejudge, :set_tag]
+  before_action :can_edit_problem, only: [:rejudge, :set_tag, :archive_viva]
 
   # GET /submissions
   # GET /submissions.json
@@ -147,6 +147,24 @@ class SubmissionsController < ApplicationController
       @submission.add_judge_job(@submission.problem.live_dataset, -10)
       @toast = {title: 'Rejudge', body: "Submission ##{@submission.id} is added to judge queue."}
     end
+    render 'turbo_toast'
+  end
+
+  # POST /submissions/:id/archive_viva
+  # Admin-only: mark a viva submission as archived so the student can
+  # take a fresh viva on the same problem. The original submission
+  # (with transcript, grade, costs) is preserved for audit.
+  def archive_viva
+    unless @submission.problem.viva_exam?
+      redirect_to viva_submission_path(@submission), alert: 'Not a viva submission.' and return
+    end
+    unless @submission.status.in?(%w[done grader_error])
+      redirect_to viva_submission_path(@submission),
+                  alert: "Cannot archive a viva that's still in progress (status: #{@submission.status}). Wait for grading to finish or fail." and return
+    end
+    @submission.update!(viva_archived_at: Time.current)
+    @toast = {title: 'Viva archived',
+              body:  "Submission ##{@submission.id} has been archived. The student can now start a new viva on '#{@submission.problem.name}'."}
     render 'turbo_toast'
   end
 

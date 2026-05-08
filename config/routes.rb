@@ -258,6 +258,7 @@ Rails.application.routes.draw do
       get 'viva', to: 'viva_sessions#show', as: 'viva'
       post 'viva/turns', to: 'viva_sessions#answer', as: 'viva_answer'
       get 'viva/refresh', to: 'viva_sessions#refresh', as: 'viva_refresh'
+      post 'archive_viva'
     end
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'

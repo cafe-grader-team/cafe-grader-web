@@ -179,8 +179,12 @@ class MainController < ApplicationController
     submissions = submissions.where(submitted_at: @current_user.active_contests_range) if GraderConfiguration.contest_mode?
 
     # calculate latest submission & submission count
+    # Filter on viva_archived_at IS NULL: a viva that an admin set aside
+    # shouldn't gate the "Start Viva" button for the same user-problem.
+    # Non-viva submissions always have viva_archived_at = nil, so this is
+    # a no-op for them.
     @prob_submissions = Hash.new { |h, k| h[k] = {count: 0, submission: nil} }
-    last_sub_ids = submissions.group(:problem_id).pluck('max(id)')
+    last_sub_ids = submissions.where(viva_archived_at: nil).group(:problem_id).pluck('max(id)')
     Submission.where(id: last_sub_ids).each do |sub|
       @prob_submissions[sub.problem_id] = { count: sub.number, submission: sub }
     end

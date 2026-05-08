@@ -21,7 +21,10 @@
           .col= "#{time_ago_in_words(@submission.submitted_at)} ago"
         .row.mb-2
           .col-5.text-end.text-secondary Status
-          .col= @submission.status
+          .col
+            = @submission.status
+            - if @submission.viva_archived?
+              %span.badge.text-bg-warning.ms-1 archived
         .row.mb-2
           .col-5.text-end.text-secondary Turns
           .col= @submission.viva_turns.where(role: :student).count
@@ -29,6 +32,13 @@
           .row.mb-2
             .col-5.text-end.text-secondary Points
             .col= "#{@submission.points}/100"
+        - if @submission.viva_archived?
+          .row.mb-2
+            .col-5.text-end.text-secondary Archived
+            .col
+              = "#{time_ago_in_words(@submission.viva_archived_at)} ago"
+              %div.small.text-secondary.fst-italic
+                This viva no longer counts for grading. You may start a fresh viva on this problem.
 
     - if @current_user.can_edit_problem?(@submission.problem)
       - grader_class = (Rails.configuration.llm[:viva_grade_service].presence || 'Llm::VivaGradeAssist').constantize
@@ -46,6 +56,15 @@
                   class: 'form-select form-select-sm',
                   title: 'Model to use for the next grader run'
               = f.submit 'Re-run grading', class: 'btn btn-warning btn-sm'
+
+          - if @submission.viva_archived?
+            .small.text-secondary.mt-2
+              %em Archived #{time_ago_in_words(@submission.viva_archived_at)} ago.
+              The student has been able to start a new viva since then.
+          - elsif @submission.status.to_s.in?(%w[done grader_error])
+            = button_to 'Archive viva', archive_viva_submission_path(@submission),
+                class: 'btn btn-outline-warning btn-sm mt-2',
+                form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Archive this viva so the student can take a fresh one? Transcript and grade are preserved for audit but no longer count for grading.'}}
 
       -# Editor-visible diagnostics: grader response/request, per-turn raw responses.
       .card.shadow-sm.mb-3

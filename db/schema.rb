@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_06_220000) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_08_120000) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -395,11 +395,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_06_220000) do
     t.integer "status", limit: 1, default: 0
     t.string "cookie"
     t.string "content_type"
+    t.datetime "viva_archived_at"
     t.index ["graded_at"], name: "index_submissions_on_graded_at"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
     t.index ["submitted_at"], name: "index_submissions_on_submitted_at"
     t.index ["tag"], name: "index_submissions_on_tag"
     t.index ["user_id", "problem_id", "number"], name: "index_submissions_on_user_id_and_problem_id_and_number", unique: true
+    t.index ["viva_archived_at"], name: "index_submissions_on_viva_archived_at"
   end
 
   create_table "tags", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -438,13 +440,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_06_220000) do
     t.string "output_file_name"
     t.string "running_stat"
     t.integer "status"
+    t.datetime "updated_at", precision: nil, null: false
     t.datetime "submitted_at", precision: nil
     t.datetime "compiled_at", precision: nil
     t.text "compiler_message", size: :medium
     t.datetime "graded_at", precision: nil
     t.string "grader_comment"
     t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
     t.float "running_time"
     t.string "exit_status"
     t.integer "memory_usage"
@@ -487,10 +489,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_06_220000) do
     t.boolean "activated", default: false
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
-    t.string "section"
     t.boolean "enabled", default: true
     t.string "remark"
     t.string "last_ip"
+    t.string "section"
     t.integer "default_language_id"
     t.datetime "last_heartbeat"
     t.index ["login"], name: "index_users_on_login", unique: true

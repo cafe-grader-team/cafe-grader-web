@@ -103,6 +103,15 @@ class Submission < ApplicationRecord
     Job.add_grade_submission_job(self, dataset, priority)
   end
 
+  # nil viva_archived_at means this is the canonical/active viva submission
+  # for its (user, problem); a non-nil timestamp means an admin has set the
+  # submission aside so a fresh viva can be started. Non-viva submissions
+  # leave viva_archived_at nil forever — the column is meaningful only for
+  # viva problems.
+  def viva_archived?
+    viva_archived_at.present?
+  end
+
 
   def set_grading_complete(point, grading_text, max_time, max_mem)
     update(points: point, status: :done, graded_at: Time.zone.now, grader_comment: grading_text, max_runtime: max_time, peak_memory: max_mem)
