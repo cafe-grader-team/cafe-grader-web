@@ -34,24 +34,63 @@
       .card.shadow-sm.mb-3
         .card-body
           %h5 Admin
-          .d-flex.flex-wrap.gap-2.mb-2
-            = link_to 'Submission details', submission_path(@submission), class: 'btn btn-outline-secondary btn-sm'
-            = button_to 'Re-run grading', rejudge_submission_path(@submission),
-                class: 'btn btn-warning btn-sm',
-                form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Discard the current grade and re-run Llm::VivaGradeAssistJob?'}}
+          = button_to 'Re-run grading', rejudge_submission_path(@submission),
+              class: 'btn btn-warning btn-sm',
+              form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Discard the current grade and re-run Llm::VivaGradeAssistJob?'}}
 
+      -# Editor-visible diagnostics: grader response/request, per-turn raw responses.
+      .card.shadow-sm.mb-3
+        .card-body
+          %h5.mb-2 Debug
           - if @viva_grade
-            .border-top.pt-2.mt-2
-              %h6.text-secondary.small.mb-1 Last grader run
-              %div.small.text-secondary
-                - if @viva_grade.llm_model.present?
-                  Model: #{@viva_grade.llm_model}
-                - if @viva_grade.cost
-                  | · Cost: $#{format('%.4f', @viva_grade.cost)}
-                - if @viva_grade.graded_at
-                  | · #{time_ago_in_words(@viva_grade.graded_at)} ago
-              - if @viva_grade.llm_response_raw.present?
-                %details.mt-2
-                  %summary.text-secondary.small Raw response
+            %h6.text-secondary.small.mb-1 Last grader run
+            .small.text-secondary
+              - if @viva_grade.llm_model.present?
+                Model: #{@viva_grade.llm_model}
+              - if @viva_grade.cost
+                | · Cost: $#{format('%.4f', @viva_grade.cost)}
+              - if @viva_grade.graded_at
+                | · #{time_ago_in_words(@viva_grade.graded_at)} ago
+            - if @viva_grade.llm_response_raw.present?
+              %details.mt-2
+                %summary.text-secondary.small Grader response (last run)
+                %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                  = @viva_grade.llm_response_raw
+
+          -# Request preview — what would be sent on the next grader call.
+          -# Computed lazily here; pdf_attachment downloads + base64-encodes
+          -# so this adds ~50–100ms to admin page loads. Acceptable for
+          -# editor-only sidebar that isn't part of the polling refresh.
+          - grader_class    = (Rails.configuration.llm[:viva_grade_service].presence || 'Llm::VivaGradeAssist').constantize
+          - request_payload = (grader_class.preview(submission: @submission) rescue nil)
+          - if request_payload
+            %details.mt-2
+              %summary.text-secondary.small Grader request payload (next run)
+              %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                = JSON.pretty_generate(request_payload)
+
+          - turn_class = (Rails.configuration.llm[:viva_turn_service].presence || 'Llm::VivaTurnAssist').constantize
+          - turn_payload = (turn_class.preview(submission: @submission, turn: nil) rescue nil)
+          - if turn_payload
+            %details.mt-2
+              %summary.text-secondary.small Turn request payload (next turn would send)
+              %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                = JSON.pretty_generate(turn_payload)
+
+          -# Per-turn raw responses — what each interview-turn LLM call returned.
+          - turns_with_raw = @submission.viva_turns.where(role: :assistant).where.not(llm_response_raw: nil).order(:id)
+          - if turns_with_raw.any?
+            .border-top.pt-2.mt-3
+              %h6.text-secondary.small.mb-1 Per-turn responses
+              - turns_with_raw.each do |t|
+                %details.mt-1
+                  %summary.text-secondary.small
+                    Turn ##{t.id}
+                    - if t.llm_model.present?
+                      | · #{t.llm_model}
+                    - if t.cost
+                      | · $#{format('%.4f', t.cost)}
+                    - if t.token_count_in || t.token_count_out
+                      | · #{t.token_count_in || 0}/#{t.token_count_out || 0} tok
                   %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
-                    = @viva_grade.llm_response_raw
+                    = t.llm_response_raw
