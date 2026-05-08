@@ -4,16 +4,25 @@
       - turns.each do |turn|
         = render 'viva_sessions/turn', turn: turn
 
-  - if finished && viva_grade
-    = render partial: 'submissions/viva_grade', locals: {viva_grade: viva_grade, submission: submission}
-
-  - if finished && !viva_grade
-    - if submission.status.to_s == 'grader_error'
-      .alert.alert-danger
-        %strong Grader error.
-        = submission.grader_comment
+  -# Branch by submission status, not by viva_grade presence — viva_grade
+  -# may exist but be partial (we save it before JSON parse to preserve
+  -# llm_response_raw for diagnosis on failure).
+  - case submission.status.to_s
+  - when 'done'
+    - if viva_grade
+      = render partial: 'submissions/viva_grade', locals: {viva_grade: viva_grade, submission: submission}
     - else
-      .alert.alert-info Interview ended. Grading in progress...
+      .alert.alert-warning Interview ended successfully but the grade record is missing. Contact an admin.
+  - when 'grader_error'
+    .alert.alert-danger
+      %strong Grader error.
+      = submission.grader_comment.to_s
+    - if @current_user&.admin? && viva_grade&.llm_response_raw.present?
+      %details.mt-2
+        %summary.text-secondary.small Raw upstream response (admin)
+        %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 30vh; overflow-y: auto;'}= viva_grade.llm_response_raw
+  - when 'evaluating'
+    .alert.alert-info Interview ended. Grading in progress...
 
   - unless finished
     = render partial: 'viva_sessions/answer_form', locals: {submission: submission, pending_turn: pending_turn, finished: finished}
