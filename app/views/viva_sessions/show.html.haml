@@ -31,12 +31,21 @@
             .col= "#{@submission.points}/100"
 
     - if @current_user.can_edit_problem?(@submission.problem)
+      - grader_class = (Rails.configuration.llm[:viva_grade_service].presence || 'Llm::VivaGradeAssist').constantize
+      - known_models = grader_class.const_defined?(:KNOWN_MODELS) ? grader_class::KNOWN_MODELS : []
+
       .card.shadow-sm.mb-3
         .card-body
           %h5 Admin
-          = button_to 'Re-run grading', rejudge_submission_path(@submission),
-              class: 'btn btn-warning btn-sm',
-              form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Discard the current grade and re-run Llm::VivaGradeAssistJob?'}}
+          = form_with url: rejudge_submission_path(@submission), method: :post,
+                      html: {data: {turbo: true, 'turbo-confirm': 'Discard the current grade and re-run grading?'}} do |f|
+            .input-group.input-group-sm
+              = f.select :model,
+                  [['Default model', '']] + known_models.map { |m| [m, m] },
+                  {},
+                  class: 'form-select form-select-sm',
+                  title: 'Model to use for the next grader run'
+              = f.submit 'Re-run grading', class: 'btn btn-warning btn-sm'
 
       -# Editor-visible diagnostics: grader response/request, per-turn raw responses.
       .card.shadow-sm.mb-3

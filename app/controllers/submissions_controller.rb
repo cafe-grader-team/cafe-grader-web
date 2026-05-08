@@ -133,12 +133,20 @@ class SubmissionsController < ApplicationController
     if @submission.problem.viva_exam?
       @submission.viva_grade&.destroy
       @submission.update(status: :evaluating, points: nil, grader_comment: nil, graded_at: nil)
-      Llm::VivaGradeAssistJob.perform_later(@submission)
+
+      # Optional admin override: re-run with a specific model (e.g., upgrade
+      # to gemini-2.5-pro for a stricter grader). Falls back to the service
+      # class's DEFAULT_MODEL when not specified.
+      job_kwargs = params[:model].present? ? {model: params[:model]} : {}
+      Llm::VivaGradeAssistJob.perform_later(@submission, **job_kwargs)
+
+      model_label = params[:model].presence || 'default model'
+      @toast = {title: 'Re-grading', body: "Submission ##{@submission.id} grading queued (#{model_label})."}
     else
       # add lower priority job
       @submission.add_judge_job(@submission.problem.live_dataset, -10)
+      @toast = {title: 'Rejudge', body: "Submission ##{@submission.id} is added to judge queue."}
     end
-    @toast = {title: 'Rejudge', body: "Submission ##{@submission.id} is added to judge queue. It will be re-judged soon."}
     render 'turbo_toast'
   end
 

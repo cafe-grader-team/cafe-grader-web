@@ -6,6 +6,12 @@ module Llm
     MAX_TOKENS    = 2048
     DEFAULT_MODEL = nil
 
+    # Provider-supported model names. Concrete subclasses override with their
+    # actual roster (see VivaGradeGenieAssist on chula_cp). The admin "Re-run
+    # grading" form on /submissions/:id/viva uses this to populate a model
+    # picker dropdown — when empty, the dropdown only offers "default model".
+    KNOWN_MODELS = [].freeze
+
     def initialize(submission:, model: nil, **args)
       @submission = submission
       @problem    = submission.problem
