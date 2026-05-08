@@ -34,8 +34,24 @@
       .card.shadow-sm.mb-3
         .card-body
           %h5 Admin
-          .d-flex.flex-wrap.gap-2
+          .d-flex.flex-wrap.gap-2.mb-2
             = link_to 'Submission details', submission_path(@submission), class: 'btn btn-outline-secondary btn-sm'
-            = button_to 'Re-grade', rejudge_submission_path(@submission),
+            = button_to 'Re-run grading', rejudge_submission_path(@submission),
                 class: 'btn btn-warning btn-sm',
-                form: {class: 'd-inline', data: {turbo: true}}
+                form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Discard the current grade and re-run Llm::VivaGradeAssistJob?'}}
+
+          - if @viva_grade
+            .border-top.pt-2.mt-2
+              %h6.text-secondary.small.mb-1 Last grader run
+              %div.small.text-secondary
+                - if @viva_grade.llm_model.present?
+                  Model: #{@viva_grade.llm_model}
+                - if @viva_grade.cost
+                  | · Cost: $#{format('%.4f', @viva_grade.cost)}
+                - if @viva_grade.graded_at
+                  | · #{time_ago_in_words(@viva_grade.graded_at)} ago
+              - if @viva_grade.llm_response_raw.present?
+                %details.mt-2
+                  %summary.text-secondary.small Raw response
+                  %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                    = @viva_grade.llm_response_raw

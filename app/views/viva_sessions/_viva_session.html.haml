@@ -17,10 +17,8 @@
     .alert.alert-danger
       %strong Grader error.
       = submission.grader_comment.to_s
-    - if @current_user&.admin? && viva_grade&.llm_response_raw.present?
-      %details.mt-2
-        %summary.text-secondary.small Raw upstream response (admin)
-        %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 30vh; overflow-y: auto;'}= viva_grade.llm_response_raw
+      -# Editors see the raw response and a re-run button in the right-side
+      -# Admin card; this branch stays text-only.
   - when 'evaluating'
     .alert.alert-info Interview ended. Grading in progress...
 
