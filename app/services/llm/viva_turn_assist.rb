@@ -101,7 +101,14 @@ module Llm
 
     def handle_response(response)
       parsed = JSON.parse(response.body)
-      text   = parsed.dig('choices', 0, 'message', 'content').to_s
+      content = parsed.dig('choices', 0, 'message', 'content')
+      if content.nil? || content.to_s.strip.empty?
+        raise ResponseError.new(
+          "Empty or missing choices[0].message.content in viva turn response from #{provider_name}",
+          body: response&.body
+        )
+      end
+      text   = content.to_s
       done   = text.include?(DONE_SENTINEL)
       clean  = text.sub(DONE_SENTINEL, '').strip
       usage  = parsed['usage'] || {}

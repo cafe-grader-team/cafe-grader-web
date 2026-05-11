@@ -80,4 +80,26 @@ class Llm::VivaTurnAssistTest < ActiveSupport::TestCase
     assert grounding_part, 'expected a Grounding Material text part in the first user message'
     assert_includes grounding_part[:text], 'trees have nodes'
   end
+
+  test "handle_response raises ResponseError when choices array is empty" do
+    response = Struct.new(:body).new('{"choices":[]}')
+    err = assert_raises(Llm::Request::ResponseError) do
+      @assist.send(:handle_response, response)
+    end
+    assert_match(/choices\[0\]\.message\.content/, err.message)
+  end
+
+  test "handle_response raises ResponseError when message content is missing" do
+    response = Struct.new(:body).new('{"choices":[{"message":{}}]}')
+    assert_raises(Llm::Request::ResponseError) do
+      @assist.send(:handle_response, response)
+    end
+  end
+
+  test "handle_response raises ResponseError when content is whitespace-only" do
+    response = Struct.new(:body).new('{"choices":[{"message":{"content":"   \n  "}}]}')
+    assert_raises(Llm::Request::ResponseError) do
+      @assist.send(:handle_response, response)
+    end
+  end
 end
