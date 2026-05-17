@@ -12,12 +12,15 @@
       %small Editing
 
   .d-flex.gap-2.align-items-center{'data-controller': 'init-ui-component'}
-    = link_to stat_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs: {toggle: 'tooltip'}, bs_title: 'Statistics'} do
+    = link_to stat_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Statistics'} do
       %span.mi finance
-    = link_to download_archive_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs: {toggle: 'tooltip'}, bs_title: 'Download Archive'} do
+    = link_to download_archive_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Download Archive'} do
       %span.mi download
-    = link_to audit_logs_path(auditable_type: 'Problem', auditable_id: @problem.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs: {toggle: 'tooltip'}, bs_title: 'Change history'} do
+    = link_to audit_logs_path(auditable_type: 'Problem', auditable_id: @problem.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Change history'} do
       %span.mi history
+    %button.btn.btn-sm.bg-white.shadow-sm.border-0.text-secondary.d-inline-flex.align-items-center.gap-1{type: 'button', data: {bs_toggle: 'offcanvas', bs_target: '#problem-edit-help', bs_title: 'Help'}}
+      %span.mi help_outline
+      Help
     .vr.mx-1
     = link_to 'Cancel', problems_path, class: 'btn btn-link text-secondary text-decoration-none'
 
@@ -48,3 +51,6 @@
           -# dataset form
           - if @problem.live_dataset
             = turbo_frame_tag :dataset, src: edit_dataset_path(@problem.live_dataset), data: {'problem-target': 'dataset', 'current-id': @problem.live_dataset.id}
+
+-# Offcanvas help drawer (kept outside .row so it overlays the page on the right)
+= render 'edit_help'

@@ -7,7 +7,7 @@
       %small Editing
 
   .d-flex.gap-2.align-items-center{'data-controller': 'init-ui-component'}
-    = link_to audit_logs_path(auditable_type: 'Contest', auditable_id: @contest.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs: {toggle: 'tooltip'}, bs_title: 'Change history'} do
+    = link_to audit_logs_path(auditable_type: 'Contest', auditable_id: @contest.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Change history'} do
       %span.mi history
     .vr.mx-1
     = link_to 'Cancel', contest_path(@contest), class: 'btn btn-link text-secondary text-decoration-none'

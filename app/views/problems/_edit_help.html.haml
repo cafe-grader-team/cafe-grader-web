@@ -1,0 +1,76 @@
+-# Offcanvas help drawer for problems/edit.
+-# Triggered by the Help (?) icon button in the edit-page header.
+-# Content here is intended to grow over time; keep sections short and
+-# link out to the wiki for deep reference rather than duplicating it.
+#problem-edit-help.offcanvas.offcanvas-end{tabindex: -1, 'aria-labelledby': 'problem-edit-help-label', style: 'width: 480px;'}
+  .offcanvas-header.border-bottom
+    %div
+      %h5#problem-edit-help-label.offcanvas-title.fw-bold.mb-0
+        %span.mi.me-1 help_outline
+        Problem Editor Help
+      %small.text-secondary Quick reference for the fields and panels on this page.
+    %button.btn-close{type: 'button', 'data-bs-dismiss': 'offcanvas', 'aria-label': 'Close'}
+
+  .offcanvas-body
+    -# ---- Section: Detail fields ----
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Detail Card
+      %dl.row.small.mb-0
+        %dt.col-4.fw-semibold Full name
+        %dd.col-8.text-secondary Human-readable title shown to students. Required.
+        %dt.col-4.fw-semibold Name
+        %dd.col-8.text-secondary
+          Short identifier used in filenames and the engine. Must be
+          %strong unique
+          and stable — renaming may break links and imports.
+        %dt.col-4.fw-semibold Description
+        %dd.col-8.text-secondary Markdown statement shown to students.
+        %dt.col-4.fw-semibold Time / memory limit
+        %dd.col-8.text-secondary Per-test-case caps. Time in seconds, memory in MB.
+        %dt.col-4.fw-semibold Tags
+        %dd.col-8.text-secondary
+          Free-form labels. For viva exams, attach
+          %code llm_prompt
+          (interviewer persona + rubric) and
+          %code viva_grounding
+          (course materials) here.
+
+    -# ---- Section: Datasets ----
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Datasets
+      %p.small.text-secondary.mb-2
+        A problem can have multiple datasets; exactly one is the
+        %strong live dataset
+        — that's what runs when a student submits. Switch the live
+        dataset via the dropdown on the right.
+      %p.small.text-secondary.mb-0
+        Viva-exam problems don't use datasets at all — they're driven by
+        the LLM tags described above.
+
+    -# ---- Section: Audit & ops ----
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Operations
+      %ul.small.text-secondary.mb-0.ps-3
+        %li
+          %span.mi.md-18.align-text-bottom finance
+          %strong Statistics
+          — submission counts, scores, language breakdown.
+        %li
+          %span.mi.md-18.align-text-bottom download
+          %strong Download Archive
+          — exports the problem + live dataset for backup or transfer.
+        %li
+          %span.mi.md-18.align-text-bottom history
+          %strong Change history
+          — audit log of edits to this problem, its dataset, and testcases.
+
+    -# ---- Section: External links ----
+    %section
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 More
+      %p.small.text-secondary.mb-1
+        For deep reference (import format, checker scripts, manager files,
+        initializer scripts) see the project wiki.
+      -# TODO: replace with the actual wiki URL once we pick one
+      %a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1{href: '#', target: '_blank', rel: 'noopener'}
+        %span.mi.md-18 open_in_new
+        Open wiki

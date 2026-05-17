@@ -2,7 +2,10 @@ class AuditLog < ApplicationRecord
   REDACTED = "[redacted]".freeze
 
   belongs_to :user, optional: true
-  belongs_to :auditable, polymorphic: true
+  # Audit rows must outlive their target — the whole point of a destroy entry
+  # is that the auditable record is gone. With the Rails default (required),
+  # after_destroy_commit -> AuditLog.create! fails "Auditable must exist".
+  belongs_to :auditable, polymorphic: true, optional: true
 
   alias_attribute :diff, :object_changes
 

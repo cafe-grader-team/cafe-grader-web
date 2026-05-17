@@ -18,12 +18,15 @@ export default class extends Controller {
 
 
   initializeTooltips() {
-    const tooltipTriggerList = this.element.querySelectorAll('[data-bs-toggle="tooltip"]');
+    // Standard tooltip triggers, PLUS any element with data-bs-title that uses
+    // data-bs-toggle for some other purpose (offcanvas, dropdown, modal, …) —
+    // since data-bs-toggle holds a single value, those elements can't say
+    // `="tooltip"` but still want a tooltip on hover.
+    const standard = this.element.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const piggybacked = this.element.querySelectorAll('[data-bs-title][data-bs-toggle]:not([data-bs-toggle="tooltip"])');
+    const all = [...standard, ...piggybacked];
 
-    // Create new tooltip instances for the current content
-    this.tooltipInstances = Array.from(tooltipTriggerList).map(tooltipTriggerEl => {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    this.tooltipInstances = all.map(el => new bootstrap.Tooltip(el));
   }
 
   initializePopovers() {
