@@ -45,7 +45,8 @@
         = form.input :view_testcase, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
         = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
         = form.input :difficulty, tooltip: 'Input integer value from 0 to 10'
-        = form.input :compilation_type, collection: [['[Self Contained] The submissions can be compiled by itself','self_contained'],['[With managers] The submission will be compiled with the managers','with_managers'],['[Viva Exam] LLM-driven Socratic interview + rubric grading','viva_exam']], wrapper: :horizontal_select, tooltip: 'For Viva Exam, attach llm_prompt tags (interviewer persona + rubric) and viva_grounding tags (course materials). Test-case datasets do not apply.'
+        - compilation_options = [['<strong>Self contained</strong> <span class="text-secondary">— the submission compiles by itself (most problems).</span>'.html_safe, 'self_contained'], ['<strong>With managers</strong> <span class="text-secondary">— the submission is compiled together with manager files attached to the dataset.</span>'.html_safe, 'with_managers'], ['<strong>Viva Exam</strong> <span class="text-secondary">— LLM-driven Socratic interview + rubric grading. No test-case dataset; attach llm_prompt + viva_grounding tags instead.</span>'.html_safe, 'viva_exam']]
+        = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, tooltip: 'See Help drawer (top-right) for details on each mode.'
         = form.input :submission_filename
         = form.button :submit, class: 'btn btn-primary me-2'
       %div#description.my-3.tab-pane.fade{class: (' show active ' if @active_problem_tab == '#description')}

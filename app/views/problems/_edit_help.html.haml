@@ -34,6 +34,36 @@
           (interviewer persona + rubric) and
           %code viva_grounding
           (course materials) here.
+        %dt.col-4.fw-semibold Compilation type
+        %dd.col-8.text-secondary
+          How the submission is built before grading:
+          %ul.ps-3.mb-0
+            %li
+              %strong Self contained
+              — the submitted source compiles standalone. The default for most problems.
+            %li
+              %strong With managers
+              — the submission is compiled together with one or more
+              %em manager
+              files attached to the dataset. Use this when students implement a function called by a fixed harness, or when there's a shared header/grader stub.
+            %li
+              %strong Viva Exam
+              — special mode: no compilation and no test cases. The submission is an answer to an LLM-driven oral interview, graded against a rubric supplied via the
+              %code llm_prompt
+              tag.
+        %dt.col-4.fw-semibold Submission filename
+        %dd.col-8.text-secondary
+          The on-disk filename used when the submission is written into the compile sandbox. Leave
+          %strong blank
+          to default to
+          %code submission.<ext>
+          (e.g.
+          %code submission.cpp
+          ). Override only when the harness or manager requires a specific filename — e.g. when a manager does
+          %code #include "mySolution.cpp"
+          set the override to match. Most common with
+          %em with-managers
+          problems.
 
     -# ---- Section: Datasets ----
     %section.mb-4
@@ -70,7 +100,6 @@
       %p.small.text-secondary.mb-1
         For deep reference (import format, checker scripts, manager files,
         initializer scripts) see the project wiki.
-      -# TODO: replace with the actual wiki URL once we pick one
-      %a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1{href: '#', target: '_blank', rel: 'noopener'}
+      %a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1{href: 'https://github.com/cafe-grader-team/cafe-grader-web/wiki/Adding-a-problem', target: '_blank', rel: 'noopener'}
         %span.mi.md-18 open_in_new
-        Open wiki
+        Wiki: Adding a problem
