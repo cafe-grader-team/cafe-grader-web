@@ -2,7 +2,7 @@
 = simple_form_for @language, html: { id: 'edit_form' }, wrapper: :horizontal_form do |f|
   = f.error_notification
   = f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present?
-  = f.input :name
+  = f.input :name, input_html: { readonly: f.object.persisted? }, hint: ('Name is the engine-facing identifier and cannot be changed once created.' if f.object.persisted?)
   = f.input :pretty_name
   = f.input :ext
   = f.input :common_ext
