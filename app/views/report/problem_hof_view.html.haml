@@ -6,8 +6,8 @@
       = @problem.full_name
   - if @current_user.can_edit_problem?(@problem)
     .d-flex.gap-1
-      = link_to edit_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {'bs-toggle': 'tooltip'}, title: 'Edit problem' do
+      = link_to edit_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Edit problem'} do
         %span.mi edit
-      = link_to stat_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {'bs-toggle': 'tooltip'}, title: 'Statistics' do
-        %span.mi finance
+      = link_to stat_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Statistics'} do
+        %span.mi query_stats
 = render partial: 'task_hof'

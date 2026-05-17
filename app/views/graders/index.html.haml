@@ -82,7 +82,7 @@
                     %td
                       %small.text-muted= time_ago_in_words(job.updated_at) + " ago"
                     %td
-                      = button_to retry_error_job_grader_processes_path(job_id: job.id), class: 'btn btn-sm btn-outline-primary border-0', data: {turbo: true, 'bs-toggle': 'tooltip'}, title: 'Retry' do
+                      = button_to retry_error_job_grader_processes_path(job_id: job.id), class: 'btn btn-sm btn-outline-primary border-0', data: {turbo: true, bs_toggle: 'tooltip', bs_title: 'Retry'} do
                         %span.mi replay
       -# Worker & Grader Card
       .card.shadow-sm.mb-4

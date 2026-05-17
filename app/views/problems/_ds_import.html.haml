@@ -15,7 +15,7 @@
     .alert.alert-success.alert-dismissible.d-flex.align-items-center.gap-2
       = mdi(:check_circle, 'text-success')
       = updated
-      %button.btn-close{data: {'bs-dismiss': :alert}}
+      %button.btn-close{data: {bs_dismiss: :alert}}
 
   = simple_form_for :import, url: import_testcases_problem_path(problem), html: {multipart: true}, wrapper: :horizontal_form do |f|
     = f.input :file, label: 'ZIP file', as: :file, wrapper: :horizontal_file

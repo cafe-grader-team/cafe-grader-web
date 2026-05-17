@@ -12,7 +12,7 @@
           .col
             = @submission.problem.full_name
             - if @submission.problem.statement.attached?
-              = link_to mdi(:description, 'md-18 text-muted ms-1'), download_by_type_problem_path(@submission.problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', title: 'Download problem statement (PDF)', data: {'bs-toggle': 'tooltip'}
+              = link_to mdi(:description, 'md-18 text-muted ms-1'), download_by_type_problem_path(@submission.problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', data: {bs_toggle: 'tooltip', bs_title: 'Download problem statement (PDF)'}
         .row.mb-2
           .col-5.text-end.text-secondary User
           .col= @submission.user.login

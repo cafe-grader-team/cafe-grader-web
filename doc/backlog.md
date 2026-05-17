@@ -51,24 +51,30 @@ admin help-pattern split.
 
 ## `/problems/edit` icon polish
 
-**Why.** Small but real UX rough edges noticed while adding the Help drawer.
-None are bugs, all are easy.
+**Done (2026-05-17).** `finance` → `query_stats` everywhere
+(`problems/edit`, `problems/index`, `report/problem_hof_view`,
+`_edit_help` body text). Magic 480px → `.offcanvas-help` class in
+`my_custom.scss`.
 
-**Items.**
-- `finance` icon → `query_stats` (or `bar_chart`) for the Statistics button
-  at `app/views/problems/edit.html.haml:15`. `finance` is a graph-of-money
-  shape — wrong metaphor for student score stats; nobody guesses it.
-- Magic number: `style: 'width: 480px;'` inline on the offcanvas at
-  `app/views/problems/_edit_help.html.haml:5`. Replace with a utility class
-  or a CSS variable in `my_custom.scss` so widths are centralized.
-- Drawer content is still text-dense. The whole point of the drawer was to
-  relieve a heavy page; the help inside shouldn't reproduce the density.
-  Consider tabs inside the drawer (Basics / Datasets / Viva / Tags) or a
-  numbered walkthrough rather than field-by-field reference.
+**Still pending.** Drawer content density rewrite — `_edit_help` is still
+text-heavy. The point of the drawer was to relieve a dense page; the help
+inside shouldn't reproduce that density. Consider tabs inside the drawer
+(Basics / Datasets / Viva / Tags) or a numbered walkthrough rather than
+field-by-field reference. Defer until a second drawer exists for comparison.
 
-**Size.** Small. ~15 min for the icon + width-class. Drawer content rewrite
-is its own design pass — defer until help-pattern unification is done so we
-do it once.
+## Legacy tooltip attribute form
+
+**Done (2026-05-17).** Rewrote ~13 occurrences across 8 views to flat
+`data: {bs_toggle: …, bs_title: …}` form. Files touched:
+`graders/index`, `report/problem_hof_view`, `report/problem_hof`,
+`viva_sessions/show`, `problems/index` (×8), `problems/_ds_import`,
+`datasets/_testcases`. Verified by grep — no `'bs-toggle'` /
+`'bs-dismiss'` / `'bs-title'` string-key forms remain (excluding the
+`graders/index.html.haml.orig` merge backup; that file is unrelated
+to the convention sweep).
+
+**Stale backup.** `app/views/graders/index.html.haml.orig` is a
+Mercurial merge backup. Worth deleting if it's no longer needed.
 
 ---
 

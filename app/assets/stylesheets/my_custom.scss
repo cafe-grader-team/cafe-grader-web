@@ -50,6 +50,12 @@
   font-size: 48px;
 }
 
+// Help drawer (offcanvas) — keep widths centralized so all help drawers match.
+// See CLAUDE.md "Help-pattern split" and "Offcanvas help triggers".
+.offcanvas-help {
+  width: 480px;
+}
+
 .mi.fill {
   font-variation-settings: 'FILL' 1
 }
