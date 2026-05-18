@@ -6,6 +6,13 @@ Rails.application.configure do
   # Make code changes take effect immediately without server restart.
   config.enable_reloading = true
 
+  # Use inotify-based file watching (via the `listen` gem) instead of the
+  # default `Dir.glob`-based poller. The default polls on every request,
+  # which on WSL2 serializes concurrent requests on directory inode locks
+  # and made cascading turbo_frame requests on /problems/:id/edit take
+  # ~2 seconds each instead of ~80ms.
+  config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+
   # Do not eager load code on boot.
   config.eager_load = false
 

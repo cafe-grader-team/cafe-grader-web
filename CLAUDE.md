@@ -164,6 +164,11 @@ AuditLog.record!(auditable: @contest,                 # one manual row
 - Primary: `grader` — application data
 - Queue: `grader_queue` — Solid Queue tables (migrations in `db/queue_migrate/`)
 
+## Development Environment
+
+- **File watcher (WSL2 critical):** `config/environments/development.rb` sets `config.file_watcher = ActiveSupport::EventedFileUpdateChecker`, backed by the `listen` gem. The Rails default (`ActiveSupport::FileUpdateChecker`) polls via `Dir.glob` on every request — on WSL2 that serializes concurrent requests on directory inode locks and made cascading turbo_frame requests (e.g. `/problems/:id/edit`) take ~2s each instead of ~80ms. If the cascade ever feels slow again, first check: did `listen` quietly fall back to polling? Look for "maximum number of watches reached" at boot. Current inotify limit: `cat /proc/sys/fs/inotify/max_user_watches` (default WSL2 was 8192 but this host has 524288). Raise with `sudo sysctl fs.inotify.max_user_watches=N`. listen docs: https://github.com/guard/listen. Rails' evented checker: https://api.rubyonrails.org/classes/ActiveSupport/EventedFileUpdateChecker.html.
+- **In-page profiler:** `rack-mini-profiler` is in the `:development` gem group with `stackprof` for flame-graph support. Speed-badge appears top-right on every HTML page (configurable via `config/initializers/rack_mini_profiler.rb`). Per-request breakdown by clicking the badge; `?pp=flamegraph&flamegraph_mode=wall` for stack-sampling profile (wall-mode is essential for diagnosing I/O / lock contention — CPU mode misses it). Visit `?pp=help` for the full menu. Zero production impact (gem group isolation).
+
 ## Testing Notes
 
 - **System tests + Turbo login:** the login form (`_login_box.html.haml`) uses `form_with`, which submits via Turbo. Capybara's `click_on 'Login'` returns once the click event fires, *before* Turbo's async fetch lands and replaces the page. A bare `visit some_path` immediately after will race the login and end up on the wrong page. In the local `login` helper for any new system test, sync after the click (e.g. `assert_current_path list_main_path, wait: 5`) before doing anything else.

@@ -120,8 +120,21 @@ group :development do
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem "web-console", ">= 3.3.0"
 
+  # Per-request profiler — adds a "speed badge" in the page corner with
+  # middleware/render/SQL/unaccounted breakdown. Used to diagnose dev-only
+  # slowness (e.g. cascading turbo_frame requests). NO `require: false` —
+  # the Railtie needs to load at boot so the middleware is inserted.
+  gem "rack-mini-profiler", "~> 3.0"
+  # Stack-sampling profiler — backs `?pp=flamegraph` in rack-mini-profiler.
+  gem "stackprof"
 
-  # gem 'listen', '>= 3.0.5', '< 3.2'
+
+  # Listen backs ActiveSupport::EventedFileUpdateChecker, which uses inotify
+  # events instead of `Dir.glob` polling. Without this, the default
+  # FileUpdateChecker runs Dir.glob on every request — fine on Linux native,
+  # disastrous on WSL2 where concurrent Dir.glob serializes on inode locks
+  # and inflates each cascading turbo_frame request from ~80ms to ~2s.
+  gem "listen", "~> 3.9"
   # # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   # gem 'spring'
   # gem 'spring-watcher-listen', '~> 2.0.0'
