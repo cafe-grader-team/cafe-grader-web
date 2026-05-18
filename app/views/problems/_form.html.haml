@@ -103,11 +103,13 @@
 
   .tab-content
     %div#hint.tab-pane.fade.my-3{class: (' show active ' if @active_problem_tab == '#hint'), data: {controller: 'children-select'}}
-      -# dataset selector
-      = turbo_frame_tag :hint_select do
-        = render partial: 'hint_select', locals: {ds: @problem.live_dataset, problem: @problem}
-      -# dataset form
-      = turbo_frame_tag :hint_detail, src: edit_problem_hint_index_path(@problem,@problem.hints.first)
+      %section.mb-4
+        %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Hints
+        -# hint selector (dropdown + Add/Delete row)
+        = turbo_frame_tag :hint_select do
+          = render partial: 'hint_select', locals: {ds: @problem.live_dataset, problem: @problem}
+        -# hint detail editor (lazy-loaded for the selected hint)
+        = turbo_frame_tag :hint_detail, src: edit_problem_hint_index_path(@problem,@problem.hints.first)
 
 
 :javascript

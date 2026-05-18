@@ -2,11 +2,13 @@
   = simple_form_for hint, url: problem_hint_path(@problem,hint), wrapper: :horizontal_form, multipart: true do |f|
     .row{'data-controller': 'init-ui-component'}
       .col-12
-        %h5.my-2 Hint Detail
         = f.input :title
-        = f.input :body
-        = f.input :cost
+        = f.input :body, as: :text, input_html: { rows: 8 }, tooltip: 'Markdown is supported. Shown to students who choose to acquire this hint.'
+        = f.input :cost, tooltip: 'Token-style cost: students "spend" this amount to acquire the hint. Set to 0 for free hints.'
         -# = f.input :kind, collection: Comment::HINT_KIND.keys.map { |key| [I18n.t("activerecord.attributes.comment.kinds.#{key}"), key] }, include_blank: false, wrapper: :horizontal_form
         = f.button :submit, class: 'btn btn-primary me-2'
 - else
-  %em -- There is no hint for this problem. Click "Add" to add a hint. --
+  .text-center.text-muted.py-4
+    %span.mi.md-36.d-block.mb-2 lightbulb
+    %p.mb-1 No hints yet for this problem.
+    %p.small.text-secondary.mb-0 Click "Add hint" above to create the first one.
