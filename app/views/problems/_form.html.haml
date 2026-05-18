@@ -12,67 +12,95 @@
     %input{type: 'hidden', name: 'active_problem_tab', 'data-bs-tab-target': 'activeTabInput'}
     .tab-content
       %div#general.my-3.tab-pane.fade{class: (' show active ' if @active_problem_tab == '#general')}
-        -# general
-        = form.input :name
-        = form.input :full_name
-        = form.input :statement, wrapper: :horizontal_file
-        .row
-          .col-sm-3
-          .col-sm-9
-            %p.d-inline-flex.align-items-center.gap-1
-              - if @problem.statement.attached?
-                = link_to "<span class='mi md-18 me-1'>description</span> Read (#{@problem.statement.filename})".html_safe, download_by_type_problem_path(@problem,'statement'), target: '_blank', data: {turbo: false}, class: 'link-flex'
-                = " | "
-                = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'statement'), class: 'link-flex link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Really delete the Statement? This cannot be undone.'}
-              - else
-                This problem has no statement
-        = form.input :attachment, wrapper: :horizontal_file
-        .row
-          .col-sm-3
-          .col-sm-9
-            %p.d-inline-flex.align-items-center.gap-1
-              - if @problem.attachment.attached?
-                = link_to "<span class='mi md-18 me-1'>archive</span> File (#{@problem.attachment.filename})".html_safe, download_by_type_problem_path(@problem,'attachment'), target: '_blank', data: {turbo: false}
-                |
-                = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'attachment'), class: 'link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Really delete the Attachment? This cannot be undone.'}
-              - else
-                This problem has no attachment
-        = form.input :tag_ids, label: 'Tags', collection: Tag.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: "Tags with public value of true will be shown to contestant in the main page"
-        = form.input :group_ids, label: 'Groups', collection: Group.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form
-        = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: @problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: 'Blank value means any language can be used'
-        = form.input :date_added, input_html: {value: @problem.date_added&.strftime("%d/%b/%Y"), class: 'tempus-dominus'}, wrapper: :horizontal_form, as: :string, tooltip: 'Date added is use as a main sorting order for problems in the main page'
-        = form.input :available, wrapper: :horizontal_boolean, label: 'Globally Available', tooltip: 'If "Globally available" is not set, the problem will remain hidden from all contestants, even if enabled in groups or contests.' , disabled: @current_user.admin? == false
-        = form.input :view_testcase, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
-        = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
-        = form.input :difficulty, tooltip: 'Input integer value from 0 to 10'
-        - compilation_options = [['<strong>Self contained</strong> <span class="text-secondary">— the submission compiles by itself (most problems).</span>'.html_safe, 'self_contained'], ['<strong>With managers</strong> <span class="text-secondary">— the submission is compiled together with manager files attached to the dataset.</span>'.html_safe, 'with_managers'], ['<strong>Viva Exam</strong> <span class="text-secondary">— LLM-driven Socratic interview + rubric grading. No test-case dataset; attach llm_prompt + viva_grounding tags instead.</span>'.html_safe, 'viva_exam']]
-        = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, tooltip: 'See Help drawer (top-right) for details on each mode.'
-        = form.input :submission_filename
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Identity
+          = form.input :name
+          = form.input :full_name
+
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Statement & Files
+          = form.input :statement, wrapper: :horizontal_file
+          .row
+            .col-sm-3
+            .col-sm-9
+              %p.d-inline-flex.align-items-center.gap-1
+                - if @problem.statement.attached?
+                  = link_to "<span class='mi md-18 me-1'>description</span> Read (#{@problem.statement.filename})".html_safe, download_by_type_problem_path(@problem,'statement'), target: '_blank', data: {turbo: false}, class: 'link-flex'
+                  = " | "
+                  = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'statement'), class: 'link-flex link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Really delete the Statement? This cannot be undone.'}
+                - else
+                  This problem has no statement
+          = form.input :attachment, wrapper: :horizontal_file
+          .row
+            .col-sm-3
+            .col-sm-9
+              %p.d-inline-flex.align-items-center.gap-1
+                - if @problem.attachment.attached?
+                  = link_to "<span class='mi md-18 me-1'>archive</span> File (#{@problem.attachment.filename})".html_safe, download_by_type_problem_path(@problem,'attachment'), target: '_blank', data: {turbo: false}
+                  |
+                  = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'attachment'), class: 'link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Really delete the Attachment? This cannot be undone.'}
+                - else
+                  This problem has no attachment
+
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Categorization
+          = form.input :tag_ids, label: 'Tags', collection: Tag.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: "Tags with public value of true will be shown to contestant in the main page"
+          = form.input :group_ids, label: 'Groups', collection: Group.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form
+          = form.input :difficulty, tooltip: 'Input integer value from 0 to 10'
+
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Visibility & Listing
+          = form.input :date_added, input_html: {value: @problem.date_added&.strftime("%d/%b/%Y"), class: 'tempus-dominus'}, wrapper: :horizontal_form, as: :string, tooltip: 'Date added is use as a main sorting order for problems in the main page'
+          = form.input :available, wrapper: :horizontal_boolean, label: 'Globally Available', tooltip: 'If "Globally available" is not set, the problem will remain hidden from all contestants, even if enabled in groups or contests.' , disabled: @current_user.admin? == false
+          = form.input :view_testcase, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
+          = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
+
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Grading & Compilation
+          = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: @problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: 'Blank value means any language can be used'
+          - compilation_options = [['<strong>Self contained</strong> <span class="text-secondary">— the submission compiles by itself (most problems).</span>'.html_safe, 'self_contained'], ['<strong>With managers</strong> <span class="text-secondary">— the submission is compiled together with manager files attached to the dataset.</span>'.html_safe, 'with_managers'], ['<strong>Viva Exam</strong> <span class="text-secondary">— LLM-driven Socratic interview + rubric grading. No test-case dataset; attach llm_prompt + viva_grounding tags instead.</span>'.html_safe, 'viva_exam']]
+          = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, tooltip: 'See Help drawer (top-right) for details on each mode.'
+          = form.input :submission_filename
+
         = form.button :submit, class: 'btn btn-primary me-2'
       %div#description.my-3.tab-pane.fade{class: (' show active ' if @active_problem_tab == '#description')}
-        -# Description
-        .card.bg-warning-subtle.shadow-sm.mb-3
-          .card-body
-            %ul.mb-0
-              %li
-                Description is used internally and it is not shown to contestants. Its main usage is for
-                generating of a PDF statement and as a machine readable text of the statement.
-              %li
-                With LLM plugins, this description will be sent to the LLM of your choice for hinting and suggesting help to the contestant.
-              %li
-                You are not required to use a description, but when it is used, the content should match the actual PDF.
-        = form.input :description, as: :text, wrapper: :vertical_form
-        -# we hide the markdown and url which are no longer used
-          = form.input :markdown, wrapper: :horizontal_boolean
-          = form.input :url
-        %p.d-inline-flex.align-items-center.gap-1
-          - if @problem.generated_statement.attached?
-            = link_to "<span class='mi md-18 me-1'>description</span> Generated Statement".html_safe, download_by_type_problem_path(@problem,'generated_statement'), target: '_blank', data: {turbo: false}
-            = " | "
-            = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'generated_statement'), class: 'link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Delete the generated document?'}
-          - else
-            This problem has no statement
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Markdown Statement
+          = form.input :description, as: :text, wrapper: :vertical_form, label: false, input_html: { rows: 20, class: 'font-monospace' }
+          %p.small.text-secondary.mt-1.mb-0
+            Internal markdown source — not shown to students directly. The PDF below is auto-regenerated whenever you save with a changed description.
+
+        %section.mb-4
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom PDF Export
+          .d-flex.align-items-center.justify-content-between.flex-wrap.gap-2
+            -# Current PDF state
+            - if @problem.generated_statement.attached?
+              .d-inline-flex.align-items-center.gap-1
+                %span.mi.md-18.text-secondary description
+                = link_to @problem.generated_statement.filename.to_s, download_by_type_problem_path(@problem, 'generated_statement'), target: '_blank', data: {turbo: false}, class: 'text-decoration-none'
+            - else
+              %span.text-secondary.fst-italic No PDF generated yet.
+
+            -# Delete button references the hidden form below via HTML5
+            -# `form=` attr, so the button can live inside this
+            -# simple_form_for without producing illegal nested <form> tags.
+            -# To force a fresh PDF without changing description, edit and
+            -# resave (any description change re-fires the auto-generation).
+            - if @problem.generated_statement.attached?
+              %button.btn.btn-sm.btn-outline-danger.d-inline-flex.align-items-center.gap-1{type: 'submit', form: 'pdf-delete-form'}
+                %span.mi.md-18 delete
+                Delete
+
         = form.button :submit, class: 'btn btn-primary me-2'
+
+  -# Hidden form for the PDF delete action — lives OUTSIDE simple_form_for
+  -# so the visible button inside the Description tab (which references it
+  -# by HTML5 `form="…"` attribute) doesn't produce nested <form> tags
+  -# (HTML disallows that; browsers handle the malformed DOM inconsistently).
+  - if @problem.generated_statement.attached?
+    = form_with url: delete_by_type_problem_path(@problem, 'generated_statement'), method: :delete, html: {id: 'pdf-delete-form', class: 'd-none', data: {turbo: true, 'turbo-confirm': 'Delete the generated PDF? This cannot be undone.'}} do
+      -# CSRF token + `_method=delete` are auto-added; body intentionally empty.
+
   .tab-content
     %div#hint.tab-pane.fade.my-3{class: (' show active ' if @active_problem_tab == '#hint'), data: {controller: 'children-select'}}
       -# dataset selector

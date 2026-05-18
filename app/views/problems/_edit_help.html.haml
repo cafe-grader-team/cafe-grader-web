@@ -24,7 +24,10 @@
           %strong unique
           and stable — renaming may break links and imports.
         %dt.col-4.fw-semibold Description
-        %dd.col-8.text-secondary Markdown statement shown to students.
+        %dd.col-8.text-secondary
+          Markdown source used internally —
+          %strong not shown to students directly.
+          Two uses: (a) auto-generates the downloadable PDF statement, (b) feeds LLM-assisted hints. Optional; when present, its content should match the uploaded PDF.
         %dt.col-4.fw-semibold Time / memory limit
         %dd.col-8.text-secondary Per-test-case caps. Time in seconds, memory in MB.
         %dt.col-4.fw-semibold Tags

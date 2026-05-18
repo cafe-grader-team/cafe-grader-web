@@ -26,13 +26,13 @@
 
 .row
   -# problem card
-  .col-md-5
+  .col-md-6
     .card.shadow-sm.mb-4
       .card-body
         %h5.fw-bold.text-secondary.mb-3 Detail
         = render 'form', problem: @problem
   -# dataset card
-  .col-md-7
+  .col-md-6
     .card.shadow-sm.mb-4
       .card-body{'data-controller': 'bs-tab'}
         - if @problem.viva_exam?
