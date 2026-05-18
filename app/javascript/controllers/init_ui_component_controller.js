@@ -42,6 +42,17 @@ export default class extends Controller {
     $(".select2").select2({
       theme: "bootstrap-5",
     });
+    // Bridge select2's jQuery-triggered `select2:select` event to a native
+    // `change` event. select2 v4 dispatches its events through jQuery, which
+    // does NOT always reach native addEventListener handlers — and Stimulus'
+    // `data-action="change->..."` uses native listeners. Without this bridge,
+    // a select2-styled dropdown's selection silently fails to trigger
+    // Stimulus actions. Namespaced .cafe_bridge so re-init doesn't stack
+    // duplicate handlers.
+    $(".select2").off("select2:select.cafe_bridge")
+                 .on("select2:select.cafe_bridge", (event) => {
+                   event.target.dispatchEvent(new Event("change", { bubbles: true }));
+                 });
   }
 
   initializeTempusDominus() {

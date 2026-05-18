@@ -1,4 +1,4 @@
-= simple_form_for :null, url: manage_problem_hint_index_path(@problem), data: { turbo: 'true', 'children-select-target': 'selectForm'}, wrapper: :inline_form, html: { class: 'mb-3', data: { controller: 'init-ui-component' } } do |f|
+= simple_form_for :null, url: manage_problem_hint_index_path(@problem), wrapper: :inline_form, html: { class: 'mb-3', data: { controller: 'init-ui-component', turbo: 'true', 'children-select-target': 'selectForm' } } do |f|
   .d-flex.flex-wrap.align-items-center.gap-2
     = f.input :hint_id, label: false, collection: @problem.hints, selected: @hint&.id, wrapper: :inline_form, include_blank: '— Select hint —',
       input_html: {class: 'select2', style: 'min-width: 14rem;', data: {action: 'change->children-select#childSelect', 'children-select-target': 'selectInput'}}

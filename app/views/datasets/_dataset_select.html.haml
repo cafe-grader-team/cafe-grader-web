@@ -1,23 +1,34 @@
-.alert.alert-secondary
-  .row.row-cols-lg-auto.g-3.align-items-center
-    .col-12
-      .form-check
-        %label.form-check-label Select a dataset to view
-    .col-12
-      = simple_form_for :null, url: view_dataset_path(ds), data: {'problem-target': 'datasetSelectForm', turbo: 'true'},
-        wrapper: :inline_form do |f|
-        = f.input :dsid, collection: problem.datasets.reload, selected: ds.id, input_html: {class: 'form-select-sm form-select', data: {turbo: true, action: 'change->problem#viewDataset', 'problem-target': 'datasetSelect'}}, wrapper: :inline_form
-        %input#dataset-select-active-tab{type: 'hidden', name: 'active_dataset_tab', value: @active_dataset_tab, data: {'bs-tab-target': 'activeTabInput', 'problem-target': 'activeTabInput'}}
-    .col-12
-      .form-check
-        %label.form-check-label Action
-    .col-12
-      = link_to 'Add', add_dataset_problem_path(problem), data: {turbo: true, 'turbo-method': 'post'}, class: 'btn btn-success btn-sm mx-1'
-      = link_to 'Set as live', set_as_live_dataset_path(ds), data: {turbo: true, 'turbo-method': 'post'}, class: 'btn btn-info btn-sm mx-1' if ds != problem.live_dataset
-      = link_to 'Delete', dataset_path(ds), data: {turbo: true,
-        'turbo-method': 'delete',
-        turbo_confirm: "Really delete the dataset <code>#{ds.name}</code>?"}, class: 'btn btn-danger btn-sm mx-1'
-      = link_to 'Rejudge', rejudge_dataset_path(ds), data: {turbo: true,
-        'turbo-method': 'post',
-        turbo_confirm: "Rejudge all #{problem.submissions.count} submissions of #{problem.name} using the dataset <code>#{ds.name}</code>?"}, 
-        class: 'btn btn-warning btn-sm mx-1'
+= simple_form_for :null, url: view_dataset_path(ds), wrapper: :inline_form, html: { class: 'mb-3', data: { controller: 'init-ui-component', 'problem-target': 'datasetSelectForm', turbo: 'true' } } do |f|
+  .d-flex.flex-wrap.align-items-center.gap-2
+    = f.input :dsid, label: false, collection: problem.datasets.reload, selected: ds.id, include_blank: false, wrapper: :inline_form,
+      input_html: {class: 'select2', style: 'min-width: 12rem;', data: {turbo: true, action: 'change->problem#viewDataset', 'problem-target': 'datasetSelect'}}
+    %input#dataset-select-active-tab{type: 'hidden', name: 'active_dataset_tab', value: @active_dataset_tab, data: {'bs-tab-target': 'activeTabInput', 'problem-target': 'activeTabInput'}}
+
+    -# State indicator vs. promotion button — never both.
+    - if ds == problem.live_dataset
+      %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium Live
+    - else
+      = link_to set_as_live_dataset_path(ds), data: {turbo: true, 'turbo-method': 'post'}, class: 'btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1' do
+        %span.mi.md-18 star
+        Set as live
+
+    = link_to add_dataset_problem_path(problem), data: {turbo: true, 'turbo-method': 'post'}, class: 'btn btn-sm btn-success d-inline-flex align-items-center gap-1 ms-auto' do
+      %span.mi.md-18 add
+      Add dataset
+
+    -# Heavier / destructive actions tucked behind more_horiz per CLAUDE.md
+    -# Progressive Condensation rule (>2 controls including a destructive one).
+    .dropdown
+      %button.btn.btn-sm.bg-white.shadow-sm.border-0.text-secondary.d-inline-flex.align-items-center.justify-content-center{type: 'button', data: {bs_toggle: 'dropdown', bs_title: 'More dataset actions'}, 'aria-expanded': 'false'}
+        %span.mi more_horiz
+      %ul.dropdown-menu.dropdown-menu-end
+        %li
+          = link_to rejudge_dataset_path(ds), data: {turbo: true, 'turbo-method': 'post', turbo_confirm: "Rejudge all #{problem.submissions.count} submissions of #{problem.name} using the dataset \"#{ds.name}\"?"}, class: 'dropdown-item d-inline-flex align-items-center gap-1' do
+            %span.mi.md-18 replay
+            Rejudge all submissions
+        %li
+          %hr.dropdown-divider
+        %li
+          = link_to dataset_path(ds), data: {turbo: true, 'turbo-method': 'delete', turbo_confirm: "Really delete the dataset \"#{ds.name}\"? This cannot be undone."}, class: 'dropdown-item text-danger d-inline-flex align-items-center gap-1' do
+            %span.mi.md-18 delete
+            Delete dataset

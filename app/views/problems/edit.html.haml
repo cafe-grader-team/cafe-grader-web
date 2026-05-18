@@ -36,7 +36,7 @@
     .card.shadow-sm.mb-4
       .card-body{'data-controller': 'bs-tab'}
         - if @problem.viva_exam?
-          %h5.fw-bold.text-secondary.mb-3 Viva Exam
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Viva Exam
           %p.text-secondary
             This problem is a Viva Exam. Interview flow is driven by
             %code llm_prompt
@@ -44,7 +44,7 @@
             %code viva_grounding
             tags (course materials), attached in the tags picker on the left. Test-case datasets do not apply.
         - else
-          %h5.fw-bold.text-secondary.mb-3 Datasets
+          %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Datasets
           -# dataset selector
           = turbo_frame_tag :dataset_select do
             = render partial: 'datasets/dataset_select', locals: {ds: @problem.live_dataset, problem: @problem}
