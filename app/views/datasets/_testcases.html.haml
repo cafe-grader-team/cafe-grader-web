@@ -1,5 +1,19 @@
 -# require *ds* as a dataset object
-%h5.my-2 Testcases
+
+-# Hidden forms for per-testcase actions. Each row's button uses HTML5
+-# `form="..."` + `formaction="..."` to submit through one of these forms
+-# with the correct per-testcase URL. One shared form per action type,
+-# not 3N forms per page, and no nested-form risk since these live at
+-# the partial root.
+.d-none
+  = form_with url: '#', html: {id: 'tc-input-form', data: {turbo: true}} do
+    -# CSRF token auto-added; body intentionally empty.
+  = form_with url: '#', html: {id: 'tc-sol-form', data: {turbo: true}} do
+    -# CSRF token auto-added; body intentionally empty.
+  = form_with url: '#', html: {id: 'tc-delete-form', data: {turbo: true, 'turbo-confirm': 'Really delete this testcase? This cannot be undone.'}} do
+    -# CSRF token auto-added; body intentionally empty.
+
+%h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Testcases
 = form_with url: set_weight_dataset_path(ds), class: 'row row-cols-lg-auto g-3 align-items-center' do |f|
   %input{type: 'hidden', name: 'active_dataset_tab', value: @active_dataset_tab, data: {'bs-tab-target': 'activeTabInput'}}
   .col-12
@@ -11,7 +25,10 @@
     = text_field_tag :weight_param, nil, class: 'form-control'
   .col-12
     = f.submit 'Set', class: 'btn btn-primary'
-%table.datatable.table-hover{style: 'width: 100%'}
+-# init-ui-component on the table so tooltips on the per-row action
+-# buttons get initialized when this partial renders (also reconnects
+-# when the :dataset_testcases turbo_frame is swapped after a delete).
+%table.datatable.table-hover{style: 'width: 100%', data: {controller: 'init-ui-component'}}
   %thead
     %tr
       %th #
@@ -19,7 +36,7 @@
       %th Group
       %th Group Name
       %th Weight
-      %th Action
+      %th.text-end Actions
   %tbody
     - last_group = nil
     - odd = true
@@ -28,25 +45,25 @@
         - odd = !odd
         - last_group = tc.group
       %tr{class: (odd ? 'bg-secondary bg-opacity-25' : '')}
-        %td
+        %td.align-middle
           = tc.num
-        %td
+        %td.align-middle
           = tc.code_name
-        %td
+        %td.align-middle
           = tc.group
-        %td
+        %td.align-middle
           = tc.group_name
-        %td
+        %td.align-middle
           = tc.weight
-        %td
-          [
-          %span= link_to 'input', testcase_input_dataset_path(ds,tc), data: {turbo: true, 'turbo-method': 'post' }
-          |
-          %span= link_to 'output', testcase_sol_dataset_path(ds,tc), data: {turbo: true, 'turbo-method': 'post' }
-          |
-          %span= link_to 'delete', testcase_delete_dataset_path(ds,tc), data: {turbo: true, 'turbo-method': 'post', turbo_confirm: 'Really delete? This is very hard to undo' }
-          ]
-%h4.mt-5 Import testcases
+        %td.text-end.py-1.align-middle
+          .d-inline-flex.gap-1.justify-content-end
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'tc-input-form', formaction: testcase_input_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'View testcase input'}}
+              %span.mi.md-18 input
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'tc-sol-form', formaction: testcase_sol_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'View testcase output'}}
+              %span.mi.md-18 output
+            %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'tc-delete-form', formaction: testcase_delete_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'Delete testcase'}}
+              %span.mi.md-18 delete
+%h5.fw-bold.text-body-emphasis.mt-5.mb-3.pb-2.border-bottom Import testcases
 - if @errors
   .alert.alert-danger
     There are following errors

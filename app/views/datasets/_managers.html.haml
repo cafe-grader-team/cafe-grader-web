@@ -1,21 +1,37 @@
-= simple_form_for ds, wrapper: :horizontal_form, multipart: true do |f|
+-# Hidden forms for per-file actions. Each visible file row's buttons use
+-# HTML5 `form="..."` + `formaction="..."` to submit through one of these
+-# forms with the correct per-attachment URL. Three shared forms total,
+-# not 2N per page, and the buttons can live inside the outer
+-# simple_form_for below without producing nested <form> tags.
+.d-none
+  = form_with url: '#', html: {id: 'file-view-form', data: {turbo: true}} do
+    -# CSRF token auto-added; body intentionally empty.
+  -# Download is a full-page POST that streams the file back via send_data
+  -# — NO data-turbo, so Turbo doesn't try to apply the response as a
+  -# turbo_stream (which would fail and lose the file).
+  = form_with url: '#', html: {id: 'file-download-form'} do
+    -# CSRF token auto-added; body intentionally empty.
+  = form_with url: '#', html: {id: 'file-delete-form', data: {turbo: true, 'turbo-confirm': 'Really delete this file? This cannot be undone.'}} do
+    -# CSRF token auto-added; body intentionally empty.
+
+= simple_form_for ds, wrapper: :horizontal_form, multipart: true, html: { data: { controller: 'init-ui-component' } } do |f|
   %input{type: 'hidden', value: @active_dataset_tab, name: 'active_dataset_tab', data: {'bs-tab-target': 'activeTabInput'}}
   -# a place holder dataset
   %input{type: 'hidden', name: 'dataset[placeholder]'}
   -# --- managers ---
-  %h5.my-2.d-flex.align-items-center.gap-2
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
     %span.mi clinical_notes
     Managers
   - ds.managers.each do |mg|
-    .row
+    .row.align-items-center.mb-1
       .col-md-6
         %span.bg-success-subtle.rounded.p-1.font-monospace= mg.filename
       .col-md-6
-        [
-        %span= link_to 'view', file_view_dataset_path(ds,mg), data: {turbo: true, turbo_method: :post}
-        |
-        %span= link_to 'delete', file_delete_dataset_path(ds,mg), data: {turbo: true, 'turbo-method': 'post', turbo_confirm: 'Really delete? This is very hard to undo' }
-        ]
+        .d-inline-flex.gap-1
+          %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-view-form', formaction: file_view_dataset_path(ds, mg), data: {bs_toggle: 'tooltip', bs_title: 'View file'}}
+            %span.mi.md-18 visibility
+          %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, mg), data: {bs_toggle: 'tooltip', bs_title: 'Delete file'}}
+            %span.mi.md-18 delete
   - if ds.managers.count == 0
     %i -- none --
   .my-2
@@ -23,59 +39,59 @@
 
   -# --- checker ---
   - if ['custom_cafe','custom_cms','custom_cms_raw'].include? ds.evaluation_type
-    %h5.my-2.d-flex.align-items-center.gap-2
+    %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
       %span.mi checkbook
       Checker
     - if ds.checker.attached?
-      .row.mb-2
+      .row.align-items-center.mb-2
         .col-md-6
           %span.bg-warning-subtle.rounded.p-1.font-monospace= ds.checker.filename
         .col-md-6
-          [
-          %span= link_to 'view', file_view_dataset_path(ds,ds.checker.attachment), data: {turbo: true, 'turbo-method': 'post' }
-          |
-          %span= link_to 'download', file_download_dataset_path(ds,ds.checker.attachment), method: 'post'
-          |
-          %span= link_to 'delete', file_delete_dataset_path(ds,ds.checker.attachment), data: {turbo: true, 'turbo-method': 'post', turbo_confirm: 'Really delete? This is very hard to undo' }
-          ]
+          .d-inline-flex.gap-1
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-view-form', formaction: file_view_dataset_path(ds, ds.checker.attachment), data: {bs_toggle: 'tooltip', bs_title: 'View checker'}}
+              %span.mi.md-18 visibility
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-download-form', formaction: file_download_dataset_path(ds, ds.checker.attachment), data: {bs_toggle: 'tooltip', bs_title: 'Download checker'}}
+              %span.mi.md-18 download
+            %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, ds.checker.attachment), data: {bs_toggle: 'tooltip', bs_title: 'Delete checker'}}
+              %span.mi.md-18 delete
     - else
       .alert.alert-danger
         Evaluation type of "#{ds.evaluation_type}" requires a custom checker but none is added to this dataset.
     = f.input :checker, label: 'Set checker', wrapper: :horizontal_file
 
   -# --- Initializer ---
-  %h5.my-2.d-flex.align-items-center.gap-2
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
     %span.mi video_settings
     Initializers
   - ds.initializers.each do |init|
-    .row
+    .row.align-items-center.mb-1
       .col-md-6
         %span.bg-info-subtle.rounded.p-1.font-monospace= init.filename
       .col-md-6
-        [
-        %span= link_to 'view', file_view_dataset_path(ds,init), data: {turbo: true, turbo_method: :post}
-        |
-        %span= link_to 'delete', file_delete_dataset_path(ds,init), data: {turbo: true, 'turbo-method': 'post', turbo_confirm: 'Really delete? This is very hard to undo' }
-        ]
+        .d-inline-flex.gap-1
+          %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-view-form', formaction: file_view_dataset_path(ds, init), data: {bs_toggle: 'tooltip', bs_title: 'View file'}}
+            %span.mi.md-18 visibility
+          %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, init), data: {bs_toggle: 'tooltip', bs_title: 'Delete file'}}
+            %span.mi.md-18 delete
   - if ds.initializers.count == 0
     %i -- none --
   .my-2
     = f.input :initializers, label: 'Add initializers', wrapper: :horizontal_file
 
   -# --- Data File ---
-  %h5.my-2.d-flex.align-items-center.gap-2
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
     %span.mi database
     Data Files
   - ds.data_files.each do |data_file|
-    .row
+    .row.align-items-center.mb-1
       .col-md-6
         %span.bg-danger-subtle.rounded.p-1.font-monospace= data_file.filename
       .col-md-6
-        [
-        %span= link_to 'view', file_view_dataset_path(ds,data_file), data: {turbo: true, turbo_method: :post}
-        |
-        %span= link_to 'delete', file_delete_dataset_path(ds,data_file), data: {turbo: true, 'turbo-method': 'post', turbo_confirm: 'Really delete? This is very hard to undo' }
-        ]
+        .d-inline-flex.gap-1
+          %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-view-form', formaction: file_view_dataset_path(ds, data_file), data: {bs_toggle: 'tooltip', bs_title: 'View file'}}
+            %span.mi.md-18 visibility
+          %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, data_file), data: {bs_toggle: 'tooltip', bs_title: 'Delete file'}}
+            %span.mi.md-18 delete
   - if ds.data_files.count == 0
     %i -- none --
   .my-2
