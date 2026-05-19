@@ -11,7 +11,7 @@
   -# turbo_stream (which would fail and lose the file).
   = form_with url: '#', html: {id: 'file-download-form'} do
     -# CSRF token auto-added; body intentionally empty.
-  = form_with url: '#', html: {id: 'file-delete-form', data: {turbo: true, 'turbo-confirm': 'Really delete this file? This cannot be undone.'}} do
+  = form_with url: '#', html: {id: 'file-delete-form', data: {turbo: true, 'turbo-confirm': 'Delete this file? This cannot be undone.'}} do
     -# CSRF token auto-added; body intentionally empty.
 
 = simple_form_for ds, wrapper: :horizontal_form, multipart: true, html: { data: { controller: 'init-ui-component' } } do |f|
@@ -35,7 +35,7 @@
   - if ds.managers.count == 0
     %i -- none --
   .my-2
-    = f.input :managers, label: 'Add manager', wrapper: :horizontal_file
+    = f.input :managers, label: 'Add managers', wrapper: :horizontal_file
 
   -# --- checker ---
   - if ['custom_cafe','custom_cms','custom_cms_raw'].include? ds.evaluation_type
@@ -56,7 +56,7 @@
               %span.mi.md-18 delete
     - else
       .alert.alert-danger
-        Evaluation type of "#{ds.evaluation_type}" requires a custom checker but none is added to this dataset.
+        The "#{ds.evaluation_type}" evaluation type requires a custom checker, but none is attached.
     = f.input :checker, label: 'Set checker', wrapper: :horizontal_file
 
   -# --- Initializer ---
@@ -95,5 +95,5 @@
   - if ds.data_files.count == 0
     %i -- none --
   .my-2
-    = f.input :data_files, label: 'Add Data Files', wrapper: :horizontal_file
+    = f.input :data_files, label: 'Add data files', wrapper: :horizontal_file
   = f.submit class: 'btn btn-primary'

@@ -10,7 +10,7 @@
     -# CSRF token auto-added; body intentionally empty.
   = form_with url: '#', html: {id: 'tc-sol-form', data: {turbo: true}} do
     -# CSRF token auto-added; body intentionally empty.
-  = form_with url: '#', html: {id: 'tc-delete-form', data: {turbo: true, 'turbo-confirm': 'Really delete this testcase? This cannot be undone.'}} do
+  = form_with url: '#', html: {id: 'tc-delete-form', data: {turbo: true, 'turbo-confirm': 'Delete this testcase? This cannot be undone.'}} do
     -# CSRF token auto-added; body intentionally empty.
 
 %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Testcases
@@ -24,11 +24,13 @@
   .col-12
     = text_field_tag :weight_param, nil, class: 'form-control'
   .col-12
-    = f.submit 'Set', class: 'btn btn-primary'
--# init-ui-component on the table so tooltips on the per-row action
--# buttons get initialized when this partial renders (also reconnects
--# when the :dataset_testcases turbo_frame is swapped after a delete).
-%table.datatable.table-hover{style: 'width: 100%', data: {controller: 'init-ui-component'}}
+    = f.submit 'Apply', class: 'btn btn-primary'
+-# Table classes follow the admin-table convention from CLAUDE.md
+-# (.table.table-hover.table-condense.align-middle). init-ui-component
+-# on the table so tooltips on the per-row action buttons get initialized
+-# when this partial renders (also reconnects when the
+-# :dataset_testcases turbo_frame is swapped after a delete).
+%table.table.datatable.table-hover.table-condense.align-middle{style: 'width: 100%', data: {controller: 'init-ui-component'}}
   %thead
     %tr
       %th #
@@ -45,17 +47,12 @@
         - odd = !odd
         - last_group = tc.group
       %tr{class: (odd ? 'bg-secondary bg-opacity-25' : '')}
-        %td.align-middle
-          = tc.num
-        %td.align-middle
-          = tc.code_name
-        %td.align-middle
-          = tc.group
-        %td.align-middle
-          = tc.group_name
-        %td.align-middle
-          = tc.weight
-        %td.text-end.py-1.align-middle
+        %td= tc.num
+        %td= tc.code_name
+        %td= tc.group
+        %td= tc.group_name
+        %td= tc.weight
+        %td.text-end.py-1
           .d-inline-flex.gap-1.justify-content-end
             %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'tc-input-form', formaction: testcase_input_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'View testcase input'}}
               %span.mi.md-18 input
@@ -66,7 +63,7 @@
 %h5.fw-bold.text-body-emphasis.mt-5.mb-3.pb-2.border-bottom Import testcases
 - if @errors
   .alert.alert-danger
-    There are following errors
+    The following errors occurred:
     %ul
       - @errors.each do |msg|
         %li= msg

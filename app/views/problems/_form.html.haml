@@ -27,9 +27,9 @@
                 - if @problem.statement.attached?
                   = link_to "<span class='mi md-18 me-1'>description</span> Read (#{@problem.statement.filename})".html_safe, download_by_type_problem_path(@problem,'statement'), target: '_blank', data: {turbo: false}, class: 'link-flex'
                   = " | "
-                  = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'statement'), class: 'link-flex link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Really delete the Statement? This cannot be undone.'}
+                  = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'statement'), class: 'link-flex link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Delete the statement? This cannot be undone.'}
                 - else
-                  This problem has no statement
+                  No statement uploaded.
           = form.input :attachment, wrapper: :horizontal_file
           .row
             .col-sm-3
@@ -38,26 +38,26 @@
                 - if @problem.attachment.attached?
                   = link_to "<span class='mi md-18 me-1'>archive</span> File (#{@problem.attachment.filename})".html_safe, download_by_type_problem_path(@problem,'attachment'), target: '_blank', data: {turbo: false}
                   |
-                  = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'attachment'), class: 'link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Really delete the Attachment? This cannot be undone.'}
+                  = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(@problem,'attachment'), class: 'link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Delete the attachment? This cannot be undone.'}
                 - else
-                  This problem has no attachment
+                  No attachment uploaded.
 
         %section.mb-4
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Categorization
-          = form.input :tag_ids, label: 'Tags', collection: Tag.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: "Tags with public value of true will be shown to contestant in the main page"
+          = form.input :tag_ids, label: 'Tags', collection: Tag.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: "Tags marked public are shown to contestants on the main page."
           = form.input :group_ids, label: 'Groups', collection: Group.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form
-          = form.input :difficulty, tooltip: 'Input integer value from 0 to 10'
+          = form.input :difficulty, tooltip: 'Integer between 0 and 10.'
 
         %section.mb-4
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Visibility & Listing
-          = form.input :date_added, input_html: {value: @problem.date_added&.strftime("%d/%b/%Y"), class: 'tempus-dominus'}, wrapper: :horizontal_form, as: :string, tooltip: 'Date added is use as a main sorting order for problems in the main page'
+          = form.input :date_added, input_html: {value: @problem.date_added&.strftime("%d/%b/%Y"), class: 'tempus-dominus'}, wrapper: :horizontal_form, as: :string, tooltip: 'Used as the main sort order for problems on the main page.'
           = form.input :available, wrapper: :horizontal_boolean, label: 'Globally Available', tooltip: 'If "Globally available" is not set, the problem will remain hidden from all contestants, even if enabled in groups or contests.' , disabled: @current_user.admin? == false
           = form.input :view_testcase, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
           = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
 
         %section.mb-4
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Grading & Compilation
-          = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: @problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: 'Blank value means any language can be used'
+          = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: @problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: 'Leave blank to allow any language.'
           - compilation_options = [['<strong>Self contained</strong> <span class="text-secondary">— the submission compiles by itself (most problems).</span>'.html_safe, 'self_contained'], ['<strong>With managers</strong> <span class="text-secondary">— the submission is compiled together with manager files attached to the dataset.</span>'.html_safe, 'with_managers'], ['<strong>Viva Exam</strong> <span class="text-secondary">— LLM-driven Socratic interview + rubric grading. No test-case dataset; attach llm_prompt + viva_grounding tags instead.</span>'.html_safe, 'viva_exam']]
           = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, tooltip: 'See Help drawer (top-right) for details on each mode.'
           = form.input :submission_filename
@@ -68,7 +68,7 @@
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Markdown Statement
           = form.input :description, as: :text, wrapper: :vertical_form, label: false, input_html: { rows: 20, class: 'font-monospace' }
           %p.small.text-secondary.mt-1.mb-0
-            Internal markdown source — not shown to students directly. The PDF below is auto-regenerated whenever you save with a changed description.
+            Internal markdown source — not shown to students directly. The PDF below is auto-regenerated whenever you save changes to the description.
 
         %section.mb-4
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom PDF Export

@@ -40,6 +40,6 @@
       %li
         = button_to dataset_path(ds), method: :delete,
                     class: 'dropdown-item text-danger d-inline-flex align-items-center gap-1',
-                    form: { class: 'd-inline mb-0', data: { turbo: true, 'turbo-confirm': "Really delete the dataset \"#{ds.name}\"? This cannot be undone." } } do
+                    form: { class: 'd-inline mb-0', data: { turbo: true, 'turbo-confirm': "Delete the dataset \"#{ds.name}\"? This cannot be undone." } } do
           %span.mi.md-18 delete
           Delete dataset

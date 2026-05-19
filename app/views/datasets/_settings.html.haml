@@ -7,12 +7,12 @@
       .col-12
         .d-flex.justify-content-between.align-items-center.mb-3.pb-2.border-bottom
           %h5.fw-bold.text-body-emphasis.mb-0 Basic Info
-          = link_to audit_logs_path(auditable_type: 'Dataset', auditable_id: ds.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Change history (incl. testcases)'} do
+          = link_to audit_logs_path(auditable_type: 'Dataset', auditable_id: ds.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Change history (including testcases)'} do
             %span.mi history
         = f.input :name
-        = f.input :time_limit, label: "Time limit (s)", tooltip: 'Decimal is ok, e.g., 1.2'
-        = f.input :memory_limit, label: "Memory Limit (MB)"
-        = f.input :score_type, collection: [['[SUM] The score is the sum of all testcase','sum'],['[GROUP MIN] The score is summation of minimum of each group','group_min'],['[RAW SUM] The score is the direct sum of checker testcase scores','raw_sum']], include_blank: false, wrapper: :horizontal_select
+        = f.input :time_limit, label: "Time limit (s)", tooltip: 'Decimals allowed (e.g., 1.2).'
+        = f.input :memory_limit, label: "Memory limit (MB)"
+        = f.input :score_type, collection: [['[SUM] The score is the sum of all testcases','sum'],['[GROUP MIN] The score is the sum of the minimum of each group','group_min'],['[RAW SUM] The score is the direct sum of testcase scores returned by the checker','raw_sum']], include_blank: false, wrapper: :horizontal_select
         = f.input :evaluation_type, collection: Dataset.evaluation_types.keys, include_blank: false, wrapper: :horizontal_select
         = f.input :main_filename, collection: ds.managers.joins(:blob).pluck(:filename), include_blank: false, wrapper: :horizontal_select, disabled: ds.problem.compilation_type == 'self_contained'
         = f.input :initializer_filename, collection: ds.initializers.joins(:blob).pluck(:filename), include_blank: '-- No initializers --', wrapper: :horizontal_select, disabled: ds.initializers.blank?
