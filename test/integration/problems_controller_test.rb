@@ -88,7 +88,12 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
     prob = Problem.find_by(name: "qcprob")
     assert prob, "new problem should be persisted"
     assert prob.live_dataset, "new problem should have a live dataset assigned"
-    assert_response :success
+    # On success, quick_create redirects to the problems index with 303 See
+    # Other so Turbo follows it and re-renders the list with the new row.
+    # (Previously returned 200 with a turbo_stream toast, but that didn't
+    # refresh the index because the listing isn't AJAX-driven.)
+    assert_redirected_to problems_path
+    assert_equal 303, @response.status
   end
 
   test "quick_create with invalid name does not create a problem" do
@@ -97,8 +102,10 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
       # blank name fails Problem validation
       post quick_create_problems_path, params: { problem: { name: "" } }, as: :turbo_stream
     end
-    # action still renders 200 with an error toast
-    assert_response :success
+    # On failure, the action renders a turbo_stream toast with
+    # :unprocessable_entity (422) so Turbo treats the form submission as
+    # rejected.
+    assert_response :unprocessable_entity
   end
 
   test "admin can update problem" do
