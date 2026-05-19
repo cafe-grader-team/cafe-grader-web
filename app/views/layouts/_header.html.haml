@@ -1,8 +1,11 @@
 %header
   %nav.navbar.fixed-top.navbar-dark.bg-primary.navbar-expand-lg.shadow
     .container-fluid
-      %a.navbar-brand.d-flex.align-items-center.gap-1{href: list_main_path}
-        %span.mi home
+      %a.navbar-brand.d-flex.align-items-center.gap-2{href: list_main_path}
+        -# Same asset as the favicon — single source of truth.
+        -# Bootstrap `.rounded` is redundant with the SVG's own rounded corners
+        -# but keeps the silhouette tidy if the SVG ever changes.
+        = image_tag 'icon.svg', alt: '', height: 28, width: 28, class: 'rounded'
         = GraderConfiguration.site_name&.html_safe || 'MAIN'
       .navbar-expand
         / display MODE button (with countdown in contest mode)
