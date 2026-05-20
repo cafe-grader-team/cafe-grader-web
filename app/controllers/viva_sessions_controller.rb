@@ -66,8 +66,11 @@ class VivaSessionsController < ApplicationController
 
   # POST /submissions/:submission_id/viva/turns
   def answer
-    unless @current_user == @submission.user || @current_user.admin?
-      redirect_to list_main_path, alert: 'Authorization error.' and return
+    # Only the submission owner may post answers. Admins / other privileged
+    # users can still VIEW (#show, #refresh stay open), but posting on
+    # behalf of someone else corrupts transcript ownership — refuse.
+    unless @current_user == @submission.user
+      redirect_to list_main_path, alert: "You cannot post to another user's viva session." and return
     end
 
     case @submission.status.to_s

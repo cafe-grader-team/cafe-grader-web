@@ -40,6 +40,31 @@ class VivaSessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to list_main_path
   end
 
+  test "admin cannot answer in another user's viva session" do
+    # Admins can VIEW other students' viva sessions (assert above) but must
+    # not be able to POST on their behalf — that would corrupt transcript
+    # ownership. Before the fix the controller allowed any admin to answer
+    # in any session via `|| @current_user.admin?`; the new policy is
+    # owner-only, regardless of admin role.
+    sign_in_as("admin", "admin")
+    assert_no_difference "VivaTurn.count" do
+      post viva_answer_submission_path(@owner_sub), params: { content: "hi" }
+    end
+    assert_redirected_to list_main_path
+  end
+
+  test "admin can still answer in their own viva session" do
+    # Regression guard: removing the admin-bypass shouldn't accidentally
+    # block admin from posting to a viva session they themselves own.
+    # Auth passes; the request then redirects out via the empty-content
+    # validation, which is the same path the owner case takes.
+    sign_in_as("admin", "admin")
+    post viva_answer_submission_path(@other_sub), params: { content: "   " }
+    assert_response :redirect
+    refute_equal list_main_path, @response.headers["Location"],
+      "should not be redirected to list (auth failure); should fall through to validation redirect"
+  end
+
   test "owner gets validation error when answering with empty content" do
     sign_in_as("john", "hello")
     post viva_answer_submission_path(@owner_sub), params: { content: "   " }
