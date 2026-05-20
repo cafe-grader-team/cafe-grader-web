@@ -68,6 +68,12 @@ The wire shape:
   { role: "system",
     content: "<llm_prompt tag content>
 
+              <SECURITY_DIRECTIVE — platform-injected anti-jailbreak policy.
+               Lists triggers (role spoofing, score/answer extraction,
+               question laundering, out-of-band requests) and instructs the
+               model to emit a user-visible banner plus `[[VIVA_ALERT]]`
+               sentinel on detection.>
+
               When you are satisfied you have enough signal to grade
               the student, append exactly `[[VIVA_DONE]]` at the very
               end of your final message to end the interview."
@@ -87,7 +93,7 @@ The wire shape:
 
 A few properties of this design:
 
-- **The DONE_SENTINEL directive is the only English text the backend injects into the system prompt.** Everything else comes from the `llm_prompt` tag. This is a deliberate single-purpose contract — the backend parses for `[[VIVA_DONE]]` in the response and uses it to transition the submission to grading.
+- **Two pieces of English text are backend-injected into the system prompt:** the `SECURITY_DIRECTIVE` (anti-jailbreak policy) and the `DONE_SENTINEL` directive. Everything else comes from the `llm_prompt` tag. Both are code contracts — `handle_response` parses for `[[VIVA_DONE]]` (transitions to grading) and `[[VIVA_ALERT]]` (jailbreak detected: sets `submissions.viva_terminated_at` and still transitions to grading on the partial transcript). Centralizing the security policy here (rather than asking each problem author to bake it into `llm_prompt`) keeps the sentinel string in lockstep with the parser and lets new attack patterns roll out platform-wide via a single edit.
 
 - **Scenario, grounding, and PDF all live in the first user message** (as a multimodal content array). This keeps the system prompt purely about "how to interview" and the user message about "the case at hand." The arrangement mirrors how `Llm::CommentAssist` (the comment-on-submission flow) lays out PDF + managers + source code in its user message.
 
@@ -148,7 +154,9 @@ Key differences from the turn call:
 
 4. **Done sentinel.** When the interviewer judges it has enough signal, it appends `[[VIVA_DONE]]` at the end of its response. The backend strips the sentinel before displaying the message, marks the submission as `:evaluating`, and enqueues `Llm::VivaGradeAssistJob`. The session UI hides the answer form, shows an "Interview ended. Grading in progress…" alert, and keeps polling.
 
-5. **Grading.** The grader LLM receives its system prompt + the scenario + transcript. It returns strict JSON. The result is persisted as a `VivaGrade` (with `total_points`, `narrative`, `rubric`, `llm_response_raw`, cost), and the submission is set to `:done`.
+4a. **Alert sentinel (jailbreak termination).** When the interviewer detects a jailbreak attempt under the SECURITY_DIRECTIVE policy, it emits a short user-visible banner ("⚠️ Jailbreaking attempt detected…") followed by `[[VIVA_ALERT]]`. The backend strips the sentinel, sets `submissions.viva_terminated_at = Time.current`, marks the submission `:evaluating`, and enqueues the same `Llm::VivaGradeAssistJob` so the partial transcript is still scored. (`done` is treated as true whenever ALERT is true — alert implies end-of-interview.) The student sees the banner as the model's final message; from the UI's perspective the session has ended normally.
+
+5. **Grading.** The grader LLM receives its system prompt + the scenario + transcript. It returns strict JSON. The result is persisted as a `VivaGrade` (with `total_points`, `narrative`, `rubric`, `llm_response_raw`, cost), and the submission is set to `:done`. When `viva_terminated_at` is set, `VivaGradeAssist#grading_system_prompt` prepends a termination note instructing the grader to score academic content prior to termination normally (no extra rubric penalty for the termination — that's an instructor policy decision) but to explicitly call out the termination and flagged-for-review status in the student-facing `narrative`.
 
 6. **Polling stops** once the submission status is terminal (`:done` or `:grader_error`) and there are no more `:processing` turns.
 
