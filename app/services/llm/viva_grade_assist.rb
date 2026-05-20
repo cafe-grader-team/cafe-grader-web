@@ -59,7 +59,7 @@ module Llm
       <<~PROMPT
         You are a strict but fair grader for an oral programming exam. Evaluate the student's understanding based on the interview transcript.
 
-        The user message contains the scenario the student was interviewed on (at the top), followed by the interview transcript to grade (below).
+        #{termination_note}The user message contains the scenario the student was interviewed on (at the top), followed by the interview transcript to grade (below).
 
         Respond ONLY with valid JSON matching this schema (no markdown fences, no prose):
         {
@@ -75,6 +75,19 @@ module Llm
 
         #{assemble_context}
       PROMPT
+    end
+
+    # When the interview was force-ended by the anti-jailbreak guard
+    # (Llm::VivaTurnAssist sets submission.viva_terminated_at), tell the
+    # grader to score only the academic content prior to termination and
+    # to mention the termination in the student-facing narrative.
+    def termination_note
+      return '' unless @submission.viva_terminated_at?
+      <<~NOTE
+
+        IMPORTANT — TERMINATED INTERVIEW: This interview was force-ended by the system because the student attempted to subvert the exam (jailbreak, score extraction, question laundering, role spoofing, or similar). Grade the academic content of their answers PRIOR to termination only. Do not penalize the rubric scores for the termination itself — the instructor handles that policy separately. However, your "narrative" field MUST clearly tell the student that the interview was terminated due to a detected attempt to subvert the exam, and that the case has been flagged for instructor review.
+
+      NOTE
     end
 
     def assemble_context
