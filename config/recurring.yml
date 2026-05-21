@@ -9,7 +9,25 @@
 #     priority: 2
 #     schedule: at 5am every day
 
+# Failsafe for stuck viva placeholder turns. Most failures are caught
+# by Llm::RequestJob (retry_on + perform's rescue) which mark the
+# placeholder :error directly. This sweeper exists for the residual
+# cases — worker killed mid-call, OOM, etc. — where neither path runs.
+# See VivaTurn.fail_stale!.
+#
+# Registered in both envs: the cost is one indexed query every 5
+# minutes, and in development an unrecoverable LLM-job failure
+# otherwise leaves the developer staring at "Interviewer is thinking..."
+# with no path forward.
+development:
+  viva_turn_failsafe:
+    command: "VivaTurn.fail_stale!"
+    schedule: every 5 minutes
+
 production:
   audit_log_cleanup:
     command: "AuditLog.cleanup!"
     schedule: at 3am every day
+  viva_turn_failsafe:
+    command: "VivaTurn.fail_stale!"
+    schedule: every 5 minutes

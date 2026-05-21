@@ -257,6 +257,7 @@ Rails.application.routes.draw do
       # viva exam
       get 'viva', to: 'viva_sessions#show', as: 'viva'
       post 'viva/turns', to: 'viva_sessions#answer', as: 'viva_answer'
+      post 'viva/turns/:turn_id/retry', to: 'viva_sessions#retry_turn', as: 'viva_retry_turn'
       get 'viva/refresh', to: 'viva_sessions#refresh', as: 'viva_refresh'
       post 'archive_viva'
     end
@@ -361,6 +362,7 @@ Rails.application.routes.draw do
       post 'retry_error_job'
       post 'retry_all_error_jobs'
       post 'clear_all_error_jobs'
+      get 'stuck_viva_turns'
     end
   end
 

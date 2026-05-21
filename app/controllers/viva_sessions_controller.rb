@@ -1,7 +1,7 @@
 class VivaSessionsController < ApplicationController
   before_action :check_valid_login
   before_action :set_problem, only: %i[start]
-  before_action :set_submission, only: %i[show answer refresh]
+  before_action :set_submission, only: %i[show answer refresh retry_turn]
 
   VIVA_LANGUAGE_NAME = 'viva'.freeze
 
@@ -112,6 +112,61 @@ class VivaSessionsController < ApplicationController
       format.turbo_stream { redirect_to viva_submission_path(@submission) }
       format.html { redirect_to viva_submission_path(@submission) }
     end
+  end
+
+  # POST /submissions/:submission_id/viva/turns/:turn_id/retry
+  #
+  # Re-runs the LLM call for a failed assistant turn. Resets the turn
+  # back to :processing (clearing content + LLM metadata) and enqueues
+  # a fresh VivaTurnAssistJob.
+  #
+  # Allowed for owner OR admin — unlike #answer (which strictly forbids
+  # admin posting on behalf of the student), retry doesn't add new
+  # student content; it just asks the LLM to take another shot at the
+  # student's previous answer. Admins routinely rescue stuck sessions.
+  #
+  # Only :error turns can be retried; in-flight :processing turns are
+  # left alone (they may still complete normally, and the
+  # VivaTurn.fail_stale! sweeper will eventually mark genuinely stuck
+  # ones as :error so they become retryable).
+  def retry_turn
+    turn = @submission.viva_turns.find(params[:turn_id])
+
+    unless @current_user == @submission.user || @current_user.admin?
+      redirect_to viva_submission_path(@submission),
+                  alert: 'You are not allowed to retry this turn.' and return
+    end
+
+    unless turn.role == 'assistant'
+      redirect_to viva_submission_path(@submission),
+                  alert: 'Only interviewer turns can be retried.' and return
+    end
+
+    unless turn.status == 'error'
+      redirect_to viva_submission_path(@submission),
+                  alert: 'Only failed turns can be retried.' and return
+    end
+
+    case @submission.status.to_s
+    when 'done', 'grader_error', 'evaluating'
+      redirect_to viva_submission_path(@submission),
+                  alert: 'This viva session has already ended.' and return
+    end
+
+    turn.update!(
+      status:           :processing,
+      content:          nil,
+      llm_response_raw: nil,
+      cost:             nil,
+      token_count_in:   nil,
+      token_count_out:  nil,
+      llm_model:        nil
+    )
+
+    Llm::VivaTurnAssistJob.perform_later(@submission, turn: turn)
+
+    redirect_to viva_submission_path(@submission),
+                notice: 'Retrying the interviewer response...'
   end
 
   # GET /submissions/:submission_id/viva/refresh

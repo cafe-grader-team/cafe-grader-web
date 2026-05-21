@@ -16,6 +16,12 @@
           .text-danger
             %strong Error:
             = simple_format(turn.content.to_s)
+          -# Owner or admin can re-enqueue the LLM call without restarting
+          -# the entire viva. See VivaSessionsController#retry_turn.
+          - if @current_user == turn.submission.user || @current_user&.admin?
+            = button_to viva_retry_turn_submission_path(turn.submission, turn_id: turn.id), class: 'btn btn-sm btn-outline-secondary mt-2 d-inline-flex align-items-center gap-1', form: {class: 'd-inline', data: {turbo: true}} do
+              %span.mi.md-18 replay
+              Retry
         - else
           .markdown-body= safe_markdown(turn.content.to_s)
         - if @current_user&.admin? && turn.cost

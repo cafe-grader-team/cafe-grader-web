@@ -79,4 +79,69 @@ class VivaSessionsControllerTest < ActionDispatch::IntegrationTest
     post viva_start_problem_path(problems(:prob_add))
     assert_redirected_to list_main_path
   end
+
+  # --- retry_turn ---
+
+  # Helper: build a :error assistant turn so we have a target to retry.
+  def make_failed_turn(submission)
+    submission.viva_turns.create!(
+      role:    :assistant,
+      status:  :error,
+      content: "boom"
+    )
+  end
+
+  test "owner can retry a failed turn on their own viva" do
+    sign_in_as("john", "hello")
+    turn = make_failed_turn(@owner_sub)
+    assert_enqueued_with(job: Llm::VivaTurnAssistJob) do
+      post viva_retry_turn_submission_path(@owner_sub, turn_id: turn.id)
+    end
+    assert_redirected_to viva_submission_path(@owner_sub)
+    turn.reload
+    assert_predicate turn, :processing?, "turn should be reset to :processing"
+    assert_nil turn.content, "content should be cleared so the spinner shows again"
+  end
+
+  test "admin can retry a failed turn on someone else's viva" do
+    sign_in_as("admin", "admin")
+    turn = make_failed_turn(@owner_sub)  # john's session, admin retries
+    assert_enqueued_with(job: Llm::VivaTurnAssistJob) do
+      post viva_retry_turn_submission_path(@owner_sub, turn_id: turn.id)
+    end
+    assert_redirected_to viva_submission_path(@owner_sub)
+    turn.reload
+    assert_predicate turn, :processing?
+  end
+
+  test "unrelated user cannot retry someone else's viva turn" do
+    # `mary` is neither the owner (john) nor an admin.
+    sign_in_as("mary", "mary")
+    turn = make_failed_turn(@owner_sub)
+    assert_no_enqueued_jobs(only: Llm::VivaTurnAssistJob) do
+      post viva_retry_turn_submission_path(@owner_sub, turn_id: turn.id)
+    end
+    turn.reload
+    assert_predicate turn, :error?, "turn must NOT have been reset"
+  end
+
+  test "retry refuses when turn is not in :error state" do
+    sign_in_as("john", "hello")
+    fresh = @owner_sub.viva_turns.create!(role: :assistant, status: :processing, content: nil)
+    assert_no_enqueued_jobs(only: Llm::VivaTurnAssistJob) do
+      post viva_retry_turn_submission_path(@owner_sub, turn_id: fresh.id)
+    end
+    fresh.reload
+    assert_predicate fresh, :processing?, "in-flight turn should not be reset"
+  end
+
+  test "retry refuses when target turn is a system or student turn" do
+    sign_in_as("john", "hello")
+    student_turn = @owner_sub.viva_turns.create!(role: :student, status: :ok, content: "answer")
+    # Hack the status to error to bypass the status guard and isolate the role guard.
+    VivaTurn.where(id: student_turn.id).update_all(status: 2) # :error
+    assert_no_enqueued_jobs(only: Llm::VivaTurnAssistJob) do
+      post viva_retry_turn_submission_path(@owner_sub, turn_id: student_turn.id)
+    end
+  end
 end

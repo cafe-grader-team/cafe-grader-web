@@ -26,6 +26,27 @@ class VivaSessionsTest < ApplicationSystemTestCase
     assert_no_button "Send"
   end
 
+  test "Retry button appears on failed assistant turns for owner" do
+    @owner_sub.viva_turns.create!(role: :assistant, status: :error, content: "boom")
+    login "john", "hello"
+    visit viva_submission_path(@owner_sub)
+    assert_button "Retry", wait: 5
+  end
+
+  test "Retry button appears for admin viewing someone else's failed turn" do
+    @owner_sub.viva_turns.create!(role: :assistant, status: :error, content: "boom")
+    login "admin", "admin"
+    visit viva_submission_path(@owner_sub)
+    assert_button "Retry", wait: 5
+  end
+
+  test "Retry button absent on healthy (ok or processing) turns" do
+    @owner_sub.viva_turns.create!(role: :assistant, status: :ok, content: "all good")
+    login "john", "hello"
+    visit viva_submission_path(@owner_sub)
+    assert_no_button "Retry"
+  end
+
   def login(username, password)
     visit root_path
     fill_in "Login", with: username

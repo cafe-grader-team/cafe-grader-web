@@ -13,6 +13,16 @@ module Llm
   # which lets the concrete subclass mark its placeholder record as
   # :error before the exception propagates to Solid Queue.
   class RequestJob < ApplicationJob
+    # Errors that retry_on covers. Listed once so the rescue clause in
+    # #perform can let them through to retry_on instead of treating them
+    # as terminal failures.
+    RETRYABLE_ERRORS = [
+      Faraday::TimeoutError,
+      Faraday::ConnectionFailed,
+      ActiveRecord::Deadlocked,
+      ActiveRecord::ConnectionTimeoutError
+    ].freeze
+
     RETRY_EXHAUSTED = ->(job, error) do
       job.send(:on_retries_exhausted, error)
       raise error
@@ -39,8 +49,19 @@ module Llm
       @job_args   = job_args
       Rails.logger.info "Starting #{service_class.name} for Submission ##{submission.id}"
       service_class.call(submission: submission, **job_args)
+    rescue *RETRYABLE_ERRORS
+      # retry_on handles these externally; pass through unchanged so the
+      # next attempt (or RETRY_EXHAUSTED) runs.
+      raise
     rescue => e
-      Rails.logger.error "Service #{service_class.name} failed: #{e.class}: #{e.message}"
+      # Non-retryable failure (NotImplementedError, JSON parse errors,
+      # provider 4xx/5xx surfaced as something other than a Faraday
+      # error, etc.). Without this branch, the placeholder record stays
+      # in :processing forever — the user sees an eternal
+      # "Interviewer is thinking..." spinner. Reuse on_retries_exhausted
+      # so the failure shape matches the retry-exhausted path.
+      Rails.logger.error "Service #{service_class.name} failed (non-retryable): #{e.class}: #{e.message}"
+      on_retries_exhausted(e)
       raise
     end
 

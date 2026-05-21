@@ -10,11 +10,23 @@ class GradersController < ApplicationController
     @error_count = Job.where(status: :error).count
     @error_jobs = Job.where(status: :error).order(updated_at: :desc).limit(50) if @error_count > 0
 
+    # "External signals" — surfaced here so admins have a single
+    # landing page for "anything broken right now?" The deep-links
+    # point at the existing specialized pages.
+    @sq_failed_count  = SolidQueue::Job.failed.count
+    @stuck_viva_count = VivaTurn.stuck.count
+
     @submission = Submission.order("id desc").limit(20).includes(:user, :problem)
     @backlog_submission = Submission.where('graded_at is null').includes(:user, :problem)
 
     @wait_compile_job_count = Job.where(job_type: :compile, status: :wait).count
     @wait_eval_job_count = Job.where(job_type: :evaluate, status: :wait).count
+  end
+
+  def stuck_viva_turns
+    @turns = VivaTurn.stuck
+                     .includes(submission: %i[user problem])
+                     .order("viva_turns.updated_at desc")
   end
 
   def edit_job_type
