@@ -23,4 +23,13 @@
     .alert.alert-info Interview ended. Grading in progress...
 
   - unless finished
-    = render partial: 'viva_sessions/answer_form', locals: {submission: submission, pending_turn: pending_turn, finished: finished}
+    -# Only the submission owner sees the answer form. Other viewers
+    -# (admins, group editors, etc.) see a small observer note instead —
+    -# the controller will reject any POST attempt anyway, but hiding the
+    -# form avoids dangling a submit button that does nothing useful.
+    - if @current_user == submission.user
+      = render partial: 'viva_sessions/answer_form', locals: {submission: submission, pending_turn: pending_turn, finished: finished}
+    - else
+      .text-secondary.fst-italic.small.mt-3.d-inline-flex.align-items-center.gap-1
+        %span.mi.md-18 visibility
+        Viewing as observer — only the student can answer in this viva.
