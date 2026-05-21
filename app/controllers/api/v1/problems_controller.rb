@@ -50,13 +50,20 @@ class Api::V1::ProblemsController < Api::V1::BaseController
 
   # GET /api/v1/problems/:id/files/:type
   def file
-    dataset = @problem.live_dataset
-    unless dataset
-      render_not_found("Dataset") and return
-    end
+    # The dataset is only needed for checker/manager (they hang off the
+    # live dataset). PDF and attachment live on Problem directly, so
+    # demanding a live_dataset here used to lock viva problems (which
+    # have no dataset by design) out of the PDF endpoint entirely.
+    # Resolved on demand inside the branches that need it.
 
     case params[:type]
     when "pdf"
+      # PDF statement is hidden from students for problem modes where
+      # the PDF is staff-only (viva). Mirrors the web equivalent in
+      # ProblemsController#download_by_type.
+      unless current_user.can_view_problem_pdf?(@problem)
+        render json: {error: "PDF statement not available for this problem"}, status: :forbidden and return
+      end
       if @problem.statement.attached?
         send_data @problem.statement.download,
           type: @problem.statement.content_type,
@@ -80,6 +87,8 @@ class Api::V1::ProblemsController < Api::V1::BaseController
       end
     when "checker"
       return unless authorize_edit!
+      dataset = @problem.live_dataset
+      return render_not_found("Dataset") unless dataset
       if dataset.checker.attached?
         send_data dataset.checker.download,
           type: "application/octet-stream",
@@ -88,6 +97,8 @@ class Api::V1::ProblemsController < Api::V1::BaseController
         render_not_found("Checker")
       end
     when "manager"
+      dataset = @problem.live_dataset
+      return render_not_found("Dataset") unless dataset
       managers = dataset.managers
       if managers.attached?
         render json: managers.map { |m|

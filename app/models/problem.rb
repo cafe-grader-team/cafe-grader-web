@@ -168,6 +168,16 @@ class Problem < ApplicationRecord
     /^#+\s*Rubric\b/im => "an llm_prompt section starting with '# Rubric' (or ##/###)"
   }.freeze
 
+  # Whether the problem's statement PDF (or external description URL) is
+  # appropriate to show to students. False for viva problems — the PDF is
+  # the interviewer's brief, not student-facing material, and revealing
+  # it would defeat the interview. Instructors / admins bypass this via
+  # User#can_view_problem_pdf?, which short-circuits on edit/report
+  # access before consulting this method.
+  def pdf_visible_to_student?
+    !viva_exam?
+  end
+
   # Returns an array of human-readable error strings if the problem isn't
   # set up correctly to run a viva — empty array means good to go. Called
   # from VivaSessionsController#start before any LLM work happens, so the

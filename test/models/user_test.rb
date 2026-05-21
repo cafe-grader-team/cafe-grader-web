@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock" # for Object#stub used in can_view_problem_pdf? tests
 
 class UserTest < ActiveSupport::TestCase
   # --- Validations ---
@@ -130,6 +131,62 @@ class UserTest < ActiveSupport::TestCase
     # john needs to be able to view the problem first
     set_grader_config('system.use_problem_group', 'false')
     assert users(:john).can_view_testcase?(problems(:prob_add))
+  end
+
+  # --- can_view_problem_pdf? ---
+  #
+  # The predicate has four branches that we exercise directly (stubbing
+  # the underlying predicates) so test coverage doesn't depend on the
+  # GraderConfiguration use_problem_group setting. The matrix:
+  #
+  #   role          | viva problem | non-viva problem
+  #   admin         | allow        | allow
+  #   editor        | allow        | allow
+  #   reporter      | allow        | allow
+  #   student       | DENY         | allow
+  #   no view       | deny         | deny
+  #
+  # Integration coverage of the full controller flow lives in
+  # problems_controller_test.rb.
+
+  test "can_view_problem_pdf? admin allowed on viva problem" do
+    assert users(:admin).can_view_problem_pdf?(problems(:prob_viva))
+  end
+
+  test "can_view_problem_pdf? admin allowed on non-viva problem" do
+    assert users(:admin).can_view_problem_pdf?(problems(:prob_add))
+  end
+
+  test "can_view_problem_pdf? editor allowed on viva (mode irrelevant)" do
+    john = users(:john)
+    john.stub :can_edit_problem?, true do
+      assert john.can_view_problem_pdf?(problems(:prob_viva))
+    end
+  end
+
+  test "can_view_problem_pdf? reporter allowed on viva (mode irrelevant)" do
+    john = users(:john)
+    john.stub :can_edit_problem?, false do
+      john.stub :can_report_problem?, true do
+        assert john.can_view_problem_pdf?(problems(:prob_viva))
+      end
+    end
+  end
+
+  test "can_view_problem_pdf? student blocked on viva, allowed on non-viva" do
+    set_grader_config('system.use_problem_group', 'false')
+    john = users(:john)
+    # john has neither edit nor report rights, but submit access via Problem.available.
+    assert_not john.can_view_problem_pdf?(problems(:prob_viva))
+    assert     john.can_view_problem_pdf?(problems(:prob_add))
+  end
+
+  test "can_view_problem_pdf? blocked when base can_view_problem? denies" do
+    john = users(:john)
+    john.stub :can_view_problem?, false do
+      assert_not john.can_view_problem_pdf?(problems(:prob_viva))
+      assert_not john.can_view_problem_pdf?(problems(:prob_add))
+    end
   end
 
   # --- problems_for_action ---

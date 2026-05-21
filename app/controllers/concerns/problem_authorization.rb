@@ -22,5 +22,13 @@ module ProblemAuthorization
       return true if @current_user.can_view_problem?(@problem)
       unauthorized_redirect(msg: 'You are not authorized to access this problem')
     end
+
+    # Stricter than can_view_problem: also hides the PDF for problem
+    # modes whose statement isn't student-facing (e.g. viva, where the
+    # PDF is the interviewer's brief). See User#can_view_problem_pdf?.
+    def can_view_problem_pdf
+      return true if @current_user.can_view_problem_pdf?(@problem)
+      unauthorized_redirect(msg: 'You are not authorized to access this problem')
+    end
   end
 end

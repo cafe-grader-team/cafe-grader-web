@@ -11,7 +11,10 @@
           .col-5.text-end.text-secondary Problem
           .col
             = @submission.problem.full_name
-            - if @submission.problem.statement.attached?
+            -# PDF is the interviewer's brief on viva problems — hide
+            -# it from the student. Single-page lookup so the predicate
+            -# is fine here (unlike /main/list, which would N+1).
+            - if @submission.problem.statement.attached? && @current_user.can_view_problem_pdf?(@submission.problem)
               = link_to mdi(:description, 'md-18 text-muted ms-1'), download_by_type_problem_path(@submission.problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', data: {bs_toggle: 'tooltip', bs_title: 'Download problem statement (PDF)'}
         .row.mb-2
           .col-5.text-end.text-secondary User

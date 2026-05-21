@@ -172,4 +172,78 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
     get turn_all_off_problems_path
     assert_response :redirect
   end
+
+  # --- PDF visibility for viva problems ---
+  #
+  # The viva PDF is the interviewer's brief, not student-facing material.
+  # Students must be denied; admins/editors/reporters keep access.
+  # The 'attachment' type is a generic file slot and stays open.
+
+  test "student is blocked from downloading viva problem PDF" do
+    sign_in_as("john", "hello")
+    get download_by_type_problem_path(problems(:prob_viva), 'statement')
+    # Hits the error template with our PDF-specific message.
+    assert_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "student is blocked from downloading viva problem generated PDF" do
+    sign_in_as("john", "hello")
+    get download_by_type_problem_path(problems(:prob_viva), 'generated_statement')
+    assert_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "admin can pass the PDF gate on viva problem" do
+    sign_in_as("admin", "admin")
+    get download_by_type_problem_path(problems(:prob_viva), 'statement')
+    # The PDF gate does NOT block admin; we land in the download path
+    # (which then errors on the missing file — that's a different
+    # error message, proving the gate didn't fire).
+    refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "student is NOT blocked from downloading regular (non-viva) PDF" do
+    sign_in_as("john", "hello")
+    get download_by_type_problem_path(problems(:prob_add), 'statement')
+    refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "PDF gate does not affect generic attachment downloads on viva problem" do
+    sign_in_as("john", "hello")
+    get download_by_type_problem_path(problems(:prob_viva), 'attachment')
+    refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "admin can pass the PDF gate on regular (non-viva) problem" do
+    # Mirror of the student/non-viva case to confirm the gate doesn't
+    # accidentally block admins anywhere.
+    sign_in_as("admin", "admin")
+    get download_by_type_problem_path(problems(:prob_add), 'statement')
+    refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "group editor can download viva PDF when problem is in their group" do
+    # Group-based authorization only matters when use_problem_group is on.
+    # Fixtures place mary (editor role) in group_a; we add prob_viva to
+    # the same group at test time. Once mary is an editor of the problem,
+    # can_edit_problem? short-circuits and the PDF gate lets her through.
+    set_grader_config('system.use_problem_group', 'true')
+    GroupProblem.create!(group: groups(:group_a), problem: problems(:prob_viva), enabled: true)
+    sign_in_as("mary", "mary")
+    get download_by_type_problem_path(problems(:prob_viva), 'statement')
+    refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  test "group reporter can download viva PDF when problem is in their group" do
+    # james is in group_a with role 0 (user) in the fixture. Flip him
+    # to reporter (role 1) for this test so can_report_problem? returns
+    # true and the gate's reporter short-circuit fires. The unit test
+    # covers the predicate orchestration; this asserts the same path
+    # works end-to-end through the controller.
+    set_grader_config('system.use_problem_group', 'true')
+    GroupProblem.create!(group: groups(:group_a), problem: problems(:prob_viva), enabled: true)
+    groups_users(:james_in_group_a).update!(role: 1)
+    sign_in_as("james", "morning")
+    get download_by_type_problem_path(problems(:prob_viva), 'statement')
+    refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
 end

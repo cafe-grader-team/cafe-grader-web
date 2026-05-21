@@ -444,6 +444,16 @@ paths:
                 properties:
                   error:
                     type: string
+        '403':
+          description: viva problem PDF blocked for students
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  error:
+                    type: string
   "/api/v1/problems/{id}/testcases":
     get:
       summary: List testcase metadata for a problem

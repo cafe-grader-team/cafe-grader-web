@@ -425,6 +425,24 @@ class User < ApplicationRecord
     return problems_for_action(:edit).where(id: problem).any?
   end
 
+  # Whether the user can download the problem's statement PDF / external
+  # URL. Mirrors can_view_problem? except that students don't see the
+  # PDF for problem modes where it shouldn't be revealed (viva, today —
+  # see Problem#pdf_visible_to_student?). Instructors and reporters
+  # always see the brief; they need it to manage and grade.
+  #
+  # This is the SECURITY-BOUNDARY predicate — call it in controllers
+  # that serve the PDF (ProblemsController#download_by_type, the API
+  # file endpoint). Views that already iterate over problems the user
+  # can submit to should NOT call this — it would N+1 — and should
+  # just read problem.pdf_visible_to_student? directly.
+  def can_view_problem_pdf?(problem)
+    return true if admin?
+    return true if can_edit_problem?(problem) || can_report_problem?(problem)
+    return false unless can_view_problem?(problem)
+    problem.pdf_visible_to_student?
+  end
+
   def can_view_submission?(submission)
     # admin always has right
     return true if admin?

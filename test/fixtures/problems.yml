@@ -25,3 +25,10 @@ hard:
   available: true
   full_score: 20
   live_dataset: ds_sub
+
+prob_viva:
+  name: viva_problem
+  full_name: Viva Problem
+  available: true
+  full_score: 30
+  compilation_type: 2  # viva_exam (see Problem#compilation_type enum)

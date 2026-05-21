@@ -155,6 +155,19 @@ RSpec.describe "Problems API", type: :request do
 
         run_test!
       end
+
+      response "403", "viva problem PDF blocked for students" do
+        schema type: :object, additionalProperties: false, properties: { error: { type: :string } }
+
+        # The PDF on a viva problem is the interviewer's brief, not
+        # student-facing. Mirror of ProblemsController#download_by_type
+        # web-side gate. Admins/editors/reporters still get the file.
+        let(:user) { users(:john) }
+        let(:id) { problems(:prob_viva).id }
+        let(:type) { "pdf" }
+
+        run_test!
+      end
     end
   end
 

@@ -49,6 +49,17 @@ class ProblemsController < ApplicationController
       render 'error' and return
     end
 
+    # PDF statement is hidden from students for problem modes where the
+    # PDF is staff-only (viva). The base can_view_problem before_action
+    # has already passed; here we narrow to PDF-specific visibility.
+    # Note: 'attachment' is intentionally NOT gated — generic file
+    # downloads remain available to anyone who can see the problem.
+    if %w[statement generated_statement].include?(attachment_type) &&
+       !@current_user.can_view_problem_pdf?(@problem)
+      @error_message = "This problem's statement isn't available."
+      render 'error' and return
+    end
+
     attachment = @problem.send(attachment_type)
 
     # build the filename or render error when the type is invalid
