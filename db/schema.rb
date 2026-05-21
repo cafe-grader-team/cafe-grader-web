@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_17_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_20_120000) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -397,12 +397,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_17_120000) do
     t.string "cookie"
     t.string "content_type"
     t.datetime "viva_archived_at"
+    t.datetime "viva_terminated_at"
     t.index ["graded_at"], name: "index_submissions_on_graded_at"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
     t.index ["submitted_at"], name: "index_submissions_on_submitted_at"
     t.index ["tag"], name: "index_submissions_on_tag"
     t.index ["user_id", "problem_id", "number"], name: "index_submissions_on_user_id_and_problem_id_and_number", unique: true
     t.index ["viva_archived_at"], name: "index_submissions_on_viva_archived_at"
+    t.index ["viva_terminated_at"], name: "index_submissions_on_viva_terminated_at"
   end
 
   create_table "tags", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
