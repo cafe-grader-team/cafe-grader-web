@@ -31,3 +31,13 @@ production:
   viva_turn_failsafe:
     command: "VivaTurn.fail_stale!"
     schedule: every 5 minutes
+  # Moved here from config/schedule.rb (whenever). Both run nightly
+  # housekeeping that's safe to skip a day if Solid Queue is down.
+  # cleanup_web purges old Job rows + compiled-file blobs;
+  # cleanup_judge rm -rf's isolate submission dirs older than 24h.
+  grader_cleanup_web:
+    command: "Grader.cleanup_web"
+    schedule: at 2am every day
+  grader_cleanup_judge:
+    command: "Grader.cleanup_judge"
+    schedule: at 2am every day

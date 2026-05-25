@@ -19,11 +19,20 @@
 
 # Learn more: http://github.com/javan/whenever
 
+# Grader.watchdog stays in cron deliberately. It supervises the judge
+# worker processes; putting it inside Solid Queue would mean it dies
+# when Solid Queue itself crashes — exactly the failure mode the
+# watchdog exists to recover from. Keep this entry here.
 every 1.minute do
   runner "Grader.watchdog"
 end
 
-every 1.day do
-  runner "Grader.cleanup_web"
-  runner "Grader.cleanup_judge"
-end
+# The two cleanup_* tasks moved to config/recurring.yml so they live
+# next to AuditLog.cleanup! and viva_turn_failsafe.
+#
+# Deploy propagation is handled by the CI/CD pipeline
+# (gitlab.nattee.net/nattee/cafe-grader-automation), which runs:
+#   bundle exec whenever --update-crontab     # rewrites crontab from this file
+#   sudo -n systemctl restart solid_queue.service  # reloads recurring.yml
+# on every server. The systemctl line relies on a NOPASSWD sudoers
+# drop-in — see provision/sudoers.d/README.md in the automation repo.
