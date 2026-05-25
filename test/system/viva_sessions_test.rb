@@ -124,6 +124,48 @@ class VivaSessionsTest < ApplicationSystemTestCase
   # (the test queue adapter swallows it). After the redirect the
   # "Interviewer is thinking..." spinner replaces the error message.
 
+  # --- Form: viva-mode-toggle Stimulus controller ------------------
+  #
+  # When compilation_type is set to viva_exam, the form hides the
+  # fields that don't apply (Allowed Language, Submission filename).
+  # Verified end-to-end: load the edit page, click a radio, watch
+  # the wrappers disappear / reappear.
+
+  test "viva mode hides Allowed Language, Submission filename, View testcase, then restores" do
+    login "admin", "admin"
+    visit edit_problem_path(problems(:prob_add)) # starts as self_contained
+    # Visible to begin with.
+    assert_selector "label", text: "Allowed Language"
+    assert_selector "label", text: "Submission filename"
+    assert_selector "label", text: "View testcase"
+
+    choose "Viva Exam", allow_label_click: true
+    # Stimulus has no async; the toggle is synchronous, but Capybara
+    # waits up to default wait time for the assertion to be true.
+    assert_no_selector "label", text: "Allowed Language"
+    assert_no_selector "label", text: "Submission filename"
+    assert_no_selector "label", text: "View testcase"
+    # view_submission stays visible — admin may still want students
+    # to see each other's viva transcripts (toggle remains useful).
+    assert_selector "label", text: "View submission"
+
+    choose "Self contained", allow_label_click: true
+    assert_selector "label", text: "Allowed Language"
+    assert_selector "label", text: "Submission filename"
+    assert_selector "label", text: "View testcase"
+  end
+
+  test "viva problem edit page starts with non-applicable fields hidden" do
+    # prob_viva is persisted as viva_exam → fields should be hidden
+    # on first paint without any user click (connect() runs toggle()).
+    login "admin", "admin"
+    visit edit_problem_path(problems(:prob_viva))
+    assert_no_selector "label", text: "Allowed Language"
+    assert_no_selector "label", text: "Submission filename"
+    assert_no_selector "label", text: "View testcase"
+    assert_selector "label", text: "View submission"
+  end
+
   test "owner clicks Retry and the turn flips back to :processing" do
     failed_turn = @owner_sub.viva_turns.create!(
       role: :assistant, status: :error, content: "boom"

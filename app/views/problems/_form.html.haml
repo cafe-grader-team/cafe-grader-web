@@ -1,5 +1,5 @@
 - @active_problem_tab = '#general' unless %w[#general #description #hint].include? @active_problem_tab
-=turbo_frame_tag :problem, data: {controller: 'init-ui-component bs-tab', turbo: true} do
+=turbo_frame_tag :problem, data: {controller: 'init-ui-component bs-tab viva-mode-toggle', turbo: true} do
   %ul.nav.nav-tabs
     %li.nav-item
       %button.nav-link{data: {bs: {toggle: :tab, target: "#general"}},class: ('active' if @active_problem_tab == '#general') } General
@@ -52,15 +52,15 @@
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Visibility & Listing
           = form.input :date_added, input_html: {value: @problem.date_added&.strftime("%d/%b/%Y"), class: 'tempus-dominus'}, wrapper: :horizontal_form, as: :string, tooltip: 'Used as the main sort order for problems on the main page.'
           = form.input :available, wrapper: :horizontal_boolean, label: 'Globally Available', tooltip: 'If "Globally available" is not set, the problem will remain hidden from all contestants, even if enabled in groups or contests.' , disabled: @current_user.admin? == false
-          = form.input :view_testcase, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
-          = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false
+          = form.input :view_testcase, wrapper: :horizontal_boolean, wrapper_html: {data: {'viva-mode-toggle-target': 'hideForViva'}}, disabled: @current_user.admin? == false
+          = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false, hint: 'For viva problems: controls whether other students can see this viva transcript.'
 
         %section.mb-4
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Grading & Compilation
-          = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: @problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: 'Leave blank to allow any language.'
+          = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: @problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, wrapper_html: {data: {'viva-mode-toggle-target': 'hideForViva'}}, tooltip: 'Leave blank to allow any language.'
           - compilation_options = [['<strong>Self contained</strong> <span class="text-secondary">— the submission compiles by itself (most problems).</span>'.html_safe, 'self_contained'], ['<strong>With managers</strong> <span class="text-secondary">— the submission is compiled together with manager files attached to the dataset.</span>'.html_safe, 'with_managers'], ['<strong>Viva Exam</strong> <span class="text-secondary">— LLM-driven Socratic interview + rubric grading. No test-case dataset; attach llm_prompt + viva_grounding tags instead.</span>'.html_safe, 'viva_exam']]
-          = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, tooltip: 'See Help drawer (top-right) for details on each mode.'
-          = form.input :submission_filename
+          = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, input_html: {data: {action: 'change->viva-mode-toggle#toggle'}}, tooltip: 'See Help drawer (top-right) for details on each mode.'
+          = form.input :submission_filename, wrapper_html: {data: {'viva-mode-toggle-target': 'hideForViva'}}
 
         = form.button :submit, class: 'btn btn-primary me-2'
       %div#description.my-3.tab-pane.fade{class: (' show active ' if @active_problem_tab == '#description')}
