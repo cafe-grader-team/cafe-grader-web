@@ -13,7 +13,10 @@
         = f.input :time_limit, label: "Time limit (s)", tooltip: 'Decimals allowed (e.g., 1.2).'
         = f.input :memory_limit, label: "Memory limit (MB)"
         = f.input :score_type, collection: [['[SUM] The score is the sum of all testcases','sum'],['[GROUP MIN] The score is the sum of the minimum of each group','group_min'],['[RAW SUM] The score is the direct sum of testcase scores returned by the checker','raw_sum']], include_blank: false, wrapper: :horizontal_select
-        = f.input :evaluation_type, collection: Dataset.evaluation_types.keys, include_blank: false, wrapper: :horizontal_select
-        = f.input :main_filename, collection: ds.managers.joins(:blob).pluck(:filename), include_blank: false, wrapper: :horizontal_select, disabled: ds.problem.compilation_type == 'self_contained'
+        = f.input :evaluation_type, collection: Dataset.evaluation_types.keys, include_blank: false, wrapper: :horizontal_select, input_html: {data: {'dataset-mode-toggle-target': 'evaluationType'}}
+        -# Until managers exist there's nothing to pick, so show a
+        -# disabled placeholder pointing the user at the upload form
+        -# in the Files tab. Mirrors initializer_filename below.
+        = f.input :main_filename, collection: ds.managers.joins(:blob).pluck(:filename), include_blank: '-- Upload a manager file first --', wrapper: :horizontal_select, disabled: ds.managers.blank?, wrapper_html: {data: {'dataset-mode-toggle-target': 'hideForSelfContained'}}
         = f.input :initializer_filename, collection: ds.initializers.joins(:blob).pluck(:filename), include_blank: '-- No initializers --', wrapper: :horizontal_select, disabled: ds.initializers.blank?
         = f.button :submit, class: 'btn-primary'

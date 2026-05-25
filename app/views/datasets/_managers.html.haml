@@ -19,26 +19,34 @@
   -# a place holder dataset
   %input{type: 'hidden', name: 'dataset[placeholder]'}
   -# --- managers ---
-  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
-    %span.mi clinical_notes
-    Managers
-  - ds.managers.each do |mg|
-    .row.align-items-center.mb-1
-      .col-md-6
-        %span.bg-success-subtle.rounded.p-1.font-monospace= mg.filename
-      .col-md-6
-        .d-inline-flex.gap-1
-          %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-view-form', formaction: file_view_dataset_path(ds, mg), data: {bs_toggle: 'tooltip', bs_title: 'View file'}}
-            %span.mi.md-18 visibility
-          %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, mg), data: {bs_toggle: 'tooltip', bs_title: 'Delete file'}}
-            %span.mi.md-18 delete
-  - if ds.managers.count == 0
-    %i -- none --
-  .my-2
-    = f.input :managers, label: 'Add managers', wrapper: :horizontal_file
+  -# Hidden when compilation_type == self_contained — the compiler then
+  -# uses the student's source file directly (compiler.rb:87) and any
+  -# uploaded managers are ignored.
+  %div{data: {'dataset-mode-toggle-target': 'hideForSelfContained'}}
+    %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
+      %span.mi clinical_notes
+      Managers
+    - ds.managers.each do |mg|
+      .row.align-items-center.mb-1
+        .col-md-6
+          %span.bg-success-subtle.rounded.p-1.font-monospace= mg.filename
+        .col-md-6
+          .d-inline-flex.gap-1
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'file-view-form', formaction: file_view_dataset_path(ds, mg), data: {bs_toggle: 'tooltip', bs_title: 'View file'}}
+              %span.mi.md-18 visibility
+            %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, mg), data: {bs_toggle: 'tooltip', bs_title: 'Delete file'}}
+              %span.mi.md-18 delete
+    - if ds.managers.count == 0
+      %i -- none --
+    .my-2
+      = f.input :managers, label: 'Add managers', wrapper: :horizontal_file
 
   -# --- checker ---
-  - if ['custom_cafe','custom_cms','custom_cms_raw'].include? ds.evaluation_type
+  -# Always rendered so the upload input exists in the DOM regardless
+  -# of evaluation_type (fixes issue #48 where users couldn't upload
+  -# a checker until they'd first saved the dataset with custom_*).
+  -# Visually hidden when evaluation_type doesn't need a checker.
+  %div{data: {'dataset-mode-toggle-target': 'hideUnlessCustomEval'}}
     %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom.d-flex.align-items-center.gap-2
       %span.mi checkbook
       Checker
@@ -55,8 +63,7 @@
             %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'file-delete-form', formaction: file_delete_dataset_path(ds, ds.checker.attachment), data: {bs_toggle: 'tooltip', bs_title: 'Delete checker'}}
               %span.mi.md-18 delete
     - else
-      .alert.alert-danger
-        The "#{ds.evaluation_type}" evaluation type requires a custom checker, but none is attached.
+      .alert.alert-danger Custom evaluation requires a checker file; none is attached.
     = f.input :checker, label: 'Set checker', wrapper: :horizontal_file
 
   -# --- Initializer ---

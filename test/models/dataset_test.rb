@@ -53,4 +53,50 @@ class DatasetTest < ActiveSupport::TestCase
     ds = datasets(:ds_add)
     assert ds.testcases.count >= 2
   end
+
+  # --- main_filename presence ---
+
+  test "main_filename is auto-set to first manager filename when missing" do
+    ds = datasets(:ds_add)
+    ds.problem.update!(compilation_type: :with_managers)
+    ds.managers.attach(io: StringIO.new("// header"), filename: "main.cpp", content_type: "text/x-c")
+    ds.managers.attach(io: StringIO.new("// other"),  filename: "other.cpp", content_type: "text/x-c")
+    ds.update_columns(main_filename: nil) # bypass callback to set up the scenario
+    ds.reload
+    # Callback fires on validation; presence validation then passes.
+    assert ds.save
+    assert_equal "main.cpp", ds.main_filename
+  end
+
+  test "main_filename presence is enforced when managers attached + with_managers" do
+    ds = datasets(:ds_add)
+    ds.problem.update!(compilation_type: :with_managers)
+    ds.managers.attach(io: StringIO.new("// m"), filename: "m.cpp", content_type: "text/x-c")
+    # Skip the auto-pick callback by stubbing it out so we can verify
+    # the validation acts as a backstop when the callback is bypassed.
+    ds.define_singleton_method(:update_main_filename) { false }
+    ds.main_filename = nil
+    assert_not ds.valid?
+    assert_includes ds.errors[:main_filename], "can't be blank"
+  end
+
+  test "main_filename can be blank when no managers are attached" do
+    ds = datasets(:ds_add)
+    ds.problem.update!(compilation_type: :with_managers)
+    # No managers; the callback also nils main_filename. Validation
+    # condition is false (managers.attached? is false), so save succeeds.
+    ds.main_filename = nil
+    assert ds.valid?
+  end
+
+  test "main_filename can be blank for self_contained problems" do
+    ds = datasets(:ds_add)
+    ds.problem.update!(compilation_type: :self_contained)
+    ds.managers.attach(io: StringIO.new("// m"), filename: "m.cpp", content_type: "text/x-c")
+    ds.main_filename = nil
+    # Even with managers attached, self_contained problems don't need
+    # main_filename — the validation condition checks with_managers?.
+    ds.define_singleton_method(:update_main_filename) { false }
+    assert ds.valid?
+  end
 end

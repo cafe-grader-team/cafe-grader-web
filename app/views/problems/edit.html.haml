@@ -34,7 +34,7 @@
   -# dataset card
   .col-md-6
     .card.shadow-sm.mb-4
-      .card-body{'data-controller': 'bs-tab'}
+      .card-body{data: {controller: 'bs-tab dataset-mode-toggle', 'dataset-mode-toggle-compilation-type-value': @problem.compilation_type, action: 'mode:compilation-type-changed@window->dataset-mode-toggle#syncCompilationType'}}
         - if @problem.viva_exam?
           %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Viva Exam
           %p.text-secondary

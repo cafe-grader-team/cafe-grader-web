@@ -26,7 +26,13 @@ export default class extends Controller {
 
   toggle() {
     const checked = this.element.querySelector('input[name$="[compilation_type]"]:checked')
-    const isViva = checked?.value === "viva_exam"
-    this.hideForVivaTargets.forEach(el => el.classList.toggle("d-none", isViva))
+    const value   = checked?.value
+    this.hideForVivaTargets.forEach(el => el.classList.toggle("d-none", value === "viva_exam"))
+
+    // Broadcast the new compilation_type so listeners outside this
+    // controller's scope (notably the dataset-mode-toggle controller
+    // in the right-column dataset card) can react. Event name is
+    // namespaced ("mode:") to avoid clashing with anything else.
+    this.dispatch("compilation-type-changed", { detail: { value }, prefix: "mode" })
   }
 }

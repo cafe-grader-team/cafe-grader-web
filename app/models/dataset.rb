@@ -27,7 +27,25 @@ class Dataset < ApplicationRecord
   has_many_attached :initializers   # additional files for initialization of testcases
   has_many_attached :data_files     # additional files when running
 
-  before_save :update_main_filename
+  # Runs BEFORE validation so the presence check below sees the
+  # auto-picked main_filename. update_main_filename: when managers
+  # are attached, points main_filename at the first manager if the
+  # current value isn't a member of the manager set (covers blank,
+  # stale, and renamed-file cases). When managers are empty, clears
+  # the field. See app/engine/compiler.rb:87/158, compiler/python.rb:33
+  # for how main_filename is consumed at compile time.
+  before_validation :update_main_filename
+
+  # main_filename is the file the compiler will actually invoke
+  # (compiler.rb:87 selects it via with_managers?). Letting a
+  # with_managers dataset save without it produces opaque grader
+  # errors at compile time — empty Pathname + nil, etc. — so we
+  # block the save instead. The before_validation callback above
+  # normally fills this in automatically when managers exist; this
+  # validation just enforces the contract in case the callback was
+  # bypassed (update_columns, raw SQL).
+  validates :main_filename, presence: true,
+            if: -> { problem&.with_managers? && managers.attached? }
 
   def set_default
     self.compilation_type ||= 'self_contained'
