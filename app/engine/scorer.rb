@@ -11,7 +11,13 @@ class Scorer
           .order(:group, :code_name, 'testcases.id ASC')
   end
 
-  # return a score, full score is always 100
+  # Three score-aggregation strategies live below: sum_of_all_testcases,
+  # group_min, raw_sum. They're dispatched on Dataset#score_type at line
+  # 135. Semantics documented in doc/dataset-scoring-and-evaluation.md —
+  # keep that file in sync when modifying these.
+
+  # score_type :sum — weighted sum / total weight × 100. Full score is
+  # always 100 regardless of testcase weights. Default for most problems.
   def sum_of_all_testcases
     sum_user_score, sum_total_weight = 0.to_d, 0.to_d
     @sub.evaluations.each do |ev|
@@ -25,6 +31,10 @@ class Scorer
     return score
   end
 
+  # score_type :group_min — IOI/ICPC subtask style. For each group take
+  # the minimum testcase score, multiply by the group's max weight, then
+  # normalize to 100. One failure in a group drags the whole group to
+  # its min.
   def group_min
     # evs = evaluations sorted by group
     evs = sorted_evaluation.select(:group, :group_name, :score, :weight, :testcase_id).map { |r| r.attributes.symbolize_keys }
@@ -63,6 +73,9 @@ class Scorer
     return score
   end
 
+  # score_type :raw_sum — literal Σ of per-testcase scores. No weighting,
+  # no scaling. Designed to pair with evaluation_type :custom_cms_raw,
+  # where the custom checker emits the score it wants summed directly.
   def raw_sum
     sum_user_score = 0.to_d
     @sub.evaluations.each do |ev|

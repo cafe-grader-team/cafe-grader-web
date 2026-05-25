@@ -9,15 +9,32 @@ class Dataset < ApplicationRecord
   has_many :testcases, dependent: :destroy
   has_many :submissions
 
-  enum :evaluation_type, { default: 0,  # diff ignore trailing space, ignore blank line
-                           exact: 1,    # diff ignore nothing
-                           relative: 2, # token match float relate
+  # How a submission's output is judged against the expected answer.
+  # Behavior of each value is documented in doc/dataset-scoring-and-evaluation.md
+  # and consumed by app/engine/checker.rb (check_command, process_result).
+  # Quick reference:
+  #   default        diff -b -B -Z (ignores whitespace + blank lines)
+  #   exact          diff -q (strict)
+  #   relative       lib/checker/relative.rb (numbers compared with 1e-6)
+  #   custom_cafe    user's checker; line1=CORRECT/INCORRECT/COMMENT, line2=score/10
+  #   custom_cms     user's checker; CMS/Codeforces — score on stdout, comment on stderr
+  #   postgres       lib/checker/postgres_checker.rb (CMS-style, strips CREATE/DROP VIEW)
+  #   custom_cms_raw user's checker; raw decimal stdout. Pair with score_type :raw_sum.
+  enum :evaluation_type, { default: 0,
+                           exact: 1,
+                           relative: 2,
                            custom_cafe: 3,
                            custom_cms: 4,
                            postgres: 5,
                            custom_cms_raw: 6}
 
-  enum :score_type,      { sum: 0,       # summation of all testcase, default
+  # How per-testcase scores aggregate into the submission's final grade.
+  # Computed in app/engine/scorer.rb (sum_of_all_testcases, group_min, raw_sum).
+  # Quick reference:
+  #   sum         weighted sum / total weight × 100 (default)
+  #   group_min   IOI/ICPC subtask style — a group earns only as much as its weakest case
+  #   raw_sum     literal Σ of testcase scores. Pair with evaluation_type :custom_cms_raw.
+  enum :score_type,      { sum: 0,
                            group_min: 1,
                            raw_sum: 2,
                          }, prefix: :st

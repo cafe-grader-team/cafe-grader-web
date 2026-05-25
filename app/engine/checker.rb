@@ -5,25 +5,38 @@ class Checker
   include JudgeBase
   include Rails.application.routes.url_helpers
 
-  # A language specific sub-class may override this method
-  # it should return shell command that do the comparison
+  # Each branch produces the shell command that compares submission output
+  # to the expected answer. Semantics documented in
+  # doc/dataset-scoring-and-evaluation.md — keep that file in sync with
+  # this dispatch table when adding/changing evaluators.
   def check_command(evaluation_type, input_file, output_file, ans_file)
     case evaluation_type
     when 'default'
+      # -b: ignore amount-of-whitespace diffs; -B: ignore blank lines;
+      # -Z: ignore trailing whitespace. Right default for most problems.
       return "diff -q -b -B -Z #{output_file} #{ans_file}"
     when 'exact'
       return "diff -q #{output_file} #{ans_file}"
     when 'relative'
+      # Tokenizes on whitespace; numbers compared with EPSILON = 1e-6.
       prog = Rails.root.join 'lib', 'checker', (evaluation_type + ".rb")
       return "#{prog} #{input_file} #{output_file} #{ans_file}"
     when 'postgres'
+      # Strips CREATE VIEW / DROP VIEW lines, then CMS-style scoring.
       prog = Rails.root.join 'lib', 'checker', 'postgres_checker.rb'
       return "#{prog} #{input_file} #{output_file} #{ans_file}"
     when 'custom_cms', 'custom_cms_raw'
+      # User's checker. CMS/Codeforces convention: exit 0, score on
+      # stdout, comment on stderr. _raw variant outputs a raw decimal
+      # score meant to pair with score_type :raw_sum.
       return "#{@prob_checker_file} #{input_file} #{output_file} #{ans_file}"
     when 'custom_cafe'
+      # User's checker. Receives <lang> <tc_num> <in> <out> <ans> 10.
+      # Output is two lines: line1 CORRECT/INCORRECT/COMMENT:, line2 score
+      # (note: score is divided by 10 in process_result_cafe).
       return "#{@prob_checker_file} #{@sub.language.name} #{@testcase.num} #{input_file} #{output_file} #{ans_file} 10"
     when 'no_check'
+      # Reachable here but NOT in the Dataset#evaluation_type enum — see doc.
       return ""
     end
   end

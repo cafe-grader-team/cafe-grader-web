@@ -80,9 +80,45 @@
         Viva-exam problems don't use datasets at all — they're driven by
         the LLM tags described above.
 
-    -# ---- Section: Audit & ops ----
+    -# ---- Section: Scoring & evaluation ----
     %section.mb-4
-      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Operations
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Scoring & evaluation
+      %p.small.text-secondary.mb-2
+        %strong Score type
+        controls how per-testcase scores aggregate into a final grade:
+        %strong Sum
+        (weighted sum, scaled to 100 — the default),
+        %strong Group Min
+        (IOI/ICPC subtask style — a group is only as strong as its
+        weakest testcase), or
+        %strong Raw Sum
+        (literal sum, no normalization).
+      %p.small.text-secondary.mb-2
+        %strong Evaluation type
+        controls how a submission's output is judged against the
+        expected answer. Built-in evaluators are
+        %code default
+        (diff that ignores whitespace + blank lines — most problems),
+        %code exact
+        (strict diff), and
+        %code relative
+        (token-by-token; numbers compared with tolerance). Custom
+        evaluators —
+        %code cafe
+        ,
+        %code cms
+        , and
+        %code cms-raw
+        — run a checker file you attach to the dataset (Files tab).
+      %p.small.text-secondary.mb-0
+        %strong Heads up:
+        the
+        %code Raw Sum
+        score type is designed to pair with the
+        %code CMS-raw
+        custom evaluator — other combinations will produce strange
+        totals because non-custom evaluators only emit pass/fail per
+        testcase.
       %ul.small.text-secondary.mb-0.ps-3
         %li
           %span.mi.md-18.align-text-bottom query_stats

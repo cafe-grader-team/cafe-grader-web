@@ -12,8 +12,17 @@
         = f.input :name
         = f.input :time_limit, label: "Time limit (s)", tooltip: 'Decimals allowed (e.g., 1.2).'
         = f.input :memory_limit, label: "Memory limit (MB)"
-        = f.input :score_type, collection: [['[SUM] The score is the sum of all testcases','sum'],['[GROUP MIN] The score is the sum of the minimum of each group','group_min'],['[RAW SUM] The score is the direct sum of testcase scores returned by the checker','raw_sum']], include_blank: false, wrapper: :horizontal_select
-        = f.input :evaluation_type, collection: Dataset.evaluation_types.keys, include_blank: false, wrapper: :horizontal_select, input_html: {data: {'dataset-mode-toggle-target': 'evaluationType'}}
+        -# score_type — rich radio buttons (compilation_type pattern).
+        -# 3 options each benefit from a short explanation; radios make
+        -# the trade-offs scannable. See doc/dataset-scoring-and-evaluation.md.
+        - score_options = [['<strong>Sum</strong> <span class="text-secondary">— weighted sum / total weight × 100. Default for most problems.</span>'.html_safe, 'sum'], ['<strong>Group Min</strong> <span class="text-secondary">— IOI/ICPC subtask style; a group is only as strong as its weakest testcase.</span>'.html_safe, 'group_min'], ['<strong>Raw Sum</strong> <span class="text-secondary">— literal Σ of testcase scores (no normalization). Pair with Custom CMS-raw evaluator.</span>'.html_safe, 'raw_sum']]
+        = f.input :score_type, as: :radio_buttons, collection: score_options, wrapper: :horizontal_collection, tooltip: 'How testcase scores aggregate into a final grade.'
+
+        -# evaluation_type — grouped select. 7 options would be too
+        -# heavy as radios, but they cluster naturally into three groups.
+        -# See doc/dataset-scoring-and-evaluation.md for full semantics.
+        - eval_groups = [['Built-in', [['[DEFAULT] Diff — ignores whitespace differences and blank lines', 'default'], ['[EXACT] Diff — strict, no normalization', 'exact'], ['[RELATIVE] Token-by-token; numbers compared with 1e-6 tolerance', 'relative']]], ['Custom checker', [['[CAFE] CORRECT/INCORRECT/COMMENT + score (cafe protocol)', 'custom_cafe'], ['[CMS] CMS/Codeforces protocol (score on stdout)', 'custom_cms'], ['[CMS-raw] Raw checker output — pair with Raw Sum score type', 'custom_cms_raw']]], ['Special', [['[POSTGRES] SQL query result; strips CREATE/DROP VIEW lines', 'postgres']]]]
+        = f.input :evaluation_type, as: :grouped_select, collection: eval_groups, group_method: :last, group_label_method: :first, label_method: :first, value_method: :last, include_blank: false, wrapper: :horizontal_select, input_html: {data: {'dataset-mode-toggle-target': 'evaluationType'}}, tooltip: 'How submission output is judged against the expected answer.'
         -# Until managers exist there's nothing to pick, so show a
         -# disabled placeholder pointing the user at the upload form
         -# in the Files tab. Mirrors initializer_filename below.

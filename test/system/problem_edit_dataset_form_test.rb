@@ -63,8 +63,9 @@ class ProblemEditDatasetFormTest < ApplicationSystemTestCase
     assert_selector "[data-dataset-mode-toggle-target='hideUnlessCustomEval'].d-none",
                     visible: :all, wait: 5
     # The evaluation_type select lives in the Settings tab (default
-    # active), so it's reachable without switching tabs.
-    select "custom_cms", from: "dataset_evaluation_type"
+    # active), so it's reachable without switching tabs. Labels were
+    # reworded to "[BRACKET] description" form; pick the CMS option.
+    select "[CMS] CMS/Codeforces protocol (score on stdout)", from: "dataset_evaluation_type"
     assert_no_selector "[data-dataset-mode-toggle-target='hideUnlessCustomEval'].d-none",
                        visible: :all, wait: 5
   end
