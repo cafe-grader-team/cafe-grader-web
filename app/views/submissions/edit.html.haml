@@ -62,7 +62,7 @@
           .col-auto
             = form.label :language_id, 'Language'
           .col-auto
-            - options = options_from_collection_for_select(Language.where(id: @problem.get_permitted_lang_as_ids), 'id', 'pretty_name', @language.id )
+            - options = options_from_collection_for_select(Language.where(id: @problem.get_permitted_lang_as_ids).order(:id), 'id', 'pretty_name', @language.id )
             = form.select :language_id, options, {},  class: 'form-select', data: {action: 'change->editor#setLanguage', editor_target: 'languageSelect'}, style: "width: 100px", id: 'language_id', disabled: @language_forced
           .col-auto
             = form.file_field :file, class: 'form-control', id: 'load_file', data: {action: 'change->editor#loadFileToEditor'}

@@ -101,4 +101,26 @@ class ProblemTest < ActiveSupport::TestCase
     prob = problems(:prob_add)
     assert prob.submissions.count > 0
   end
+
+  # --- permitted_lang ordering ---
+  # set_language picks the fallback language as `permitted.first`, so the order
+  # returned here must be deterministic (ascending id), not the typed order or
+  # the name-index order MySQL happens to return.
+
+  test "get_permitted_lang_as_ids returns all ids ascending when blank" do
+    prob = problems(:prob_add)
+    prob.update!(permitted_lang: "")
+    ids = prob.get_permitted_lang_as_ids
+    assert_equal Language.count, ids.size
+    assert_equal ids.sort, ids, "blank permitted_lang must return all ids in ascending order"
+  end
+
+  test "get_permitted_lang_as_ids returns an explicit set in ascending id order" do
+    prob = problems(:prob_add)
+    langs = [languages(:Language_c), languages(:Language_cpp), languages(:Language_java)]
+    # list the names deliberately in descending-id order
+    prob.update!(permitted_lang: langs.sort_by(&:id).reverse.map(&:name).join(" "))
+    assert_equal langs.map(&:id).sort, prob.get_permitted_lang_as_ids,
+                 "permitted ids must come back ascending regardless of the order they were typed in"
+  end
 end

@@ -356,9 +356,9 @@ class Problem < ApplicationRecord
 
   # return ids array of permitted lang
   # if permitted_lang is blank, show nil
-  def get_permitted_lang_as_ids(when_blank: Language.ids)
+  def get_permitted_lang_as_ids(when_blank: Language.order(:id).ids)
     return when_blank if self.permitted_lang.blank?
-    return Language.where(name: self.permitted_lang.split(' ').uniq).ids
+    return Language.where(name: self.permitted_lang.split(' ').uniq).order(:id).ids
   end
 
   # this function return a content generated for "all_tests.cfg"

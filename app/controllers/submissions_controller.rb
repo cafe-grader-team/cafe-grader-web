@@ -184,16 +184,23 @@ protected
   end
 
   # need set_problem first
+  #
+  # The problem's permitted-language set is authoritative: it defines what is
+  # submittable. The user's default_language is only a preference used to
+  # preselect one of those permitted languages, so it is honored solely when it
+  # is itself permitted. This keeps @language (and therefore @as_binary, which
+  # drives the upload-vs-editor UI) always inside the permitted set, so the
+  # rendered mode can never contradict the language dropdown.
   def set_language
-    problem_lang = Language.find(@problem.get_permitted_lang_as_ids[0]) rescue nil
-    @language_forced = @problem.get_permitted_lang_as_ids.count == 1
-    if @language_forced
-      @language = problem_lang
-    else
-      @language = nil
-      # this maybe called when @submission is nil
-      @language = @submission&.language || @current_user.default_language || problem_lang || Language.first
-    end
+    permitted = @problem.get_permitted_lang_as_ids          # deterministically ordered (by id)
+    @language_forced = permitted.count == 1
+    default = @current_user.default_language
+
+    @language =
+      @submission&.language ||                                  # editing: keep the submission's own language
+      (default if default && permitted.include?(default.id)) || # default only when it is permitted
+      Language.find_by(id: permitted.first) ||                  # deterministic in-set fallback
+      Language.first                                            # guard: stale/empty permitted set
 
     @as_binary = @language.binary?
   end
