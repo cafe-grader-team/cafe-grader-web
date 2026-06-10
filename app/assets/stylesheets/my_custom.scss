@@ -394,6 +394,30 @@ table.taskdesc {
   }
 }
 
+// Markdown preview on announcement cards (main page) and the admin
+// announcements table. The body renders as real markdown and is clamped
+// visually; truncating the markdown text itself would cut mid-syntax
+// (code fences, links) and break the render. "Read More" opens the modal.
+.announcement-preview {
+  // tame block headings inside a compact preview; the modal shows them full-size
+  h1, h2, h3, h4, h5 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.announcement-preview-clamped {
+  max-height: 7.5rem;
+  overflow: hidden;
+  // fade the clipped bottom edge out instead of cutting it abruptly
+  -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+}
+
 div {
   &.message {
     margin: 10px 0 0;

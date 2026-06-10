@@ -22,11 +22,7 @@
       - if is_contest
         = markdown(announcement.body)
       - else
-        - parsed_body = markdown(announcement.body)
-        - raw_text = CGI.unescapeHTML(strip_tags(parsed_body))
-        = truncate(raw_text, length: 150)
-        - if raw_text.length > 150
-          %a.ms-1.fw-bold{:href => "#", "data-bs-toggle" => "modal", "data-bs-target" => "#announcementModal-#{announcement.id}", :style => "text-decoration: none;"} Read More &rarr;
+        = render 'announcements/body_preview', announcement: announcement
 
     - if announcement.file.attached?
       %hr.my-2
@@ -35,22 +31,3 @@
         %span.badge.bg-light.text-dark.border
           = mdi('attachment', 'md-18')
           = link_to announcement.file.filename, url_for(announcement.file), class: 'text-decoration-none ms-1'
-
-  - if !is_contest
-    .modal.fade{:id => "announcementModal-#{announcement.id}", :tabindex => "-1", "aria-labelledby" => "announcementModalLabel-#{announcement.id}", "aria-hidden" => "true"}
-      .modal-dialog.modal-lg.modal-dialog-scrollable
-        .modal-content
-          .modal-header
-            %h5.modal-title.fw-bold{:id => "announcementModalLabel-#{announcement.id}"}= announcement.title
-            %button.btn-close{"data-bs-dismiss" => "modal", "aria-label" => "Close"}
-          .modal-body
-            = markdown(announcement.body)
-            - if announcement.file.attached?
-              %hr.my-2
-              .text-uppercase.small.fw-bold.text-muted.mb-1 Attachments
-              .mt-2
-                %span.badge.bg-light.text-dark.border
-                  = mdi('attachment', 'md-18')
-                  = link_to announcement.file.filename, url_for(announcement.file), class: 'text-decoration-none ms-1'
-          .modal-footer
-            %button.btn.btn-secondary{"data-bs-dismiss" => "modal"} Close
