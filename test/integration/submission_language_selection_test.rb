@@ -136,4 +136,45 @@ class SubmissionLanguageSelectionTest < ActionDispatch::IntegrationTest
     open_new_submission(permitted_lang: "no_such_lang another_missing", default: nil)
     assert_response :success
   end
+
+  # --- Editing an existing submission preserves its own (historical) language ---
+
+  test "editing a submission honors its stored language even when no longer permitted" do
+    sub = submissions(:add1_by_admin)             # admin's own submission on prob_add
+    sub.update_columns(language_id: @archive.id)  # stored language is binary; bypass the coercion callback
+    @problem.update!(permitted_lang: "#{@c.name} #{@cpp.name}")  # restrict to a source-only set (excludes archive)
+    sign_in_as("admin", "admin")
+    get edit_submission_path(sub)
+    assert_response :success
+    assert_upload_mode   # set_language honored @submission.language (binary), not the permitted-set fallback
+  end
+
+  # --- Submit-time guard: the permitted set is enforced server-side ---
+
+  test "submit rejects a language_id outside the permitted set" do
+    @problem.update!(permitted_lang: "#{@c.name} #{@cpp.name}")  # source-only, more than one permitted
+    sign_in_as("admin", "admin")
+    assert_no_difference "Submission.count" do
+      post submit_main_path, params: {
+        submission: { problem_id: @problem.id },
+        language_id: @archive.id,                                # not permitted
+        editor_text: "print(1)"
+      }
+    end
+    assert_redirected_to list_main_path
+    assert_match(/not permitted/i, flash[:alert])
+  end
+
+  test "submit accepts a language_id within the permitted set" do
+    @problem.update!(permitted_lang: "#{@c.name} #{@cpp.name}")
+    sign_in_as("admin", "admin")
+    assert_difference "Submission.count", 1 do
+      post submit_main_path, params: {
+        submission: { problem_id: @problem.id },
+        language_id: @cpp.id,                                    # permitted
+        editor_text: "int main() { return 0; }"
+      }
+    end
+    assert_redirected_to edit_submission_path(Submission.last)
+  end
 end

@@ -63,7 +63,14 @@ class MainController < ApplicationController
       language = Language.find_by_extension params['file'].original_filename.ext
     end
     language = Language.find(params[:language_id]) rescue nil
-    language = Language.find(problem.get_permitted_lang_as_ids[0]) rescue nil if problem.get_permitted_lang_as_ids.count == 1   # if permitted only 1 language, we will use it
+    permitted_ids = problem.get_permitted_lang_as_ids
+    # The language dropdown only offers permitted languages; reject a crafted or
+    # stale POST whose language_id is outside the problem's permitted set.
+    # (Skipped when exactly one language is permitted — it is force-set below.)
+    if params[:language_id].present? && permitted_ids.count != 1 && !permitted_ids.include?(language&.id)
+      redirect_to list_main_path, alert: 'The selected language is not permitted for this problem.' and return
+    end
+    language = Language.find(permitted_ids[0]) if permitted_ids.count == 1   # if permitted only 1 language, we will use it
     language = Language.where(name: 'cpp').first if language.nil?
 
     @submission = Submission.new(user: @current_user,
