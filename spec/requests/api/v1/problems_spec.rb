@@ -179,6 +179,28 @@ RSpec.describe "Problems API", type: :request do
 
       parameter name: :id, in: :path, type: :integer, required: true
 
+      response "200", "testcase metadata list" do
+        schema type: :array, items: {
+          type: :object, additionalProperties: false, properties: {
+            id: { type: :integer, description: "Global testcase id — pass this as {id} to /api/v1/testcases/{id}/input and /api/v1/testcases/{id}/sol" },
+            num: { type: :integer, description: "Display number within the problem (1, 2, 3, …) — not usable as {id} for the download endpoints" },
+            group: { type: :integer, nullable: true, description: "Testcase group number" },
+            group_name: { type: :string, nullable: true, description: "Testcase group name" },
+            weight: { type: :integer, nullable: true, description: "Score weight of this testcase" }
+          },
+          required: %w[id num]
+        }
+
+        let(:id) { problems(:prob_add).id }
+
+        run_test! do |response|
+          body = JSON.parse(response.body)
+          expect(body.length).to eq(2)
+          expect(body.map { |t| t["num"] }).to eq([1, 2])
+          expect(body.map { |t| t["id"] }).to all(be_a(Integer))
+        end
+      end
+
       response "403", "testcase viewing not allowed" do
         schema type: :object, additionalProperties: false, properties: { error: { type: :string } }
 

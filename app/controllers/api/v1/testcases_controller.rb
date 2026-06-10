@@ -22,7 +22,10 @@ class Api::V1::TestcasesController < Api::V1::BaseController
     @testcase = Testcase.find(params[:id])
     @problem = @testcase.dataset.problem
   rescue ActiveRecord::RecordNotFound
-    render_not_found("Testcase")
+    # the most common mistake is passing the per-problem `num` as {id}
+    render_not_found("Testcase",
+                     hint: "Use the global `id` from GET /api/v1/problems/{problem_id}/testcases, " \
+                           "not the per-problem `num`. The solution file is at /api/v1/testcases/{id}/sol.")
   end
 
   def authorize_testcase!

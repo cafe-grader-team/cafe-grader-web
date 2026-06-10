@@ -34,7 +34,9 @@ class Api::V1::BaseController < ActionController::API
     Rails.application.secret_key_base
   end
 
-  def render_not_found(resource = "Resource")
-    render json: { error: "#{resource} not found" }, status: :not_found
+  def render_not_found(resource = "Resource", hint: nil)
+    body = { error: "#{resource} not found" }
+    body[:hint] = hint if hint
+    render json: body, status: :not_found
   end
 end
