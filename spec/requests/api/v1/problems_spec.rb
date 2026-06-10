@@ -29,6 +29,7 @@ RSpec.describe "Problems API", type: :request do
             last_score: { type: :number, nullable: true },
             last_result: { type: :string, nullable: true },
             last_submission_time: { type: :string, format: "date-time", nullable: true },
+            last_submission_id: { type: :integer, nullable: true, description: "Id of the user's latest submission for this problem — fetch details via /api/v1/submissions/{id}" },
             has_testcase: { type: :boolean },
             has_attachment: { type: :boolean },
             permitted_languages: {
@@ -42,12 +43,21 @@ RSpec.describe "Problems API", type: :request do
           }
         }
 
+        # non-nil points so the schema actually exercises the score types
+        # (points is DECIMAL/BigDecimal — regression: encoded as string "50.5")
+        before { submissions(:add1_by_admin).update_columns(points: 50.5) }
+
         run_test! do |response|
           data = JSON.parse(response.body)
           expect(data).to be_an(Array)
           names = data.map { |p| p["name"] }
           expect(names).to include("add")
           expect(names).not_to include("subtract") # not available
+
+          add = data.find { |p| p["name"] == "add" }
+          expect(add["best_score"]).to eq(50.5)
+          expect(add["last_score"]).to eq(50.5)
+          expect(add["last_submission_id"]).to eq(submissions(:add1_by_admin).id)
         end
       end
     end
@@ -74,6 +84,7 @@ RSpec.describe "Problems API", type: :request do
           last_score: { type: :number, nullable: true },
           last_result: { type: :string, nullable: true },
           last_submission_time: { type: :string, format: "date-time", nullable: true },
+          last_submission_id: { type: :integer, nullable: true, description: "Id of the user's latest submission for this problem — fetch details via /api/v1/submissions/{id}" },
           has_testcase: { type: :boolean },
           has_attachment: { type: :boolean },
           permitted_languages: {
@@ -89,10 +100,15 @@ RSpec.describe "Problems API", type: :request do
 
         let(:id) { problems(:prob_add).id }
 
+        before { submissions(:add1_by_admin).update_columns(points: 50.5) }
+
         run_test! do |response|
           data = JSON.parse(response.body)
           expect(data["name"]).to eq("add")
           expect(data["submission_ids"]).to be_an(Array)
+          expect(data["best_score"]).to eq(50.5)
+          expect(data["last_score"]).to eq(50.5)
+          expect(data["last_submission_id"]).to eq(submissions(:add1_by_admin).id)
         end
       end
 

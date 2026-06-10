@@ -30,9 +30,10 @@ class Api::V1::ProblemsController < Api::V1::BaseController
       tags: @problem.public_tags.pluck(:name),
       submission_count: stat[:count] || 0,
       best_score: stat[:best_score],
-      last_score: last&.points,
+      last_score: last&.points&.to_f,
       last_result: last&.grader_comment,
       last_submission_time: last&.submitted_at,
+      last_submission_id: last&.id,
       has_testcase: @problem.can_view_testcase,
       has_attachment: @problem.attachment.attached?,
       permitted_languages: permitted_languages_for(@problem),
@@ -172,8 +173,10 @@ class Api::V1::ProblemsController < Api::V1::BaseController
       stats[sub.problem_id][:last] = sub
     end
 
+    # points is a DECIMAL column (BigDecimal in Ruby), which Rails JSON-encodes
+    # as a string to preserve precision — cast to float so the API emits numbers
     submissions.group(:problem_id).pluck("problem_id", "max(points)").each do |pid, max|
-      stats[pid][:best_score] = max
+      stats[pid][:best_score] = max&.to_f
     end
 
     stats
@@ -190,9 +193,10 @@ class Api::V1::ProblemsController < Api::V1::BaseController
       tags: problem.public_tags.pluck(:name),
       submission_count: stat[:count] || 0,
       best_score: stat[:best_score],
-      last_score: last&.points,
+      last_score: last&.points&.to_f,
       last_result: last&.grader_comment,
       last_submission_time: last&.submitted_at,
+      last_submission_id: last&.id,
       has_testcase: problem.can_view_testcase,
       has_attachment: problem.attachment.attached?,
       permitted_languages: permitted_languages_for(problem)

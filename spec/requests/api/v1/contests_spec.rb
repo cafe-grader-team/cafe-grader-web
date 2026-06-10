@@ -4,7 +4,7 @@ RSpec.describe "Contests API", type: :request do
   fixtures :users, :roles, :grader_configurations, :sites,
            :contests, :contests_users, :contests_problems,
            :problems, :datasets, :groups, :groups_users, :groups_problems,
-           :tags
+           :tags, :submissions, :languages
 
   path "/api/v1/contests/{id}" do
     get "Get contest info" do
@@ -66,6 +66,7 @@ RSpec.describe "Contests API", type: :request do
             last_score: { type: :number, nullable: true },
             last_result: { type: :string, nullable: true },
             last_submission_time: { type: :string, format: "date-time", nullable: true },
+            last_submission_id: { type: :integer, nullable: true, description: "Id of the user's latest submission for this problem — fetch details via /api/v1/submissions/{id}" },
             has_testcase: { type: :boolean },
             has_attachment: { type: :boolean },
             permitted_languages: {
@@ -82,10 +83,18 @@ RSpec.describe "Contests API", type: :request do
         let(:id) { contests(:contest_a).id }
         let(:Authorization) { "Bearer #{jwt_token_for(users(:admin))}" }
 
+        # non-nil points so the score fields are exercised as JSON numbers
+        before { submissions(:add1_by_admin).update_columns(points: 50.5) }
+
         run_test! do |response|
           data = JSON.parse(response.body)
           expect(data).to be_an(Array)
           expect(data.map { |p| p["name"] }).to include("add")
+
+          add = data.find { |p| p["name"] == "add" }
+          expect(add["best_score"]).to eq(50.5)
+          expect(add["last_score"]).to eq(50.5)
+          expect(add["last_submission_id"]).to eq(submissions(:add1_by_admin).id)
         end
       end
     end

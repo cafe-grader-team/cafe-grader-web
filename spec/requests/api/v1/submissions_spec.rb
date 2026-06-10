@@ -33,9 +33,14 @@ RSpec.describe "Submissions API", type: :request do
 
         let(:problem_id) { problems(:prob_add).id }
 
+        # non-nil points so the schema exercises the type (DECIMAL → must be a JSON number)
+        before { submissions(:add1_by_admin).update_columns(points: 50.5) }
+
         run_test! do |response|
           data = JSON.parse(response.body)
           expect(data).to be_an(Array)
+          mine = data.find { |s| s["id"] == submissions(:add1_by_admin).id }
+          expect(mine["points"]).to eq(50.5)
         end
       end
     end
@@ -125,9 +130,12 @@ RSpec.describe "Submissions API", type: :request do
 
         let(:id) { submissions(:add1_by_admin).id }
 
+        before { submissions(:add1_by_admin).update_columns(points: 50.5) }
+
         run_test! do |response|
           data = JSON.parse(response.body)
           expect(data["problem_name"]).to eq("add")
+          expect(data["points"]).to eq(50.5)
         end
       end
 

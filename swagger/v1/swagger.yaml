@@ -167,6 +167,11 @@ paths:
                       type: string
                       format: date-time
                       nullable: true
+                    last_submission_id:
+                      type: integer
+                      nullable: true
+                      description: Id of the user's latest submission for this problem
+                        — fetch details via /api/v1/submissions/{id}
                     has_testcase:
                       type: boolean
                     has_attachment:
@@ -262,6 +267,11 @@ paths:
                       type: string
                       format: date-time
                       nullable: true
+                    last_submission_id:
+                      type: integer
+                      nullable: true
+                      description: Id of the user's latest submission for this problem
+                        — fetch details via /api/v1/submissions/{id}
                     has_testcase:
                       type: boolean
                     has_attachment:
@@ -333,6 +343,11 @@ paths:
                     type: string
                     format: date-time
                     nullable: true
+                  last_submission_id:
+                    type: integer
+                    nullable: true
+                    description: Id of the user's latest submission for this problem
+                      — fetch details via /api/v1/submissions/{id}
                   has_testcase:
                     type: boolean
                   has_attachment:

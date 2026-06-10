@@ -26,7 +26,8 @@ class Api::V1::SubmissionsController < Api::V1::BaseController
       source: (submission.source if submission.user == current_user || current_user.admin?),
       source_filename: submission.source_filename,
       submitted_at: submission.submitted_at,
-      points: submission.points,
+      # points is DECIMAL (BigDecimal) — Rails JSON-encodes it as a string; cast to float
+      points: submission.points&.to_f,
       status: submission.status,
       grader_comment: submission.grader_comment,
       compiler_message: submission.compiler_message,
@@ -114,7 +115,7 @@ class Api::V1::SubmissionsController < Api::V1::BaseController
       number: s.number,
       language: s.language.name,
       submitted_at: s.submitted_at,
-      points: s.points,
+      points: s.points&.to_f,
       status: s.status,
       grader_comment: s.grader_comment
     }
