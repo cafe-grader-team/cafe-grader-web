@@ -6,15 +6,22 @@ user_pass: &user_pass
 default: &default
   adapter: mysql2
   encoding: utf8mb4
-  collation: utf8mb4_unicode_ci
+  # canonical collation — MySQL 8 only, MariaDB unsupported (doc/decisions.md)
+  collation: utf8mb4_0900_ai_ci
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   host: localhost
   socket: /var/run/mysqld/mysqld.sock
 
 test:
-  <<: [*user_pass]
-  adapter: mysql2
-  database: grader_test
+  primary:
+    <<: [*user_pass]
+    adapter: mysql2
+    database: grader_test
+  queue:
+    <<: [*user_pass]
+    adapter: mysql2
+    database: grader_queue_test
+    migrations_paths: db/queue_migrate
 
 production:
   primary:

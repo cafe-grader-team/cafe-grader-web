@@ -29,7 +29,7 @@ Most existing users are effectively on `v1.0.0`. The `v2`/`v3` tags exist as his
 
 ### Highlights of v4.x (vs. v1.0.0)
 
-- **Rails 8.0** + **Ruby 3.4.4** — both hard requirements.
+- **Rails 8.0** + **Ruby 3.4.4** + **MySQL 8.0+** — all hard requirements. **MariaDB is NOT supported** (see Tech stack below).
 - **Solid Queue / Solid Cache / Solid Cable** — first Active Job backend in project history (no Sidekiq/Redis to retire — there was no third-party queue before).
 - **Propshaft + ImportMap + dartsass-rails** replace Sprockets. Node.js is no longer required for the web app. (Webpacker was never adopted.)
 - **Hotwire (Turbo + Stimulus)** is the primary front-end interaction model. **Bootstrap 5** throughout (Bootstrap 3 → 5 direct jump — no Bootstrap 4 phase).
@@ -58,7 +58,10 @@ git checkout v1.0.0
 ## Tech stack (v4.x)
 
 - Ruby 3.4.4, Rails 8.0
-- MySQL (primary DB `grader`, queue DB `grader_queue`)
+- **MySQL 8.0+ only** (Oracle MySQL or Percona Server; primary DB `grader`, queue DB `grader_queue`).
+  **MariaDB will NOT work**: every table uses the `utf8mb4_0900_ai_ci` collation (MySQL 8's default),
+  which MariaDB does not implement — the schema will not even load. This is a deliberate decision
+  (performance + modern Unicode/Thai handling); rationale in [doc/decisions.md](doc/decisions.md).
 - Propshaft asset pipeline, ImportMap for JS, dartsass-rails for CSS
 - Hotwire (Turbo + Stimulus), jQuery (legacy), Bootstrap 5, HAML
 - Solid Queue (jobs), Solid Cache, Solid Cable
@@ -76,6 +79,13 @@ bundle install
 bin/rails db:setup
 bin/rails db:migrate:queue       # migrate the queue DB
 bin/dev                          # web + dartsass watcher + queue
+```
+
+The test suite uses two databases (`grader_test` + `grader_queue_test`). Give the MySQL
+user a wildcard grant so all `grader_*` databases work, current and future:
+
+```sql
+GRANT ALL PRIVILEGES ON `grader\_%`.* TO 'grader'@'localhost';
 ```
 
 ## Documentation

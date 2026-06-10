@@ -15,7 +15,7 @@ Local VCS is **Mercurial (hg)**, mirrored to **GitHub** via the **hg-git** exten
 ## Tech Stack
 
 - **Ruby 3.4.4, Rails 8.0.0** (with `load_defaults 7.0`)
-- **MySQL** (primary DB: `grader`, queue DB: `grader_queue`)
+- **MySQL 8.0+ only** (Oracle MySQL or Percona; **MariaDB unsupported** — every table uses the `utf8mb4_0900_ai_ci` collation, which MariaDB lacks; enforced by `test/schema_collation_test.rb`, rationale in `doc/decisions.md`). Primary DB: `grader`, queue DB: `grader_queue`
 - **Propshaft** asset pipeline, **ImportMap** for JS, **dartsass-rails** for CSS (no Node/yarn dependency)
 - **Hotwire** (Turbo + Stimulus), jQuery (legacy), Bootstrap 5
 - **HAML** templates
@@ -38,7 +38,8 @@ bin/rails db:migrate             # primary DB migrations
 bin/rails db:migrate:queue       # queue DB migrations (db/queue_migrate/)
 
 # Tests
-bin/rails test                   # all tests
+bin/rails check                  # EVERYTHING: minitest + RSpec API specs + swagger freshness (no system tests)
+bin/rails test                   # all minitest tests (does NOT run the RSpec API specs)
 bin/rails test test/models/      # test a directory
 bin/rails test test/models/user_test.rb        # single file
 bin/rails test test/models/user_test.rb:42     # single test by line
@@ -51,6 +52,7 @@ bundle exec brakeman             # security analysis
 # API specs & Swagger docs (RSpec + rswag)
 bundle exec rspec spec/requests/api/v1/          # run API tests
 bundle exec rails rswag:specs:swaggerize         # regenerate swagger/v1/swagger.yaml
+bin/rails swagger:verify         # fail if swagger.yaml is stale (also part of `check`)
 ```
 
 ## Architecture
