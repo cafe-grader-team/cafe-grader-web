@@ -132,8 +132,11 @@ class Dataset < ApplicationRecord
     set_by_array(:group_name, options[:group_name], can_use_cms_mode: false) if options.has_key? :group_name
   end
 
+  # Drop workers' cached copy of this dataset so they re-download testcases
+  # and managers. (Was `dataset_id: @dataset` — a nil ivar inside the model —
+  # which matched nothing, so callers silently invalidated nothing.)
   def invalidate_worker
-    WorkerDataset.where(dataset_id: @dataset).delete_all
+    WorkerDataset.where(dataset_id: id).delete_all
   end
 
   # set main_filename if null and should be set
