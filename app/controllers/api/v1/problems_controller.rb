@@ -1,5 +1,10 @@
 class Api::V1::ProblemsController < Api::V1::BaseController
   before_action :set_problem, only: [:show, :description, :file, :data_files, :testcases]
+  # Write actions look the problem up directly: set_problem uses the
+  # student submit scope, which excludes unavailable problems even for
+  # their editors.
+  before_action :set_problem_for_edit, only: [:update, :destroy, :statement, :import_testcases]
+  before_action :require_editor!, only: [:create]
 
   # GET /api/v1/problems
   def index
@@ -130,6 +135,130 @@ class Api::V1::ProblemsController < Api::V1::BaseController
     end
   end
 
+  # POST /api/v1/problems
+  def create
+    @problem = Problem.new(problem_params)
+    @problem.full_name = @problem.name if @problem.full_name.blank?
+    # quick_create-style defaults for keys the client omitted
+    @problem.available = false unless problem_params.key?(:available)
+    @problem.test_allowed = true unless problem_params.key?(:test_allowed)
+    @problem.output_only = false unless problem_params.key?(:output_only)
+    @problem.date_added ||= Time.zone.today
+
+    return unless apply_permitted_languages(@problem)
+
+    # Mirror web quick_create: a problem without a dataset is invisible to
+    # the manage views, so the default dataset + live pointer are created
+    # atomically with the problem.
+    ok = Problem.transaction do
+      next false unless @problem.save
+      ds = @problem.datasets.create!(name: @problem.get_next_dataset_name)
+      @problem.update!(live_dataset: ds)
+      true
+    end
+
+    if ok
+      render json: problem_admin_json(@problem), status: :created
+    else
+      render_validation_errors(@problem)
+    end
+  rescue ArgumentError => e # invalid enum value, e.g. compilation_type
+    render json: { error: "Validation failed", details: [e.message] }, status: :unprocessable_entity
+  end
+
+  # PATCH /api/v1/problems/:id
+  def update
+    return unless apply_permitted_languages(@problem)
+
+    if @problem.update(problem_params)
+      render json: problem_admin_json(@problem)
+    else
+      render_validation_errors(@problem)
+    end
+  rescue ArgumentError => e
+    render json: { error: "Validation failed", details: [e.message] }, status: :unprocessable_entity
+  end
+
+  # PUT /api/v1/problems/:id/statement — upload/replace the statement PDF
+  def statement
+    file = params[:statement]
+    unless file.respond_to?(:content_type)
+      render json: { error: "Missing statement file" }, status: :unprocessable_entity and return
+    end
+    unless file.content_type == "application/pdf"
+      render json: { error: "Uploaded file is not PDF" }, status: :unprocessable_entity and return
+    end
+
+    @problem.statement.attach(file)
+    render json: problem_admin_json(@problem)
+  end
+
+  # DELETE /api/v1/problems/:id
+  def destroy
+    @problem.destroy
+    head :no_content
+  end
+
+  # POST /api/v1/problems/:id/testcases/import — bulk import from a zip
+  # (mirrors the web ProblemsController#import_testcases / ProblemImporter flow)
+  def import_testcases
+    file = params[:file]
+    unless file.respond_to?(:tempfile)
+      render json: { error: "Missing zip file (multipart field: file)" },
+             status: :unprocessable_entity and return
+    end
+
+    dataset = nil
+    if params[:dataset_id].present?
+      dataset = @problem.datasets.where(id: params[:dataset_id]).first
+      render_not_found("Dataset") and return unless dataset
+    end
+
+    importer = ProblemImporter.new
+    extracted_path = importer.unzip_to_dir(
+      file.tempfile.path,
+      @problem.name,
+      Rails.configuration.worker[:directory][:judge_raw_path])
+
+    if importer.errors.count > 0
+      render json: { error: "Import failed", details: importer.errors },
+             status: :unprocessable_entity and return
+    end
+
+    # importing replaces files workers may have cached
+    dataset&.invalidate_worker
+
+    # one semantic audit row instead of a per-testcase cascade
+    AuditLog.paused do
+      importer.import_dataset_from_dir(
+        extracted_path, @problem.name,
+        full_name: @problem.full_name,
+        input_pattern: params[:input_pattern].presence || "*.in",
+        sol_pattern: params[:sol_pattern].presence || "*.sol",
+        dataset: dataset,
+        do_statement: false,
+        do_checker: false,
+        do_cpp_extras: false,
+        do_solutions: false
+      )
+    end
+    result_dataset = importer.dataset
+    AuditLog.record!(auditable: @problem,
+                     action: "import_testcases",
+                     object_changes: {
+                       "dataset" => [nil, result_dataset&.name],
+                       "testcases" => [nil, result_dataset&.testcases&.count]
+                     })
+
+    render json: {
+      problem_id: @problem.id,
+      dataset_id: result_dataset&.id,
+      dataset_name: result_dataset&.name,
+      testcase_count: result_dataset&.testcases&.count || 0,
+      log: importer.log
+    }
+  end
+
   # GET /api/v1/problems/:id/testcases
   def testcases
     unless current_user.can_view_testcase?(@problem)
@@ -158,10 +287,72 @@ class Api::V1::ProblemsController < Api::V1::BaseController
     render_not_found("Problem")
   end
 
+  # 404 for unknown ids, 403 for problems the user cannot edit.
+  def set_problem_for_edit
+    @problem = Problem.find(params[:id])
+    authorize_edit!
+  rescue ActiveRecord::RecordNotFound
+    render_not_found("Problem")
+  end
+
   def authorize_edit!
     return true if current_user.can_edit_problem?(@problem)
     render json: { error: "Forbidden" }, status: :forbidden
     false
+  end
+
+  def problem_params
+    params.require(:problem).permit(:name, :full_name, :available, :date_added,
+                                    :test_allowed, :output_only, :difficulty,
+                                    :submission_filename, :compilation_type,
+                                    :view_testcase, :view_submission, :markdown,
+                                    :description, :url, tag_ids: [], group_ids: [])
+  end
+
+  # permitted_lang is stored as a space-separated string of language
+  # names; the API speaks ids (mirrors the web update action's mapping).
+  # nil → leave untouched, [] → clear (all languages allowed).
+  def apply_permitted_languages(problem)
+    return true unless params[:problem]&.key?(:permitted_language_ids)
+
+    ids = Array(params[:problem][:permitted_language_ids]).reject(&:blank?)
+    langs = Language.where(id: ids)
+    if langs.count != ids.map(&:to_i).uniq.size
+      render json: { error: "Validation failed", details: ["Unknown language id"] },
+             status: :unprocessable_entity
+      return false
+    end
+    problem.permitted_lang = langs.map(&:name).join(" ")
+    true
+  end
+
+  # Admin/editor-facing shape (the student-facing shapes above hide
+  # management fields like available/live_dataset_id).
+  def problem_admin_json(problem)
+    {
+      id: problem.id,
+      name: problem.name,
+      full_name: problem.full_name,
+      full_score: problem.full_score,
+      available: problem.available,
+      test_allowed: problem.test_allowed,
+      output_only: problem.output_only,
+      view_testcase: problem.view_testcase,
+      view_submission: problem.view_submission,
+      markdown: problem.markdown,
+      difficulty: problem.difficulty,
+      date_added: problem.date_added,
+      url: problem.url,
+      description: problem.description,
+      submission_filename: problem.submission_filename,
+      compilation_type: problem.compilation_type,
+      live_dataset_id: problem.live_dataset_id,
+      permitted_languages: permitted_languages_for(problem),
+      tag_ids: problem.tag_ids,
+      group_ids: problem.group_ids,
+      has_statement: problem.statement.attached?,
+      has_attachment: problem.attachment.attached?
+    }
   end
 
   def build_problem_stats(submissions)

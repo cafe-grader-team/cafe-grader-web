@@ -7,23 +7,36 @@ Rails.application.routes.draw do
       post "auth/login", to: "auth#login"
 
       get "me", to: "users#me"
+      resources :users, only: [:index, :show, :create, :update, :destroy]
       resources :languages, only: [:index]
 
       resources :contests, only: [:show] do
         get "problems", on: :member
       end
 
-      resources :problems, only: [:index, :show] do
+      resources :problems, only: [:index, :show, :create, :update, :destroy] do
         member do
           get "description"
           get "files/:type", action: "file", as: "file"
           get "data_files"
           get "testcases"
+          put "statement"
+          post "testcases/import", action: "import_testcases"
         end
         resources :submissions, only: [:index, :create]
+        resources :datasets, only: [:index, :create]
       end
 
-      resources :testcases, only: [] do
+      resources :datasets, only: [:update, :destroy] do
+        member do
+          post "set_live"
+          post "files", action: "file_create"
+          delete "files/:attachment_id", action: "file_delete", as: "file"
+        end
+        resources :testcases, only: [:create]
+      end
+
+      resources :testcases, only: [:update, :destroy] do
         member do
           get "input"
           get "sol"
