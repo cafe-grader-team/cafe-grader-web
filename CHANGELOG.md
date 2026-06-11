@@ -10,6 +10,84 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 
 ## [Unreleased]
 
+## [4.4.0] — 2026-06-11
+
+### Added
+
+- **Management (write) API** under `/api/v1/` — the API is no longer
+  read-only. All endpoints reuse the model-layer authorization
+  (`can_edit_problem?`, group-editor scope, admin role) and write
+  attributed audit rows:
+  - **Problems**: `POST /problems` (creates the default dataset and live
+    pointer atomically), `PATCH`/`DELETE /problems/{id}`,
+    `PUT /problems/{id}/statement` (PDF upload).
+  - **Datasets**: list/create under the problem,
+    `PATCH /datasets/{id}` (settings), `DELETE` (refused for the live or
+    last dataset), `POST /datasets/{id}/set_live`,
+    `POST /datasets/{id}/files` + `DELETE /datasets/{id}/files/{attachment_id}`
+    (checker / managers / data files / initializers).
+  - **Testcases**: `POST /datasets/{id}/testcases` (file upload or plain
+    text, CRLF-normalized), `PATCH`/`DELETE /testcases/{id}`, and
+    `POST /problems/{id}/testcases/import` — bulk zip import through
+    `ProblemImporter` with a single consolidated `import_testcases`
+    audit row.
+  - **Users** (admin only): paginated/filterable index, show, create,
+    update (blank password = keep), delete (self-delete refused). Role
+    granting stays web-only by design.
+  - Every content-affecting dataset/testcase write invalidates workers'
+    cached copy of the dataset (`WorkerDataset`), so judges re-download.
+- **`expires_at` in the API login response** so clients know when to
+  re-authenticate.
+- **`bin/rails check`** — one task running every test suite plus the
+  swagger freshness check (rev 1745).
+
+### Changed
+
+- **API token lifetime reduced from 7 days to 12 hours**
+  (`Api::V1::AuthController::TOKEN_TTL`). Bearer tokens cannot be
+  revoked server-side, so the TTL is the whole exposure window for a
+  leaked token. Tokens issued before the deploy keep their original
+  7-day expiry.
+- **Submission language authority**: the problem's permitted-language
+  set is now authoritative in the new-submission UI and enforced again
+  at submit time (revs 1740-1741).
+- **Announcement body previews render markdown** instead of stripped
+  text (rev 1742).
+- **Daily cleanups moved into Solid Queue's `recurring.yml`**
+  (rev 1739).
+- **Database collation standardized on `utf8mb4_0900_ai_ci`** across
+  every table (MySQL 8 only; MariaDB unsupported), enforced by test
+  (rev 1746).
+
+### Fixed
+
+- **`Dataset#invalidate_worker` never invalidated anything** — it
+  referenced a nil instance variable, so the worker-cache delete
+  matched zero rows. Also wired the (previously missing) invalidation
+  into the web `testcase_delete` action: workers no longer keep grading
+  against deleted testcases.
+- **Dataset edit form adapts to checker/manager/main_filename state**
+  (issue #48) and the score_type / evaluation_type UI now matches the
+  engine semantics (revs 1737-1738).
+- **API testcase endpoints de-confused `id` vs per-problem `num`**, and
+  scores are emitted as JSON numbers (BigDecimal was serialized as a
+  string); problem detail exposes `last_submission_id` (revs 1743-1744).
+
+### Security
+
+- **API login rate limiting** — 10 attempts/minute per client IP on
+  `POST /api/v1/auth/login` (was unthrottled).
+- **Disabled accounts are now refused API tokens and rejected
+  per-request** even with a still-valid token (previously the `enabled`
+  flag was only enforced by the web session flow).
+- **API mutations carry audit actors** — `Current.user`/`Current.ip`
+  are set for API requests, so audit rows from API writes are
+  attributed instead of anonymous.
+- **Viva exam hardening**: jailbreak attempts terminate the interview
+  (`[[VIVA_ALERT]]` flow); answering restricted to the submission
+  owner; problem PDFs hidden from students for viva problems; stuck
+  assistant turns recover instead of silently hanging (revs 1722-1736).
+
 ## [4.3.3] — 2026-05-19
 
 ### Added
