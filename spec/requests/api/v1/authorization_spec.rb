@@ -299,5 +299,25 @@ RSpec.describe "API Authorization", type: :request do
       post "/api/v1/auth/login", params: { login: "disabled", password: "disabled" }
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "refuses to issue a token to an account with enabled=false" do
+      users(:john).update!(enabled: false)
+      post "/api/v1/auth/login", params: { login: "john", password: "hello" }
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "rejects requests from a disabled account even with a still-valid token" do
+      token = jwt_token_for(users(:john))
+      users(:john).update!(enabled: false)
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:forbidden)
+      expect(JSON.parse(response.body)["error"]).to eq("Account is disabled")
+    end
+
+    it "admin bypasses the enabled flag (mirrors web check_valid_login)" do
+      users(:admin).update!(enabled: false)
+      get "/api/v1/me", headers: auth_header_for(users(:admin))
+      expect(response).to have_http_status(:ok)
+    end
   end
 end
