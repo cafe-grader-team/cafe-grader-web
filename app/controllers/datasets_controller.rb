@@ -143,6 +143,9 @@ class DatasetsController < ApplicationController
   def testcase_delete
     tc = Testcase.find(params[:tc_id])
     tc.destroy
+    # workers cache testcase files per dataset; without this they keep
+    # grading against the deleted case
+    tc.dataset.invalidate_worker
 
     @toast = {title: 'Testcase changed',
               body: "Testcase ##{tc.num} is deleted."}

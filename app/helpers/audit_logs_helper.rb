@@ -46,6 +46,8 @@ module AuditLogsHelper
       bulk_badge 'library_add', 'bulk add problems'
     when 'bulk_add_problems_by_group'
       bulk_badge 'library_add', 'bulk add problems (group)'
+    when 'import_testcases'
+      bulk_badge 'upload_file', 'import testcases'
     when 'remove_user'
       bulk_badge 'person_remove', 'remove user'
     when 'remove_problem'
