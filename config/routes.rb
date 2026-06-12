@@ -305,6 +305,10 @@ Rails.application.routes.draw do
     get 'submission'
     post 'submission_query'
 
+    # activity report (per-user submission summary)
+    get 'activity'
+    post 'activity_query'
+
     # login report
     get 'login'
     get 'login_stat'

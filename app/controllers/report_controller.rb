@@ -2,8 +2,8 @@ class ReportController < ApplicationController
   include ProblemAuthorization
 
   before_action :check_valid_login
-  before_action :selected_problems, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query ]
-  before_action :selected_users, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query ]
+  before_action :selected_problems, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query, :activity_query ]
+  before_action :selected_users, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query, :activity_query ]
 
   # for all action except hall of fame (which is viewable by any user if the feature is enabled)
   before_action(except: [:problem_hof, :problem_hof_view, :problem_hof_query]) {
@@ -160,6 +160,52 @@ class ReportController < ApplicationController
     # build day sum
 
     # render json:  {data: @submissions,sub_count_by_date: {a:1}}
+  end
+
+  def activity
+    @problems = @current_user.problems_for_action(:report)
+    @groups = @current_user.groups_for_action(:report)
+  end
+
+  # Per-user submission summary: who actively worked in a time range x problem set.
+  # One aggregate pass over submissions — deliberately avoids the scoring engine,
+  # so "all problems" stays fast. "Solved" counts problems with a >= 100-point
+  # submission; raw_sum-scored datasets are excluded there because their points
+  # are a literal sum with no defined full score.
+  def activity_query
+    raw_sum = Dataset.score_types[:raw_sum]
+    rows = submission_in_range(params[:sub_range])
+      .where(problem: @problems, user: @users)
+      .joins(:user, :problem)
+      .joins('LEFT JOIN datasets live_ds ON live_ds.id = problems.live_dataset_id')
+      .group('users.id')
+      .pluck(Arel.sql(<<~SQL.squish))
+        users.id, users.login, users.full_name,
+        COUNT(submissions.id),
+        COUNT(DISTINCT submissions.problem_id),
+        COUNT(DISTINCT CASE WHEN submissions.points >= 100
+                             AND (live_ds.score_type IS NULL OR live_ds.score_type <> #{raw_sum})
+                            THEN submissions.problem_id END),
+        MIN(submissions.submitted_at), MAX(submissions.submitted_at),
+        COUNT(DISTINCT submissions.ip_address)
+      SQL
+
+    @rows = rows.map do |id, login, full_name, sub_count, prob_count, solved_count, first_sub, last_sub, ip_count|
+      { user_id: id, login: login, full_name: full_name,
+        sub_count: sub_count, prob_count: prob_count, solved_count: solved_count,
+        first_sub: first_sub.in_time_zone, last_sub: last_sub.in_time_zone,
+        ip_count: ip_count }
+    end
+
+    # optionally append selected users with zero submissions in the range
+    if params[:show_inactive] == 'true'
+      active_ids = @rows.map { |r| r[:user_id] }
+      @users.where.not(id: active_ids).pluck(:id, :login, :full_name).each do |id, login, full_name|
+        @rows << { user_id: id, login: login, full_name: full_name,
+                   sub_count: 0, prob_count: 0, solved_count: 0,
+                   first_sub: nil, last_sub: nil, ip_count: 0 }
+      end
+    end
   end
 
   def ai

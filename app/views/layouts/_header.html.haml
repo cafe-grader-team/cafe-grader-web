@@ -79,6 +79,7 @@
               %ul.dropdown-menu
                 %li= link_to 'Score Report', max_score_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :max_score)
                 %li= link_to 'Submission Report', submission_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :submission)
+                %li= link_to 'Activity Report', activity_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :activity)
                 %li= link_to 'Login Report', login_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :login)
                 %li= link_to 'AI Report', ai_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :ai)
             .d-flex
