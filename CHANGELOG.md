@@ -10,6 +10,40 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 
 ## [Unreleased]
 
+## [4.4.1] — 2026-06-13
+
+### Added
+
+- **Per-user activity summary report** — one row per user over a
+  time / submission-id range × problem set: submission count, problems
+  tried, problems solved (raw_sum-scored datasets excluded — they have
+  no defined full score), first/last submission, and distinct IPs.
+  Optionally lists zero-activity users for the selected filter
+  (highlighted, off by default). Runs as a single `GROUP BY` pass over
+  submissions without touching the scoring engine, so even an
+  all-problems window stays fast (rev 1758).
+
+### Changed
+
+- **Profile page redesigned** as a two-column identity card + settings
+  layout — left: initials avatar, name, login badge, read-only
+  email / default language / member-since; right: a Preferences card and
+  a Change-password card. Controller and permitted params unchanged
+  (rev 1763).
+- **Per-problem "my submissions" table** restyled into the carded,
+  hover/condensed UI used elsewhere, with real empty states, a `#id`
+  link, filename-as-download with a language badge, a compact AI-assist
+  badge, and an icon-only Edit button (rev 1764).
+- **Grader-processes "Recent Submissions" card** gains a whitelisted
+  `?limit=` toggle (20 / 100 / 500, default 20); Refresh and the
+  10-minute auto-refresh preserve the chosen limit (rev 1761).
+- **Footer slimmed** from a ~41px bar to a ~30px centered watermark —
+  coffee mark, cafe-grader wordmark linking to GitHub, and a monospace
+  `rev X.Y.Z` (rev 1762).
+- **Updated-announcement cards** keep their shadow instead of going
+  flat; the "updated" state now adds a 50%-opacity red border on top of
+  the standard `shadow-sm` rather than replacing it (rev 1760).
+
 ## [4.4.0] — 2026-06-11
 
 ### Added
