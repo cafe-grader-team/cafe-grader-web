@@ -28,6 +28,20 @@ class GradersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "recent submissions honors a whitelisted limit param" do
+    sign_in_as("admin", "admin")
+    get grader_processes_path(limit: 100)
+    assert_response :success
+    assert_match "Last 100 submissions", response.body
+  end
+
+  test "recent submissions falls back to 20 on a bogus limit param" do
+    sign_in_as("admin", "admin")
+    get grader_processes_path(limit: 99999)
+    assert_response :success
+    assert_match "Last 20 submissions", response.body
+  end
+
   test "admin can access queues dashboard" do
     sign_in_as("admin", "admin")
     get queues_grader_processes_path

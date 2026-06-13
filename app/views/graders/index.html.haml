@@ -13,7 +13,7 @@
 
     .d-flex.gap-2
       = link_to mdi(:queue, 'me-1') + 'Solid Queue', queues_grader_processes_path, class: 'btn btn-outline-primary btn-flex'
-      = link_to mdi(:refresh, 'me-1') + 'Refresh', grader_processes_path, class: 'btn btn-primary btn-flex'
+      = link_to mdi(:refresh, 'me-1') + 'Refresh', grader_processes_path(limit: (@submission_limit unless @submission_limit == 20)), class: 'btn btn-primary btn-flex'
 
   .row.gx-3
     -# ==========================================
@@ -138,7 +138,7 @@
     -# ---------- Right Column ------------------
     -# ==========================================
     .col-md-6
-      -# Last 20 Submissions Card
+      -# Recent Submissions Card
       .card.shadow-sm.mb-4
         .card-body
           .d-flex.align-items-start.mb-3
@@ -147,7 +147,15 @@
 
             .flex-grow-1
               %h5.fw-bold.text-dark.mb-0 Recent Submissions
-              .text-secondary.small Last 20 submissions
+              .text-secondary.small= "Last #{@submission_limit} submissions"
+
+            .d-flex.align-items-center.gap-2.small
+              %span.text-secondary Show:
+              - [20, 100, 500].each do |n|
+                - if n == @submission_limit
+                  %span.fw-bold.text-dark= n
+                - else
+                  = link_to n, grader_processes_path(limit: n), class: 'text-decoration-none'
 
           %table.table.table-hover.align-middle.mb-0
             %thead

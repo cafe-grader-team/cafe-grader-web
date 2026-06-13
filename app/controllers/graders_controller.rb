@@ -16,7 +16,8 @@ class GradersController < ApplicationController
     @sq_failed_count  = SolidQueue::Job.failed.count
     @stuck_viva_count = VivaTurn.stuck.count
 
-    @submission = Submission.order("id desc").limit(20).includes(:user, :problem)
+    @submission_limit = [20, 100, 500].include?(params[:limit].to_i) ? params[:limit].to_i : 20
+    @submission = Submission.order("id desc").limit(@submission_limit).includes(:user, :problem)
     @backlog_submission = Submission.where('graded_at is null').includes(:user, :problem)
 
     @wait_compile_job_count = Job.where(job_type: :compile, status: :wait).count
