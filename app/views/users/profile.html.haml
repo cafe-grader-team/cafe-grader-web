@@ -1,11 +1,53 @@
-%h1 Account Setting
-.row
-  .col-md-6
-    = simple_form_for @current_user, url: update_self_users_path do |f|
-      = f.association :default_language, collection: Language.all, include_blank: '-- No default language --'.html_safe
-      = f.input :password
-      = f.input :password_confirmation
-      = f.button :submit, class: 'btn btn-primary'
+.d-flex.flex-column.gap-1.mb-4
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Account
+  %h2.fw-bold.text-dark.mb-0 Profile &amp; Settings
 
+.row.gx-4{data: {controller: 'init-ui-component'}}
+  -# ---------- Identity card (read-only) ----------
+  .col-lg-4
+    .card.shadow-sm.mb-4
+      .card-body.text-center.p-4
+        - initials = @user.full_name.to_s.split.map { |s| s[0] }.first(2).join.upcase
+        .rounded-circle.bg-primary-subtle.text-primary.d-inline-flex.align-items-center.justify-content-center.mb-3{style: 'width: 88px; height: 88px;'}
+          %span.fw-bold{style: 'font-size: 2rem;'}= initials.presence || '?'
+        %h5.fw-bold.mb-1= @user.full_name
+        .mb-3
+          %span.badge.bg-light.text-dark.border.font-monospace= @user.login
 
+        %hr.my-3
 
+        %dl.row.text-start.small.mb-0.g-2
+          %dt.col-5.text-secondary.fw-medium Email
+          %dd.col-7.text-break.mb-0= @user.email.presence || content_tag(:span, '— none —', class: 'text-muted')
+          %dt.col-5.text-secondary.fw-medium Default language
+          %dd.col-7.mb-0= @user.default_language&.pretty_name || content_tag(:span, '— not set —', class: 'text-muted')
+          %dt.col-5.text-secondary.fw-medium Member since
+          %dd.col-7.mb-0= @user.created_at ? @user.created_at.strftime('%-d %b %Y') : '—'
+
+  -# ---------- Settings form ----------
+  .col-lg-8
+    = simple_form_for @user, url: update_self_users_path do |f|
+      -# Preferences
+      .card.shadow-sm.mb-4
+        .card-body.p-4
+          %h6.fw-bold.text-dark.mb-1.d-flex.align-items-center
+            = mdi('tune', 'me-2 text-secondary')
+            Preferences
+          .text-secondary.small.mb-3 Defaults applied when you open a problem.
+          = f.association :default_language, collection: Language.all, include_blank: '— No default language —'.html_safe, label: 'Default language'
+
+      -# Security
+      .card.shadow-sm.mb-4
+        .card-body.p-4
+          %h6.fw-bold.text-dark.mb-1.d-flex.align-items-center
+            = mdi('lock', 'me-2 text-secondary')
+            Change password
+          .text-secondary.small.mb-3 Leave both fields blank to keep your current password.
+          .row
+            .col-md-6
+              = f.input :password, label: 'New password', required: false, input_html: {autocomplete: 'new-password'}
+            .col-md-6
+              = f.input :password_confirmation, label: 'Confirm new password', required: false, input_html: {autocomplete: 'new-password'}
+
+      .d-flex.justify-content-end
+        = f.button :submit, 'Save changes', class: 'btn btn-primary px-4'
