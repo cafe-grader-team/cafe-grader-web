@@ -1,28 +1,31 @@
 %tr
-  %td{:align => "center"}
-    = submission.number
-  %td.text-right
-    = link_to "##{submission.id}", submission_path(submission.id)
+  %td.ps-3
+    .fw-semibold= submission.number
+    = link_to "##{submission.id}", submission_path(submission.id), class: 'small text-decoration-none', data: {turbo: false}
   %td
-    #{submission.submitted_at.strftime('%Y-%m-%d %H:%M')} 
-    %span.text-secondary (#{time_ago_in_words(submission.submitted_at)} ago)
+    .text-nowrap= submission.submitted_at.strftime('%Y-%m-%d %H:%M')
+    %span.text-secondary.small= "#{time_ago_in_words(submission.submitted_at)} ago"
   %td
-    = submission.source_filename
-    = " (#{submission.language.pretty_name}) "
-    = link_to '[load]', download_submission_path(submission)
-  %td
+    .d-flex.align-items-center.gap-2.flex-wrap
+      = link_to download_submission_path(submission), class: 'text-decoration-none text-break', title: 'Download source', data: {turbo: false} do
+        = mdi('description', 'md-18 me-1 text-secondary')
+        = submission.source_filename
+      %span.badge.bg-light.text-dark.border= submission.language.pretty_name
     - llm_count = @sub_details[submission.id][:count] || 0
-    - llm_cost = @sub_details[submission.id][:cost] || 0
     - if llm_count > 0
-      AI Assist: #{llm_count} times with cost #{llm_cost}
+      %span.badge.bg-info-subtle.text-info-emphasis.mt-1.d-inline-flex.align-items-center
+        = mdi('smart_toy', 'md-18 me-1')
+        = "AI assist ×#{llm_count}"
   %td
     = render 'submission_short', submission: submission, show_button: false, problem_id: submission&.problem&.id
   %td
     - if submission.status == 'compilation_error'
-      = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission), {class: 'link-danger', data: {turbo: true, turbo_method: :post} }
+      = link_to t('main.cmp_msg'), compiler_msg_submission_path(submission), class: 'link-danger', data: {turbo: true, turbo_method: :post}
     - elsif !submission.compiler_message.blank?
-      = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission), {class: 'link-warning', data: {turbo: true, turbo_method: :post} }
+      = link_to t('main.cmp_msg'), compiler_msg_submission_path(submission), class: 'link-warning', data: {turbo: true, turbo_method: :post}
     - else
-      No Compiler Message
-  %td
-    = link_to 'Edit', edit_submission_path(submission.id), class: 'btn btn-success'
+      %span.text-secondary —
+  %td.text-end.pe-3
+    = link_to edit_submission_path(submission.id), class: 'btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1', title: 'Edit & resubmit', data: {turbo: false} do
+      = mdi('edit', 'md-18')
+      Edit

@@ -1,21 +1,36 @@
-.my-2
-  = render 'problem_chooser', {problems: @problems, selected_problem: @problem, target_url_method: :problem_submissions_path}
+.d-flex.flex-wrap.justify-content-between.align-items-end.gap-3.mb-4
+  .d-flex.flex-column.gap-1
+    %small.text-secondary.text-uppercase.fw-bold.ls-1 My Submissions
+    - if @problem
+      %h2.fw-bold.text-dark.mb-0
+        %span.font-monospace.text-secondary [#{@problem.name}]
+        = @problem.full_name
+    - else
+      %h2.fw-bold.text-dark.mb-0 Select a problem
+  .ms-auto
+    = render 'problem_chooser', {problems: @problems, selected_problem: @problem, target_url_method: :problem_submissions_path}
 
-- if @problem!=nil
-  = render partial: 'problems/problem_head', locals: {problem: @problem}
-
-- if @submissions!=nil
-  - if @submissions.length>0
-    %table.table
-      %thead
-        %th No.
-        %th.text-right #
-        %th At
-        %th Source
-        %th AI Assist
-        %th Result
-        %th{:width => "300px"} Compiler message
-        %th
-      = render partial: 'submission', collection: @submissions
-  - else
-    No submission
+- if @submissions.nil?
+  .card.shadow-sm.border-0
+    .card-body.text-center.text-secondary.py-5
+      = mdi('quiz', 'md-48 d-block mb-2 opacity-50')
+      Choose a problem above to see your submissions.
+- elsif @submissions.empty?
+  .card.shadow-sm.border-0
+    .card-body.text-center.text-secondary.py-5
+      = mdi('inbox', 'md-48 d-block mb-2 opacity-50')
+      No submissions yet for this problem.
+- else
+  .card.shadow-sm{data: {controller: 'init-ui-component'}}
+    .table-responsive
+      %table.table.table-hover.align-middle.mb-0
+        %thead.text-secondary.small
+          %tr
+            %th.ps-3 No.
+            %th Submitted
+            %th Source
+            %th Result
+            %th Compiler
+            %th.text-end.pe-3 Action
+        %tbody
+          = render partial: 'submission', collection: @submissions
