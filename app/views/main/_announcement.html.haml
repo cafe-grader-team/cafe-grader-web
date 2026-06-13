@@ -2,7 +2,7 @@
 - cookie_key = "dismissed_ann_#{announcement.id}_#{announcement.updated_at.to_i}"
 - is_updated = announcement.updated_at > 1.day.ago
 
-.card.mb-4{:id => "announcement-#{announcement.id}", "data-controller" => "init-ui-component dismiss-announcement", "data-dismiss-announcement-id-value" => announcement.id, "data-dismiss-announcement-timestamp-value" => announcement.updated_at.to_i, :class => (is_updated && cookies[cookie_key].blank? ? 'border-danger' : 'border-1 shadow-sm')}
+.card.mb-4{:id => "announcement-#{announcement.id}", "data-controller" => "init-ui-component dismiss-announcement", "data-dismiss-announcement-id-value" => announcement.id, "data-dismiss-announcement-timestamp-value" => announcement.updated_at.to_i, :class => "border-1 shadow-sm #{'border-danger border-opacity-50' if is_updated && cookies[cookie_key].blank?}"}
   .card-body
     .card-title.mb-1.d-flex.justify-content-between.align-items-start
       %h5.mb-0.d-flex.align-items-center

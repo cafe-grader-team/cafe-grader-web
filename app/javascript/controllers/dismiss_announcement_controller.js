@@ -12,7 +12,6 @@ export default class extends Controller {
     document.cookie = `dismissed_ann_${this.idValue}_${this.timestampValue}=true; path=/; max-age=86400`
 
     this.badgeTarget.style.display = "none"
-    this.element.classList.remove("border-danger")
-    this.element.classList.add("border-1", "shadow-sm")
+    this.element.classList.remove("border-danger", "border-opacity-50")
   }
 }
