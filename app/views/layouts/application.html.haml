@@ -55,11 +55,11 @@
       #js-response
         / place holder
 
-  %footer.footer.mt-5.py-2.bg-light.fixed-bottom.border-top
-    .container.text-center
-      %span.text-muted
-        &copy; #{Time.now.year}
-        %a{href: 'https://github.com/nattee/cafe-grader-web'} cafe-grader
-        -# both constant are set in the intiailizers/version.rb
-        | Revision: #{APP_VERSION}#{APP_VERSION_SUFFIX}
+  %footer.footer.py-1.bg-light.fixed-bottom.border-top
+    .container-fluid.px-3.text-center.small.text-body-secondary
+      ☕
+      %a.text-decoration-none.fw-medium{href: 'https://github.com/nattee/cafe-grader-web'} cafe-grader
+      %span.mx-1.opacity-50 &middot;
+      -# both constants are set in the initializers/version.rb
+      %span.font-monospace rev #{APP_VERSION}#{APP_VERSION_SUFFIX}
 

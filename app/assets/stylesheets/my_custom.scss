@@ -113,7 +113,7 @@ body {
   font-family: 'Sarabun', 'Noto Sans Thai', Tahoma, "sans-serif";
   padding: 5px;
   padding-top: 65px;
-  padding-bottom: 50px;
+  padding-bottom: 38px; // clearance for the fixed-bottom footer (~30px tall)
 }
 
 .form-check-thick {
