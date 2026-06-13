@@ -1,30 +1,61 @@
+-# this is for render a (not so small but also not full-info) submission status
+  It is used in the main page (and some other place as well)
 - if submission.nil?
   = "-"
 - else
-  %strong= "Submission ID:"
-  = submission.id
-  %br
+  - if local_assigns[:show_id]
+    -# show submission id row (with tries and compiler message)
+    .row
+      .col-12.d-flex.align-items-center
+        %span.me-1.mi.text-secondary tag
+        = link_to submission.id, submission_path(submission), data: {turbo: false}
+        %span.ms-2
+          = "(#{link_to pluralize(sub_count || '-',"try"), problem_submissions_path(submission.problem_id), data: {turbo: false}})"
+        %span.ms-2
+          - if submission.status == 'compilation_error'
+            - compiler_msg_class = 'link-danger'
+          - elsif !submission.compiler_message.blank?
+            - compiler_msg_class = 'link-warning'
+          - else
+            - compiler_msg_class = ''
+          = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission), {class: compiler_msg_class, data: {turbo: true, turbo_method: :post} }
   - unless submission.graded_at
-    %strong= t 'main.submitted_at:'
-    = format_full_time_ago(submission.submitted_at.localtime)
+    -# show waiting to be graded
+    .row
+      .col-12.d-flex.align-items-center
+        %span.me-1.mi.mr-2.text-secondary hourglass
+        submitted
+        %span= time_ago_in_words(submission.submitted_at) + ' ago'
+        %span.text-secondary (#{format_short_time(submission.submitted_at)})
+    .row
+      .col-12.d-flex.align-items-center{ data: ({controller: 'refresh', refresh_delay_value: @delay_value} if local_assigns[:refresh_if_not_graded] && @submission)  }
+        %div{data: {refresh_target: 'waitingText'}} Waiting to be graded...
+        -# hidden link to be clicked by the stimulus action
+        - if @submission
+          = link_to "Refresh",get_latest_submission_status_submissions_path(@submission.user,@problem), class: "d-none", data: {turbo_stream: true, refresh_target: 'refreshLink'}
   - else
-    %strong= t 'main.graded_at:'
-    = format_full_time_ago(submission.graded_at.localtime)
-    %br
+    -# show graded time (and the score if allowed)
+    .row
+      .col-12.d-flex.align-items-center
+        %span.me-1.mi.mr-2.text-secondary calendar_clock
+        %span= time_ago_in_words(submission.graded_at) + ' ago'
+        %span.text-secondary (#{format_short_time(submission.graded_at)})
     - if GraderConfiguration['ui.show_score']
-      %strong=t 'main.score'
-      = "#{(submission.points*100/submission.problem.full_score).to_i} "
-    = " [" 
-    %tt
-      = submission.grader_comment
-    = "]"
-    %br
-  %strong View:
-  - if GraderConfiguration.show_grading_result
-    = link_to '[detailed result]', :action => 'result', :id => submission.id
-  - if submission.graded_at
-    %button.btn.btn-info.btn-xs{type: 'button', data: {toggle: 'modal', target: '#compiler'}}
-      =t 'main.cmp_msg'
-  = link_to "#{t 'main.src_link'}", download_submission_path(submission.id), class: 'btn btn-xs btn-info'
-  = link_to "#{t 'main.submissions_link'}", problem_submissions_path(problem_id), class: 'btn btn-xs btn-info'
+      .row
+        //.col-lg-3.text-secondary=t 'main.score'
+        .col-12.d-flex.align-items-center
+          %span.me-1.mi.mr-2.text-secondary speed
+          %span{class: ('text-success' if submission.points >= 100)}
+            = submission.points
+          %span.grader-comment.text-break
+            = " [#{submission.grader_comment}]"
+          = link_to mdi('ballot'), evaluations_submission_path(submission), data: {turbo: true, turbo_method: :post}
+  - if local_assigns[:show_button]
+    -# show links
+    - if submission.graded_at
+      = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission), {class: 'my-1 btn btn-sm btn-info', data: {turbo: true, turbo_method: :post} }
+    = link_to "#{t 'main.src_link'}",download_submission_path(submission), class: 'my-1 btn btn-sm btn-info'
+    = link_to "#{t 'main.submissions_link'} (#{sub_count rescue '-'})", problem_submissions_path(submission.problem_id), class: 'my-1 btn btn-sm btn-info'
+    - if GraderConfiguration.show_testcase
+      = link_to "testcases", show_problem_testcases_path(submission.problem_id), class: 'my-1 btn btn-sm btn-info'
 

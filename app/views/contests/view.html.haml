@@ -1,0 +1,16 @@
+= render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'Management', path: contest_path(@contest) }, { label: 'Watch' } ]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0.font-monospace
+      = @contest.name
+    %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium
+      %small Watch
+
+  .d-flex.gap-2
+    = link_to mdi(:settings, 'me-1') + 'Manage', contest_path(@contest), class: 'btn btn-outline-primary btn-flex'
+    = link_to mdi(:edit, 'me-1') + 'Edit', edit_contest_path(@contest), class: 'btn btn-primary btn-flex'
+
+.card.card-shadow
+  .card-body
+    = render partial: 'report/score_table', locals: {problems: @problems, link_for_data: view_query_contest_path(@contest), contest_id: @contest.id  }

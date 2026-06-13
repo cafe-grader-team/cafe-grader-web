@@ -1,7 +1,7 @@
 :plain
   var t = $("#{button_id}");
-  t.removeClass('btn-default');
+  t.removeClass('btn-outline-secondary');
   t.removeClass('btn-success');
   t.removeClass('btn-warning');
-  t.addClass("btn-#{button_on ? 'success' : 'default'}");
+  t.addClass("btn-#{button_on ? 'success' : 'outline-secondary'}");
   t.text("#{button_on ? 'Yes' : 'No'}");

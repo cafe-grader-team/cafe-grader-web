@@ -1,6 +1,6 @@
-class CreateProblems < ActiveRecord::Migration
+class CreateProblems < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :problems do |t|
+    create_table :problems, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column :name, :string, :limit => 30
       t.column :full_name, :string
       t.column :full_score, :integer

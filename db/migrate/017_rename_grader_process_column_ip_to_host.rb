@@ -1,4 +1,4 @@
-class RenameGraderProcessColumnIpToHost < ActiveRecord::Migration
+class RenameGraderProcessColumnIpToHost < ActiveRecord::Migration[4.2]
   def self.up
     rename_column :grader_processes, :ip, :host
   end

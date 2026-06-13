@@ -1,20 +1,41 @@
-%h1 Editing contest
-= form_for(@contest) do |f|
-  = f.error_messages
-  %table
-    %tr
-      %td= f.label :name
-      %td= f.text_field :name
-    %tr
-      %td= f.label :title
-      %td= f.text_field :title
-    %tr
-      %td
-      %td
-        = f.check_box :enabled
-        = f.label :enabled
-  %p
-    = f.submit 'Update'
-= link_to 'Show', @contest
-|
-= link_to 'Back', contests_path
+= render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'Management', path: contest_path(@contest) }, { label: 'Edit' } ]
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0.font-monospace
+      = @contest.name
+    %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+      %small Editing
+
+  .d-flex.gap-2.align-items-center{'data-controller': 'init-ui-component'}
+    = link_to audit_logs_path(auditable_type: 'Contest', auditable_id: @contest.id), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Change history'} do
+      %span.mi history
+    .vr.mx-1
+    = link_to 'Cancel', contest_path(@contest), class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'edit_form'} Save Changes
+
+.row.gx-3
+  .col-md-6
+    .card.card-shadow.mb-3
+      .card-body
+        = render 'form'
+  .col-md-6
+    .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+      .card-body.p-4
+        .d-flex.align-items-center.mb-3
+          .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+            %span.mi.md-24.fill lightbulb
+          %div
+            %h5.fw-bold.text-dark.mb-0 Tips
+            %small.text-secondary Quick guide to contest behavior.
+
+        .text-secondary.small
+          %ul.mb-0.ps-3
+            %li 
+              The site must be in the 
+              %strong.text-dark Contest Mode
+              for a contest to be displayed to users.
+            %li A contest is shown to users only if it is enabled and the current time falls within its start and stop time range.
+            %li 
+              When a contest is 
+              %strong.text-dark finalized
+              , users cannot submit to the contest and the contests can no longer be modified.

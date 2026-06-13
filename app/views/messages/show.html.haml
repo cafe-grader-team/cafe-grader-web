@@ -6,10 +6,10 @@
   .body= simple_format(@message.body)
 
 %h3 Your reply:
-= form_for 'r_message', :url => { :action => 'reply'} do |f|
+= form_for 'message', url: reply_message_path(@message) do |f|
   = f.text_area :body, :rows => 5, :cols => 100
-  = f.hidden_field :receiver_id, {:value => @message.sender_id }
-  = f.hidden_field :replying_message_id, {:value => @message.id }
+  -#= f.hidden_field :receiver_id, {:value => @message.sender_id }
+  -#= f.hidden_field :replying_message_id, {:value => @message.id }
   = submit_tag "Post"
 
 %p

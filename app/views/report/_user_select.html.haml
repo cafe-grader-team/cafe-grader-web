@@ -1,0 +1,29 @@
+.card.shadow-sm.mb-2{data: {controller: 'form--filter-user', action: 'change->form--filter-user#filterChanged'}}
+  .card-body
+    %h6.fw-bold.mb-3.d-flex.align-items-center
+      %span.mi.me-2.text-secondary group
+      Users
+    .form-check.mb-2
+      = radio_button_tag :'users[use]', :all, true, class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
+      = label_tag :users_use_all, 'All Users', class: 'form-check-label'
+    .form-check.mb-2
+      = radio_button_tag :'users[use]', :enabled, false, class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
+      = label_tag :users_use_enabled, 'Only enabled users', class: 'form-check-label'
+    .form-check.mb-2
+      = radio_button_tag :'users[use]', :group, false, class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
+      = label_tag :users_use_group, 'Only users from this group', class: 'form-check-label'
+    .ms-4.mb-3
+      = select_tag "users[group_ids]", options_from_collection_for_select( Group.all.order('id DESC'), 'id','name',params[:group_id]),
+        class: 'select2', style: 'width: 100%', data: {'form--filter-user-target': 'groupSelect'};
+    .form-check
+      %input#only-users.form-check-input{type: 'checkbox', name: 'users[only_users]', checked: true, data: {'form--filter-user-target': 'onlyUsers'}}
+      %label.form-check-label{for: 'only-users'} Exclude editors and reporters
+
+:javascript
+  // save the problem selection input into d
+  // (to be used by DataTable Ajax data source)
+  function build_user_params(d) {
+    d['users[use]'] = $('input[name="users[use]"]:checked').val()
+    if ($('select[name="users[group_ids]"]').hasClass("select2-hidden-accessible"))
+      d['users[group_ids]']= $('select[name="users[group_ids]"]').select2('data').map( e=>e.id )
+  }

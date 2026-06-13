@@ -1,0 +1,32 @@
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 Score Progress
+
+= form_with url: progress_query_report_path, data: {turbo: true} do |f|
+  .row
+    .col-lg-4
+      .card.border-primary.mb-2
+        .card-header.text-bg-primary.border-primary
+          Problems
+        .card-body
+          %p
+            Select problem(s) that we wish to know the score.
+          = label_tag :problem_id, "Problems"
+          = select_tag 'problem_id[]',
+              options_for_select(Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]},params[:problem_id]),
+              { class: 'select2 form-control', multiple: "true" }
+      %input#show-time.form-check-input{type: 'checkbox', name: 'show-time'}
+    .col-lg-4
+      = render partial: 'submission_range'
+    .col-lg-4
+      = render partial: 'shared/user_select'
+  .row
+    .col-lg-1
+      = button_tag 'Show', class: "btn btn-primary btn-large", value: "show"
+    .col-lg-11
+      %div
+        %canvas#chart
+
+.mt-3
+  = turbo_frame_tag "score_progress_result", data: {turbo: "true"}
+

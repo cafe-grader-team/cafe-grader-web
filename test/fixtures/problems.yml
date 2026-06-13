@@ -1,24 +1,34 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-one:
-  id: 1
+prob_add:
   name: add
   full_name: add_full_name
+  full_score: 100
   available: true
+  live_dataset: ds_add
 
-two:
-  id: 2
+prob_sub:
   name: subtract
   full_name: subtract_full_name
+  full_score: 100
   available: false
+  live_dataset: ds_sub
 
 easy:
   name: easy_problem
   full_name: Easy Problem
   available: true
-  contests: contest_a, contest_b
+  full_score: 10
+  live_dataset: ds_add
 
 hard:
   name: hard_problem
   full_name: Hard Problem
   available: true
-  contests: contest_b
+  full_score: 20
+  live_dataset: ds_sub
+
+prob_viva:
+  name: viva_problem
+  full_name: Viva Problem
+  available: true
+  full_score: 30
+  compilation_type: 2  # viva_exam (see Problem#compilation_type enum)

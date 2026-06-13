@@ -1,0 +1,127 @@
+%h2= "Viva Session: ##{@submission.id}"
+
+.row
+  .col-lg-8
+    = render partial: 'viva_session', locals: {submission: @submission, turns: @turns, viva_grade: @viva_grade, pending_turn: @pending_turn, finished: @finished}
+  .col-lg-4
+    .card.shadow-sm.mb-3
+      .card-body
+        %h4 Viva Info
+        .row.mb-2
+          .col-5.text-end.text-secondary Problem
+          .col
+            = @submission.problem.full_name
+            -# PDF is the interviewer's brief on viva problems — hide
+            -# it from the student. Single-page lookup so the predicate
+            -# is fine here (unlike /main/list, which would N+1).
+            - if @submission.problem.statement.attached? && @current_user.can_view_problem_pdf?(@submission.problem)
+              = link_to mdi(:description, 'md-18 text-muted ms-1'), download_by_type_problem_path(@submission.problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', data: {bs_toggle: 'tooltip', bs_title: 'Download problem statement (PDF)'}
+        .row.mb-2
+          .col-5.text-end.text-secondary User
+          .col= @submission.user.login
+        .row.mb-2
+          .col-5.text-end.text-secondary Started
+          .col= "#{time_ago_in_words(@submission.submitted_at)} ago"
+        .row.mb-2
+          .col-5.text-end.text-secondary Status
+          .col
+            = @submission.status
+            - if @submission.viva_archived?
+              %span.badge.text-bg-warning.ms-1 archived
+        .row.mb-2
+          .col-5.text-end.text-secondary Turns
+          .col= @submission.viva_turns.where(role: :student).count
+        - if @submission.points
+          .row.mb-2
+            .col-5.text-end.text-secondary Points
+            .col= "#{@submission.points}/100"
+        - if @submission.viva_archived?
+          .row.mb-2
+            .col-5.text-end.text-secondary Archived
+            .col
+              = "#{time_ago_in_words(@submission.viva_archived_at)} ago"
+              %div.small.text-secondary.fst-italic
+                This viva no longer counts for grading. You may start a fresh viva on this problem.
+
+    - if @current_user.can_edit_problem?(@submission.problem)
+      - grader_class = (Rails.configuration.llm[:viva_grade_service].presence || 'Llm::VivaGradeAssist').constantize
+      - known_models = grader_class.const_defined?(:KNOWN_MODELS) ? grader_class::KNOWN_MODELS : []
+
+      .card.shadow-sm.mb-3
+        .card-body
+          %h5 Admin
+          = form_with url: rejudge_submission_path(@submission), method: :post,
+                      html: {data: {turbo: true, 'turbo-confirm': 'Discard the current grade and re-run grading?'}} do |f|
+            .input-group.input-group-sm
+              = f.select :model,
+                  [['Default model', '']] + known_models.map { |m| [m, m] },
+                  {},
+                  class: 'form-select form-select-sm',
+                  title: 'Model to use for the next grader run'
+              = f.submit 'Re-run grading', class: 'btn btn-warning btn-sm'
+
+          - if @submission.viva_archived?
+            .small.text-secondary.mt-2
+              %em Archived #{time_ago_in_words(@submission.viva_archived_at)} ago.
+              The student has been able to start a new viva since then.
+          - elsif @submission.status.to_s.in?(%w[done grader_error])
+            = button_to 'Archive viva', archive_viva_submission_path(@submission),
+                class: 'btn btn-outline-warning btn-sm mt-2',
+                form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Archive this viva so the student can take a fresh one? Transcript and grade are preserved for audit but no longer count for grading.'}}
+
+      -# Editor-visible diagnostics: grader response/request, per-turn raw responses.
+      .card.shadow-sm.mb-3
+        .card-body
+          %h5.mb-2 Debug
+          - if @viva_grade
+            %h6.text-secondary.small.mb-1 Last grader run
+            .small.text-secondary
+              - if @viva_grade.llm_model.present?
+                Model: #{@viva_grade.llm_model}
+              - if @viva_grade.cost
+                | · Cost: $#{format('%.4f', @viva_grade.cost)}
+              - if @viva_grade.graded_at
+                | · #{time_ago_in_words(@viva_grade.graded_at)} ago
+            - if @viva_grade.llm_response_raw.present?
+              %details.mt-2
+                %summary.text-secondary.small Grader response (last run)
+                %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                  = @viva_grade.llm_response_raw
+
+          -# Request preview — what would be sent on the next grader call.
+          -# Computed lazily here; pdf_attachment downloads + base64-encodes
+          -# so this adds ~50–100ms to admin page loads. Acceptable for
+          -# editor-only sidebar that isn't part of the polling refresh.
+          - grader_class    = (Rails.configuration.llm[:viva_grade_service].presence || 'Llm::VivaGradeAssist').constantize
+          - request_payload = (grader_class.preview(submission: @submission) rescue nil)
+          - if request_payload
+            %details.mt-2
+              %summary.text-secondary.small Grader request payload (next run)
+              %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                = JSON.pretty_generate(request_payload)
+
+          - turn_class = (Rails.configuration.llm[:viva_turn_service].presence || 'Llm::VivaTurnAssist').constantize
+          - turn_payload = (turn_class.preview(submission: @submission, turn: nil) rescue nil)
+          - if turn_payload
+            %details.mt-2
+              %summary.text-secondary.small Turn request payload (next turn would send)
+              %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                = JSON.pretty_generate(turn_payload)
+
+          -# Per-turn raw responses — what each interview-turn LLM call returned.
+          - turns_with_raw = @submission.viva_turns.where(role: :assistant).where.not(llm_response_raw: nil).order(:id)
+          - if turns_with_raw.any?
+            .border-top.pt-2.mt-3
+              %h6.text-secondary.small.mb-1 Per-turn responses
+              - turns_with_raw.each do |t|
+                %details.mt-1
+                  %summary.text-secondary.small
+                    Turn ##{t.id}
+                    - if t.llm_model.present?
+                      | · #{t.llm_model}
+                    - if t.cost
+                      | · $#{format('%.4f', t.cost)}
+                    - if t.token_count_in || t.token_count_out
+                      | · #{t.token_count_in || 0}/#{t.token_count_out || 0} tok
+                  %pre.small.bg-light.p-2.mt-1.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}
+                    = t.llm_response_raw

@@ -1,4 +1,4 @@
-class AddCommonExtToLanguages < ActiveRecord::Migration
+class AddCommonExtToLanguages < ActiveRecord::Migration[4.2]
   def self.up
     # language.common_ext is a comma-separated list of common file
     # extensions.

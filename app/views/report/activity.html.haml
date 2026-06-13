@@ -1,0 +1,94 @@
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 User Activity
+
+= form_with url: '#', id: 'filter_form' do |f|
+  .row{data: {controller: 'init-ui-component'}}
+    .col-lg-4.mt-2
+      = render partial: 'problem_select', locals: {all: true}
+    .col-lg-4.mt-2
+      = render partial: 'submission_range'
+    .col-lg-4.mt-2
+      = render partial: 'user_select'
+      .form-check.mt-2
+        %input#show_inactive.form-check-input{type: :checkbox}
+        %label.form-check-label{for: 'show_inactive'}
+          Also show selected users with zero submissions
+        .form-text Inactive rows are highlighted; applies to the user filter above.
+
+.text-secondary.small.mb-3.d-flex.align-items-center
+  %span.mi.md-18.me-1 sync
+  Select filters above, then click Refresh to load data. Solved counts problems with a 100-point submission (raw-sum problems excluded).
+
+.row
+  .col-sm-12
+    %table#table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
+
+:javascript
+  user_path = "#{stat_user_admin_path(-1234)}"
+
+  function user_link_renderer(data, type, row) {
+    if (type == 'display' || type == 'filter') {
+      return `<a href="${user_path.replace("-1234",row['user_id'])}">(${row['login']})</a> ${row['full_name']}`;
+    }
+    return row['login']
+  }
+  function date_time_renderer(data, type, row) {
+    if (data == null) { return (type == 'display' || type == 'filter') ? '—' : '' }
+    if (type == 'display' || type == 'filter') {
+      return moment(data).format('YYYY-MM-DD HH:mm:ss')
+    }
+    return data
+  }
+
+  window.addEventListener("load", function() {
+    activity_table = $('#table').DataTable({
+      layout: {
+        topStart: 'buttons'
+      },
+      autoWidth: true,
+      pageLength: 50,
+      processing: true,
+      order: [[1, 'desc']],
+      buttons: [
+        {
+          text: 'Refresh',
+          action: (e,dt,node,config) => {
+            activity_table.clear().draw()
+            activity_table.ajax.reload( () => { activity_table.columns.adjust().draw() } )
+          }
+        },
+        'copy',
+        {
+          extend: 'excel',
+          title: 'User activity'
+        }
+      ],
+      columns: [
+        {title: 'User', data: 'login', render: user_link_renderer},
+        {title: 'Subs', data: 'sub_count', className: 'text-end'},
+        {title: 'Problems tried', data: 'prob_count', className: 'text-end'},
+        {title: 'Solved (=100)', data: 'solved_count', className: 'text-end'},
+        {title: 'First sub', data: 'first_sub', render: date_time_renderer},
+        {title: 'Last sub', data: 'last_sub', render: date_time_renderer},
+        {title: 'IPs', data: 'ip_count', className: 'text-end'},
+      ],
+      createdRow: (row, data) => {
+        if (data.sub_count == 0) { $(row).addClass('table-danger') }
+      },
+      ajax: {
+        url: '#{activity_query_report_path}',
+        type: 'POST',
+        data: (d) =>  {
+          build_sub_range_params(d)
+          build_user_params(d)
+          build_problem_params(d)
+          d.show_inactive = $('#show_inactive').is(':checked') ? 'true' : 'false'
+        },
+        dataType: 'json',
+        beforeSend: (request) => {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+      }, //end ajax
+    });
+  });

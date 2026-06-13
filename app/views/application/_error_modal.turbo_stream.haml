@@ -1,0 +1,13 @@
+-# replace the modal (and show it if necessary)
+:ruby
+  modal_opts  = { do_popup: true,
+                  header_class: 'bg-danger-subtle',
+                  header_msg: title,
+                  body_msg: body
+                }
+= turbo_stream.update :msg_modal_main, partial: 'msg_modal', locals: modal_opts
+
+- id = local_assigns.fetch(:id, 'msg_modal')
+= turbo_stream.append 'js-response' do
+  :javascript
+    $("##{id}").modal('show')

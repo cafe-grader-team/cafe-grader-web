@@ -1,22 +1,10 @@
-= form_for @tag do |f|
-  - if @tag.errors.any?
-    #error_explanation
-      %h2= "#{pluralize(@tag.errors.count, "error")} prohibited this tag from being saved:"
-      %ul
-        - @tag.errors.full_messages.each do |msg|
-          %li= msg
-
-  .row
-    .col-md-6
-      .form-group.field
-        = f.label :name
-        = f.text_field :name, class: 'form-control'
-      .form-group.field
-        = f.label :description
-        = f.text_area :description, class: 'form-control'
-      .form-group.field
-        = f.label :public
-        = f.text_field :public, class: 'form-control'
-      .actions
-        = f.submit 'Save', class: 'btn btn-primary'
-    .col-md-6
+= simple_form_for @tag, html: { id: 'edit_form' }, wrapper: :horizontal_form do |f|
+  = render 'application/error_for_model', model: @tag
+  = f.input :name
+  = f.input :description, input_html: {style: 'height: 7rem', class: 'mb-4'}
+  = f.input :public, wrapper: :horizontal_boolean
+  = f.input :kind, label: 'Type', collection: Tag.kinds.keys.map { |key| [I18n.t("activerecord.attributes.tag.kinds.#{key}"), key] }, include_blank: false, wrapper: :horizontal_select, input_html: { style: 'max-width: 300px;' }
+  = f.input :color, as: :color, input_html: {class: 'form-control-color', style: 'max-width: 100px;'}
+  -# kind specifc params
+  - if @tag.kind == 'llm_prompt'
+    = f.input :params, label: 'LLM Prompt', input_html: {style: 'height: 20rem'}

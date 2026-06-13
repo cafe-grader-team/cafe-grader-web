@@ -1,73 +1,381 @@
-%p
-  %b Name:
-  = @group.name
-%p
-  %b Description:
-  = @group.description
+= render 'application/breadcrumb', steps: [ { label: 'Groups', path: groups_path, icon: resource_icon_name(Group) }, { label: 'Management' } ]
 
-%br
-= link_to 'Edit', edit_group_path(@group)
-\|
-= link_to 'Back', groups_path
+.group-management-wrapper{data: {controller: 'group init-ui-component'}}
+  .d-flex.justify-content-between.align-items-center.mb-3
+    .d-flex.align-items-center.gap-2
+      %h2.fw-bold.text-dark.mb-0.font-monospace
+        = @group.name
+      %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+        %small Manage
 
-.row
-  .col-md-12
-    %h1 Group details
-.row
-  .col-md-6
-    .panel.panel-default
-      .panel-heading
-        .panel-title Users in this group
-      .panel-body
-        =form_tag add_user_group_path(@group), class: 'form-inline' do
-          .form-group
-            =label_tag :user_id, "User"
-            =select_tag :user_id, options_from_collection_for_select(User.all,'id','full_name'), class: 'select2'
-          =submit_tag "Add",class: 'btn btn-primary'
+    .d-flex.gap-2
+      = link_to mdi(:edit, 'me-1') + 'Edit', edit_group_path(@group), class: 'btn btn-primary btn-flex'
+
+  .row.gx-3
+    .col-md-6
+      .card.card-shadow.mb-3
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill group
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Group Detail
+              .text-secondary.small Overview
+
+          .row.gy-3
+            = key_pair(obj: @group, field: :name, label: 'Name', icon: :label)
+            = key_pair(obj: @group, field: :description, width: 4, label: 'Description', icon: :description)
+            = key_pair(obj: @group, field: :enabled, as: :yes_no, label: 'Enabled', icon: :visibility)
+
+    .col-md-6
+      = render partial: 'group_help'
+
+  .row.mb-3
+  .col-sm-12
+    .card.shadow-sm.my-2
+      .card-body
+        %ul.nav.nav-tabs.mb-3
+          %li.nav-item
+            %button.nav-link.active{data: {bs: {toggle: 'tab',target: '#tab-group-user'}}}
+              .d-inline-flex.align-items-center
+                %span.mi
+                  person
+                Users
+          %li.nav-item
+            %button.nav-link{data: {bs: {toggle: 'tab',target: '#tab-group-problem'}}}
+              .d-inline-flex.align-items-center
+                %span.mi
+                  task
+                Problems
+        .tab-content
+          -# ==========================================
+          -# ---------- users pane ------------------
+          -# ==========================================
+          #tab-group-user.tab-pane.fade.show.active
+            .row.gx-4
+              .col-md-6
+                .card.border-0.shadow-sm.bg-light.mb-4
+                  .card-body.p-4
+                    .d-flex.align-items-center.mb-3
+                      .bg-primary.text-white.rounded-circle.d-flex.align-items-center.justify-content-center.me-3{style: "width: 32px; height: 32px"}
+                        %span.mi.md-18 group_add
+                      %h6.fw-bold.text-dark.mb-0 Add Users to Group
+                    
+                    .row.gy-3
+                      .col-12
+                        =form_tag add_user_group_path(@group), class: 'user-add-form', 
+                          data: {turbo: true, action: 'turbo:submit-end->group#afterUsersAdd'} do
+                          .d-flex.gap-2.align-items-center
+                            .flex-grow-1
+                              =select_tag :user_ids, options_from_collection_for_select(User.all,'id','login_with_name'), 
+                                class: 'select2', multiple: true, style: 'width: 100%',
+                                data: {placeholder: 'Add these users...'}
+                            =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                      .col-12
+                        =form_tag add_user_by_group_group_path(@group), class: 'group-add-form',
+                          data: {turbo: true, action: 'turbo:submit-end->group#afterUsersAdd'} do
+                          .d-flex.gap-2.align-items-center
+                            .flex-grow-1
+                              =select_tag :user_group_ids, options_from_collection_for_select(@current_user.groups_for_action(:edit),'id','name'), 
+                                class: 'select2', multiple: true, style: 'width: 100%',
+                                data: {placeholder: 'Add all from groups...'}
+                            =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                -# bulk actions dropdown
+                .d-flex.justify-content-start.align-items-center.mb-3
+                  .dropdown
+                    %button.btn.btn-outline-secondary.dropdown-toggle.shadow-sm.d-inline-flex.align-items-center.gap-1{type: 'button', 'data-bs-toggle': 'dropdown'}
+                      %span.mi.md-18 settings_suggest
+                      Bulk Actions
+                    %ul.dropdown-menu.dropdown-menu-end.border-0.shadow-sm
+                      = form_with url: do_all_users_group_path(@group), data: {turbo: true, action: 'turbo:submit-end->group#afterUserAction'} do |f|
+                        = f.hidden_field :command, value: 1, 'data-group-target': 'usersCommand'
+                        %li
+                          = f.button class: 'dropdown-item d-flex align-items-center gap-2', data: {action: 'click->group#setUsersCommand', value: 'enable'} do
+                            %span.mi.md-18.text-success check_circle
+                            Enable All
+                        %li
+                          = f.button class: 'dropdown-item d-flex align-items-center gap-2', data: {action: 'click->group#setUsersCommand', value: 'disable'} do
+                            %span.mi.md-18.text-secondary block
+                            Disable All
+                        %li
+                          %hr.dropdown-divider
+                        %li
+                          = f.button class: 'dropdown-item d-flex align-items-center gap-2 text-danger', data: {action: 'click->group#setUsersCommand', value: 'remove'} do
+                            %span.mi.md-18 person_remove
+                            Remove All
+
+                -# hidden user action form
+                = form_with url: do_user_group_path, html: {'data-group-target': 'userForm',
+                  data: {turbo: true, action: 'turbo:submit-end->group#afterUserAction'}} do |f|
+                  = f.hidden_field :user_id, 'data-group-target': 'userFormUserID'
+                  = f.hidden_field :command, 'data-group-target': 'userFormCommand'
+
+              .col-md-6
+                -# help for GroupUser
+                .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+                  .card-body
+                    .d-flex.align-items-center.mb-2
+                      %span.mi.text-info.me-2 lightbulb
+                      %h6.fw-bold.text-dark.mb-0 User Management Tips
+                    .text-secondary.small
+                      %ul.mb-0.ps-3
+                        %li.mb-1
+                          If you want to add several users to a group, it may be easier to just re-import the users in the
+                          = link_to 'New list of users', new_list_user_admin_index_path, class: 'fw-bold text-dark'
+                          or
+                          = link_to 'Bulk Manage User', bulk_manage_user_admin_index_path, class: 'fw-bold text-dark'
+                          page.
+                        %li.mb-1 Only enabled problems are shown to the enabled users of the group.
+                        %li
+                          %strong.text-dark User Roles:
+                          %ul.ps-3.mt-1.mb-0
+                            %li
+                              %span.badge.bg-info-subtle.text-info-emphasis.border.border-info-subtle User
+                              = "- Can only use available problems."
+                            %li.mt-1
+                              %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle Reporter
+                              = "- Can view submissions of any users."
+                            %li.mt-1
+                              %span.badge.bg-success-subtle.text-success-emphasis.border.border-success-subtle Editor
+                              = "- Can edit any problems."
+            = render partial: 'group_users'
+          -# ==========================================
+          -# ---------- problem pane ------------------
+          -# ==========================================
+          #tab-group-problem.tab-pane.fade
+            .row.gx-4
+              .col-md-6
+                .card.border-0.shadow-sm.bg-light.mb-4
+                  .card-body.p-4
+                    .d-flex.align-items-center.mb-3
+                      .bg-primary.text-white.rounded-circle.d-flex.align-items-center.justify-content-center.me-3{style: "width: 32px; height: 32px"}
+                        %span.mi.md-18 post_add
+                      %h6.fw-bold.text-dark.mb-0 Add Problems to Group
+                    
+                    .row.gy-3
+                      .col-12
+                        =form_tag add_problem_group_path(@group), class: 'problem-add-form',
+                          data: {turbo: true, action: 'turbo:submit-end->group#afterProblemsAdd'} do
+                          .d-flex.gap-2.align-items-center
+                            .flex-grow-1
+                              =select_tag :problem_ids, options_from_collection_for_select(@current_user.problems_for_action(:edit),'id','long_name'), 
+                                class: 'select2', multiple: true, style: 'width: 100%',
+                                data: {placeholder: 'Select individual problems...'}
+                            =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm', 'data-group-target': 'asdf'
+
+                      .col-12
+                        =form_tag add_problem_by_group_group_path(@group), class: 'group-add-form',
+                          data: {turbo: true, action: 'turbo:submit-end->group#afterProblemsAdd'} do
+                          .d-flex.gap-2.align-items-center
+                            .flex-grow-1
+                              =select_tag :problem_group_ids, options_from_collection_for_select(@current_user.groups_for_action(:edit),'id','name'), 
+                                class: 'select2', multiple: true, style: 'width: 100%',
+                                data: {placeholder: 'Add all problems from groups...'}
+                            =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                -# bulk actions dropdown
+                .d-flex.justify-content-start.align-items-center.mb-3
+                  .dropdown
+                    %button.btn.btn-outline-secondary.dropdown-toggle.shadow-sm.d-inline-flex.align-items-center.gap-1{type: 'button', 'data-bs-toggle': 'dropdown'}
+                      %span.mi.md-18 settings_suggest
+                      Bulk Actions
+                    %ul.dropdown-menu.dropdown-menu-end.border-0.shadow-sm
+                      = form_with url: do_all_problems_group_path(@group), data: {turbo: true, action: 'turbo:submit-end->group#afterProblemAction'} do |f|
+                        = f.hidden_field :command, value: 1, 'data-group-target': 'problemsCommand'
+                        %li
+                          = link_to "New Problem", import_problems_path, class: 'dropdown-item d-flex align-items-center gap-2 text-primary'
+                        %li
+                          %hr.dropdown-divider
+                        %li
+                          = f.button class: 'dropdown-item d-flex align-items-center gap-2', data: {action: 'click->group#setProblemsCommand', value: 'enable'} do
+                            %span.mi.md-18.text-success check_circle
+                            Enable All
+                        %li
+                          = f.button class: 'dropdown-item d-flex align-items-center gap-2', data: {action: 'click->group#setProblemsCommand', value: 'disable'} do
+                            %span.mi.md-18.text-secondary block
+                            Disable All
+                        %li
+                          %hr.dropdown-divider
+                        %li
+                          = f.button class: 'dropdown-item d-flex align-items-center gap-2 text-danger', data: {action: 'click->group#setProblemsCommand', value: 'remove'} do
+                            %span.mi.md-18 delete
+                            Remove All
+
+                -# hidden problem action form
+                = form_with url: do_problem_group_path, html: {'data-group-target': 'problemForm',
+                  data: {turbo: true, action: 'turbo:submit-end->group#afterProblemAction'}} do |f|
+                  = f.hidden_field :problem_id, 'data-group-target': 'problemFormProblemID'
+                  = f.hidden_field :command, 'data-group-target': 'problemFormCommand'
+
+              .col-md-6
+                -# help for group problem
+                .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+                  .card-body
+                    .d-flex.align-items-center.mb-2
+                      %span.mi.text-info.me-2 lightbulb
+                      %h6.fw-bold.text-dark.mb-0 Problem Management Tips
+                    .text-secondary.small
+                      %ul.mb-0.ps-3
+                        %li.mb-1 
+                          If you want to add multiple problems at once, it may be easier to bulk manage them in the
+                          = link_to 'Bulk Manage Problems', manage_problems_path, class: 'fw-bold text-dark'
+                          page.
+                        %li Only enabled problems are shown to the enabled users of the group.
+            .row
+              .col-12
+                = render partial: 'group_problems'
 
 
-        %table.table.table-hover
-          %thead
-            %tr
-              %th Login
-              %th Full name
-              %th Remark
-              %th= link_to 'Remove All', remove_all_user_group_path(@group), method: :delete, :data => { :confirm => "Remove ALL USERS from group?" }, class: 'btn btn-danger btn-sm'
 
-          %tbody
-            - @group.users.each do |user|
-              %tr
-                %td= user.login
-                %td= user.full_name
-                %td= user.remark
-                %td= link_to 'Remove', remove_user_group_path(@group,user), :method => :delete, :data => { :confirm => "Remove #{user.full_name}?" }, class: 'btn btn-danger btn-sm'
-  .col-md-6
-    .panel.panel-default
-      .panel-heading
-        .panel-title Problems
-      .panel-body
+:javascript
+  function reload_table() {
 
-        =form_tag add_problem_group_path(@group), class: 'form-inline' do
-          .form-group
-            =label_tag :problem_id, "Problem"
-            =select_tag :problem_id, options_from_collection_for_select(Problem.all,'id','full_name'), class: 'select2'
-          =submit_tag "Add",class: 'btn btn-primary'
+    // user tables
+    user_role_column = 2
+    $('#user_table').DataTable({
+      responsive: true,
+      processing: true,
+      ajax: {
+        url: "#{show_users_query_group_path(@group)}",
+        type: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+      },
+      layout: {
+        topStart: 'info',
+        topEnd: 'search',
+      },
+      rowId: 'id',
+      columns: [ 
+        {data: 'login', render: function(data,type,row,meta) { return `<a href="/user_admin/${row['user_id']}/stat" data-turbo="false" class="fw-bold text-decoration-none"> ${data}</a>` } },
+        {data: 'full_name'},
+        {data: 'role'},
+        {data: 'remark'},
+        {data: 'user_id', render: cafe.dt.render.button(null, {element_type: 'switch', action: 'group#postUserAction', command: 'toggle', checked_data_field: 'enabled'}), className: 'text-center'},
+        {
+          data: null, 
+          render: function(data, type, row, meta) {
+            if (type !== 'display') return '';
+            let role_items = '';
+            if (row['role'] != 'editor') 
+              role_items += `<li>${cafe.dt.render.button('Set as Editor',{element_type: 'link', className: 'dropdown-item text-success', action: 'group#postUserAction', command: 'make_editor'})(row['user_id'],type,row,meta)}</li>`;
+            if (row['role'] != 'reporter') 
+              role_items += `<li>${cafe.dt.render.button('Set as Reporter',{element_type: 'link', className: 'dropdown-item text-warning', action: 'group#postUserAction', command: 'make_reporter'})(row['user_id'],type,row,meta)}</li>`;
+            if (row['role'] != 'user') 
+              role_items += `<li>${cafe.dt.render.button('Set as User',{element_type: 'link', className: 'dropdown-item text-info', action: 'group#postUserAction', command: 'make_user'})(row['user_id'],type,row,meta)}</li>`;
+
+            const remove_item = cafe.dt.render.button(`<span class="mi md-18">person_remove</span> Remove from Group`, {
+              element_type: 'link', 
+              className: 'dropdown-item d-flex align-items-center gap-2 text-danger', 
+              action: 'group#postUserAction', 
+              command: 'remove', 
+              confirm: 'Really remove user from group?'
+            })(row['user_id'], type, row, meta);
+
+            let dropdown = `<div class="dropdown d-inline-flex align-items-center">` +
+              `  <a type="button" class="btn btn-outline-secondary link-flex rounded-1 border-0 p-1 ms-1" data-bs-toggle="dropdown">` +
+              `    <span class="mi">more_horiz</span>` +
+              `  </a>` +
+              `  <ul class="dropdown-menu dropdown-menu-end border-0 shadow">` +
+              `    <li><h6 class="dropdown-header">Change Role</h6></li>` +
+              role_items +
+              `    <li><hr class="dropdown-divider"></li>` +
+              `    <li>${remove_item}</li>` +
+              `  </ul>` +
+              `</div>`;
+
+            return `<div class="d-flex gap-1 justify-content-end">${dropdown}</div>`;
+          },
+          className: 'align-middle py-1 pr-2',
+        }
+      ],
+      columnDefs: [{visible: false, targets: user_role_column}, {orderable: false, targets: [4,5]} ],
+      destroy: true,
+      paging: false,
+      orderFixed: [user_role_column,'asc'],
+      order: [[0,'asc']],
+      drawCallback: function (settings) {
+        var api = this.api();
+        var rows = api.rows({ page: 'current' }).nodes();
+        var last = null;
+        api.column(user_role_column, { page: 'current' })
+          .data()
+          .each(function (group, i) {
+              if (last !== group) {
+
+                // set text for group row
+                if (group == 'editor') {
+                  role_group_text = '<tr class="table-success fw-bold text-uppercase small ls-1"><td colspan="6"> Editors (Can edit any problems) </td></tr>'
+                } else if (group == 'reporter') {
+                  role_group_text = '<tr class="table-warning fw-bold text-uppercase small ls-1"><td colspan="6"> Reporters (Can view submissions of any users) </td></tr>'
+                } else {
+                  role_group_text = '<tr class="table-info fw-bold text-uppercase small ls-1"><td colspan="6"> Users (Can only use available problems) </td></tr>'
+                }
+
+                //prepend group row
+                $(rows).eq(i).before(role_group_text);
+                last = group;
+              }
+          });
+        //since columns size changed, we call adjust
+        //but not .draw() !!! else, infinite recursion
+        api.columns.adjust()
+      },
+    })
+
+    // problem table
+    $('#problem_table').DataTable({
+      responstive: true,
+      destroy: true,
+      paging: false,
+      processing: true,
+      ajax: {
+        url: "#{show_problems_query_group_path(@group)}",
+        type: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+      },
+      rowId: 'id',
+      columns: [
+        {data: 'name', render: function(data,type,row,meta) { return `<a href="/problems/${row['id']}/edit" data-turbo="false" class="fw-bold text-decoration-none"> ${data}</a>` } },
+        {data: 'full_name'},
+        {data: 'tags', render: cafe.dt.render_factory.badge()},
+        {data: 'date_added'},
+        {data: 'available', render: cafe.dt.render.yes_no_pill(), className: 'text-center'},
+        {data: 'problem_id', render: cafe.dt.render.button(null, {element_type: 'switch', action: 'group#postProblemAction', command: 'toggle', checked_data_field: 'enabled'}), className: 'text-center'},
+        {
+          data: null, 
+          render: function(data, type, row, meta) {
+            if (type !== 'display') return '';
+            const remove_btn = cafe.dt.render.button(`${cafe.msi('close')}`, {
+              element_type: 'link',  
+              className: 'btn btn-outline-danger border-0 py-1 px-2', 
+              action: 'group#postProblemAction', 
+              command: 'remove', 
+              confirm: 'Really remove problem from group?',
+              title: "Remove from Group"
+            })(row['problem_id'], type, row, meta);
+            return `<div class="d-flex gap-1 justify-content-end">${remove_btn}</div>`;
+          },
+          className: 'align-middle py-1 pr-2',
+        }
+      ],
+      columnDefs: [{orderable: false, targets: [2,3,6]} ],
+      order: [[3,'desc']],
+      drawCallback: function (settings) {
+        var api = this.api();
+        api.columns.adjust()
+      },
+    })
+  }
 
 
-        %table.table.table-hover
-          %thead
-            %tr
-              %th name
-              %th Full name
-              %th Full score
-              %th= link_to 'Remove All', remove_all_problem_group_path(@group), method: :delete, :data => { :confirm => "Remove ALL PROBLEMS from group?" }, class: 'btn btn-danger btn-sm'
-
-          %tbody
-            - @group.problems.each do |problem|
-              %tr
-                %td= problem.name
-                %td= problem.full_name
-                %td= problem.full_score
-                %td= link_to 'Remove', remove_problem_group_path(@group,problem), :method => :delete, :data => { :confirm => "Remove #{problem.full_name}?" }, class: 'btn btn-danger btn-sm'
-
-
+  //doc ready
+  window.addEventListener("load", function() {
+    reload_table();
+  });

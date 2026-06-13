@@ -1,0 +1,23 @@
+:javascript
+  // generate paths to be used in js
+  // for any parameterized id, the id is replaced with -123 to be gsubbed, later
+  window.AppRoute = {
+    // contests
+    contest: "#{contest_path(-123)}",
+    viewContest: "#{view_contest_path(-123)}",
+    cloneContest: "#{clone_contest_path(-123)}",
+
+    // users
+    // this is for rendering a stat, which was, inappropriately assigned to user_admin controller
+    statContestUserAdmin: "#{stat_contest_user_admin_path(-123,-456)}",
+    statUserAdmin: "#{stat_user_admin_path(-123)}",
+    editUserAdmin: "#{edit_user_admin_path(-123)}",
+
+    // problems
+    editProblem: "#{edit_problem_path(-123)}",
+    statProblem: "#{stat_problem_path(-123)}",
+
+    // tag
+    tag: "#{tag_path(-123)}",
+    editTag: "#{edit_tag_path(-123)}",
+  }

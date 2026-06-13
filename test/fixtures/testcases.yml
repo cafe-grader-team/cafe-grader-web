@@ -1,0 +1,19 @@
+tc_add_1:
+  problem: prob_add
+  dataset: ds_add
+  num: 1
+  group: 1
+  weight: 50
+  input: "1 2\n"
+  sol: "3\n"
+  code_name: add_1
+
+tc_add_2:
+  problem: prob_add
+  dataset: ds_add
+  num: 2
+  group: 1
+  weight: 50
+  input: "10 20\n"
+  sol: "30\n"
+  code_name: add_2

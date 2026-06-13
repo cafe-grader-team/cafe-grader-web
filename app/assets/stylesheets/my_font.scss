@@ -1,0 +1,198 @@
+//font are places at assets/fonts and font-url hepler (provided by sass-rails) will map correctly to it
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 100;
+  font-style: normal;
+  src: url('sarabun/Sarabun-Thin.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 200;
+  font-style: normal;
+  src: url('sarabun/Sarabun-ExtraLight.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 300;
+  font-style: normal;
+  src: url('sarabun/Sarabun-Light.ttf') format('truetype'),
+}
+
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 400;
+  font-style: normal;
+  src: url('sarabun/Sarabun-Regular.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 500;
+  font-style: normal;
+  src: url('sarabun/Sarabun-Medium.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 600;
+  font-style: normal;
+  src: url('sarabun/Sarabun-SemiBold.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 700;
+  font-style: normal;
+  src: url('sarabun/Sarabun-Bold.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 800;
+  font-style: normal;
+  src: url('sarabun/Sarabun-ExtraBold.ttf') format('truetype'),
+}
+
+// italic
+
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 100;
+  font-style: italic;
+  src: url('sarabun/Sarabun-ThinItalic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 200;
+  font-style: italic;
+  src: url('sarabun/Sarabun-ExtraLightItalic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 300;
+  font-style: italic;
+  src: url('sarabun/Sarabun-LightItalic.ttf') format('truetype'),
+}
+
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 400;
+  font-style: italic;
+  src: url('sarabun/Sarabun-Italic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 500;
+  font-style: italic;
+  src: url('sarabun/Sarabun-MediumItalic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 600;
+  font-style: italic;
+  src: url('sarabun/Sarabun-SemiBoldItalic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 700;
+  font-style: italic;
+  src: url('sarabun/Sarabun-BoldItalic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Sarabun';
+  font-weight: 800;
+  font-style: italic;
+  src: url('sarabun/Sarabun-ExtraBoldItalic.ttf') format('truetype'),
+}
+
+//ubuntu mono font
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: 400;
+  font-style: normal;
+  src: url('ubuntu_mono/UbuntuMono-Regular.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: 700;
+  font-style: normal;
+  src: url('ubuntu_mono/UbuntuMono-Bold.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: 400;
+  font-style: italic;
+  src: url('ubuntu_mono/UbuntuMono-Italic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-weight: 700;
+  font-style: italic;
+  src: url('ubuntu_mono/UbuntuMono-BoldItalic.ttf') format('truetype'),
+}
+
+
+// material symbol
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  src: url('material_symbols/MaterialSymbolsOutlined.woff2') format('woff');
+}
+
+@font-face {
+  font-family: 'Material Symbols Rounded';
+  font-style: normal;
+  src: url('material_symbols/MaterialSymbolsRounded.woff2') format('woff');
+}
+
+@font-face {
+  font-family: 'Material Symbols Sharp';
+  font-style: normal;
+  src: url('material_symbols/MaterialSymbolsSharp.woff2') format('woff');
+}
+
+
+// Cascadia Mono
+@font-face {
+  font-family: 'Cascadia Mono';
+  font-weight: 400;
+  font-style: normal;
+  src: url('cascadia_mono/CascadiaMono-VariableFont_wght.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Cascadia Mono';
+  font-weight: 400;
+  font-style: italic;
+  src: url('cascadia_mono/CascadiaMono-Italic-VariableFont_wght.ttf') format('truetype'),
+}
+
+// Inconsolata
+@font-face {
+  font-family: 'Inconsolata';
+  font-weight: 500;
+  font-style: normal;
+  src: url('inconsolata/Inconsolata-VariableFont_wdth,wght.ttf') format('truetype'),
+}
+
+
+// courier prime
+@font-face {
+  font-family: 'Courier Prime';
+  font-weight: 400;
+  font-style: normal;
+  src: url('courier_prime/CourierPrime-Regular.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-weight: 400;
+  font-style: italic;
+  src: url('cascadia_code/CourierPrime-Italic.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-weight: 700;
+  font-style: normal;
+  src: url('cascadia_code/CourierPrime-Bold.ttf') format('truetype'),
+}
+@font-face {
+  font-family: 'Courier Prime';
+  font-weight: 700;
+  font-style: italic;
+  src: url('cascadia_code/CourierPrime-BoldItalic.ttf') format('truetype'),
+}

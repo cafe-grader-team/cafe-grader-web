@@ -1,119 +1,199 @@
-- content_for :head do
-  = stylesheet_link_tag 'problems'
-  = javascript_include_tag 'local_jquery'
+= render 'application/breadcrumb', steps: [{ label: 'Problems', path: problems_path, icon: resource_icon_name(Problem) }, { label: 'Manage' }]
+.d-flex.justify-content-between.align-items-center.mb-4
+  .d-flex.flex-column.gap-1
+    %small.text-secondary.text-uppercase.fw-bold.ls-1 Management
+    %h2.fw-bold.text-dark.mb-0 Bulk Manage Problems
+
+- if @result && @result.count > 0
+  .alert.alert-info
+    %ul.mb-0
+      - @result.each do |r|
+        %li= r
+- if @error && @error.count > 0
+  .alert.alert-danger
+    %ul.mb-0
+      - @error.each do |r|
+        %li= r
+
+= form_with url: manage_problems_path, class: 'align-items-center',
+  data: {turbo: true, action: 'turbo:submit-end->problem#bulkManageSubmitEnd',controller: 'init-ui-component' } do |f|
+  .card.card-shadow.mb-4
+    .card-body
+      .d-flex.align-items-start.mb-3
+        .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+          %span.mi.md-36.fill build
+        .flex-grow-1
+          %h5.fw-bold.text-dark.mb-0 Bulk Actions
+          %small.text-muted Select problems below, choose actions, then apply. You can shift-click to select a range.
+      .row
+        .col-md-6
+          .row.mb-3.align-items-center
+            .col-md-auto
+              .form-check
+                = f.check_box :change_date_added, class: 'form-check-input manage-action'
+                = f.label :change_date_added, 'Change "Date added" to'
+            .col-md-auto
+              = f.text_field :date_added, class: 'form-control'
+          .row.mb-3.align-items-center
+            .col-md-auto
+              .form-check
+                = f.check_box :change_enable, class: 'form-check-input manage-action'
+                = f.label :change_enable, 'Set "Available" to'
+            .col-md-auto
+              = f.radio_button :enable, "yes", class: 'form-check-input manage-action'
+              = f.label :enable_yes, "yes"
+            .col-md-auto
+              = f.radio_button :enable, "no", class: 'form-check-input manage-action'
+              = f.label :enable_no, "no"
+        .col-md-6
+          .row.mb-3.align-items-center
+            .col-md-auto
+              .form-check
+                = f.check_box :add_group, class: 'form-check-input manage-action'
+                = f.label :add_group, 'Add to groups'
+            .col-md-auto
+              = f.select "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), {}, class: 'select2 form-control', multiple: true, data: {width: "400px", placeholder: 'Click to select groups'}
+          .row.mb-3.align-items-center
+            .col-md-auto
+              .form-check
+                = f.check_box :add_tags, class: 'form-check-input manage-action'
+                = f.label :add_tags, 'Add tags'
+            .col-md-auto
+              = f.select "tag_ids", options_from_collection_for_select( Tag.all, 'id','name'), {},class: 'select2', multiple: true, data: {placeholder: 'Select tags by clicking', width: "400px"}
+          .row.mb-3.align-items-center
+            .col-md-auto
+              .form-check
+                = f.check_box :set_languages, class: 'form-check-input manage-action'
+                = f.label :set_languages, 'Set permitted languages'
+            .col-md-auto
+              = f.select "lang_ids", options_from_collection_for_select( Language.all, 'id','name',params[:group_name]), {}, class: 'select2 form-control', multiple: true, data: {width: "400px", placeholder: 'Click to select languages'}
+      .d-flex.justify-content-end
+        = f.submit 'Apply to Selected', class: 'btn btn-primary btn-flex px-4'
+
+  .card.card-shadow
+    .card-body
+      %table#main-table.table.table-hover.table-condense.align-middle.datatable
+        %thead
+          %tr
+            %th
+              .form-check
+                %input#select_all.form-check-input.form-check-thick{type: :checkbox}
+            %th Name
+            %th Full name
+            %th Difficulty
+            %th Permitted Languages
+            %th Tags
+            %th Date added
+            %th Available
 
 :javascript
-  $(document).ready( function() {
-    function shiftclick(start,stop,value) {
-      $('tr input').each( function(id,input) { 
-        var $input=$(input);
-        var iid=parseInt($input.attr('id').split('-')[2]);
-        if(iid>=start&&iid<=stop){
-        $input.prop('checked',value)
-        }
-      });
+
+  window.addEventListener("load", function() {
+
+    badge_renderer = cafe.dt.render_factory.badge()
+
+    function permitted_langs_render(data,type,row,meta) {
+      if (data == null) return ''
+
+      if (type == 'display') {
+        return badge_renderer(JSON.stringify(data.split(' ')),type,row,meta)
+      }
+
+      return data
     }
 
-    $('tr input').click( function(e)  {
-      if (e.shiftKey) {
-        stop = parseInt($(this).attr('id').split('-')[2]);
-        var orig_stop = stop
-        if (typeof start !== 'undefined') {
-          if (start > stop) {
-            var tmp = start;
-            start = stop;
-            stop = tmp;
-          }
-          shiftclick(start,stop,$(this).is(':checked') )
-        }
-        start = orig_stop
+    function check_box_render(data,type,row,meta) {
+      if (type == 'display') {
+        return `<div class="form-check"><input class="form-check-input form-check-thick prob-select-check" type="checkbox" id="prob-${data}" name="prob-${data}"> </div>`
+      }
+
+      return data;
+    }
+
+    function difficulty_render(data,type,row,meta) {
+      if (type == 'display') {
+        count = data || 0
+
+        html = "<span class=\"mi md-18\" style=\"font-variation-settings: 'FILL' 1\">star</span>".repeat(count/2)
+        if (count % 2 == 1)
+          html += "<span class=\"mi md-18\" > star_half </span>"
+        return html
+      }
+
+      return data
+    }
+
+    function full_name_render(data,type,row,meta) {
+      let statement = ''
+      if (typeof row.url === 'string' && row.url.length > 0)
+        statement = ` <a href="${row.url}" class="ms-1 d-inline-flex text-decoration-none" title="Read statement" data-bs-toggle="tooltip"><span class="mi md-18 text-muted">description</span></a>`
+      else if (row.statement_attached)
+        statement = ` <a href="${row.statement_path}" class="ms-1 d-inline-flex text-decoration-none" title="Read statement" data-bs-toggle="tooltip"><span class="mi md-18 text-muted">description</span></a>`
+
+      let attachment = ''
+      if (row.attachment_attached)
+        attachment = ` <a href="${row.attachment_path}" class="ms-1 d-inline-flex text-decoration-none" title="Download files" data-bs-toggle="tooltip"><span class="mi md-18 text-muted">archive</span></a>`
+
+      return `<div class="d-inline-flex align-items-center">${data}${statement}${attachment}</div>`
+    }
+
+    table = $('.datatable').DataTable({
+      paging: false,
+      ajax: {
+        url: '#{manage_query_problems_path}',
+        type: 'POST',
+        dataType: 'json',
+        beforeSend: (request) => {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+      },
+      columns: [
+        {data: 'id', name: 'checkbox', render: check_box_render, className: 'd-flex justify-content-center'},
+        {data: 'name', className: 'font-monospace'},
+        {data: 'full_name', render: full_name_render},
+        {data: 'difficulty', render: difficulty_render, className: 'text-start'},
+        {data: 'permitted_lang', render: permitted_langs_render},
+        {data: 'tags', render: cafe.dt.render_factory.badge()},
+        {data: 'date_added', render: cafe.dt.render.datetime("Y-MM-DD")},
+        {data: 'available', render: cafe.dt.render.yes_no_pill()},
+      ],
+      columnDefs: [{orderable: false, targets: [0]} ],
+      order: [[0]],
+    });
+
+    td = new TempusDominus(document.getElementById('date_added'), cafe.config.td.date);
+
+    let firstRowIndex = null;
+    const checkboxColumnIndex = table.column('checkbox:name').index();
+
+    $('#main-table tbody').on('click', 'td', function(e) {
+      let cell = table.cell(this).index()
+      if (cell.column != checkboxColumnIndex) return
+      if (e.shiftKey && firstRowIndex !== null) {
+          const lastRowIndex = table.cell(this).index().row;
+
+          let start = table.rows().count() + 1
+          let end = -1
+          table.rows().every( function(rowIdx, tableLoop, rowLoop) {
+            if (rowIdx == firstRowIndex || rowIdx == lastRowIndex) {
+              start = Math.min(start,rowLoop)
+              end = Math.max(end,rowLoop)
+            }
+          })
+
+          const target_checked = document.getElementById(`prob-${table.row(lastRowIndex).data().id}`).checked
+          table.rows().every( function(rowIdx, tableLoop, rowLoop) {
+            if (rowLoop >= start && rowLoop <= end) {
+              document.getElementById(`prob-${table.row(rowIdx).data().id}`).checked = target_checked
+            }
+          })
       } else {
-        start = parseInt($(this).attr('id').split('-')[2]);
+          firstRowIndex = table.cell(this).index().row;
       }
     });
-  });
 
+    $('#select_all').on('click', function(e) {
+      $('.prob-select-check').prop('checked',e.target.checked)
+    })
 
-%h1 Manage problems
-
-%p= link_to '[Back to problem list]', problems_path
-
-= form_tag :action=>'do_manage' do
-  .panel.panel-primary
-    .panel-heading
-      Action
-    .panel-body
-      .submit-box
-        What do you want to do to the selected problem?
-        %br/
-        (You can shift-click to select a range of problems)
-        %ul.form-inline
-          %li
-            Change "Date added" to
-            .input-group.date
-              = text_field_tag :date_added, class: 'form-control'
-              %span.input-group-addon
-                %span.glyphicon.glyphicon-calendar
-            -# = select_date Date.current, :prefix => 'date_added'
-            &nbsp;&nbsp;&nbsp;
-            = submit_tag 'Change', :name => 'change_date_added', class: 'btn btn-primary btn-sm'
-          %li
-            Set "Available" to
-            = submit_tag 'True', :name => 'enable_problem', class: 'btn btn-primary btn-sm'
-            = submit_tag 'False', :name => 'disable_problem', class: 'btn btn-primary btn-sm'
-
-          - if GraderConfiguration.multicontests?
-            %li
-              Add selected problems to contest
-              = select("contest","id",Contest.all.collect {|c| [c.title, c.id]})
-              = submit_tag 'Add', :name => 'add_to_contest', class: 'btn btn-primary btn-sm'
-          %li
-            Add selected problems to user group
-            = select_tag "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), id: 'group_name',class: 'select2'
-            = submit_tag 'Add', name: 'add_group', class: 'btn btn-primary'
-          %li
-            Add the following tags to the selected problems
-            = select_tag "tag_ids", options_from_collection_for_select( Tag.all, 'id','name'), id: 'tags_name',class: 'select2', multiple: true, data: {placeholder: 'Select tags by clicking', width: "200px"}
-            = submit_tag 'Add', name: 'add_tags', class: 'btn btn-primary'
-
-  %table.table.table-hover.datatable
-    %thead
-      %tr{style: "text-align: left;"}
-        %th= check_box_tag 'select_all'
-        %th Name
-        %th Full name
-        %th Tags
-        %th Available
-        %th Date added
-        - if GraderConfiguration.multicontests?
-          %th Contests
-
-    %tbody
-      - num = 0
-      - for problem in @problems
-        - num += 1
-        %tr{:id => "row-prob-#{problem.id}", :name=> "prob-#{problem.id}"}
-          %td= check_box_tag "prob-#{problem.id}-#{num}"
-          %td= problem.name
-          %td= problem.full_name
-          %td
-            - problem.tags.each do |t|
-              %span.label.label-default= t.name
-          %td= problem.available
-          %td= problem.date_added
-          - if GraderConfiguration.multicontests?
-            %td
-              - problem.contests.each do |contest|
-                = "(#{contest.name} [#{link_to 'x', :action => 'remove_contest', :id => problem.id, :contest_id => contest.id }])"
-
-:javascript
-  $('.input-group.date').datetimepicker({
-    format: 'DD/MMM/YYYY',
-    showTodayButton: true,
-    locale: 'en',
-    widgetPositioning: {horizontal: 'auto', vertical: 'bottom'},
-
-  });
-  $('.datatable').DataTable({
-    paging: false
   });

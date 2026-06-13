@@ -1,0 +1,7 @@
+- modal_id = local_assigns.fetch(:modal_id, 'msg_modal')
+- header_msg = local_assigns.fetch(:header_msg, 'Message')
+- body_msg = local_assigns.fetch(:body_msg, 'Body Placeholder')
+:plain
+  $('##{modal_id} .modal-header h4').html("#{j header_msg}")
+  $('##{modal_id} .modal-body pre').html("#{j body_msg}")
+  $('##{modal_id}').modal('show')

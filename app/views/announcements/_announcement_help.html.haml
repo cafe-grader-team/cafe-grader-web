@@ -1,0 +1,48 @@
+/ Knowledge Card: Announcements
+.card.border-0.shadow-sm.border-start.border-4.border-info
+  .card-body.p-4
+    
+    / --- Header ---
+    .d-flex.align-items-center.mb-4
+      .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+        %span.mi.md-24.fill campaign
+      
+      %div
+        %h5.fw-bold.text-dark.mb-0 How Announcements Work
+        %small.text-secondary Guidelines for formatting and audience targeting.
+
+    / --- Content Grid ---
+    .row.g-4
+      
+      / 1. Formatting & Status
+      .col-lg-6.col-xxl-6
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 edit_note
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Formatting & Status
+            %p.small.text-muted.mb-0.lh-sm
+              Use 
+              %strong.text-dark Markdown
+              for formatting. Only 
+              %strong.text-dark Published
+              announcements are visible to users; drafts are hidden.
+
+      / 2. Audience Targeting
+      .col-lg-6.col-xxl-6
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 groups
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Audience Targeting
+            %p.small.text-muted.mb-0.lh-sm
+              %strong Front Page:
+              Visible to everyone (logged in or not).
+              %br/
+              %strong Public:
+              Visible to all logged-in users.
+              %br/
+              %strong Group-Specific:
+              Only visible to members of the assigned group.

@@ -1,22 +1,63 @@
 %tr
+  %td.text-end{'data-order': @numbering}
+    %div= @numbering
+    - if @current_user&.admin?
+      .mt-1
+        = link_to stat_problem_path(problem), class: 'text-secondary text-decoration-none', 'data-bs-toggle' => 'tooltip', title: 'View Statistics' do
+          %span.mi{style: 'font-size: 1.2rem; vertical-align: middle;'} bar_chart
+        = link_to edit_problem_path(problem), class: 'text-secondary text-decoration-none', 'data-bs-toggle' => 'tooltip', title: 'Edit Problem' do
+          %span.mi{style: 'font-size: 1.2rem; vertical-align: middle;'} edit
+  - @numbering+=1
+  -# problem name, pdf, attachments, etc.
   %td
-    - if @current_user and @current_user.admin?
-      = link_to problem.name, stat_problem_path(problem)
+    = render partial: 'problems/problem_name', locals: {problem: problem}
+  -# score column
+  - score = @prob_submissions[problem.id][:max_score] || 0
+  - raw_sum_mode = problem.live_dataset&.st_raw_sum?
+  - cc = score == 100 ? 'bg-success' : 'bg-warning text-dark'
+  %td{style: "width: 12em; vertical-align: middle", 'data-order': score || 0}
+    - if raw_sum_mode
+      %span.fw-semibold
+        = number_with_precision score, precision: 2, strip_insignificant_zeros: true
     - else
-      = "#{problem.name}"
+      - text = []
+      - sum_cost = 0
+      - hint_count = @prob_submissions[problem.id][:hint_count]
+      - hint_cost = @prob_submissions[problem.id][:hint_cost] || 0
+      - text << "Hint: #{hint_count}" if hint_count
+      - sum_cost += hint_cost
+      - ai_count = @prob_submissions[problem.id][:ai_assist_count]
+      - ai_cost = @prob_submissions[problem.id][:ai_assist_cost] || 0
+      - sum_cost += ai_cost
+      - sum_cost = [100, sum_cost].min
+      - text << "AI Assist: #{ai_count}" if ai_count
+      -# display progress bar
+      - adjusted_score = [100 - sum_cost, score].min
+      .progress.rounded-pill{style: 'height: 0.85rem;'}
+        .progress-bar{style: "width: #{adjusted_score}%", class: cc}
+          = number_with_precision adjusted_score, precision: 2
+        .progress-bar{style: "width: #{score - adjusted_score}%", class: 'bg-danger'}
+          = number_with_precision score - adjusted_score, precision: 2
+      %div
+        %small= text.join(', ')
+      %div
+        %small= "Full score reduced by #{sum_cost}" if sum_cost > 0
+  -# last submission column
   %td
-    = "#{problem.full_name}"
-
-    %br
-    = link_to_description_if_any "[#{t 'main.problem_desc'}] <span class='glyphicon glyphicon-file'></span>".html_safe, problem
+    = render partial: 'submission_short',
+      locals: {submission: @prob_submissions[problem.id][:submission], problem_name: problem.name, problem_id: problem.id, sub_count: @prob_submissions[problem.id][:count], show_button: false, show_id: true }
+  -# Action column
   %td
-    = @prob_submissions[problem.id][:count]
-    -#= link_to "[subs]", main_submission_path(problem.id)
-  %td
-    = render :partial => 'submission_short',
-      :locals => {:submission => @prob_submissions[problem.id][:submission], :problem_name => problem.name, :problem_id => problem.id }
-  %td
-    - if @prob_submissions[problem.id][:submission]
-      = link_to 'Edit', edit_submission_path(@prob_submissions[problem.id][:submission]), class: 'btn btn-success'
+    - if problem.viva_exam?
+      - if @prob_submissions[problem.id][:submission]
+        = link_to 'View Viva', viva_submission_path(@prob_submissions[problem.id][:submission]), class: 'btn btn-outline-primary btn-sm'
+      - else
+        = button_to 'Start Viva', viva_start_problem_path(problem), class: 'btn btn-outline-success btn-sm', form: {style: 'display:inline-block'}
     - else
-      = link_to 'New', direct_edit_problem_submissions_path(problem.id), class: 'btn btn-success'
+      - if @prob_submissions[problem.id][:submission]
+        = link_to 'Edit', edit_submission_path(@prob_submissions[problem.id][:submission]), class: 'btn btn-outline-primary btn-sm'
+      - else
+        = link_to 'New', direct_edit_problem_submissions_path(problem.id), class: 'btn btn-outline-success btn-sm'
+  -# hidden column
+  %td
+    = problem.public_tags.pluck(:name).join ','

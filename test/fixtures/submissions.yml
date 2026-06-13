@@ -1,5 +1,65 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-one:
-  id: 1
-two:
-  id: 2
+add1_by_admin:
+  user: admin
+  problem: prob_add
+  language: Language_c
+  submitted_at: "2019-10-22 08:34"
+  number: 1
+  source:
+    xxx
+    \#include <stdio>
+    \#include <stdlib>
+    int main() {
+      cout << 1 << endl;
+    }
+
+sub1_by_admin:
+  user: admin
+  problem: prob_sub
+  language: Language_c
+  submitted_at: "2019-10-22 08:34"
+  number: 1
+  source:
+    \#include <stdio>
+    \#include <stdlib>
+    int main() {
+      cout << 2 << endl;
+    }
+
+add1_by_john:
+  user: john
+  problem: prob_add
+  language: Language_c
+  submitted_at: "2019-10-22 08:34"
+  number: 1
+  source:
+    \#include <stdio>
+    \#include <stdlib>
+    int main() {
+      cout << 33 << endl;
+    }
+
+add1_by_james:
+  user: james
+  problem: prob_add
+  language: Language_c
+  submitted_at: "2019-10-22 08:34"
+  number: 1
+  source:
+    \#include <stdio>
+    \#include <stdlib>
+    int main() {
+      cout << 33 << endl;
+    }
+
+sub1_by_james:
+  user: james
+  problem: prob_sub
+  language: Language_c
+  submitted_at: "2019-10-22 08:34"
+  number: 1
+  source:
+    \#include <stdio>
+    \#include <stdlib>
+    int main() {
+      cout << 44 << endl;
+    }

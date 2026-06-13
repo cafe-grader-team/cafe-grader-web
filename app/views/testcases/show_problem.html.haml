@@ -1,25 +1,37 @@
-%h1 Test cases
-%h2= @problem.long_name
+%h1
+  Test cases
+%h4= @problem.long_name
 
 /navbar
-%ul.nav.nav-pills{role: :tablist}
-  - @problem.testcases.each.with_index do |tc,id|
-    %li{role: :presentation, class: ('active' if id == 0)}
-      %a{href:"#tc#{tc.id}", role: 'tab', data: {toggle: 'tab'}}= tc.num
+.row
+  .col-lg-6
+    %h5 Testcase num
+    %ul.nav.nav-pills{role: :tablist}
+      - @dataset.testcases.each.with_index do |tc,id|
+        %li.nav-item{role: :presentation, class: ('active' if id == 0)}
+          %a.nav-link{href:"#", role: 'tab', data: {bs: {toggle: 'tab', target: "#tc#{tc.id}"}}, class: ('active' if id == 0)}= tc.num
+  .col-lg-6
+    - if @managers.count > 0
+      %h5 Additional file for grader
+      %ul
+        - @managers.each do |mg|
+          %li= link_to mg.filename, download_manager_testcases_path(@problem,mg)
 
 /actual data
 .tab-content
-  - @problem.testcases.each.with_index do |tc,id|
+  - @dataset.testcases.each.with_index do |tc,id|
     .tab-pane{id: "tc#{tc.id}",class: ('active' if id == 0)}
-      .row
-        .col-md-6
-          %h3 Input
-          = link_to "Download",download_input_testcase_path(tc),class: 'btn btn-info btn-sm'
-        .col-md-6
-          %h3 Output
-          = link_to "Download",download_sol_testcase_path(tc),class: 'btn btn-info btn-sm'
-      .row
-        .col-md-6
-          %textarea{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= tc.input
-        .col-md-6
-          %textarea{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= tc.sol
+      .row.my-2
+        .col-lg-6
+          %h3
+            Input
+            = link_to "Download",download_input_testcase_path(tc),class: 'btn btn-info btn-sm'
+        .col-lg-6
+          %h3
+            Output
+            = link_to "Download",download_sol_testcase_path(tc),class: 'btn btn-info btn-sm'
+      .row.my-2
+        .col-lg-6
+          %textarea.font-monospace{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= (tc.inp_file.download.force_encoding('UTF-8') if tc.inp_file.attached?)
+        .col-lg-6
+          %textarea.font-monospace{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= (tc.ans_file.download.force_encoding('UTF-8') if tc.ans_file.attached?)

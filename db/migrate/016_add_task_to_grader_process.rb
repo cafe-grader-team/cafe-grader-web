@@ -1,4 +1,4 @@
-class AddTaskToGraderProcess < ActiveRecord::Migration
+class AddTaskToGraderProcess < ActiveRecord::Migration[4.2]
   def self.up
     add_column :grader_processes, :task_id, :integer
   end

@@ -1,4 +1,4 @@
-class UserContestStat < ActiveRecord::Base
+class UserContestStat < ApplicationRecord
 
   belongs_to :user
 

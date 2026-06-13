@@ -1,0 +1,19 @@
+hint_for_add:
+  commentable: prob_add (Problem)
+  user: admin
+  kind: 0
+  enabled: true
+  cost: 1.5
+  title: Hint for add
+  body: Try using addition
+  status: 0
+
+solution_for_add:
+  commentable: prob_add (Problem)
+  user: admin
+  kind: 1
+  enabled: true
+  cost: 3.0
+  title: Solution for add
+  body: Use scanf and printf
+  status: 0

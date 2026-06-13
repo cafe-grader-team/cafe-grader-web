@@ -14,6 +14,7 @@ en:
   login_page: "login page"
   home_page: "home page"
 
+
   menu:
     main: 'Main'
     messages: 'Messages'
@@ -42,10 +43,11 @@ en:
     start_soon: "The contest at your site will start soon.  Please wait."
     specified_in_header: "Specified in header"
 
-    problem_desc: "desc"
-    submitted_at: "Submitted at"
-    graded_at: "Graded at"
-    score: "score: "
+    problem_desc: desc
+    submission_id: Sub ID
+    submitted_at: Submitted
+    graded_at: Graded
+    score: score
     cmp_msg: "compiler msg"
     src_link: "src"
     submissions_link: "submissions"
@@ -156,4 +158,32 @@ Cheers!
         full_name: "full name"
         email: "e-mail"
         province: "province"
+      comment:
+        kinds:
+          hint: Hint
+      tag:
+        kinds:
+          normal: Normal tag
+          topic: Topic tag
+          llm_prompt: Prompt For LLM Assist
+          viva_grounding: Viva Exam Grounding
+      evaluation:
+        results:
+          waiting: Judging
+          correct: Correct
+          wrong: Wrong Answer
+          partial: Partially Correct
+          time_limit: Time Limit Exceed
+          memory_limit: Memory Limit Exceed
+          crash: Program Crashed
+          unknown_error: UNKNOWN ERROR
+          grader_error: GRADER ERROR
+      contest:
+        finalized: Read Only
+  errors:
+    messages:
+      name_format: contains invalid characters. Only letters, numbers, <code>( )</code>, <code>[ ]</code>, <code>-</code> and <code>_</code> are allowed.
+
+
+
 

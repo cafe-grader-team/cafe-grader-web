@@ -1,6 +1,6 @@
-class CreateSites < ActiveRecord::Migration
+class CreateSites < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :sites do |t|
+    create_table :sites, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.string :name
       t.boolean :started
       t.datetime :start_time

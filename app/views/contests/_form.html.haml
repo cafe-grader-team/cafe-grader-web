@@ -1,0 +1,29 @@
+= simple_form_for @contest, wrapper: :horizontal_form, html: {data: {turbo: false}, id: 'edit_form'} do |f|
+  = f.error_notification
+  = f.input :name, disabled: @contest.finalized?
+  = f.input :description, disabled: @contest.finalized?
+  = f.input :pre_contest_seconds, disabled: @contest.finalized?
+  .row.mb-3
+    .col-md-3.col-form-label
+      Start
+    .col-md-7
+      .input-group.td-date
+        = f.text_field :start, value: @contest.start&.strftime("%d/%b/%Y %H:%M"), class: 'form-control', disabled: @contest.finalized?
+        %span.input-group-text
+          %span.mi event
+  .row.mb-3
+    .col-md-3.col-form-label
+      Stop
+    .col-md-7
+      .input-group.td-date
+        = f.text_field :stop, value: @contest.stop&.strftime("%d/%b/%Y %H:%M"), class: 'form-control', disabled: @contest.finalized?
+        %span.input-group-text
+          %span.mi event
+  = f.input :post_contest_seconds, disabled: @contest.finalized?
+  = f.input :enabled, disabled: @contest.finalized?
+  = f.input :finalized
+:javascript
+  window.addEventListener("load", function() {
+    start_datetime = new TempusDominus(document.getElementById('contest_start'), cafe.config.td.datetime );
+    stop_datetime = new TempusDominus(document.getElementById('contest_stop'), cafe.config.td.datetime );
+  })

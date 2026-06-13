@@ -1,0 +1,531 @@
+
+.secondnavbar {
+  top: 50px;
+}
+
+
+
+//---- google material icon -----
+.mi-bs {
+  //vertical-align: middle;
+  //position: relative;
+  // DAE: i need -3 because, when putting in a bootstrap button, -3 make it perfectly centered vertically
+  //top: -3px;
+
+  .btn-sm & {
+    // but for btn-sm, it is -2 instead
+    // top: -2px;
+  }
+}
+
+.mi {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  vertical-align: middle;
+}
+
+.mi.md-18 {
+  font-size: 18px;
+}
+
+.mi.md-24 {
+  font-size: 24px;
+}
+
+.mi.md-36 {
+  font-size: 36px;
+}
+
+.mi.md-48 {
+  font-size: 48px;
+}
+
+// Help drawer (offcanvas) — keep widths centralized so all help drawers match.
+// See CLAUDE.md "Help-pattern split" and "Offcanvas help triggers".
+.offcanvas-help {
+  width: 480px;
+}
+
+.mi.fill {
+  font-variation-settings: 'FILL' 1
+}
+
+.btn-flex {
+  @extend .d-inline-flex;
+  @extend .gap-2;
+  @extend .align-items-center;
+
+  justify-content: center;
+}
+
+.link-flex {
+  @extend .d-inline-flex;
+  @extend .align-items-center;
+  @extend .text-decoration-none;
+}
+
+//for use google material icon with Tempus Dominus
+.mi-td-time:after { content: 'schedule'; }
+.mi-td-date:after { content: 'date_range'; }
+.mi-td-up:after { content: 'arrow_upward'; }
+.mi-td-down:after { content: 'arrow_downward'; }
+.mi-td-previous:after { content: 'arrow_back'; }
+.mi-td-next:after { content: 'arrow_forward'; }
+.mi-td-today:after { content: 'today'; }
+.mi-td-clear:after { content: 'delete'; }
+.mi-td-close:after { content: 'cancel'; }
+
+// --------------- bootstrap file upload ----------------------
+.btn-file {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-file input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity = 0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
+
+
+// --------------- bootstrap adjustment ----------------------
+body {
+  font-family: 'Sarabun', 'Noto Sans Thai', Tahoma, "sans-serif";
+  padding: 5px;
+  padding-top: 65px;
+  padding-bottom: 38px; // clearance for the fixed-bottom footer (~30px tall)
+}
+
+.form-check-thick {
+  border-width: 1.5px;
+  border-color: #ccc;
+
+}
+
+h1 {
+  color: #334488;
+}
+
+h2 {
+  color: #5566bb;
+}
+
+code {
+  background-color: #ececec;
+  //color: #333;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
+pre code {
+  display: block;
+  background-color: #ececec;
+  //color: #000;
+  padding: 1em;
+  border-radius: 6px;
+  font-size: 0.95em;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  border: 1px solid #e2e2e5;
+}
+
+
+.markdown-content {
+  p {
+    margin-bottom: 0.25rem
+  }
+}
+
+
+
+// --------------- below here are legacy from aj.Jittat ---------------
+
+
+div {
+  &.userbar {
+    line-height: 1.5em;
+    text-align: right;
+    font-size: 12px;
+  }
+
+  &.title {
+    padding: 10px 0px;
+    line-height: 1.5em;
+    font-size: 13px;
+
+    span.contest-over-msg {
+      font-size: 15px;
+      color: red;
+    }
+
+    table {
+      width: 100%;
+      font-weight: bold;
+    }
+
+    td {
+      &.left-col {
+        text-align: left;
+        vertical-align: top;
+        color: #444444;
+      }
+
+      &.right-col {
+        text-align: right;
+        vertical-align: top;
+        font-size: 18px;
+        color: #116699;
+      }
+    }
+  }
+}
+
+table.info {
+  margin: 10px 0;
+  border: 1px solid #666666;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  th {
+    border: 1px solid #666666;
+    line-height: 1.5em;
+    padding: 0 0.5em;
+  }
+
+  td {
+    border-left: 1px solid #666666;
+    border-right: 1px solid #666666;
+    line-height: 1.5em;
+    padding: 0 0.5em;
+  }
+}
+
+tr {
+  &.info-head {
+    background: #777777;
+    color: white;
+  }
+
+  &.info-odd {
+    background: #eeeeee;
+  }
+
+  &.info-even {
+    background: #fcfcfc;
+  }
+}
+
+@mixin basicbox {
+  background: #eeeeff;
+  border: 1px dotted #99aaee;
+  padding: 5px;
+  margin: 10px 0px;
+  color: black;
+  font-size: 13px;
+}
+
+.infobox {
+  @include basicbox;
+}
+
+.submitbox {
+  @include basicbox;
+}
+
+.errorExplanation {
+  border: 1px dotted gray;
+  color: #bb2222;
+  padding: 5px 15px 5px 15px;
+  margin-bottom: 5px;
+  background-color: white;
+  font-weight: normal;
+
+  h2 {
+    color: #cc1111;
+    font-weight: bold;
+  }
+}
+
+table.uinfo {
+  border-collapse: collapse;
+  border: 1px solid black;
+  font-size: 13px;
+}
+
+td.uinfo {
+  vertical-align: top;
+  border: 1px solid black;
+  padding: 5px;
+}
+
+th.uinfo {
+  background: lightgreen;
+  vertical-align: top;
+  text-align: right;
+  border: 1px solid black;
+  padding: 5px;
+}
+
+div {
+  &.compilermsgbody {
+    font-family: monospace;
+  }
+
+  &.task-menu {
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.75em;
+    font-weight: bold;
+    border-top: 1px dashed gray;
+    border-bottom: 1px dashed gray;
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+}
+
+table.taskdesc {
+  border: 2px solid #dddddd;
+  border-collapse: collapse;
+  margin: 10px auto;
+  width: 90%;
+  font-size: 13px;
+
+  p {
+    font-size: 13px;
+  }
+
+  tr.name {
+    border: 2px solid #dddddd;
+    background: #dddddd;
+    color: #333333;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.5em;
+    text-align: center;
+  }
+
+  td {
+    &.desc-odd {
+      padding: 5px;
+      padding-left: 20px;
+      background: #fefeee;
+    }
+
+    &.desc-even {
+      padding: 5px;
+      padding-left: 20px;
+      background: #feeefe;
+    }
+  }
+}
+
+.announcementbox {
+  margin: 10px 0px;
+  background: #bbddee;
+  padding: 1px;
+
+  span.title {
+    font-weight: bold;
+    color: #224455;
+    padding-left: 10px;
+    line-height: 1.6em;
+  }
+}
+
+.announcement {
+  margin: 2px;
+  background: white;
+  padding: 1px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.announcement p {
+  font-size: 12px;
+  margin: 2px;
+}
+
+.pub-info {
+  text-align: right;
+  font-style: italic;
+  font-size: 9px;
+
+  p {
+    text-align: right;
+    font-style: italic;
+    font-size: 9px;
+  }
+}
+
+.announcement {
+  .toggles {
+    font-weight: normal;
+    float: right;
+    font-size: 80%;
+  }
+
+  .announcement-title {
+    font-weight: bold;
+  }
+}
+
+// Markdown preview on announcement cards (main page) and the admin
+// announcements table. The body renders as real markdown and is clamped
+// visually; truncating the markdown text itself would cut mid-syntax
+// (code fences, links) and break the render. "Read More" opens the modal.
+.announcement-preview {
+  // tame block headings inside a compact preview; the modal shows them full-size
+  h1, h2, h3, h4, h5 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.announcement-preview-clamped {
+  max-height: 7.5rem;
+  overflow: hidden;
+  // fade the clipped bottom edge out instead of cutting it abruptly
+  -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 65%, transparent 100%);
+}
+
+div {
+  &.message {
+    margin: 10px 0 0;
+
+    div {
+      &.message {
+        margin: 0 0 0 30px;
+      }
+
+      &.body {
+        border: 2px solid #dddddd;
+        background: #fff8f8;
+        padding-left: 5px;
+      }
+
+      &.reply-body {
+        border: 2px solid #bbbbbb;
+        background: #fffff8;
+        padding-left: 5px;
+      }
+
+      &.stat {
+        font-size: 10px;
+        line-height: 1.75em;
+        padding: 0 5px;
+        color: #333333;
+        background: #dddddd;
+        font-weight: bold;
+      }
+
+      &.message div.stat {
+        font-size: 10px;
+        line-height: 1.75em;
+        padding: 0 5px;
+        color: #444444;
+        background: #bbbbbb;
+        font-weight: bold;
+      }
+    }
+  }
+
+  &.contest-title {
+    color: white;
+    text-align: center;
+    line-height: 2em;
+  }
+
+  &.registration-desc, &.test-desc {
+    border: 1px dotted gray;
+    background: #f5f5f5;
+    padding: 5px;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.5em;
+  }
+}
+
+h2.contest-title {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+
+
+.grader-comment {
+  word-wrap: break-word;
+  //font-family: 'Cascadia Mono';
+  font-family: 'Inconsolata';
+}
+
+// bring back bootstrap btn-xs
+.btn-xs {
+  font-size: 0.75rem;  /* Smaller font size */
+  padding: 0.25rem 0.5rem;  /* Smaller padding */
+}
+
+
+golden-btn + .golden-btn { margin-top: 1em; }
+
+.golden-btn {
+  display: inline-block;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  border: none;
+  box-shadow: 0 3px 6px rgba(0,0,0,.16), 0 3px 6px rgba(110,80,20,.4),
+              inset 0 -2px 5px 1px rgba(139,66,8,1),
+              inset 0 -1px 1px 3px rgba(250,227,133,1);
+  background-image: linear-gradient(160deg, #a54e07, #b47e11, #fef1a2, #bc881b, #a54e07) !important;
+  border: 1px solid #a55d07;
+  color: rgb(120,50,5);
+  text-shadow: 0 2px 2px rgba(250, 227, 133, 1);
+  cursor: pointer;
+  transition: all .2s ease-in-out;
+  background-size: 100% 100%;
+  background-position:center;
+}
+.golden-btn:focus,
+.golden-btn:hover {
+  background-size: 150% 150%;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23),
+                inset 0 -2px 5px 1px #b17d10,
+                inset 0 -1px 1px 3px rgba(250,227,133,1);
+  border: 1px solid rgba(165,93,7,.6);
+  color: rgba(120,50,5,.8);
+}
+.golden-btn:active {
+  box-shadow: 0 3px 6px rgba(0,0,0,.16), 0 3px 6px rgba(110,80,20,.4),
+              inset 0 -2px 5px 1px #b17d10,
+                inset 0 -1px 1px 3px rgba(250,227,133,1);
+}

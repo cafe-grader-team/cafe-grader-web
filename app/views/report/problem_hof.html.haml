@@ -1,29 +1,63 @@
+.d-flex.justify-content-between.align-items-end.mb-3{data: {controller: 'init-ui-component'}}
+  .d-flex.flex-column.gap-1
+    %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+    %h2.fw-bold.text-dark.mb-0 Hall of Fame
+  - if @current_user&.admin?
+    = link_to problem_hof_recompute_report_path, class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: { turbo: true, turbo_method: 'post', bs_toggle: 'tooltip', bs_title: 'Recompute statistics' } do
+      %span.mi sync
 
-/- if params[:id]
-/  %h1 Tasks Hall of Fame
-/  = link_to('[back to All-Time Hall of Fame]', action: 'problem_hof', id: nil  )
-/- else
-/  %h1 All-Time Hall of Fame
+.card.card-shadow
+  .card-body
+    %table#hof-table.table.table-hover.table-condense.align-middle
+      %thead
+        %tr
+          %th Name
+          %th Full Name
+          %th.text-end Submissions
+          %th.text-end Solved / Attempted
+          %th.text-end Solve Rate
 
-.panel.panel-info
-  .panel-heading
-    Select Task
-  .panel-body
-    .form-inline
-      = select 'report',
-        'problem_id',
-        @problems.collect {|p| ["[#{p.name}] #{p.full_name}", report_problem_hof_url(p.id)]},
-        {:selected => report_problem_hof_url(@problem)},
-        { class: 'select2 form-control' }
-      %button.btn.btn-primary.btn-sm.go-button#problem_go{data: {source: "#report_problem_id"}} Go
+:javascript
+  window.addEventListener("load", function() {
 
+    function name_render(data, type, row) {
+      if (type === 'display')
+        return `<a href="${'#{problem_hof_view_report_path(':id')}'.replace(':id', row.id)}" class="text-decoration-none font-monospace">${data}</a>`
+      return data
+    }
 
-- unless params[:id]
-  /=render partial: 'all_time_hof'
-  Please select a problem.
-- else
-  %h1 [#{Problem.find(params[:id]).name}] #{Problem.find(params[:id]).full_name}
-  %h2 Submission History
-  =render partial: 'application/bar_graph', locals: { histogram: @histogram }
-  =render partial: 'task_hof'
+    function solve_render(data, type, row) {
+      if (type === 'display')
+        return `${row.solved} / ${row.attempted}`
+      return row.attempted
+    }
 
+    function rate_render(data, type, row) {
+      if (type === 'display') {
+        if (row.attempted === 0) return '<span class="text-muted">\u2014</span>'
+        let bar_class = data >= 50 ? 'bg-success' : 'bg-warning'
+        return `<div class="d-flex align-items-center justify-content-end gap-2"><div class="progress" style="width:60px;height:6px"><div class="progress-bar ${bar_class}" style="width:${data}%" role="progressbar"></div></div><span style="min-width:3.5em;text-align:right">${data}%</span></div>`
+      }
+      return data
+    }
+
+    $('#hof-table').DataTable({
+      paging: false,
+      ajax: {
+        url: '#{problem_hof_query_report_path}',
+        type: 'POST',
+        dataType: 'json',
+        beforeSend: function(request) {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+      },
+      columns: [
+        { data: 'name', render: name_render },
+        { data: 'full_name' },
+        { data: 'sub_count', className: 'text-end' },
+        { data: 'solved', render: solve_render, className: 'text-end' },
+        { data: 'rate', render: rate_render, className: 'text-end' },
+      ],
+      order: [[2, 'desc']],
+    });
+  });

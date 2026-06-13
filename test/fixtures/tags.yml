@@ -1,11 +1,9 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+tag_easy:
+  name: easy
+  description: Easy problems
+  public: true
 
-one:
-  name: MyString
-  description: MyString
-  public: 
-
-two:
-  name: MyString
-  description: MyString
-  public: 
+tag_hard:
+  name: hard
+  description: Hard problems
+  public: false

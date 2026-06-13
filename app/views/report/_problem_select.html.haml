@@ -1,0 +1,42 @@
+.card.shadow-sm.mb-2{data: {controller: 'form--filter-problem', action: 'change->form--filter-problem#filterChanged'}}
+  .card-body
+    %h6.fw-bold.mb-3.d-flex.align-items-center
+      %span.mi.me-2.text-secondary dataset
+      Problems
+    - if local_assigns[:all]
+      .form-check.mb-2
+        = radio_button_tag :'probs[use]', :all, false, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+        = label_tag :probs_use_all, "All problems", class: 'form-check-label'
+    .form-check.mb-2
+      = radio_button_tag :'probs[use]', :ids, true, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+      = label_tag :probs_use_ids, "Only these problems", class: 'form-check-label'
+    .ms-4.mb-3
+      = select_tag 'probs[ids][]',
+          options_for_select(@problems.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, params[:'probs[ids][]']),
+          { class: 'select2 form-control', multiple: "true", data: {'form--filter-problem-target': 'idSelect'} }
+    .form-check.mb-2
+      = radio_button_tag :'probs[use]', :groups, false, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+      = label_tag :probs_use_groups, "Problems in these groups", class: 'form-check-label'
+    .ms-4.mb-3
+      = select_tag 'probs[group_ids][]',
+          options_for_select(@groups.collect {|g| [g.name, g.id]},params[:prob_group_id]),
+          { class: 'select2 form-control', multiple: "true", data: {'form--filter-problem-target': 'groupSelect'} }
+    .form-check.mb-2
+      = radio_button_tag :'probs[use]', :tags, false, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+      = label_tag :probs_use_tags, "Problems with these tags", class: 'form-check-label'
+    .ms-4
+      = select_tag 'probs[tag_ids][]',
+          options_for_select(Tag.all.collect {|t| [t.name, t.id]},params[:prob_tag_id]),
+          { class: 'select2 form-control', multiple: "true", data: {'form--filter-problem-target': 'tagSelect'} }
+:javascript
+  // save the problem selection input into d
+  // (to be used by DataTable Ajax data source)
+  function build_problem_params(d) {
+    d['probs[use]'] = $('input[name="probs[use]"]:checked').val()
+    if ($('#probs_ids_').hasClass("select2-hidden-accessible"))
+      d['probs[ids]']= $('#probs_ids_').select2('data').map( e=>e.id)
+    if ($('#probs_group_ids_').hasClass("select2-hidden-accessible"))
+      d['probs[group_ids]']= $('#probs_group_ids_').select2('data').map( e=>e.id)
+    if ($('#probs_tag_ids_').hasClass("select2-hidden-accessible"))
+      d['probs[tag_ids]']= $('#probs_tag_ids_').select2('data').map( e=>e.id)
+  }

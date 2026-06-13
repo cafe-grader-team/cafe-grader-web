@@ -1,69 +1,62 @@
-%table.table.sortable.table-striped.table-bordered.table-condensed
-  %thead
-    %tr
-      %th Login
-      %th Name
-      / %th Activated?
-      / %th Logged_in
-      / %th Contest(s)
-      %th Remark
-      - @problems.each do |p|
-        %th.text-right= p.name.gsub('_',' ')
-      %th.text-right Total
-      %th.text-right Passed
-  %tbody
-    - sum = Array.new(@scorearray[0].count,0)
-    - nonzero = Array.new(@scorearray[0].count,0)
-    - full = Array.new(@scorearray[0].count,0)
-    - @scorearray.each do |sc|
+-# result table
+-# build data hash
+- contest_id = local_assigns.fetch(:contest_id, nil)
+- data_hash = { controller: 'datatables--init-score-table',
+    'datatables--init-score-table-config-name-value': 'scoreTable',
+    'datatables--init-score-table-ajax-url-value': link_for_data,
+    'datatables--init-score-table-problem-ids-value': problems.ids,
+    'datatables--init-score-table-submission-path-value': submission_path(-123),
+    'datatables--init-score-table-stat-path-value': (contest_id.nil? ?  stat_user_admin_path(-123) : stat_contest_user_admin_path(-123,@contest.id)),
+    'datatables--init-score-table-submission-download-path-value': link_to(" [#{mdi(:download_2,'md-18')} load]".html_safe, download_submission_path(-123) ),
+  }
+-# add special refresh
+- data_hash['datatables--init-score-table-refresh-submit-form-id-value'] = refresh_submit_form_id if local_assigns[:refresh_submit_form_id]
+- show_deduction = local_assigns.fetch(:show_deduction, true)
+
+
+%div{data: data_hash }
+  -# graph area
+  .row.mb-3
+    .col-lg-6
+      %div{style: 'height: 1px', 'data-datatables--init-score-table-target': 'problemScoreChartContainer'}
+        %canvas#chart{'data-datatables--init-score-table-target': 'problemScore'}
+    .col-lg-6
+      %div{style: 'height: 1px', 'data-datatables--init-score-table-target': 'totalScoreChartContainer'}
+        %canvas#chart_2{'data-datatables--init-score-table-target': 'totalScore'}
+  %table#table.table.datatable.table-hover
+    %thead
       %tr
-        - total,num_passed = 0,0
-        - sc.each_index do |i|
-          - if i == 0
-            %td= link_to sc[i].login, stat_user_path(sc[i])
-            %td= sc[i].full_name
-            / %td= sc[i].activated
-            / %td= sc[i].try(:contest_stat).try(:started_at) ? 'yes' : 'no'
-            / %td= sc[i].contests.collect {|c| c.name}.join(', ') 
-            %td= sc[i].remark
-          - else
-            %td.text-right= sc[i][0]
-            - total += sc[i][0]
-            - num_passed += 1 if sc[i][1]
-            - sum[i] += sc[i][0]
-            - nonzero[i] += 1 if sc[i][0] > 0
-            - full[i] += 1 if sc[i][1]
-        %td.text-right= total 
-        %td.text-right= num_passed
+        %th.text-end{rowspan: 2} #
+        %th{rowspan: 2} Login
+        %th{rowspan: 2} Name
+        %th{rowspan: 2} Contest Remark
+        %th{rowspan: 2} Seat
+        %th.border-end{rowspan: 2} Last Seen
+        - problems.each do |problem|
+          %th.border-end.text-center.prob-header{colspan: (show_deduction ? 3 : false), 'data-dt-order': 'disable', 'data-datatables--init-score-table-target': 'probHeader'}=problem.name.gsub('_',' ')
+        %th.border-end.text-center.sum-header{colspan: (show_deduction ? 2 : false), 'data-dt-order': 'disable'} Sum
+      %tr
+        - problems.each do |problem|
+          - if show_deduction
+            %th Raw
+            %th Deduct
+          %th Final
+        - if show_deduction
+          %th Raw
+        %th Final
     %tfoot
-      %tr
+      %tr.fw-bold
+        %td
         %td Summation
         %td
         %td
-        - sum.each.with_index do |s,i|
-          - next if i == 0
-          %td.text-right= number_with_delimiter(s)
         %td
         %td
-      %tr
-        %td partial solver
-        %td
-        %td
-        - nonzero.each.with_index do |s,i|
-          - next if i == 0
-          %td.text-right= number_with_delimiter(s)
-        %td
-        %td
-      %tr
-        %td Full solver
-        %td
-        %td
-        - full.each.with_index do |s,i|
-          - next if i == 0
-          %td.text-right= number_with_delimiter(s)
-        %td
-        %td
-
-
-:javascript
-  $.bootstrapSortable(true,'reversed')
+        - problems.each do |problem|
+          - if show_deduction
+            %td.text-end{id: "sum-raw-#{problem.id}"}
+            %td.text-end{id: "sum-deduction-#{problem.id}"}
+          %td.text-end{id: "sum-final-#{problem.id}"}
+        - if show_deduction
+          %td#grand-total-raw.text-end
+        %td#grand-total-final.text-end

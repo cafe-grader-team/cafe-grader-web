@@ -1,18 +1,38 @@
-%h1 New contest
-= form_for(@contest) do |f|
-  = f.error_messages
-  %p
-    = f.label :name
-    %br/
-    = f.text_field :name
-  %p
-    = f.label :title
-    %br/
-    = f.text_field :title
-  %p
-    = f.label :enabled
-    %br/
-    = f.check_box :enabled
-  %p
-    = f.submit 'Create'
-= link_to 'Back', contests_path
+= render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'New' } ]
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0
+      New Contest
+    %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium
+      %small Creating
+
+  .d-flex.gap-2
+    = link_to 'Cancel', contests_path, class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'edit_form'} Create Contest
+
+.row.gx-3
+  .col-md-6
+    .card.card-shadow.mb-3
+      .card-body
+        = render 'form', contest: @contest
+  .col-md-6
+    .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+      .card-body.p-4
+        .d-flex.align-items-center.mb-3
+          .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+            %span.mi.md-24.fill lightbulb
+          %div
+            %h5.fw-bold.text-dark.mb-0 Tips
+            %small.text-secondary Quick guide to contest behavior.
+
+        .text-secondary.small
+          %ul.mb-0.ps-3
+            %li
+              The site must be in the
+              %strong.text-dark Contest Mode
+              for a contest to be displayed to users.
+            %li A contest is shown to users only if it is enabled and the current time falls within its start and stop time range.
+            %li
+              When a contest is
+              %strong.text-dark finalized
+              , users cannot submit to the contest and the contests can no longer be modified.

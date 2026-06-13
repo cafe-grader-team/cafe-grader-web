@@ -1,0 +1,53 @@
+-# Knowledge Card: Languages
+-# border-info: Matches the blue color scheme generally associated with info/code
+.card.border-0.shadow-sm.border-start.border-4.border-info
+  .card-body.p-4
+    
+    -# --- Header ---
+    .d-flex.align-items-center.mb-4
+      .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+        %span.mi.md-24.fill code
+      
+      %div
+        %h5.fw-bold.text-dark.mb-0 Programming Languages
+        %small.text-secondary Configure available languages for submissions.
+
+    -# --- Content Grid ---
+    .row.g-4
+      
+      / 1. Source Code
+      .col-lg-6.col-xxl-4
+        .d-flex.gap-3
+          / Icon
+          .text-info.flex-shrink-0
+            %span.mi.md-24 terminal
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Compilation
+            %p.small.text-muted.mb-0.lh-sm
+              Define how source code is compiled and executed. 
+              Extensions determine which language is selected for a file.
+
+      / 2. Extensions
+      .col-lg-6.col-xxl-4
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 extension
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Extensions
+            %p.small.text-muted.mb-0.lh-sm
+              <strong>Default Ext:</strong> The primary extension.
+              <br>
+              <strong>Other Ext:</strong> Additional extensions (comma separated) that map to this language.
+
+      / 3. System Languages
+      .col-lg-6.col-xxl-4
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 lock
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 System Languages
+            %p.small.text-muted.mb-0.lh-sm
+              Standard languages (ID < 20) are pre-configured and cannot be deleted or have their critical properties changed.

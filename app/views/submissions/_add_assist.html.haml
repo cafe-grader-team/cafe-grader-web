@@ -1,0 +1,13 @@
+-# requires *models*
+  which is an array of llm names, e.g., ["gemini-2.5-pro", "Claude-3.5-Sonnet"]
+- models.each do |model|
+  .row
+    - body_text = render partial: 'comments/acquire_llm_assist_confirm', locals: {cost: 10,model: model}
+    - confirmation = {title: "Confirm Submission for AI Help", body: body_text}
+    .col
+      AI help by
+      %code #{model}
+    .col-auto.pb-0.text-end
+      - model_id = Rails.configuration.llm[:provider].keys.index(model)
+      = link_to "Get", llm_assist_submission_comments_path(@submission,model_id), 
+        data: {turbo: true, turbo_method: 'POST', turbo_confirm: confirmation.to_json}

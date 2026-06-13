@@ -1,0 +1,15 @@
+eval_add1_tc1:
+  submission: add1_by_admin
+  testcase: tc_add_1
+  result: 1
+  time: 100
+  memory: 1024
+  score: 1.0
+
+eval_add1_tc2:
+  submission: add1_by_admin
+  testcase: tc_add_2
+  result: 2
+  time: 150
+  memory: 2048
+  score: 0.0

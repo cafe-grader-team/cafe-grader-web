@@ -1,0 +1,110 @@
+%h1
+  User stats
+  - if @contest
+    %span.text-body-tertiary.fs-2
+      (for Contest #{@contest.name})
+
+.row.my-3
+  .col-md-8
+    .card.mb-3
+      .card-body
+        %h2.card-title Submission History
+        %canvas#chart{height: '50px', data: { controller: 'chart', chart_data_value: @chart_dataset }}
+
+  .col-md-4
+    .card.mb-3
+      .card-body
+        .row
+          .col-6.text-secondary.text-end
+            Login
+          .col-6
+            = @user.login
+            - if @contest
+              = link_to "(view full stat)", stat_user_admin_path(@user)
+        .row
+          .col-6.text-secondary.text-end
+            Full name
+          .col-6
+            = @user.full_name
+        .row
+          .col-6.text-secondary.text-end
+            Subs
+          .col-6
+            = @summary[:count]
+        .row
+          .col-6.text-secondary.text-end
+            Solved/Attempted Problem
+          .col-6
+            #{@summary[:solve]}/#{@summary[:count]} (#{(@summary[:solve]*100.0/@summary[:count]).round(1)}%)
+        .row
+          .col-6.text-secondary.text-end
+            Hints
+          .col-6
+            = @summary[:hint]
+        .row
+          .col-6.text-secondary.text-end
+            AI Assist
+          .col-6
+            = @summary[:llm_assist]
+
+
+        -# contest info (if exists)
+        - if @contest
+          .row
+            .col
+              %hr
+          .row
+            .col-6.text-secondary.text-end
+              Contest
+            .col-6
+              = @contest.name
+          .row
+            .col-6.text-secondary.text-end
+              Start
+            .col-6
+              = @contest.start.strftime("%Y-%m-%d %H:%M")
+          .row
+            .col-6.text-secondary.text-end
+              Stop
+            .col-6
+              = @contest.stop.strftime("%Y-%m-%d %H:%M")
+
+
+%table#main_table.table.table-striped
+  %thead
+    %tr
+      %th ID
+      %th Problem code
+      %th Problem full name
+      %th Language
+      %th Submitted at
+      %th Result
+      %th Score
+      - if session[:admin]
+        %th IP
+  %tbody
+    - @submission.each do |s|
+      - next unless s.problem
+      %tr
+        %td= link_to s.id, submission_path(s)
+        %td= link_to s.problem.name, stat_problem_path(s.problem)
+        %td= s.problem.full_name
+        %td= s.language.pretty_name
+        %td{data: {order: s.submitted_at}}
+          #{s.submitted_at.strftime('%Y-%m-%d %H:%M')} 
+          %span.text-secondary (#{time_ago_in_words(s.submitted_at)} ago)
+        %td.grader-comment= s.grader_comment
+        %td.text-end= s.points
+        - if session[:admin]
+          %td= s.ip_address
+
+
+
+:javascript
+  window.addEventListener("load", function() {
+    $("#main_table").DataTable({
+      paging: false,
+      responsive: true,
+    });
+  });
+

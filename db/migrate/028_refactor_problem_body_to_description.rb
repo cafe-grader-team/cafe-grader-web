@@ -1,4 +1,4 @@
-class RefactorProblemBodyToDescription < ActiveRecord::Migration
+class RefactorProblemBodyToDescription < ActiveRecord::Migration[4.2]
   def self.up
     add_column :problems, :description_id, :integer
     Problem.reset_column_information

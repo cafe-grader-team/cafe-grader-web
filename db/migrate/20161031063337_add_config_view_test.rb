@@ -1,4 +1,4 @@
-class AddConfigViewTest < ActiveRecord::Migration
+class AddConfigViewTest < ActiveRecord::Migration[4.2]
   def up
     GraderConfiguration.create key: 'right.view_testcase', value_type: 'boolean', value:'true', description:'When true, any user can view/download test data'
     #uglily and dirtily and shamelessly check other config and inifialize

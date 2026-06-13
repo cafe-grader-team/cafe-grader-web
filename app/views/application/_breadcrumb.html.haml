@@ -1,0 +1,13 @@
+-# locals: steps: [{ label: 'Name', path: path, icon: 'icon-name' }]
+.mb-4.mt-3
+  %nav{'aria-label': 'breadcrumb'}
+    %ol.breadcrumb.mb-2.small
+      - steps.each_with_index do |step, index|
+        - if index == steps.size - 1
+          %li.breadcrumb-item.active.text-muted= step[:label]
+        - else
+          %li.breadcrumb-item
+            %a.text-primary.text-decoration-none.d-inline-flex.align-items-center.gap-1{href: step[:path]}
+              - if step[:icon]
+                = mdi(step[:icon], 'md-16')
+              = step[:label]

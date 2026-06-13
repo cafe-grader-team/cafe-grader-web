@@ -1,0 +1,24 @@
+//$font-size-base:    0.875rem;
+$font-family-monospace: "Inconsolata", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+// darken the border a little bit
+$border-color: #bbb;
+
+// change the primary color to different shade of blue
+$primary: #0074d9;
+//$primary: #7d3;
+//$danger: #ff4136;
+
+
+@keyframes highlight-fade {
+  from {
+    background-color: var(--bs-success-bg-subtle); /* A soft yellow highlight from Bootstrap */
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.new-item-highlight {
+  animation: highlight-fade 4s ease-in forwards;
+}

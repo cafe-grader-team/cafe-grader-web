@@ -1,9 +1,7 @@
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+add_easy:
+  problem: prob_add
+  tag: tag_easy
 
-one:
-  problem_id: 
-  tag_id: 
-
-two:
-  problem_id: 
-  tag_id: 
+sub_hard:
+  problem: prob_sub
+  tag: tag_hard

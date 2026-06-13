@@ -1,0 +1,4 @@
+%turbo-stream{action: "append", target: "stream_js"}
+  %template
+    :javascript
+      $("##{dom_id(@config,"config")}").prop("checked",#{@config.value})

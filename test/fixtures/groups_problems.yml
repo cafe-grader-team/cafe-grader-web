@@ -1,0 +1,9 @@
+add_in_group_a:
+  problem: prob_add
+  group: group_a
+  enabled: true
+
+sub_in_group_a:
+  problem: prob_sub
+  group: group_a
+  enabled: true

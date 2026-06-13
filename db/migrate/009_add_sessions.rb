@@ -1,6 +1,6 @@
-class AddSessions < ActiveRecord::Migration
+class AddSessions < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :sessions do |t|
+    create_table :sessions, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column :session_id, :string
       t.column :data, :text
       t.column :updated_at, :datetime

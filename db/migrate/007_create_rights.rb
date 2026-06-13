@@ -1,12 +1,12 @@
-class CreateRights < ActiveRecord::Migration
+class CreateRights < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :rights do |t|
+    create_table :rights, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column 'name', :string
       t.column 'controller', :string
       t.column 'action', :string
     end
 
-    create_table :rights_roles, :id => false do |t|
+    create_table :rights_roles, :id => false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column 'right_id', :integer
       t.column 'role_id', :integer
     end

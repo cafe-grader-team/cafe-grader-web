@@ -1,0 +1,28 @@
+-# Markdown preview of an announcement body, shared by the main-page cards and
+-# the admin announcements table. The body renders as real markdown, clamped
+-# visually with CSS (max-height + fade) — never truncate the markdown text
+-# itself; cutting mid-syntax (a code fence, half a link) breaks the render.
+-# "Read More" opens a modal with the same rendered body in full.
+- clipped = announcement_preview_clipped?(announcement)
+.announcement-preview{class: ('announcement-preview-clamped' if clipped)}
+  = markdown(announcement.body)
+- if clipped
+  %a.fw-bold{href: '#', style: 'text-decoration: none;', data: {bs_toggle: 'modal', bs_target: "#announcementModal-#{announcement.id}"}}
+    Read More &rarr;
+  .modal.fade{id: "announcementModal-#{announcement.id}", tabindex: '-1', 'aria-labelledby': "announcementModalLabel-#{announcement.id}", 'aria-hidden': 'true'}
+    .modal-dialog.modal-lg.modal-dialog-scrollable
+      .modal-content
+        .modal-header
+          %h5.modal-title.fw-bold{id: "announcementModalLabel-#{announcement.id}"}= announcement.title.blank? ? 'Announcement' : announcement.title
+          %button.btn-close{type: 'button', data: {bs_dismiss: 'modal'}, 'aria-label': 'Close'}
+        .modal-body
+          = markdown(announcement.body)
+          - if announcement.file.attached?
+            %hr.my-2
+            .text-uppercase.small.fw-bold.text-muted.mb-1 Attachments
+            .mt-2
+              %span.badge.bg-light.text-dark.border
+                = mdi('attachment', 'md-18')
+                = link_to announcement.file.filename, url_for(announcement.file), class: 'text-decoration-none ms-1'
+        .modal-footer
+          %button.btn.btn-secondary{type: 'button', data: {bs_dismiss: 'modal'}} Close

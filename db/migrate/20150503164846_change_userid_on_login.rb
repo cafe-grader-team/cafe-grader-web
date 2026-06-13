@@ -1,4 +1,4 @@
-class ChangeUseridOnLogin < ActiveRecord::Migration
+class ChangeUseridOnLogin < ActiveRecord::Migration[4.2]
   def up
     change_column :logins, :user_id, :integer
   end

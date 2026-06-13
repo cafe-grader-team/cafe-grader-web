@@ -1,4 +1,4 @@
-class AddSupportsForOutputOnlyProblems < ActiveRecord::Migration
+class AddSupportsForOutputOnlyProblems < ActiveRecord::Migration[4.2]
   def self.up
     add_column :submissions, :source_filename, :string
     add_column :problems, :output_only, :boolean

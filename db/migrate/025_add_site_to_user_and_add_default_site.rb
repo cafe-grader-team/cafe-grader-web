@@ -1,4 +1,4 @@
-class AddSiteToUserAndAddDefaultSite < ActiveRecord::Migration
+class AddSiteToUserAndAddDefaultSite < ActiveRecord::Migration[4.2]
   def self.up
     default_site = Site.new({:name => 'default',
                               :started => false})

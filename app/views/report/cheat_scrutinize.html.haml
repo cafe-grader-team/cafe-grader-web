@@ -1,0 +1,108 @@
+- content_for :header do
+  = stylesheet_link_tag 'tablesorter-theme.cafe'
+
+%script{:type=>"text/javascript"}
+  $(function () {
+  $('#since_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#until_datetime').datetimepicker({ showButtonPanel: true, dateFormat: "yy-mm-dd", controlType: "slider"} );
+  $('#my_table').tablesorter({widthFixed: true, widgets: ['zebra']});
+  $('#my_table2').tablesorter({widthFixed: true, widgets: ['zebra']});
+  $('#sub_table').tablesorter({widthFixed: true, widgets: ['zebra']});
+  });
+
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 Login Status
+
+.panel.panel-primary
+  .panel-heading
+    User ID and time rnage
+  .panel-body
+    = form_tag({session: :url })  do
+      .row.form-group
+        .col-md-2
+          From Date:
+        .col-md-4
+          .input-group.date
+            = text_field_tag :since_datetime, @since_time, class: 'form-control'
+            %span.input-group-addon
+              %span.glyphicon.glyphicon-calendar
+      .row.form-group
+        .col-md-2
+          Until Date:
+        .col-md-4
+          .input-group.date
+            = text_field_tag :until_datetime, @until_time, class: 'form-control'
+            %span.input-group-addon
+              %span.glyphicon.glyphicon-calendar
+      .row.form-group
+        .col-md-2
+          IDs (separated by space):
+        .col-md-10
+          = text_field_tag 'SID', @sid, size: 40, class: 'form-control'
+      .row.form-group
+        .col-md-2
+        .col-md-10
+          =submit_tag 'query', class: 'btn btn-primary'
+
+      -#
+        %table
+          %tr
+            %td{style: 'width: 120px; font-weight: bold'}= 'Login date range'
+            %td{align: 'right'} since:
+            %td= text_field_tag 'since_datetime', @since_time, class: 'form-control datetimepicker'
+          %tr
+            %td
+            %td{align: 'right'} until:
+            %td= text_field_tag 'until_datetime', @until_time
+          %tr
+            %td
+            %td
+            %td Blank mean no condition
+          %tr
+            %td{style: 'width: 120px; font-weight: bold'}= "ID"
+            %td{colspan: 2}= text_field_tag 'SID', @sid, size: 40
+          %tr
+            %td
+            %td
+            %td= submit_tag 'query'
+
+
+%h2 Logs
+
+- if @sid
+  %table
+    %tbody
+      - @sid.each do |id|
+        - user = User.where("login = ?",id).first
+        %tr
+          //%td= link_to id, controller: :user, action: :profile, id: id
+          %td= link_to id, stat_user_admin_path(user.id)
+          %td= user.full_name
+
+//%table.tablesorter-cafe#my_table
+%table.info
+  %thead
+    %tr.info-head
+      %th Time
+      %th Action
+      %th IP
+      %th login
+      %th name
+      %th problem
+      %th score
+  %tbody
+    - if @logs
+      - @logs.each do |l|
+        %tr{class: cycle('info-even','info-odd')}
+          %td= l[:submitted_at].strftime "%Y.%b.%d %H:%M:%S"
+          //%td= l[:id] == -1 ? "LOGIN" : link_to("submit #{l[:id]}", controller: 'graders' , action: 'submission', id: l[:id])
+          %td= l[:id] == -1 ? "LOGIN" : link_to( "##{l[:id]}", submission_path(l[:id]))
+          %td= l[:ip_address]
+          //%td= link_to l[:login], controller: 'users', action: 'profile', id: l[:id]
+          %td= link_to( l[:login], stat_user_admin_path(l.user_id))
+          %td= l[:full_name]
+          %td= l[:id] == -1 ? "" : l.problem.name
+          %td.text-right= l[:id] == -1 ? "" : l.points
+
+

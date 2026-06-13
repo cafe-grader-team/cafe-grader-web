@@ -1,65 +1,125 @@
-- content_for :head do
-  = stylesheet_link_tag 'problems'
-%h1 Problems
-%p
-  = link_to 'Import problems', {:action => 'import'}, class: 'btn btn-success btn-sm'
-  = link_to 'New problem', new_problem_path, class: 'btn btn-success btn-sm'
-  = link_to 'Bulk Manage', { action: 'manage'}, class: 'btn btn-info btn-sm'
-  = link_to 'Turn off all problems', {:action => 'turn_all_off'}, class: 'btn btn-default btn-sm'
-  = link_to 'Turn on all problems', {:action => 'turn_all_on'}, class: 'btn btn-default btn-sm'
-.submitbox
-  = form_tag :action => 'quick_create' do
-    %b Quick New:
-    %label{:for => "problem_name"} Name
-    = text_field 'problem', 'name'
-    |
-    %label{:for => "problem_full_name"} Full name
-    = text_field 'problem', 'full_name'
-    = submit_tag "Create"
-%table.table.table-condense.table-hover
-  %thead
-    %th Name
-    %th Full name
-    %th.text-right Full score
-    %th Tags
-    %th 
-      Submit
-      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Admin can always submit to any problem' } [?]
-    %th Date added
-    %th.text-center
-      Avail?
-      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user submits to this problem?' } [?]
-    %th.text-center
-      View Data?
-      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user view the testcase of this problem?' } [?]
-    %th.text-center
-      Test?
-      %sup{class: 'text-primary',data: {toggle: 'tooltip'}, title: 'Let user uses test interface on this problem?' } [?]
-    - if GraderConfiguration.multicontests?
-      %th Contests
-  - for problem in @problems
-    %tr{:class => "#{(problem.available) ? "success" : "danger"}", :id => "prob-#{problem.id}", :name => "prob-#{problem.id}"}
-      - @problem=problem
-      %td= problem.name #in_place_editor_field :problem, :name, {}, :rows=>1
-      %td
-        = problem.full_name #in_place_editor_field :problem, :full_name, {}, :rows=>1
-        = link_to_description_if_any "[#{t 'main.problem_desc'}] <span class='glyphicon glyphicon-file'></span>".html_safe, problem
-      %td.text-right= problem.full_score #in_place_editor_field :problem, :full_score, {}, :rows=>1
-      %td
-        - problem.tags.each do |t|
-          - #%button.btn.btn-default.btn-xs= t.name
-          %span.label.label-default= t.name
-      %td= link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-xs btn-primary'
-      %td= problem.date_added
-      %td= toggle_button(@problem.available?, toggle_problem_path(@problem), "problem-avail-#{@problem.id}")
-      %td= toggle_button(@problem.view_testcase?, toggle_view_testcase_problem_path(@problem), "problem-view-testcase-#{@problem.id}")
-      %td= toggle_button(@problem.test_allowed?, toggle_test_problem_path(@problem), "problem-test-#{@problem.id}")
-      - if GraderConfiguration.multicontests?
-        %td
-          = problem.contests.collect { |c| c.name }.join(', ')
-      %td= link_to 'Stat', {:action => 'stat', :id => problem.id}, class: 'btn btn-info btn-xs btn-block'
-      %td= link_to 'Show', {:action => 'show', :id => problem}, class: 'btn btn-info btn-xs btn-block'
-      %td= link_to 'Edit', {:action => 'edit', :id => problem}, class: 'btn btn-info btn-xs btn-block'
-      %td= link_to 'Destroy', { :action => 'destroy', :id => problem }, :confirm => 'Are you sure?', :method => :delete, class: 'btn btn-danger btn-xs btn-block'
-%br/
-= link_to '[New problem]', :action => 'new'
+.row.my-2
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Management
+      %h2.fw-bold.text-dark.mb-0 Problems
+
+    .d-flex.flex-wrap.gap-2.align-items-center
+      = link_to mdi(:add, 'me-1') + 'Import', {action: 'import'}, class: 'btn btn-sm btn-success'
+      = form_with url: quick_create_problems_path, scope: :problem,
+                  html: {class: 'd-flex gap-1 align-items-center', data: {turbo: true}} do |f|
+        = f.text_field :name, placeholder: 'New problem name', class: 'form-control form-control-sm', style: 'width: 12rem'
+        = f.submit 'Quick Create', class: 'btn btn-sm btn-outline-success'
+      = link_to mdi(:settings, 'me-1') + 'Manage', { action: 'manage'}, class: 'btn btn-sm btn-outline-secondary'
+      - if @current_user.admin?
+        = link_to 'All Off', {action: 'turn_all_off'}, class: 'btn btn-sm btn-outline-secondary'
+        = link_to 'All On', {action: 'turn_all_on'}, class: 'btn btn-sm btn-outline-secondary'
+  .col-md-7.mb-3
+    = render partial: 'problem_help'
+
+.card.card-shadow
+  .card-body
+
+    %table#main_table.table.table-condense.table-hover{'data-controller': 'init-ui-component'}
+      %thead
+        %tr
+          %th.all Name
+          %th Full name
+          %th Difficulty
+          %th.text-center
+            %span.mi{data: {bs_toggle: 'tooltip', bs_title: 'Checker'}} checkbook
+          %th.text-center
+            %span.mi{data: {bs_toggle: 'tooltip', bs_title: 'Datasets (Testcases)'}} dataset
+          %th.text-center
+            %span.mi{data: {bs_toggle: 'tooltip', bs_title: 'Hints'}} lightbulb
+          %th.text-center
+            %span.mi{data: {bs_toggle: 'tooltip', bs_title: 'Model Solutions'}} code
+          %th Tags
+          %th
+            Submit
+            = render partial: 'tooltip', locals: {title: 'Admin can always submit to any problem'}
+          %th Date added
+          %th.text-center.all
+            %span.mi{data: {bs_toggle: 'tooltip', bs_title: 'Available to students'}} toggle_on
+          %th.text-center
+            %span.mi{data: {bs_toggle: 'tooltip', bs_title: 'Students can view testcases'}} bug_report
+          %th.text-center.all
+      %tbody
+        - for problem in @problems
+          %tr{:class => "#{(problem.available) ? "table-success" : ""}", :id => "prob-#{problem.id}", :name => "prob-#{problem.id}"}
+            - @problem=problem
+            %td.font-monospace= problem.name
+            %td
+              .d-inline-flex.align-items-center
+                = problem.full_name
+                = link_to_description_if_any mdi(:description, 'md-18 text-muted'), problem, class: 'ms-1 d-inline-flex text-decoration-none', data: {bs_toggle: 'tooltip', bs_title: 'Read statement'}
+                - if problem.attachment.attached?
+                  = link_to mdi(:archive, 'md-18 text-muted'), download_by_type_problem_path(problem, 'attachment'), class: 'ms-1 d-inline-flex text-decoration-none', data: {bs_toggle: 'tooltip', bs_title: 'Download files'}
+            %td= render_star(problem.difficulty)
+            %td.text-center
+              - if problem.live_dataset&.checker&.attached?
+                %span.text-success ✓
+            %td.text-center= "#{problem.dataset_count}(#{problem.tc_count})"
+            %td.text-center
+              - if problem.hint_count && problem.hint_count > 0
+                = problem.hint_count
+            %td.text-center
+              - if problem.ms_count && problem.ms_count > 0
+                = problem.ms_count
+            %td
+              - problem.tags.each do |t|
+                %span.badge.text-bg-secondary.bg-opacity-100= t.name
+            %td.py-1.align-middle= link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-sm btn-primary'
+            %td= problem.date_added
+            %td
+              .form-check.form-switch.d-flex.justify-content-center
+                %input.form-check-input{id: "prob-#{problem.id}-available-switch", checked: problem.available, type: "checkbox", data: {action: 'problem#toggle', 'row-id': problem.id, field: 'available', readonly: @current_user.admin? ? 'false' : 'true'}, disabled: @current_user.admin? == false}
+            %td
+              .form-check.form-switch.d-flex.justify-content-center
+                %input.form-check-input{id: "prob-#{problem.id}-view-testcase-switch", checked: problem.view_testcase, type: "checkbox", data: {action: 'problem#toggle', 'row-id': problem.id, field: 'view_testcase'}}
+            %td.py-1.all
+              .d-flex.gap-1.justify-content-end
+                = link_to "#{mdi(:query_stats)} Stat".html_safe, {:action => 'stat', :id => problem.id}, class: 'btn btn-flex btn-outline-primary border-0'
+                = link_to "#{mdi(:edit)} Edit".html_safe, {:action => 'edit', :id => problem}, class: 'btn btn-flex btn-outline-primary border-0'
+                = link_to "#{mdi(:delete)}".html_safe, { :action => 'destroy', :id => problem }, 'data-confirm': 'Are you sure?', :method => :delete, class: 'btn btn-outline-danger btn-flex border-0'
+    %br
+
+-# hidden form for problem toggle
+= form_with url: toggle_view_testcase_problem_path(-123), html: {data: {turbo: true, 'problem-target': 'toggleViewTestcaseForm', action: 'turbo:submit-end->problem#resetToggleForm'}} do
+  /
+= form_with url: toggle_available_problem_path(-123), html: {data: {turbo: true, 'problem-target': 'toggleAvailableForm', action: 'turbo:submit-end->problem#resetToggleForm'}} do
+  /
+
+:javascript
+  function init_table() {
+    $("#main_table").DataTable({
+      sorting: false,
+      columnDefs: [
+        { targets: [3,4,5,6,7,8,9,12], sortable: false },
+      ],
+      paging: false,
+      responsive: true,
+      dom: "<'row'<'#prob-group.col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+        "<'row'<'col-sm-12'tr>>" +
+        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+    })
+  }
+
+  // this function is called by the 
+  function set_problem_switch(problem_id,available,view_testcase) {
+    let avail_button = document.getElementById(`prob-${problem_id}-available-switch`)
+    avail_button.checked = available
+    avail_button.disabled = avail_button.dataset.readonly == 'true'
+
+    row = document.getElementById(`prob-${problem_id}`)
+    if (available) { row.classList.add('table-success')} else { row.classList.remove('table-success')}
+
+    let view_testcase_button = document.getElementById(`prob-${problem_id}-view-testcase-switch`)
+    view_testcase_button.checked = view_testcase
+    view_testcase_button.disabled = false
+  }
+
+  window.addEventListener("load", function() {
+    init_table();
+  });
+

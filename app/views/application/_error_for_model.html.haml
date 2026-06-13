@@ -1,0 +1,9 @@
+- if model.errors.any?
+  .alert.alert-danger.alert-dismissible.fade.show.mb-4{role: "alert"}
+    %h5.alert-heading
+      %span.mi.md-24.me-2 error
+      = "Error saving #{model.class.model_name.human}"
+    %ul.mb-0
+      - model.errors.full_messages.each do |message|
+        %li= message
+    %button.btn-close{type: "button", "data-bs-dismiss": "alert", "aria-label": "Close"}

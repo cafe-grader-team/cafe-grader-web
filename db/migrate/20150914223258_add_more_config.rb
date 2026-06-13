@@ -1,4 +1,4 @@
-class AddMoreConfig < ActiveRecord::Migration
+class AddMoreConfig < ActiveRecord::Migration[4.2]
   def up
     GraderConfiguration.create key: 'right.bypass_agreement', value_type: 'boolean', value:'true', description:'When false, a check box to accept license agreement appear at login and the user must click accept'
   end

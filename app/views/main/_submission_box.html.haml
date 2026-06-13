@@ -1,20 +1,22 @@
-= form_tag({:action => 'submit'}, :multipart => true, class: 'form') do
-  - if @submission and @submission.errors.any?
-    #error_explanation
-      .alert.alert-danger
-        %h3= "#{pluralize(@submission.errors.count, "error")} prohibited this user from being saved:"
-        %ul
-          - @submission.errors.full_messages.each do |msg|
-            %li= msg
-  .form-group
-    = label_tag :submission, 'Problem:'
-    = select 'submission', 'problem_id', [[(t 'main.specified_in_header'),'-1']] + @problems.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, {:selected => '-1'}, { class: 'select2 form-control', style: "width: 100%" }
-  .form-group
-    = label_tag :file, 'File:'
-    .input-group
-      %span.input-group-btn
-        %span.btn.btn-default.btn-file
-          Browse
-          = file_field_tag 'file'
-      = text_field_tag '' , nil, {readonly: true, class: 'form-control'}
-  = submit_tag 'Submit', class: 'btn btn-default'
+.card.card-shadow.bg-primary-subtle.border-1.border-primary{'data-controller': 'init-ui-component'}
+  .card-body.p-3
+    %h6.fw-bold.text-primary-emphasis.mb-2 Submission
+    = form_with url: submit_main_path, multipart: true, class: 'form' do |form|
+      - if @submission and @submission.errors.any?
+        #error_explanation
+          .alert.alert-danger
+            %h3= "#{pluralize(@submission.errors.count, "error")} prohibited this user from being saved:"
+            %ul
+              - @submission.errors.full_messages.each do |msg|
+                %li= msg
+      .row.align-items-center.gx-2
+        .col-auto
+          = form.label :submission, 'Problem:', class: 'col-form-label col-form-label-sm fw-semibold'
+        .col-md-4
+          = select 'submission', 'problem_id', [[(t 'main.specified_in_header'),'-1']] + @problems.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, {:selected => '-1'}, { class: 'select2 form-select form-select-sm', style: "width: 100%" }
+        .col-auto.ms-2
+          = form.label :file, 'File:', class: 'col-form-label col-form-label-sm fw-semibold'
+        .col-md-4
+          = form.file_field :file, class: 'form-control form-control-sm'
+        .col-auto.ms-auto
+          = form.submit 'Submit', class: 'btn btn-primary btn-sm'

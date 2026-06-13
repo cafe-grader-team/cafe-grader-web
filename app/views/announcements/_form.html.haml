@@ -1,0 +1,39 @@
+= simple_form_for @announcement, html: { id: 'edit_form' } do |f|
+  = render 'application/error_for_model', model: @announcement
+  
+  .row
+    -# Left Column: Main Content
+    .col-md-7
+      .card.shadow-sm.mb-3
+        .card-body
+          %h5.fw-bold.text-secondary.mb-3 Content
+          = f.input :title
+          = f.input :body, input_html: { rows: 15 }
+          = f.input :notes, label: 'Internal Notes', hint: 'Shown internally, used to organize announcements.'
+    
+    -# Right Column: Settings
+    .col-md-5
+      .card.shadow-sm.mb-3
+        .card-body
+          %h5.fw-bold.text-secondary.mb-3 Settings
+          = f.input :author, wrapper: :horizontal_form
+          = f.input :group_id, collection: @current_user.groups_for_action(:edit), include_blank: (@current_user.admin? ? '-- No group (show too all) --' : false), wrapper: :horizontal_select
+          
+          %hr
+          
+          = f.input :published, wrapper: :horizontal_boolean
+          = f.input :frontpage, label: 'Show on front page', wrapper: :horizontal_boolean
+          = f.input :on_nav_bar, label: 'Show on menu bar', wrapper: :horizontal_boolean
+          = f.input :contest_only, label: 'Show in contest only', wrapper: :horizontal_boolean
+          
+          %hr
+          
+          .mb-3
+            %label.form-label Attachment
+            = f.input :file, label: false, wrapper: :horizontal_file
+            
+            - if @announcement.file.attached?
+              .card.bg-light.border-0.mt-2
+                .card-body.p-2.d-flex.align-items-center.justify-content-between
+                  = link_to "<span class='mi md-18'>description</span> #{@announcement.file.filename}".html_safe, url_for(@announcement.file), class: 'text-decoration-none text-truncate d-block', style: 'max_width: 150px;'
+                  = link_to '<span class="mi md-18 text-danger">delete</span>'.html_safe, delete_file_announcement_path(@announcement), method: :delete, class: 'btn btn-sm btn-link p-0', data: {confirm: 'Are you sure?'}

@@ -1,0 +1,32 @@
+.card.card-shadow.bg-warning-subtle.border-1.border-warning{data: {controller: 'contest-timer'}}
+  .card-body.p-3
+    %h6.fw-bold.text-warning-emphasis.mb-2 Contest
+    - if @contests.count == 0
+      The system is in contest mode but you are not in any active contest. Please contact the staff.
+    - else
+      %table#contest-table.datatable.small{style: "width: 100%"}
+        %thead
+          %tr
+            %th Contest
+            %th Time
+            %th Status
+            %th
+        %tbody
+          - @contests.each do |contest|
+            %tr
+              %td
+                = contest.name
+                - if contest == @current_contest
+                  %em (Active)
+              %td
+                = format_start_stop(contest.start,contest.stop).html_safe
+              %td
+                .time-counter{data: {
+                  contest_timer_target: 'counter', 
+                  start: contest.start.iso8601,
+                  stop: contest.stop.iso8601, 
+                  start_offset: @current_user.contests_users.where(contest_id: contest).first.start_offset_second, 
+                  extra_time: @current_user.contests_users.where(contest_id: contest).first.extra_time_second}}
+              %td
+                - unless contest == @current_contest
+                  = link_to 'Set as active', set_active_contest_path(contest)

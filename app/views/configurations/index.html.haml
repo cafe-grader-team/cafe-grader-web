@@ -1,37 +1,79 @@
-/- content_for :header do
-/  = javascript_include_tag 'local_jquery'
+- section_names = { 'chula' => 'Identity & Authentication', 'right' => 'Permissions & Access', 'system' => 'System Parameters' }
+- section_icons = { 'chula' => 'fingerprint', 'right' => 'lock', 'system' => 'settings' }
 
-%h1 System configuration
+.row.mb-4
+  .col-md-12.d-flex.justify-content-between.align-items-center
+    %h1.mb-0 System configuration
+    .actions
+      = link_to audit_logs_path(auditable_type: 'GraderConfiguration'), class: 'btn-flex btn btn-outline-secondary btn-sm me-2', title: 'View change history for all settings' do
+        %span.mi.md-18 history
+        History
+      = link_to reload_grader_configuration_index_path, class: 'btn-flex btn btn-outline-secondary btn-sm me-2', title: 'Reload configuration from DB' do
+        %span.mi.md-18 refresh
+        Reload
+      = link_to clear_user_ip_grader_configuration_index_path, class: 'btn-flex btn btn-outline-danger btn-sm', data: {turbo: true, 'turbo-method': 'post'}, title: 'Clear all user device locks' do
+        %span.mi.md-18 lock_open
+        Clear Device Locks
 
-- @group.each do |g|
-  %h2= g
-  %table.table.table-striped
-    %thead
-      %th{style: 'width: 25%'} Key
-      %th{style: 'width: 10%'}Type
-      %th{style: 'width: 15%'} Value
-      %th Description
-    - @configurations.each do |conf|
-      - next if conf.key[0...(conf.key.index('.'))] != g
-      - @grader_configuration = conf
-      %tr
-        %td
-          /= in_place_editor_field :grader_configuration, :key, {}, :rows=>1
-          = @grader_configuration.key
-        %td
-          /= in_place_editor_field :grader_configuration, :value_type, {}, :rows=>1
-          = @grader_configuration.value_type
-        %td
-          = best_in_place @grader_configuration, :value, ok_button: "ok", cancel_button: "cancel"
-        %td= conf.description
+.row
+  .col-md-12
+    .config-search-wrapper
+      .input-group
+        %span.input-group-text
+          %span.mi search
+        %input#config-search.form-control{type: 'text', placeholder: 'Search for settings...', onkeyup: 'filterConfigs()'}
 
-- if GraderConfiguration.config_cached?
-  %br/
-  Your config is saved, but it does not automatically take effect.
-  %br/
-  If you have one mongrel process running, you can
-  = link_to '[click]', :action => 'reload'
-  here to reload.
-  %br/
-  If you have more than one process running, you should restart 
-  them manually.
+= turbo_frame_tag "stream_js"
+
+.row
+  - @group.each do |groups|
+    .col-lg-6.col-xl-4
+      - groups = [groups] unless groups.is_a? Array
+      - groups.each do |group|
+        .card.config-card.mb-4.shadow-sm.rounded-3{data: {group: group}}
+          .card-header.bg-light.bg-info-subtle.p-3
+            %h3
+              %span.mi= section_icons[group] || 'settings'
+              = section_names[group] || group.upcase
+          .card-body.p-0
+            - @configurations.each do |conf|
+              - next if conf.key[0...(conf.key.index('.'))] != group
+              .config-item{data: {key: conf.key, search: "#{conf.key} #{conf.description}".downcase}}
+                .config-main
+                  .config-info
+                    %span.config-key= conf.key
+                    .config-description= conf.description
+                    %span.badge.bg-body-tertiary.text-secondary=conf.value_type.upcase
+                  .config-value-wrapper
+                    = render partial: 'config', locals: {conf: conf}
+
+:javascript
+  function filterConfigs() {
+    let input = document.getElementById('config-search');
+    let filter = input.value.toLowerCase();
+    let cards = document.querySelectorAll('.config-card');
+    let items = document.querySelectorAll('.config-item');
+
+    items.forEach(item => {
+      let text = item.getAttribute('data-search');
+      if (text.includes(filter)) {
+        item.style.display = 'flex';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    cards.forEach(card => {
+      let visibleItems = card.querySelectorAll('.config-item[style="display: flex;"]');
+      let allItems = card.querySelectorAll('.config-item');
+      // if allItems has any item with style display not none
+      let hasVisible = false;
+      allItems.forEach(i => { if (i.style.display !== 'none') hasVisible = true; });
+
+      if (hasVisible) {
+        card.closest('.col-lg-6').style.display = 'block';
+      } else {
+        card.closest('.col-lg-6').style.display = 'none';
+      }
+    });
+  }

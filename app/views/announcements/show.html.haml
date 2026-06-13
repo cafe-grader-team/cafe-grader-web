@@ -1,0 +1,29 @@
+.alert.alert-success
+  The announcement is successfully updated.
+%p
+  %b Author:
+  = h @announcement.author
+%p
+  %b Title:
+  = h @announcement.title
+%p
+  %b Notes:
+  = h @announcement.notes
+%p
+  %b Body:
+  = markdown(@announcement.body)
+%p
+  %b Published:
+  = h @announcement.published
+%p
+  %b Show on front page:
+  = h @announcement.frontpage
+%p
+  %b Show on top menu bar:
+  = h @announcement.on_nav_bar
+%p
+  %b Show only in contest:
+  = h @announcement.contest_only
+= link_to 'Edit', edit_announcement_path(@announcement)
+|
+= link_to 'Back', announcements_path

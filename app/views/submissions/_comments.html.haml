@@ -1,0 +1,53 @@
+-# requires submission
+- has_processing = local_assigns.fetch(:has_processing,false)
+- show_edit = local_assigns.fetch(:show_edit, false)
+- if submission&.comments&.any?
+  -# wrap with refresh controller
+  %div{ data: {
+    controller: 'refresh',
+    refresh_delay_value: ( has_processing ? 5_000 : -1),
+    refresh_waiting_text_value: 'Checking AI in {{second}} seconds.'
+  }}
+    - kinds = [ 'llm_assist','comment']
+    - kinds.each do |kind|
+      - submission.comments.where(kind: kind).each do |comment|
+        // add highligh class to the new item, if exists
+        .row{class: ('new-item-highlight' if comment.id == @comment&.id)}
+          .col
+            -# render a row of comment title
+            - if comment.kind == 'llm_assist'
+              .badge.rounded-pill.text-primary.bg-primary-subtle.me-2 AI
+              %span
+                = comment.title.html_safe
+                -# for AI assist, if the job is waiting, we also render a small div for displaying stopwatch
+                %span
+                  - if comment.status == 'processing'
+                    %span{data: {
+                      refresh_target: 'stopwatchText',
+                      start_time: comment.created_at.iso8601,
+                      template: '({{second}}s)'
+                    }}
+            - elsif comment.kind == 'comment'
+              .badge.rounded-pill.text-info.bg-info-subtle.me-2 Comment
+              %span= comment.title.html_safe
+          .col-auto.text-end
+            = link_to 'View', submission_comment_path(submission,comment), data: {turbo: true, turbo_stream: true}
+            - if @current_user.problems_for_action(:report).where(id: submission.problem).any? && show_edit
+              |
+              = link_to 'Edit', '#',
+                data: {turbo: true, turbo_stream: true, action: 'click->submission-comment#populateFormForUpdate',
+                  bs_toggle: 'modal', bs_target: '#comment-modal',
+                  submission_comment_comment_param: comment.to_json(only: %i[ id title body ]), 
+                  submission_comment_url_param: submission_comment_path(submission, comment)}
+              |
+              = link_to 'Delete', submission_comment_path(submission,comment), class: 'text-danger',
+                data: {turbo: true, turbo_method: 'DELETE', turbo_stream: true, turbo_confirm: "Are you sure to delete the comment titled '#{comment.title}'"}
+    - if has_processing
+      //%div{data: {refresh_target: 'waitingText'}} Waiting to be graded...
+      -# hidden refresh link for the controller to click
+      -# if we render for an edit page, we won't show edit button
+      = link_to 'Refresh', submission_comments_path(@submission,{for: (show_edit ? '' : 'edit')}), class: 'd-none', data: {turbo: "true", turbo_prefetch: false, refresh_target: 'refreshLink'}
+
+- else
+  %em -- There is no comment for this submission --
+

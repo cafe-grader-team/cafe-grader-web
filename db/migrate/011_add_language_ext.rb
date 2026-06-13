@@ -1,4 +1,4 @@
-class AddLanguageExt < ActiveRecord::Migration
+class AddLanguageExt < ActiveRecord::Migration[4.2]
   def self.up
     add_column :languages, :ext, :string, :limit => 10
 

@@ -1,0 +1,30 @@
+-# this render one toast that should be append to a series of toast
+-# local var 'toast', a hash, must be given and it is merge to toast_params
+- toast_params = {body: 'Body placeholder',
+  type: :notice, 
+  title: nil, 
+  subtitle: Time.zone.now.strftime("%H:%M:%S"), 
+  autohide: true,
+  errors: local_assigns.fetch(:errors,[]) }
+- toast_params.merge!( local_assigns.fetch(:toast, {}))
+- toast_header_class = case toast_params[:type].to_sym
+  - when :notice then 'bg-info-subtle'
+  - when :alert then 'bg-danger-subtle'
+  - when :warning then 'bg-warning-subtle'
+  - else ''
+.toast.mb-1{"aria-atomic": true, "aria-live": :assertive, role: :alert}
+  .toast-header.py-1{class: toast_header_class}
+    %strong.me-auto= toast_params[:title]
+    %small= toast_params[:subtitle]
+    %button.btn-close{"aria-label" => "Close", "data-bs-dismiss" => "toast", :type => "button"}
+  .toast-body.py-1{ class: (toast_header_class if toast_params[:type].to_sym != :notice)}
+    = toast_params[:body].html_safe
+    - if toast_params[:errors].any?
+      %ul
+        - toast_params[:errors].each do |error|
+          %li= error.html_safe
+:javascript
+  // select unhide toast
+  toast_elements = document.querySelectorAll('.toast:not(.hide)')
+  arr = [...toast_elements]
+  arr.map(toast_el => bootstrap.Toast.getOrCreateInstance(toast_el, {autohide: #{toast_params[:autohide]}} ).show())

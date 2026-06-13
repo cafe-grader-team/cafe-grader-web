@@ -1,37 +1,77 @@
-%h1 Listing announcements
+.row.my-2
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Communication
+      %h2.fw-bold.text-dark.mb-0 Announcements
 
-= link_to '+ Add announcement', new_announcement_path, class: 'btn btn-success'
-%br
-%br
+    .d-flex.flex-wrap.gap-2
+      = link_to mdi(:add) + 'Add Announcement', new_announcement_path, class: 'btn btn-flex btn-success'
+  .col-md-7.mb-3
+    = render partial: 'announcement_help'
 
-%table.table.table-striped
-  %thead
-    %th Updated
-    %th Announcement
-    %th Author
-    %th{style: 'width: 100px'} Published?
-    %th{style: 'width: 100px'}Front?
-    %th
-    %th
-  - for announcement in @announcements
-    %tr
-      - @announcement = announcement
-      %td= time_ago_in_words announcement.updated_at
-      %td
-        - if !announcement.title.blank?
-          %b Title:
-          = h announcement.title
-          %br/
-        - if !announcement.notes.blank?
-          %b
-            Notes: #{h announcement.notes}
-          %br/
-        = h announcement.body
-      %td= h announcement.author
-      %td= toggle_button(announcement.published?, toggle_announcement_path(@announcement), "announcement_toggle_#{@announcement.id}", {size: 'btn-sm'})
-      %td= toggle_button(announcement.frontpage?, toggle_front_announcement_path(@announcement), "announcement_toggle_front_#{@announcement.id}", {size: 'btn-sm'})
-      %td= link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-block btn-sm btn-info'
-      %td= link_to 'Destroy', announcement, :confirm => 'Are you sure?', :method => :delete, class: "btn btn-block btn-sm btn-danger"
-%br
+.card.card-shadow
+  .card-body
 
-= link_to '+ Add announcement', new_announcement_path, class: 'btn btn-success'
+    %table.table.table-hover
+      %thead
+        %th Updated
+        %th Announcement
+        %th Author
+        %th{style: 'width: 100px'} Published?
+        %th{style: 'width: 100px'} Front?
+        %th Group
+        %th
+      - for announcement in @announcements
+        %tr
+          - @announcement = announcement
+          %td= time_ago_in_words announcement.updated_at
+          %td
+            - if !announcement.title.blank?
+              %b Title:
+              = h announcement.title
+              %br/
+            - if !announcement.notes.blank?
+              %strong Notes:
+              = h announcement.notes
+              %br/
+            = render 'body_preview', announcement: announcement
+            - if announcement.file.attached?
+              .mt-2
+                %span.badge.bg-light.text-dark.border
+                  = mdi('attachment', 'md-18')
+                  = link_to announcement.file.filename, url_for(announcement.file), class: 'text-decoration-none ms-1'
+          %td= h announcement.author
+          %td
+            .form-check.form-switch
+              %input.form-check-input{id: "ann-#{announcement.id}-published-switch", checked: announcement.published, type: "checkbox", data: {action: 'announcement#toggle', 'row-id': announcement.id, field: 'published'}}
+          %td
+            .form-check.form-switch
+              %input.form-check-input{id: "ann-#{announcement.id}-front-switch", checked: announcement.frontpage, type: "checkbox", data: {action: 'announcement#toggle', 'row-id': announcement.id, field: 'front'}}
+          %td
+            - if announcement.group.nil?
+              .badge.text-bg-success Public
+              
+            - else
+              = announcement.group.name
+          %td.py-1
+            .d-flex.gap-1.justify-content-end
+              = link_to mdi('edit') + 'Edit', edit_announcement_path(announcement), class: 'btn btn-flex btn-outline-primary border-0'
+              = link_to mdi('delete', 'md-24'), announcement, :method => :delete, :data => { :confirm => 'Are you sure?' }, class: 'btn btn-flex btn-outline-danger border-0'
+
+    %br
+
+-# hidden form for announcement toggle
+= form_with url: toggle_published_announcement_path(-123), html: {data: {turbo: true, action: 'turbo:submit-end->announcement#resetToggleForm', 'announcement-target': 'togglePublishedForm'} } do
+  /
+= form_with url: toggle_front_announcement_path(-123), html: {data: {turbo: true, action: 'turbo:submit-end->announcement#resetToggleForm', 'announcement-target': 'toggleFrontForm'}} do
+  /
+:javascript
+  function set_announcement_switch(announcement_id,published,front) {
+    document.getElementById(`ann-${announcement_id}-published-switch`).checked = published
+    document.getElementById(`ann-${announcement_id}-published-switch`).disabled = false
+
+    document.getElementById(`ann-${announcement_id}-front-switch`).checked = front
+    document.getElementById(`ann-${announcement_id}-front-switch`).disabled = false
+
+  }
+

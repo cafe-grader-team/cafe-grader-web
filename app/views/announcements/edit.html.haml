@@ -1,34 +1,17 @@
-.container-fluid
-  %h1 Editing announcement
-  = error_messages_for :announcement
-  .row
-    .col-md-6
-      = form_for(@announcement) do |f|
-        .form-group
-          %label Title
-          = f.text_field :title, class: 'form-control'
-        .form-group
-          %label Notes
-          (shown internally, used to organize announcements)
-          = f.text_field :notes, class: 'form-control'
-        .form-group
-          %label Body
-          = f.text_area  :body, class: 'form-control', style: 'height: 200px;'
-        .form-group
-          %label Author
-          = f.text_field :author, class: 'form-control'
-        .checkbox
-          %label 
-            = f.check_box :published
-            Published
-        .checkbox
-          %label 
-            = f.check_box :frontpage
-            Show on front page?
-        .checkbox
-          %label 
-            = f.check_box :contest_only
-            Show only in contest?
-        = f.submit "Update", class: 'btn btn-primary'
-        = link_to 'Show', @announcement, class: 'btn btn-default'
-        = link_to 'Back', announcements_path, class: 'btn btn-default'
+= render 'application/breadcrumb', steps: [{ label: 'Announcements', path: announcements_path, icon: resource_icon_name(Announcement) }, { label: 'Edit' }]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0
+      - if @announcement.title.present?
+        = @announcement.title
+      - else
+        %span.text-muted.fst-italic [Untitled Announcement ##{@announcement.id}]
+    %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+      %small Editing
+
+  .d-flex.gap-2
+    = link_to 'Cancel', announcements_path, class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'edit_form'} Save Changes
+
+= render 'form'

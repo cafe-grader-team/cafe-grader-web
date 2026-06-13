@@ -1,34 +1,34 @@
-Language_1:
+Language_c:
   name: c
   pretty_name: C
   ext: c
   common_ext: c
 
-Language_2:
+Language_cpp:
   name: cpp
   pretty_name: C++
   ext: cpp
   common_ext: cpp,cc
 
-Language_3:
+Language_pas:
   name: pas
   pretty_name: Pascal
   ext: pas
   common_ext: pas
 
-Language_4:
+Language_ruby:
   name: ruby
   pretty_name: Ruby
   ext: rb
   common_ext: rb
 
-Language_5:
+Language_python:
   name: python
   pretty_name: Python
   ext: py
   common_ext: py
 
-Language_6:
+Language_java:
   name: java
   pretty_name: Java
   ext: java

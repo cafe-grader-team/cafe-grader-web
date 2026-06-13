@@ -1,93 +1,118 @@
 class GradersController < ApplicationController
+  before_action :set_problem, only: [:edit_job_type, :set_enabled, :update
+                                    ]
 
-  before_filter :admin_authorization
-
-  verify :method => :post, :only => ['clear_all', 
-                                     'start_exam',
-                                     'start_grading',
-                                     'stop_all', 
-                                     'clear_terminated'], 
-         :redirect_to => {:action => 'index'}
+  before_action :admin_authorization
 
   def index
-    redirect_to :action => 'list'
+    @graders = GraderProcess.all
+    @wait_count = Job.where(status: :wait).group(:job_type).count
+    @error_count = Job.where(status: :error).count
+    @error_jobs = Job.where(status: :error).order(updated_at: :desc).limit(50) if @error_count > 0
+
+    # "External signals" — surfaced here so admins have a single
+    # landing page for "anything broken right now?" The deep-links
+    # point at the existing specialized pages.
+    @sq_failed_count  = SolidQueue::Job.failed.count
+    @stuck_viva_count = VivaTurn.stuck.count
+
+    @submission_limit = [20, 100, 500].include?(params[:limit].to_i) ? params[:limit].to_i : 20
+    @submission = Submission.order("id desc").limit(@submission_limit).includes(:user, :problem)
+    @backlog_submission = Submission.where('graded_at is null').includes(:user, :problem)
+
+    @wait_compile_job_count = Job.where(job_type: :compile, status: :wait).count
+    @wait_eval_job_count = Job.where(job_type: :evaluate, status: :wait).count
   end
 
-  def list
-    @grader_processes = GraderProcess.find_running_graders
-    @stalled_processes = GraderProcess.find_stalled_process
-
-    @terminated_processes = GraderProcess.find_terminated_graders
-    
-    @last_task = Task.last
-    @last_test_request = TestRequest.last
-    @submission = Submission.order("id desc").limit(20)
-    @backlog_submission = Submission.where('graded_at is null')
+  def stuck_viva_turns
+    @turns = VivaTurn.stuck
+                     .includes(submission: %i[user problem])
+                     .order("viva_turns.updated_at desc")
   end
 
-  def clear
-    grader_proc = GraderProcess.find(params[:id])
-    grader_proc.destroy if grader_proc!=nil
-    redirect_to :action => 'list'
-  end
-
-  def clear_terminated
-    GraderProcess.find_terminated_graders.each do |p|
-      p.destroy
-    end
-    redirect_to :action => 'list'
-  end
-
-  def clear_all
-    GraderProcess.all.each do |p|
-      p.destroy
-    end
-    redirect_to :action => 'list'
-  end
-
-  def view
-    if params[:type]=='Task'
-      redirect_to :action => 'task', :id => params[:id]
+  def edit_job_type
+    if @grader.job_type.blank?
+      @job_type = Job.job_types.keys
     else
-      redirect_to :action => 'test_request', :id => params[:id]
+      @job_type = @grader.job_type.split
     end
   end
 
-  def test_request
-    @test_request = TestRequest.find(params[:id])
+  def update
+    result = []
+    Job.job_types.each do |k, v|
+      param_name = "jt-#{k}"
+      result << k if params[param_name] == 'on'
+    end
+    @grader.update(job_type: result.join(' '))
+
+    # i don't know why but when submit is made via form's input{type: 'submit'}, we don't need to call turbo_stream.replace
+    # see "set_enabled" which is acticated by form's button element. There, we NEED explicit call to turbo_stream.replace
+    render partial: 'grader', locals: {grader: @grader}
+    # render turbo_stream: turbo_stream.replace( helpers.dom_id(@grader), partial: 'grader', locals: {grader: @grader})
   end
 
-  def task
-    @task = Task.find(params[:id])
+  def set_enabled
+    @grader.update(enabled: params[:enabled])
+
+    # render partial: 'grader', locals: {grader: @grader}
+    render turbo_stream: turbo_stream.replace(helpers.dom_id(@grader), partial: 'grader', locals: {grader: @grader})
   end
 
-
-  # various grader controls
-
-  def stop 
-    grader_proc = GraderProcess.find(params[:id])
-    GraderScript.stop_grader(grader_proc.pid)
-    flash[:notice] = 'Grader stopped.  It may not disappear now, but it should disappear shortly.'
-    redirect_to :action => 'list'
+  def retry_error_job
+    job = Job.find(params[:job_id])
+    job.update(status: :wait, result: nil)
+    @toast = { title: "Grader", body: "Job ##{job.id} re-queued." }
+    respond_to do |format|
+      format.turbo_stream { render "turbo_toast" }
+      format.html { redirect_to grader_processes_path, flash: { notice: @toast[:body] } }
+    end
   end
 
-  def stop_all
-    GraderScript.stop_graders(GraderProcess.find_running_graders + 
-                              GraderProcess.find_stalled_process)
-    flash[:notice] = 'Graders stopped.  They may not disappear now, but they should disappear shortly.'
-    redirect_to :action => 'list'
+  def retry_all_error_jobs
+    count = Job.where(status: :error).update_all(status: :wait, result: nil)
+    @toast = { title: "Grader", body: "#{count} error #{'job'.pluralize(count)} re-queued." }
+    respond_to do |format|
+      format.turbo_stream { render "turbo_toast" }
+      format.html { redirect_to grader_processes_path, flash: { notice: @toast[:body] } }
+    end
   end
 
-  def start_grading
-    GraderScript.start_grader('grading')
-    flash[:notice] = '2 graders in grading env started, one for grading queue tasks, another for grading test request'
-    redirect_to :action => 'list'
+  def clear_all_error_jobs
+    count = Job.where(status: :error).delete_all
+    @toast = { title: "Grader", body: "#{count} error #{'job'.pluralize(count)} cleared." }
+    respond_to do |format|
+      format.turbo_stream { render "turbo_toast" }
+      format.html { redirect_to grader_processes_path, flash: { notice: @toast[:body] } }
+    end
   end
 
-  def start_exam
-    GraderScript.start_grader('exam')
-    flash[:notice] = '2 graders in grading env started, one for grading queue tasks, another for grading test request'
-    redirect_to :action => 'list'
+  # solid_queue dashboard
+  QUEUE_STATUSES = %w[all pending failed finished].freeze
+
+  def queues
+    @status = QUEUE_STATUSES.include?(params[:status]) ? params[:status] : 'all'
+    @statuses = QUEUE_STATUSES
   end
 
+  def queues_query
+    jobs_scope = SolidQueue::Job.all
+    case params[:status]
+    when 'failed'
+      jobs_scope = jobs_scope.failed
+    when 'finished'
+      jobs_scope = jobs_scope.finished
+    when 'pending'
+      jobs_scope = jobs_scope.where(finished_at: nil).where.missing(:failed_execution)
+    end
+
+    raw_jobs = jobs_scope.includes(:failed_execution).order(created_at: :desc).first(500)
+    @jobs = raw_jobs.map { |job| Llm::RequestJobPresenter.new(job) }
+  end
+
+  private
+
+    def set_problem
+      @grader = GraderProcess.find(params[:id])
+    end
 end

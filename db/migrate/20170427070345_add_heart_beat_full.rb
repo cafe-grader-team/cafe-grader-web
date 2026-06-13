@@ -1,4 +1,4 @@
-class AddHeartBeatFull < ActiveRecord::Migration
+class AddHeartBeatFull < ActiveRecord::Migration[4.2]
   def up
     GraderConfiguration.create key: 'right.heartbeat_response_full', value_type: 'string', value:'RESTART', description:'Heart beat response text when user got full score (set this value to the empty string to disable this feature)'
   end

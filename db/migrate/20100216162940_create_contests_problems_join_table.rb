@@ -1,6 +1,6 @@
-class CreateContestsProblemsJoinTable < ActiveRecord::Migration
+class CreateContestsProblemsJoinTable < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :contests_problems, :id => false do |t|
+    create_table :contests_problems, :id => false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.integer :contest_id
       t.integer :problem_id
     end

@@ -1,0 +1,23 @@
+= render 'application/breadcrumb', steps: [ { label: 'Languages', path: languages_path, icon: resource_icon_name(Language) }, { label: 'Edit' } ]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0.font-monospace
+      - if @language.name.present?
+        = @language.name
+      - else
+        %span.text-muted.fst-italic [Untitled Language ##{@language.id}]  
+    %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+      %small Editing
+
+  .d-flex.gap-2
+    = link_to 'Cancel', languages_path, class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'edit_form'} Save Changes
+
+.row.my-3.gx-3
+  .col-md-6
+    .card.shadow-sm
+      .card-body
+        = render 'form'
+  .col-md-6
+    = render 'language_help'

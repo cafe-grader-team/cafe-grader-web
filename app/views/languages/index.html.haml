@@ -1,0 +1,94 @@
+.row.my-2
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      -#%small.text-secondary.text-uppercase.fw-bold.ls-1 Configuration
+      %h2.fw-bold.text-dark.mb-0 Languages
+
+    .d-flex.flex-wrap.gap-2
+      = link_to mdi(:add) + 'New Language', new_language_path, class: 'btn btn-flex btn-success'
+  .col-md-7.mb-3
+    = render partial: 'language_help'
+
+
+.card.card-shadow
+  .card-body
+    %table#language_table.table.table-hover
+      %thead
+        %tr
+          %th Name
+          %th Pretty Name
+          %th Default Ext
+          %th Other Ext
+          %th
+
+%br
+
+:javascript
+
+  function page_init() {
+    language_table_config = {
+      paging: false,
+      responsive: true,
+      destroy: true,
+      ajax: {
+        url: "#{index_query_languages_path}",
+        type: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        },
+      },
+      rowId: 'id',
+      columns: [ 
+        {data: 'name', render: function(data, type, row) {
+          if (type === 'display') {
+            return `<span class="fw-bold text-dark">${data}</span>`
+          }
+          return data
+        }},
+        {data: 'pretty_name'},
+        {data: 'ext', render: function(data) {
+          return `<code class="text-primary">${data}</code>`
+        }},
+        {data: 'common_ext', render: function(data) {
+           if (!data) return ''
+           return data.split(',').map(ext => `<span class="badge bg-light text-secondary border border-secondary-subtle me-1">${ext}</span>`).join('')
+        }},
+        {data: null, render: function(data,type,row,meta) {
+          if (type != 'display') return '';
+
+          // calling the render function for link
+          // We use -123 as placeholder for ID, cafe.dt.render.link handles replacement with row.id if configured or we can construct URL manually if needed
+          // Actually, cafe.dt.render.link's ID replacement is slightly magic or specific.
+          // Let's check tags: path: '#{edit_tag_path(-123)}'
+          
+          const edit_button = cafe.dt.render.link(`${cafe.msi('edit')} Edit`,{path: '#{edit_language_path(-123)}', className: 'btn btn-flex btn-outline-primary border-0', prefetch: false, turboStream: true})(data,type,row,meta)
+          
+          // Check if system language for delete button?
+          // The destroy action in controller prevents deletion of ID < 20.
+          // Ideally we disable the button or don't show it.
+          // JS can check row.id
+          
+          let delete_button = ''
+          if (row.id >= 20) {
+             delete_button = cafe.dt.render.link(`${cafe.msi('delete')} `, {path: '#{language_path(-123)}', className: 'btn btn-flex btn-outline-danger border-0', method: 'delete', confirm: 'Really delete this language?'})(data,type,row,meta)
+          } else {
+             delete_button = `<button class="btn btn-flex btn-outline-secondary border-0 disabled" title="System Language"><span class="material-icons-outlined">lock</span></button>`
+          }
+
+          const html = `<div class="d-flex gap-1 justify-content-end">`+
+                       ` ${edit_button} ${delete_button}` +
+                       `</div>`
+          return html;
+        },className: 'py-1, text-end'}
+      ],
+      columnDefs: [{orderable: false, targets: [4]} ],
+      drawCallback: function (settings) {
+        var api = this.api();
+        api.columns.adjust()
+      },
+    }
+
+    language_table = $("#language_table").DataTable(language_table_config)
+  }
+
+  document.addEventListener("turbo:load", page_init);

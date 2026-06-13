@@ -1,4 +1,4 @@
-class ModifyGraderProcess < ActiveRecord::Migration
+class ModifyGraderProcess < ActiveRecord::Migration[4.2]
   def up
     change_column :grader_processes, :host, :string
   end

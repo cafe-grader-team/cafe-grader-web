@@ -1,0 +1,52 @@
+# james is a normal user in contest_a
+james_in_contest_a:
+  contest: contest_a
+  user: james
+  role: 0
+  enabled: true
+  start_offset_second: 0
+  extra_time_second: 0
+
+# jack is a normal user in contest_a and contest_b
+jack_in_contest_a:
+  contest: contest_a
+  user: jack
+  role: 0
+  enabled: true
+  start_offset_second: 0
+  extra_time_second: 0
+
+jack_in_contest_b:
+  contest: contest_b
+  user: jack
+  role: 0
+  enabled: true
+  start_offset_second: 0
+  extra_time_second: 0
+
+# mary is an editor of contest_a
+mary_editor_contest_a:
+  contest: contest_a
+  user: mary
+  role: 2
+  enabled: true
+  start_offset_second: 0
+  extra_time_second: 0
+
+# admin in contest_a (for completeness)
+admin_in_contest_a:
+  contest: contest_a
+  user: admin
+  role: 2
+  enabled: true
+  start_offset_second: 0
+  extra_time_second: 0
+
+# disabled_user in contest_a but disabled
+disabled_in_contest_a:
+  contest: contest_a
+  user: disabled_user
+  role: 0
+  enabled: false
+  start_offset_second: 0
+  extra_time_second: 0

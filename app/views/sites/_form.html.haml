@@ -1,0 +1,19 @@
+= simple_form_for site do |f|
+  = render partial: 'error_for_model', locals: {model: site}
+  = f.input :name
+  = f.input :password
+  = f.input :started
+  = f.input :start_time, as: :string
+  = f.input :name
+  = f.submit class: 'btn btn-primary'
+  - if content_for?(:form_buttons)
+    = yield(:form_buttons)
+
+:javascript
+  $(function() {
+    $('.datatable').DataTable({destroy: true, searching: false, paging: false})
+    td_options = structuredClone(cafe.config.td.date)
+    td_options['localization']['format'] = 'yyyy-MM-dd HH:mm'
+    td_options['defaultDate'] = "#{site.start_time}"
+    new TempusDominus(document.getElementById('site_start_time'), td_options );
+  });

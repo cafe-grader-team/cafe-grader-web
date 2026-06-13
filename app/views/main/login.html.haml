@@ -1,11 +1,12 @@
 %h1= GraderConfiguration['ui.front.title']
 
-.row
-  .col-md-6
-    - if @announcements.length!=0
-      .announcementbox{:style => 'margin-top: 0px'}
-        %span{:class => 'title'}
-          Announcements
-        = render :partial => 'announcement', :collection => @announcements
-  .col-md-4{style: "padding-left: 20px;"}
+.row.mt-4
+  .col-md-6.col-sm-12.mb-3
+    - if @announcements.count > 0
+      .d-flex.justify-content-between.align-items-center.mb-4.px-2{"data-controller" => "init-ui-component"}
+        %h6.fw-bold.text-uppercase.text-secondary.mb-0 Announcements
+      .announcements-feed
+        = render partial: 'announcement', collection: @announcements
+  .col-lg-4.col-md-6.col-sm-12
     = render :partial => 'login_box'
+    /= "current ip is #{@remote_ip}"

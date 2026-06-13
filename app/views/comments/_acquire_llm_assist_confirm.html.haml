@@ -1,0 +1,14 @@
+:markdown
+  This action will send the problem statement, your __original__ source code 
+  from submission ##{@submission.id}, and its score 
+  (#{@submission.points} [#{@submission.grader_comment}]) to the
+  `#{model}` large language model with a predefined prompt to request assistance.
+
+  Requesting assistance will reduce the __full score__ for this problem by 
+  #{cost} points. If your final score for this problem does not exceed the 
+  __reduced full score__, you will receive that score. If your score exceeds 
+  the __reduced full score__, it will be capped at the __reduced full score__.
+
+  The generated assistance will remain available to you permanently.
+
+  Do you want to confirm and request assistance?

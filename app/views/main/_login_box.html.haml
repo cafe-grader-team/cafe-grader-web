@@ -1,43 +1,85 @@
-%b= GraderConfiguration['ui.front.welcome_message']
-%br/
 
-- if !@hidelogin
-  =t 'login.message'
+.card.shadow-sm
+  .card-body
+    .card-title
+      %h3= GraderConfiguration['ui.front.welcome_message']
+    - if !@hidelogin
+      .card-subtitle=t 'login.message'
+
+      - if flash[:notice]
+        .alert.alert-danger
+          = flash[:notice]
+
+      .card
+        .card-body{ style: "background: #eeeeff;"}
+          = form_with url: login_login_path do |f|
+            .mb-3
+              = f.label :login, "Login", class: 'form-label'
+              = f.text_field :login, class: 'form-control'
+            .mb-3
+              = f.label :password, "Password", class: 'form-label'
+              = f.password_field :password, class: 'form-control'
+            - unless GraderConfiguration['right.bypass_agreement']
+              .form-check.mb-3
+                %input#accept-agree.form-check-input{type: :checkbox, name: :accept_agree, required: true}
+                %label.form-check-label{for: 'accept-agree'} ยอมรับข้อตกลงการใช้งาน
+            .mb-3
+              .col-sm-offset-3.col-sm-9
+                = submit_tag t('login.login_submit'), class: 'btn btn-primary'
+    - else
+      Login is not possible right now
+
+    %br/
+
+    - if GraderConfiguration['system.online_registration']
+      =t 'login.participation'
+      %b
+        = "#{t 'login.please'} "
+        = link_to "#{t 'login.register'}", :controller => :users, :action => :new
+      %br/
+      = link_to "#{t 'login.forget_password'}", :controller => :users, :action => :forget
+-#
   %br/
-  %br/
 
-  - if flash[:notice]
-    %hr/
-    %b= flash[:notice]
-    %hr/
+  - if !@hidelogin
+    =t 'login.message'
+    %br/
+    %br/
 
-  %div{ :style => "border: solid 1px gray; padding: 4px; background: #eeeeff;"}
-    = form_tag login_login_path, {class: 'form-horizontal'} do
-      .form-group
-        =label_tag :login, "Login",class: 'col-sm-3 control-label'
-        .col-sm-9
-          =text_field_tag :login, nil, class: 'form-control'
-      .form-group
-        =label_tag :password, "Password", class: 'col-sm-3 control-label'
-        .col-sm-9
-          =password_field_tag :password, nil, class: 'form-control'
-      - unless GraderConfiguration['right.bypass_agreement']
+    - if flash[:notice]
+      %hr/
+      %b= flash[:notice]
+      %hr/
+
+    %div{ :style => "border: solid 1px gray; padding: 4px; background: #eeeeff;"}
+      = form_tag login_login_path, {class: 'form-horizontal'} do
+        .form-group
+          =label_tag :login, "Login",class: 'col-sm-3 control-label'
+          .col-sm-9
+            =text_field_tag :login, nil, class: 'form-control'
+        .form-group
+          =label_tag :password, "Password", class: 'col-sm-3 control-label'
+          .col-sm-9
+            =password_field_tag :password, nil, class: 'form-control'
+        - unless GraderConfiguration['right.bypass_agreement']
+          .form-group
+            .col-sm-offset-3.col-sm-9
+              .checkbox
+                %label
+                  = check_box_tag 'accept_agree'
+                  ยอมรับข้อตกลงการใช้งาน
+
         .form-group
           .col-sm-offset-3.col-sm-9
-            .checkbox
-              %label
-                = check_box_tag 'accept_agree'
-                ยอมรับข้อตกลงการใช้งาน
+            = submit_tag t('login.login_submit'), class: 'btn btn-primary'
+  - else
 
-      .form-group
-        .col-sm-offset-3.col-sm-9
-          = submit_tag t('login.login_submit'), class: 'btn btn-primary'
-%br/
-
-- if GraderConfiguration['system.online_registration']
-  =t 'login.participation'
-  %b
-    = "#{t 'login.please'} "
-    = link_to "#{t 'login.register'}", :controller => :users, :action => :new
   %br/
-  = link_to "#{t 'login.forget_password'}", :controller => :users, :action => :forget
+
+  - if GraderConfiguration['system.online_registration']
+    =t 'login.participation'
+    %b
+      = "#{t 'login.please'} "
+      = link_to "#{t 'login.register'}", :controller => :users, :action => :new
+    %br/
+    = link_to "#{t 'login.forget_password'}", :controller => :users, :action => :forget

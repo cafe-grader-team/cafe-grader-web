@@ -142,3 +142,19 @@ GraderConfiguration_22:
   description: New user will be assigned to this contest automatically, if it exists.  Set
     to 'none' if there is no default contest.
 
+GraderConfiguration_23:
+  key: system.use_problem_group
+  value_type: boolean
+  value: 'false'
+
+GraderConfiguration_24:
+  key: right.whitelist_ip
+  value_type: string
+  value: ''
+
+GraderConfiguration_25:
+  key: right.whitelist_ignore
+  value_type: boolean
+  value: 'true'
+
+

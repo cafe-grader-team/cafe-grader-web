@@ -1,6 +1,6 @@
 class SitesController < ApplicationController
 
-  before_filter :admin_authorization
+  before_action :admin_authorization
 
   # GET /sites
   # GET /sites.xml
@@ -65,7 +65,7 @@ class SitesController < ApplicationController
     @site.clear_start_time_if_not_started
 
     respond_to do |format|
-      if @site.update_attributes(site_params)
+      if @site.update(site_params)
         flash[:notice] = 'Site was successfully updated.'
         format.html { redirect_to(@site) }
         format.xml  { head :ok }

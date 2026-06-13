@@ -1,22 +1,57 @@
-%h1 Groups
+.row.my-2
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Access Control
+      %h2.fw-bold.text-dark.mb-0 Groups
+    
+    .d-flex.flex-wrap.gap-2
+      = link_to mdi(:add, 'me-1') + 'New Group', new_group_path, class: 'btn btn-flex btn-success'
+  .col-md-7.mb-3
+    = render partial: 'group_help'
 
-%p
-  = link_to 'New Group', new_group_path, class: 'btn btn-primary'
-%table.table.table-hover
-  %thead
-    %tr
-      %th Name
-      %th Description
-      %th
-      %th
+.card.shadow-sm
+  .card-body
+    %table#group-table.table.table-hover
+      %thead
+        %tr
+          %th Name
+          %th Description
+          %th Enabled?
+          %th
+      %tbody
+        - @groups.each do |group|
+          %tr{:class => "#{(group.enabled?) ? "success" : "danger"}", id: "group-#{group.id}"}
+            %td= group.name
+            %td= group.description
+            %td
+              .form-check.form-switch
+                %input.form-check-input{id: "group-#{group.id}-enabled-switch", checked: group.enabled, type: "checkbox", data: {action: 'group#toggle', 'row-id': group.id}}
+            %td.text-end.align-middle.py-0
+              .d-inline-flex.align-items-center.gap-3
+                = link_to mdi('settings','md-24') + ' Manage', group, class: 'btn btn-flex btn-outline-primary border-0'
+                = link_to mdi('delete', 'md-24'), group, :method => :delete, :data => { :confirm => 'Are you sure?' }, class: 'btn btn-flex btn-outline-danger border-0'
 
-  %tbody
-    - @groups.each do |group|
-      %tr
-        %td= group.name
-        %td= group.description
-        %td= link_to 'View', group, class: 'btn btn-default'
-        %td= link_to 'Destroy', group, :method => :delete, :data => { :confirm => 'Are you sure?' }, class: 'btn btn-danger'
+-# hidden form for group toggle
+= form_with url: toggle_group_path(-123), html: {data: {turbo: true, 'group-target': 'toggleForm', action: 'turbo:submit-end->group#resetToggleForm'}} do
+  /
 
-%br
+:javascript
+  window.addEventListener("load", function() {
+    //on doc ready
+    table_config = {
+      paging: false,
+      layout: {
+        topStart: 'info',
+        topEnd: 'search',
+      },
+      columnDefs: [{orderable: false, targets: [2,3]} ],
+    }
 
+    table = $('#group-table').DataTable(table_config)
+
+  })
+
+  function set_group_switch(group_id, enabled) {
+    document.getElementById(`group-${group_id}-enabled-switch`).checked = enabled
+    document.getElementById(`group-${group_id}-enabled-switch`).disabled = false
+  }

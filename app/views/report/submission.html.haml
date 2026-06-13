@@ -1,0 +1,118 @@
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 Submissions
+
+= form_with url: '#', id: 'filter_form' do |f|
+  .row{data: {controller: 'init-ui-component'}}
+    .col-lg-4.mt-2
+      = render partial: 'problem_select', locals: {all: true}
+    .col-lg-4.mt-2
+      = render partial: 'submission_range'
+    .col-lg-4.mt-2
+      = render partial: 'user_select'
+
+.text-secondary.small.mb-3.d-flex.align-items-center
+  %span.mi.md-18.me-1 sync
+  Select filters above, then click Refresh to load data.
+
+%canvas#chart{data: {controller: 'chart', chart_preset_value: 'submission_line', chart_data_value: '{}'}}
+
+.row
+  .col-sm-12
+    %table#table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
+
+
+:javascript
+  sub_count = null;
+  submission_path = "#{submission_path(-1234)}"
+  user_path = "#{stat_user_admin_path(-1234)}"
+  problem_path = "#{stat_problem_path(-1234)}"
+
+  function sub_link_renderer(data, type, row) {
+    if (type == 'display' || type == 'filter') {
+      return `<a href="${submission_path.replace("-1234",row['id'])}">\#${row['id']}</a>`;
+    }
+    //for sort, we just return the data which is supposed to be iso8601
+    return row['id']
+  }
+  function user_link_renderer(data, type, row) {
+    if (type == 'display' || type == 'filter') {
+      return `<a href="${user_path.replace("-1234",row['user_id'])}">(${row['login']})</a> ${row['user_full_name']}`;
+    }
+    //for sort, we just return the data which is supposed to be iso8601
+    return row['login']
+  }
+  function problem_link_renderer(data, type, row) {
+    return `<a href="${problem_path.replace("-1234",row['problem_id'])}">[${row['name']}]</a> ${row['full_name']}`;
+  }
+  function date_time_renderer( data, type, row) {
+    return moment(data).format('YYYY-MM-DD HH:mm:ss')
+  }
+
+  window.addEventListener("load", function() {
+    submission_table = $('#table').DataTable({
+      //dom: "<'row'<'col-sm-3'B><'col-sm-3'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+      layout: {
+        topStart: 'buttons'
+      },
+      autoWidth: true,
+      pageLength: 50,
+      processing: true,
+      buttons: [
+        {
+          text: 'Refresh',
+          action: (e,dt,node,config) => {
+            submission_table.clear().draw()
+            submission_table.ajax.reload( () => { submission_table.columns.adjust().draw() } )
+          }
+        },
+        'copy',
+        {
+          extend: 'excel',
+          title: 'Submission detail'
+        }
+      ],
+      columns: [
+        {title: 'Sub ID', data: 'id', render: sub_link_renderer },
+        {title: 'User', data: 'login', render: user_link_renderer},
+        {title: 'Problem', data: 'full_name', render: problem_link_renderer},
+        {title: 'Language', data: 'pretty_name'},
+        {title: 'Submit at', data: 'submitted_at', render: date_time_renderer},
+        {title: 'Result', data: 'grader_comment', className: 'grader-comment'},
+        {title: 'Score', data: 'points', className: 'text-end'},
+        {title: 'IP', data: 'ip_address', className: 'grader-comment'},
+      ],
+      ajax: {
+        url: '#{submission_query_report_path}',
+        type: 'POST',
+        data: (d) =>  {
+          build_sub_range_params(d)
+          build_user_params(d)
+          build_problem_params(d)
+        },
+        dataType: 'json',
+        beforeSend: (request) => {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+        dataSrc: function (json) {
+          sub_count = json.sub_count_by_date || {}
+          sub_date = Object.keys(sub_count).sort()
+          //history graph
+          data = {
+            labels: sub_date.map( (x) => { return moment(x).locale('en-uk').format('D-MMM')} ),
+            datasets: [
+              {
+                label: '#sub',
+                data: sub_date.map( (x) => { return sub_count[x]; }),
+              },
+            ]
+          }
+          document.getElementById('chart').setAttribute('data-chart-data-value', JSON.stringify(data))
+
+          return json.data
+        }
+      }, //end ajax
+    });
+
+
+  });

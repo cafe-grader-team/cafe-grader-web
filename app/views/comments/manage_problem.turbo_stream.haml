@@ -1,0 +1,5 @@
+= turbo_stream.update :hint_select, partial: 'problems/hint_select'
+= turbo_stream.update :hint_detail, partial: 'hint_edit', locals: {hint: @hint}
+-# = turbo_stream.update :hint_detail, partial: 'datasets/form'
+- if @toast
+  = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}

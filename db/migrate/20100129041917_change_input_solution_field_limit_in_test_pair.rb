@@ -1,4 +1,4 @@
-class ChangeInputSolutionFieldLimitInTestPair < ActiveRecord::Migration
+class ChangeInputSolutionFieldLimitInTestPair < ActiveRecord::Migration[4.2]
   def self.up
     change_column :test_pairs, :input, :text, :limit => 1.megabytes
     change_column :test_pairs, :solution, :text, :limit => 1.megabytes

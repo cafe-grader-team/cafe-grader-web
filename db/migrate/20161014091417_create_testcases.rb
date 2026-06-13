@@ -1,6 +1,6 @@
-class CreateTestcases < ActiveRecord::Migration
+class CreateTestcases < ActiveRecord::Migration[4.2]
   def change
-    create_table :testcases do |t|
+    create_table :testcases, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.references :problem
       t.integer :num
       t.integer :group

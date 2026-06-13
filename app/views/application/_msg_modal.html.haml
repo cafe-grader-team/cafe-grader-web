@@ -1,0 +1,32 @@
+-#
+  we can use this partial in two ways.
+  1: use as stand alone partial, in this case, just render it as part of the response
+     but it should be given with its own id. Do not use default (#msg_modal) because it
+     should be reserved for the main modal in the layout/applicatin.html.haml
+  2: use as a part of turbo response. In that case, the turbo to be rendered is
+     '_msg_modal_show.turbo' which replace the main modal (and shows it)
+- header_msg = local_assigns.fetch(:header_msg, 'Message')
+- body_msg = local_assigns.fetch(:body_msg, 'Body placeholder')
+- do_popup = local_assigns.fetch(:do_popup, false)
+- id = local_assigns.fetch(:id, 'msg_modal')
+- header_class = local_assigns.fetch(:header_class, '')
+- pre = local_assigns.fetch(:pre,false)
+- error_messages = local_assigns.fetch(:error_messages, nil)
+.modal.fade{id: id, tabindex: -1,role: 'dialog'}
+  .modal-dialog.modal-lg{role:'document'}
+    .modal-content
+      .modal-header{class: header_class}
+        %h4= header_msg
+        %button.btn-close{type: 'button', data: {bs: {dismiss: :modal}}, aria: {label: 'Close'}}
+      .modal-body
+        - unless error_messages
+          = body_msg
+        - else
+          %ul
+            - error_messages.each do |msg|
+              %li= msg.html_safe
+      .modal-footer
+        %button.btn.btn-secondary{type: 'button', data: {bs: {dismiss: 'modal'}}} Close
+- if do_popup
+  :javascript
+    $("##{id}").modal('show')

@@ -1,0 +1,35 @@
+#viva-session{data: {controller: 'viva-session', 'viva-session-pending-value': pending_turn.to_s, 'viva-session-refresh-url-value': viva_refresh_submission_path(submission), 'viva-session-interval-ms-value': 3000}}
+  .card.shadow-sm.mb-3
+    .card-body{style: 'max-height: 70vh; overflow-y: auto;'}
+      - turns.each do |turn|
+        = render 'viva_sessions/turn', turn: turn
+
+  -# Branch by submission status, not by viva_grade presence — viva_grade
+  -# may exist but be partial (we save it before JSON parse to preserve
+  -# llm_response_raw for diagnosis on failure).
+  - case submission.status.to_s
+  - when 'done'
+    - if viva_grade
+      = render partial: 'submissions/viva_grade', locals: {viva_grade: viva_grade, submission: submission}
+    - else
+      .alert.alert-warning Interview ended successfully but the grade record is missing. Contact an admin.
+  - when 'grader_error'
+    .alert.alert-danger
+      %strong Grader error.
+      = submission.grader_comment.to_s
+      -# Editors see the raw response and a re-run button in the right-side
+      -# Admin card; this branch stays text-only.
+  - when 'evaluating'
+    .alert.alert-info Interview ended. Grading in progress...
+
+  - unless finished
+    -# Only the submission owner sees the answer form. Other viewers
+    -# (admins, group editors, etc.) see a small observer note instead —
+    -# the controller will reject any POST attempt anyway, but hiding the
+    -# form avoids dangling a submit button that does nothing useful.
+    - if @current_user == submission.user
+      = render partial: 'viva_sessions/answer_form', locals: {submission: submission, pending_turn: pending_turn, finished: finished}
+    - else
+      .text-secondary.fst-italic.small.mt-3.d-inline-flex.align-items-center.gap-1
+        %span.mi.md-18 visibility
+        Viewing as observer — only the student can answer in this viva.

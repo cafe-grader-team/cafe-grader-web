@@ -1,0 +1,5 @@
+= turbo_stream.append 'js-response' do
+  :javascript
+    set_problem_switch(#{@problem.id},#{@problem.available},#{@problem.view_testcase})
+- if @toast
+  = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}

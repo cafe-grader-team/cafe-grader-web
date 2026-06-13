@@ -1,46 +1,24 @@
-require 'csv'
-
 class UserAdminController < ApplicationController
+  before_action :admin_authorization
 
-  include MailHelperMethods
-
-  before_filter :admin_authorization
-
-  # GETs should be safe (see http://www.w3.org/2001/tag/doc/whenToUseGet.html)
-  verify :method => :post, :only => [
-                                      :create, :create_from_list, 
-                                      :update, 
-                                      :manage_contest, 
-                                      :bulk_mail 
-                                    ],
-         :redirect_to => { :action => :list }
+  # Stimulus controller connection
+  before_action :page_stimulus_controller, only: %w[admin index]
+  before_action :set_user, only: %w[ clear_last_ip toggle_enable toggle_activate
+                                     edit update stat stat_contest ]
 
   def index
     @user_count = User.count
-    if params[:page] == 'all'
-      @users = User.all
-      @paginated = false
-    else
-      @users = User.paginate :page => params[:page]
-      @paginated = true
-    end
     @users = User.all
     @hidden_columns = ['hashed_password', 'salt', 'created_at', 'updated_at']
     @contests = Contest.enabled
+    @user = User.new
+  end
+
+  def index_query
+    render json: { data: User.all }
   end
 
   def active
-    sessions = ActiveRecord::SessionStore::Session.where("updated_at >= ?", 60.minutes.ago)
-    @users = []
-    sessions.each do |session|
-      if session.data[:user_id]
-        @users << User.find(session.data[:user_id])
-      end
-    end
-  end
-
-  def show
-    @user = User.find(params[:id])
   end
 
   def new
@@ -52,183 +30,132 @@ class UserAdminController < ApplicationController
     @user.activated = true
     if @user.save
       flash[:notice] = 'User was successfully created.'
-      redirect_to :action => 'index'
+      redirect_to action: 'index'
     else
-      render :action => 'new'
-    end    
+      render action: 'new'
+    end
   end
 
+  def user_action
+    @user = User.find(params[:user_id])
+    @toast = {title: "User #{@user.full_name} (#{@user.login})"}
+
+    case params[:command]
+    when 'clear_ip'
+      @user.update(last_ip: nil)
+      @toast[:body] = "Session lock is reset"
+    when 'toggle'
+      @user.update(enabled: !@user.enabled)
+      @toast[:body] = "User enabled set to #{@user.enabled}"
+    else
+      @toast[:body] = "Unknown command"
+    end
+    render 'turbo_toast'
+  end
+
+  #
+  # --- member function
+  #
   def clear_last_ip
-    @user = User.find(params[:id])
-    @user.last_ip = nil
-    @user.save
+    @user.update(last_ip: nil)
     redirect_to action: 'index', page: params[:page]
   end
+
+  def toggle_activate
+    @user.update(activated:  !@user.activated?)
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_activate_user_#{@user.id}", button_on: @user.activated? } }
+    end
+  end
+
+  def toggle_enable
+    @user.update(enabled:  !@user.enabled?)
+    respond_to do |format|
+      format.js { render partial: 'toggle_button',
+                  locals: {button_id: "#toggle_enable_user_#{@user.id}", button_on: @user.enabled? } }
+    end
+  end
+
+  def stat
+    @submission = Submission.joins(:problem).includes(:problem).includes(:language).where(user_id: params[:id])
+
+    build_stat
+
+    @chart_dataset = @user.get_jschart_user_sub_history.to_json.html_safe
+  end
+
+  def stat_contest
+    @contest = Contest.find(params[:contest_id])
+    @submission = @contest.user_submissions(@user)
+
+    build_stat
+
+    @chart_dataset = @user.get_jschart_user_contest_history(@contest).to_json.html_safe
+
+    render 'stat'
+  end
+
 
   def create_from_list
     lines = params[:user_list]
 
-    note = []
 
-    lines.split("\n").each do |line|
-      items = line.chomp.split(',')
-      if items.length>=2
-        login = items[0]
-        full_name = items[1]
-        remark =''
-        user_alias = ''
+    res = User.create_from_list(lines)
+    error_logins = res[:error_logins]
+    error_msg = res[:first_error]
+    created_users = res[:created_users]
+    updated_users = res[:updated_users]
 
-        added_random_password = false
-        if items.length >= 3 and items[2].chomp(" ").length > 0;
-          password = items[2].chomp(" ")
-        else
-          password = random_password
-          add_random_password=true;
-        end
-
-        if items.length>= 4 and items[3].chomp(" ").length > 0;
-          user_alias = items[3].chomp(" ")
-        else
-          user_alias = login
-        end
-
-        if items.length>=5
-          remark = items[4].strip;
-        end
-
-        user = User.find_by_login(login)
-        if (user)
-          user.full_name = full_name
-          user.password = password
-          user.remark = remark
-        else
-          user = User.new({:login => login,
-                            :full_name => full_name,
-                            :password => password,
-                            :password_confirmation => password,
-                            :alias => user_alias,
-                            :remark => remark})
-        end
-        user.activated = true
-        user.save
-
-        if added_random_password
-          note << "'#{login}' (+)"
-        else
-          note << login
-        end
-      end
+    # add to group
+    if params[:add_to_group] == '1'
+      group = Group.find_by(id: params[:group_id])&.add_users_skip_existing(created_users)
+      group = Group.find_by(id: params[:group_id])&.add_users_skip_existing(updated_users)
     end
-    flash[:success] = 'User(s) ' + note.join(', ') + 
-      ' were successfully created.  ' +
-      '( (+) - created with random passwords.)'   
-    redirect_to :action => 'index'
+
+    # show flash
+    ok_text = ''
+    ok_text += "#{created_users.count} user(s) were created successfully. " if created_users.count > 0
+    ok_text += "#{updated_users.count} user(s) were updated successfully." if updated_users.count > 0
+    flash[:success] = ok_text unless ok_text.blank?
+    if error_logins.size > 0
+      flash[:error] = "Following user(s) failed to be created: " + error_logins.join(', ') + ". The errors of the first failed one are: " + error_msg
+    end
+    redirect_to action: 'index'
   end
 
   def edit
-    @user = User.find(params[:id])
   end
 
   def update
-    @user = User.find(params[:id])
-    if @user.update_attributes(user_params)
-      flash[:notice] = 'User was successfully updated.'
-      redirect_to :action => 'show', :id => @user
+    if @user.update(user_params)
+      redirect_to edit_user_admin_path(@user), notice: 'User was successfully updated.'
     else
-      render :action => 'edit'
+      render action: 'edit'
     end
   end
 
   def destroy
     User.find(params[:id]).destroy
-    redirect_to :action => 'index'
+    redirect_to action: 'index'
   end
 
-  def user_stat
-    if params[:commit] == 'download csv'
-      @problems = Problem.all
-    else
-      @problems = Problem.available_problems
-    end
-    @users = User.includes(:contests, :contest_stat).where(enabled: true) 
-    @scorearray = Array.new
-    @users.each do |u|
-      ustat = Array.new
-      ustat[0] = u
-      @problems.each do |p|
-        sub = Submission.find_last_by_user_and_problem(u.id,p.id)
-        if (sub!=nil) and (sub.points!=nil) and p and p.full_score
-          ustat << [(sub.points.to_f*100/p.full_score).round, (sub.points>=p.full_score)]
-        else
-          ustat << [0,false]
-        end
-      end
-      @scorearray << ustat
-    end
-    if params[:commit] == 'download csv' then
-      csv = gen_csv_from_scorearray(@scorearray,@problems)
-      send_data csv, filename: 'last_score.csv'
-    else
-      render template: 'user_admin/user_stat'
-    end
-  end
-
-  def user_stat_max
-    if params[:commit] == 'download csv'
-      @problems = Problem.all
-    else
-      @problems = Problem.available_problems
-    end
-    @users = User.includes(:contests).includes(:contest_stat).all
-    @scorearray = Array.new
-    #set up range from param
-    since_id = params.fetch(:since_id, 0).to_i
-    until_id = params.fetch(:until_id, 0).to_i
-    @users.each do |u|
-      ustat = Array.new
-      ustat[0] = u
-      @problems.each do |p|
-        max_points = 0
-        Submission.find_in_range_by_user_and_problem(u.id,p.id,since_id,until_id).each do |sub|
-          max_points = sub.points if sub and sub.points and (sub.points > max_points)
-        end
-        ustat << [(max_points.to_f*100/p.full_score).round, (max_points>=p.full_score)]
-      end
-      @scorearray << ustat
-    end
-
-    if params[:commit] == 'download csv' then
-      csv = gen_csv_from_scorearray(@scorearray,@problems)
-      send_data csv, filename: 'max_score.csv'
-    else
-      render template: 'user_admin/user_stat'
-    end
-  end
-
+  # GET — renders the import form / result page. The form posts to
+  # do_import. (Currently no view in the codebase actually contains the
+  # upload form; only the result template exists. Added form would belong
+  # in app/views/user_admin/import.html.haml above the result section.)
   def import
-    if params[:file]==''
-      flash[:notice] = 'Error importing no file'
-      redirect_to :action => 'index' and return
+  end
+
+  # POST — process an uploaded YAML file; render the import result.
+  def do_import
+    if params[:file].blank?
+      flash[:notice] = 'Error: no file uploaded'
+      redirect_to action: 'import' and return
     end
     import_from_file(params[:file])
+    render :import
   end
-
-  def random_all_passwords
-    users = User.all
-    @prefix = params[:prefix] || ''
-    @non_admin_users = User.find_non_admin_with_prefix(@prefix)
-    @changed = false
-    if request.request_method == 'POST'
-      @non_admin_users.each do |user|
-        password = random_password
-        user.password = password
-        user.password_confirmation = password
-        user.save
-      end
-      @changed = true
-    end
-  end
-
 
   # contest management
 
@@ -243,7 +170,7 @@ class UserAdminController < ApplicationController
     contest = Contest.find(params[:new_contest][:id])
     if !contest
       flash[:notice] = 'Error: no contest'
-      redirect_to :action => 'contests', :id =>contest_id
+      redirect_to action: 'contests', id: contest_id
     end
 
     note = []
@@ -251,9 +178,9 @@ class UserAdminController < ApplicationController
       u.contests = [contest]
       note << u.login
     end
-    flash[:notice] = 'User(s) ' + note.join(', ') + 
-      " were successfully reassigned to #{contest.title}." 
-    redirect_to :action => 'contests', :id =>contest.id
+    flash[:notice] = 'User(s) ' + note.join(', ') +
+      " were successfully reassigned to #{contest.title}."
+    redirect_to action: 'contests', id: contest.id
   end
 
   def add_to_contest
@@ -262,7 +189,7 @@ class UserAdminController < ApplicationController
     if user and contest
       user.contests << contest
     end
-    redirect_to :action => 'index'
+    redirect_to action: 'index'
   end
 
   def remove_from_contest
@@ -271,7 +198,7 @@ class UserAdminController < ApplicationController
     if user and contest
       user.contests.delete(contest)
     end
-    redirect_to :action => 'index'
+    redirect_to action: 'index'
   end
 
   def contest_management
@@ -281,20 +208,20 @@ class UserAdminController < ApplicationController
     contest = Contest.find(params[:contest][:id])
     if !contest
       flash[:notice] = 'You did not choose the contest.'
-      redirect_to :action => 'contest_management' and return
+      redirect_to action: 'contest_management' and return
     end
 
     operation = params[:operation]
 
-    if not ['add','remove','assign'].include? operation
+    if not ['add', 'remove', 'assign'].include? operation
       flash[:notice] = 'You did not choose the operation to perform.'
-      redirect_to :action => 'contest_management' and return
+      redirect_to action: 'contest_management' and return
     end
 
     lines = params[:login_list]
     if !lines or lines.blank?
       flash[:notice] = 'You entered an empty list.'
-      redirect_to :action => 'contest_management' and return
+      redirect_to action: 'contest_management' and return
     end
 
     note = []
@@ -318,7 +245,7 @@ class UserAdminController < ApplicationController
         end
 
         if params[:notification_emails]
-          send_contest_update_notification_email(user, contest) 
+          send_contest_update_notification_email(user, contest)
         end
 
         note << user.login
@@ -330,44 +257,62 @@ class UserAdminController < ApplicationController
       logout_users(users)
     end
 
-    flash[:notice] = 'User(s) ' + note.join(', ') + 
-      ' were successfully modified.  ' 
-    redirect_to :action => 'contest_management'    
+    flash[:notice] = 'User(s) ' + note.join(', ') +
+      ' were successfully modified.  '
+    redirect_to action: 'contest_management'
   end
 
   # admin management
 
   def admin
-    @admins = User.all.find_all {|user| user.admin? }
+    @admins = Role.find_by(name: 'admin')&.users || User.none
+    @tas = Role.find_by(name: 'ta')&.users || User.none
   end
 
-  def grant_admin
-    login = params[:login]
-    user = User.find_by_login(login)
-    if user!=nil
-      admin_role = Role.find_by_name('admin')
-      user.roles << admin_role
-    else
-      flash[:notice] = 'Unknown user'
-    end
-    flash[:notice] = 'User added as admins'
-    redirect_to :action => 'admin'
+  def admin_query
+    render json: {data: Role.find_by(name: 'admin')&.users || User.none}
   end
 
-  def revoke_admin
+  def ta_query
+    render json: {data: Role.find_by(name: 'ta')&.users || User.none}
+  end
+
+  # TURBO_STREAM
+  def modify_role
+    @toast = {title: "Modify role"}
+
     user = User.find(params[:id])
-    if user==nil
-      flash[:notice] = 'Unknown user'
-      redirect_to :action => 'admin' and return
-    elsif user.login == 'root'
-      flash[:notice] = 'You cannot revoke admisnistrator permission from root.'
-      redirect_to :action => 'admin' and return
+    role = Role.find_by_name(params[:role])
+    unless user && role
+      @toast[:body] = 'Unknown user or role'
+      @toast[:type] = :alert
+      render 'turbo_toast' and return
     end
-
-    admin_role = Role.find_by_name('admin')
-    user.roles.delete(admin_role)
-    flash[:notice] = 'User permission revoked'
-    redirect_to :action => 'admin'
+    if params[:command] == 'grant'
+      # grant role
+      if user.roles.where(name: role.name).any?
+        @toast[:body] = "User '#{user.login}' already has the role '#{role.name}'"
+        @toast[:type] = :alert
+      else
+        user.roles << role
+        @toast[:body] = "User '#{user.login}' has been granted the role '#{role.name}'"
+      end
+    else
+      # revoke role
+      if user.login == 'root' && role.name == 'admin'
+        @toast[:body] = 'You cannot revoke administrator permission from root.'
+        @toast[:type] = :alert
+        render 'turbo_toast' and return
+      end
+      if user == @current_user && role.name == 'admin'
+        @toast[:body] = 'You cannot revoke your own administrator role'
+        @toast[:type] = :alert
+        render 'turbo_toast' and return
+      end
+      user.roles.delete(role)
+      @toast[:body] ="The role '#{role.name}' has been revoked from User '#{user.login}'"
+    end
+    render 'turbo_toast'
   end
 
   # mass mailing
@@ -379,19 +324,19 @@ class UserAdminController < ApplicationController
     lines = params[:login_list]
     if !lines or lines.blank?
       flash[:notice] = 'You entered an empty list.'
-      redirect_to :action => 'mass_mailing' and return
+      redirect_to action: 'mass_mailing' and return
     end
 
     mail_subject = params[:subject]
     if !mail_subject or mail_subject.blank?
       flash[:notice] = 'You entered an empty mail subject.'
-      redirect_to :action => 'mass_mailing' and return
+      redirect_to action: 'mass_mailing' and return
     end
-    
+
     mail_body = params[:email_body]
     if !mail_body or mail_body.blank?
       flash[:notice] = 'You entered an empty mail body.'
-      redirect_to :action => 'mass_mailing' and return
+      redirect_to action: 'mass_mailing' and return
     end
 
     note = []
@@ -399,22 +344,26 @@ class UserAdminController < ApplicationController
     lines.split("\n").each do |line|
       user = User.find_by_login(line.chomp)
       if user
-        send_mail(user.email, mail_subject, mail_body)
+        MailSender.send_mail(user.email, mail_subject, mail_body)
         note << user.login
       end
     end
-    
-    flash[:notice] = 'User(s) ' + note.join(', ') + 
-      ' were successfully modified.  ' 
-    redirect_to :action => 'mass_mailing'
+
+    flash[:notice] = 'User(s) ' + note.join(', ') +
+      ' were successfully modified.  '
+    redirect_to action: 'mass_mailing'
   end
 
-  #bulk manage
+  # bulk manage
   def bulk_manage
-
-    begin 
-      @users = User.where('(login REGEXP ?) OR (remark REGEXP ?)',params[:regex],params[:regex]) if params[:regex]
-      @users.count if @users #i don't know why I have to call count, but if I won't exception is not raised
+    begin
+      if params[:filter_group]
+        @users = Group.find_by(id: params[:filter_group_id]).users
+      else
+        @users = User.all
+      end
+      @users = @users.where('(login REGEXP ?) OR (remark REGEXP ?)', params[:regex], params[:regex]) unless params[:regex].blank?
+      @users.count if @users # test the sql
     rescue Exception
       flash[:error] = 'Regular Expression is malformed'
       @users = nil
@@ -445,7 +394,7 @@ class UserAdminController < ApplicationController
         @group = Group.find(@action[:group_name])
         ok = []
         failed = []
-        @users.each do |user|  
+        @users.each do |user|
           begin
             @group.users << user
             ok << user.login
@@ -461,7 +410,7 @@ class UserAdminController < ApplicationController
 
   protected
 
-  def random_password(length=5)
+  def random_password(length = 5)
     chars = 'abcdefghijkmnopqrstuvwxyz23456789'
     newpass = ""
     length.times { newpass << chars[rand(chars.size-1)] }
@@ -478,13 +427,13 @@ class UserAdminController < ApplicationController
 
     # import country
     countries = {}
-    country_data.each_pair do |id,country|
+    country_data.each_pair do |id, country|
       c = Country.find_by_name(country[:name])
       if c!=nil
         countries[id] = c
         @import_log << "Found #{country[:name]}\n"
       else
-        countries[id] = Country.new(:name => country[:name])
+        countries[id] = Country.new(name: country[:name])
         countries[id].save
         @import_log << "Created #{country[:name]}\n"
       end
@@ -492,12 +441,12 @@ class UserAdminController < ApplicationController
 
     # import sites
     sites = {}
-    site_data.each_pair do |id,site|
+    site_data.each_pair do |id, site|
       s = Site.find_by_name(site[:name])
       if s!=nil
         @import_log << "Found #{site[:name]}\n"
       else
-        s = Site.new(:name => site[:name])
+        s = Site.new(name: site[:name])
         @import_log << "Created #{site[:name]}\n"
       end
       s.password = site[:password]
@@ -507,12 +456,12 @@ class UserAdminController < ApplicationController
     end
 
     # import users
-    user_data.each_pair do |id,user|
+    user_data.each_pair do |id, user|
       u = User.find_by_login(user[:login])
       if u!=nil
         @import_log << "Found #{user[:login]}\n"
       else
-        u = User.new(:login => user[:login])
+        u = User.new(login: user[:login])
         @import_log << "Created #{user[:login]}\n"
       end
       u.full_name = user[:name]
@@ -523,10 +472,9 @@ class UserAdminController < ApplicationController
       u.email = "empty-#{u.login}@none.com"
       if not u.save
         @import_log << "Errors\n"
-        u.errors.each { |attr,msg|  @import_log << "#{attr} - #{msg}\n" } 
+        u.errors.each { |attr, msg|  @import_log << "#{attr} - #{msg}\n" }
       end
     end
-
   end
 
   def logout_users(users)
@@ -540,19 +488,19 @@ class UserAdminController < ApplicationController
   end
 
   def send_contest_update_notification_email(user, contest)
-    contest_title_name = GraderConfiguration['contest.name']
+    contest_title_name = GraderConfiguration['ui.site_title']
     contest_name = contest.name
     mail_subject = t('contest.notification.email_subject', {
-                       :contest_title_name => contest_title_name,
-                       :contest_name => contest_name })
+                       contest_title_name: contest_title_name,
+                       contest_name: contest_name })
     mail_body = t('contest.notification.email_body', {
-                    :full_name => user.full_name,
-                    :contest_title_name => contest_title_name,
-                    :contest_name => contest.name,
+                    full_name: user.full_name,
+                    contest_title_name: contest_title_name,
+                    contest_name: contest.name
                   })
 
     logger.info mail_body
-    send_mail(user.email, mail_subject, mail_body)
+    MailSender.send_mail(user.email, mail_subject, mail_body)
   end
 
   def find_contest_and_user_from_contest_id(id)
@@ -569,39 +517,31 @@ class UserAdminController < ApplicationController
     return [@contest, @users]
   end
 
-  def gen_csv_from_scorearray(scorearray,problem)
-    CSV.generate do |csv|
-      #add header
-      header = ['User','Name', 'Activated?', 'Logged in', 'Contest']
-      problem.each { |p| header << p.name }
-      header += ['Total','Passed']
-      csv << header
-      #add data
-      scorearray.each do |sc|
-        total = num_passed = 0
-        row = Array.new
-        sc.each_index do |i|
-          if i == 0
-            row << sc[i].login
-            row << sc[i].full_name
-            row << sc[i].activated
-            row << (sc[i].try(:contest_stat).try(:started_at).nil? ? 'no' : 'yes')
-            row << sc[i].contests.collect {|c| c.name}.join(', ')
-          else
-            row << sc[i][0]
-            total += sc[i][0]
-            num_passed += 1 if sc[i][1]
-          end
-        end
-        row << total 
-        row << num_passed
-        csv << row
-      end
-    end
-  end
 
   private
     def user_params
-      params.require(:user).permit(:login,:password,:password_confirmation,:email, :alias, :full_name,:remark)
+      params.require(:user).permit(:login, :password, :password_confirmation, :email, :alias, :full_name, :remark, :enabled, group_ids: [])
+    end
+
+    def set_user
+      @user = User.find(params[:id])
+    end
+
+    # for action stat and user_stat
+    def build_stat
+      # when @contest is null, `chargeable_for` will ignore contest filtering
+      if @contest
+        range = (@contest.start)..(@contest.stop)
+        comment_count = Comment.chargeable_for(@user, range).group(:kind).count
+      else
+        comment_count = Comment.chargeable_for(@user).group(:kind).count
+      end
+
+      # count solve / attempted
+      max_score = @submission.group(:problem_id).pluck('problem_id, max(points) as max_point')
+      @summary = {count: max_score.count,
+                  solve: max_score.select { |x| x[1] == 100 }.count,
+                  hint: comment_count["hint"],
+                  llm_assist: comment_count["llm_assist"]}
     end
 end

@@ -1,37 +1,9 @@
 %h1 Editing site
-= error_messages_for :site
-= form_for(@site) do |f|
-  .row
-    .col-md-4
-      .form-group.field
-        = f.label :name, "Name"
-        = f.text_field :name, class: 'form-control'
-      .form-group.field
-        = f.label :password, "Password"
-        = f.text_field :password, class: 'form-control'
-      .form-group.field
-        = f.label :started, "Started"
-        = f.check_box :started, class: 'form-control'
-      .form-group.field
-        = f.label :start_time, "Start time"
-        -# = f.datetime_select :start_time, :include_blank => true
-        .input-group.date
-          = f.text_field :start_time, class:'form-control' , value: (@site.start_time ? @site.start_time.strftime('%d/%b/%Y %H:%M') : '')
-          %span.input-group-addon
-            %span.glyphicon.glyphicon-calendar
-      .actions
-        = f.submit "Update", class: 'btn btn-primary'
-    .col-md-8
+.row
+  .col-md-4
+    - content_for(:form_buttons) do
+      = link_to t(:back), sites_path, class: 'btn btn-outline-secondary mx-2'
+    = render partial: 'form', locals: {site: @site}
+  .col-md-8
 
-= link_to 'Show', @site
-|
-= link_to 'Back', sites_path
-
-
-:javascript
-  $('.input-group.date').datetimepicker({
-    format: 'DD/MMM/YYYY HH:mm',
-    locale: 'en',
-    showTodayButton: true,
-  });
 

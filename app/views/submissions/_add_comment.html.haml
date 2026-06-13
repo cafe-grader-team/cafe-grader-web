@@ -1,0 +1,20 @@
+#comment-modal.modal.fade{tabindex: -1,role: 'dialog', data: {submission_comment_target: 'modal'}}
+  .modal-dialog.modal-lg{role:'document'}
+    .modal-content
+      = form_with url: submission_comments_path(submission), 
+        data: {turbo: true, submission_comment_target: 'form', action: 'turbo:submit-end->submission-comment#handleSuccess'} do |f|
+        .modal-header
+          %h4 Add comment to ##{submission.id}
+          %button.btn-close{type: 'button', data: {bs: {dismiss: :modal}}, aria: {label: 'Close'}}
+        .modal-body
+          .alert.alert-info.mb-0
+            Write a comment for this submission in Markdown syntax. The comment will be visible to anyone that can view this submission.
+          .mt-2
+            = f.label :comment_title, 'Title', class: 'col-form-label'
+            = f.text_field :comment_title, class: 'form-control', data: {submission_comment_target: 'title'}
+          .mt-2
+            = f.label :comment_body, 'Comment', class: 'col-form-label'
+            = f.textarea :comment_body, class: 'form-control', data: {submission_comment_target: 'body'}
+        .modal-footer
+          %button.btn.btn-secondary{type: 'button', data: {bs: {dismiss: 'modal'}}} Close
+          %button.btn.btn-success{type: 'submit', data: {bs: {dis_miss: 'modal'}}} Save

@@ -1,0 +1,99 @@
+-# require *ds* as a dataset object
+
+-# Hidden forms for per-testcase actions. Each row's button uses HTML5
+-# `form="..."` + `formaction="..."` to submit through one of these forms
+-# with the correct per-testcase URL. One shared form per action type,
+-# not 3N forms per page, and no nested-form risk since these live at
+-# the partial root.
+.d-none
+  = form_with url: '#', html: {id: 'tc-input-form', data: {turbo: true}} do
+    -# CSRF token auto-added; body intentionally empty.
+  = form_with url: '#', html: {id: 'tc-sol-form', data: {turbo: true}} do
+    -# CSRF token auto-added; body intentionally empty.
+  = form_with url: '#', html: {id: 'tc-delete-form', data: {turbo: true, 'turbo-confirm': 'Delete this testcase? This cannot be undone.'}} do
+    -# CSRF token auto-added; body intentionally empty.
+
+%h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Testcases
+= form_with url: set_weight_dataset_path(ds), class: 'row row-cols-lg-auto g-3 align-items-center' do |f|
+  %input{type: 'hidden', name: 'active_dataset_tab', value: @active_dataset_tab, data: {'bs-tab-target': 'activeTabInput'}}
+  .col-12
+    .form-check.d-inline-flex.align-items-center.gap-1
+      Testcase config
+      %a{href: 'https://github.com/cafe-grader-team/cafe-grader-web/wiki/Configuring-testcases', target: '_blank'} 
+        %span.mi.md-18 help_center
+  .col-12
+    = text_field_tag :weight_param, nil, class: 'form-control'
+  .col-12
+    = f.submit 'Apply', class: 'btn btn-primary'
+-# Table classes follow the admin-table convention from CLAUDE.md
+-# (.table.table-hover.table-condense.align-middle). init-ui-component
+-# on the table so tooltips on the per-row action buttons get initialized
+-# when this partial renders (also reconnects when the
+-# :dataset_testcases turbo_frame is swapped after a delete).
+%table.table.datatable.table-hover.table-condense.align-middle{style: 'width: 100%', data: {controller: 'init-ui-component'}}
+  %thead
+    %tr
+      %th #
+      %th Codename
+      %th Group
+      %th Group Name
+      %th Weight
+      %th.text-end Actions
+  %tbody
+    - last_group = nil
+    - odd = true
+    - ds.testcases.display_order.each.with_index do |tc,idx|
+      - if tc.group != last_group
+        - odd = !odd
+        - last_group = tc.group
+      %tr{class: (odd ? 'bg-secondary bg-opacity-25' : '')}
+        %td= tc.num
+        %td= tc.code_name
+        %td= tc.group
+        %td= tc.group_name
+        %td= tc.weight
+        %td.text-end.py-1
+          .d-inline-flex.gap-1.justify-content-end
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'tc-input-form', formaction: testcase_input_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'View testcase input'}}
+              %span.mi.md-18 input
+            %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'submit', form: 'tc-sol-form', formaction: testcase_sol_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'View testcase output'}}
+              %span.mi.md-18 output
+            %button.btn.btn-outline-danger.border-0.py-1.px-2{type: 'submit', form: 'tc-delete-form', formaction: testcase_delete_dataset_path(ds, tc), data: {bs_toggle: 'tooltip', bs_title: 'Delete testcase'}}
+              %span.mi.md-18 delete
+%h5.fw-bold.text-body-emphasis.mt-5.mb-3.pb-2.border-bottom Import testcases
+- if @errors
+  .alert.alert-danger
+    The following errors occurred:
+    %ul
+      - @errors.each do |msg|
+        %li= msg
+- if local_assigns[:updated]
+  .alert.alert-info.alert-dismissible
+    = updated
+    %button.btn-close{data: {bs_dismiss: :alert}}
+
+.row
+  .col-12
+    = simple_form_for :import, url: import_testcases_problem_path(@dataset.problem), html: {multipart: true}, wrapper: :horizontal_form do |f|
+      %input{type: 'hidden', name: 'active_dataset_tab', data: {'bs-tab-target': 'activeTabInput'}}
+      = f.input :file, label: 'ZIP file', as: :file, wrapper: :horizontal_file
+      = f.input :input_pattern, input_html: { value: '*.in' }
+      = f.input :sol_pattern, input_html: { value: '*.sol' }
+      = f.input :target, label: "Import to dataset",  collection: [['As a new dataset','new'],['Into the selected dataset','replace']], checked: :new,  as: :radio_buttons, wrapper: :horizontal_collection, input_html: {onclick: 'update_import_target()'}
+      = f.input :dataset, collection: @dataset.problem.datasets, selected: @dataset.problem.live_dataset, wrapper: :horizontal_select
+      = f.button :submit, value: 'Import', class: 'btn-primary'
+- if @log
+  .row
+    .col-sm-12
+      %h4 Import log
+      %pre.import-log
+        = @log.join("\n")
+
+:javascript
+  function update_import_target() {
+    $('#import_dataset').prop('disabled',
+      $('input[name="import[target]"]:checked').val() == 'new'
+    );
+  }
+
+  update_import_target()

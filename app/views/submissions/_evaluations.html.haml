@@ -1,0 +1,90 @@
+-#
+  show evaluation with respect to the dataset
+  requires 
+    testcases, which should be @submission.problem.live_dataset.testcases.order(:group, :num)
+    evaluations_by_tcid, which should be Evaluation.where(submission: @submission, testcase: @testcases.ids).index_by(&:testcase_id)
+-# header row
+.alert.my-0.py-0
+  .row
+    .col.text-end
+      %strong Num
+    .col.text-end
+      %strong Time
+    .col.text-end
+      %strong Memory
+    .col-4
+      %strong Result
+    .col.text-end
+      %strong Score
+    .col.text-end
+      %strong Weight
+-# body row
+- groups = testcases.pluck(:group_name)
+- raw_sum_mode = testcases.first&.dataset&.st_raw_sum?
+- group_count, group_min, group_weight = 0,0,0
+- testcases.each.with_index do |tc,idx|
+  - ev = evaluations_by_tcid[tc.id]
+  - group_change = idx == 0 || groups[idx] != groups[idx-1]
+  - next_change = idx == groups.count-1 || groups[idx] != groups[idx+1]
+  - next_group_has_multiple = idx < groups.count-1 && groups[idx] == groups[idx+1]
+  - if group_change
+    - group_min = raw_sum_mode ? Float::INFINITY : 100
+    - group_weight = tc.weight
+    - group_count = 0
+
+
+  - if group_change 
+    -# start new group
+    - if next_group_has_multiple
+      :plain
+        <div class='alert alert-info my-2 py-1'>
+    - else
+      :plain
+        <div class='alert my-0 py-0'>
+
+  -# process this ev
+  - group_count += 1
+  - group_min = [group_min,ev&.score || 0].min
+
+  .row.mb-1
+    .col.text-end
+      =tc.num
+    .col.text-end
+      - if ev
+        %span= (ev&.time || 0) / 1000.0
+        %span.text-body-tertiary> s
+      - else
+        = "-"
+    .col.text-end
+      - if ev
+        %span= number_with_precision (ev&.memory || 0) / 1024.0, precision: 2
+        %span.text-body-tertiary> MB
+      - else
+        = "-"
+    .col-4
+      = render partial: 'evaluation_result', locals: {ev: ev} if ev
+    .col.text-end
+      - if ev
+        - if raw_sum_mode
+          = number_with_precision (ev&.score || 0), precision: 2, strip_insignificant_zeros: true
+        - else
+          = number_to_percentage (ev&.score || 0) *100, precision: 0
+      - else
+        = "-"
+    .col.text-end
+      = tc.weight
+
+  - if next_change
+    -# end current bundle
+    - if group_count > 1
+      -# display group summary
+      .row.mt-1
+        .col.text-center
+          %strong
+            Group "#{groups[idx-1]}" Minimum Score:
+            - if raw_sum_mode
+              = number_with_precision (group_min || 0), precision: 2, strip_insignificant_zeros: true
+            - else
+              = number_to_percentage (group_min || 0) *100, precision: 0
+    :plain
+      </div>

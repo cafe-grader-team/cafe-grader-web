@@ -1,0 +1,28 @@
+.card.shadow-sm.mb-3
+  .card-body
+    %h4 Grade
+    .row.mb-2.align-items-baseline
+      .col-4.text-end.text-secondary Total
+      .col
+        %span.fs-4= viva_grade.total_points
+        %span.text-secondary / 100
+    - if viva_grade.narrative.present?
+      .row.mb-2
+        .col-4.text-end.text-secondary Feedback
+        .col= simple_format(viva_grade.narrative)
+    - breakdown = viva_grade.rubric_breakdown
+    - if breakdown.any?
+      .row.mb-2
+        .col-4.text-end.text-secondary Rubric
+        .col
+          %table.table.table-sm.mb-0
+            - breakdown.each do |criterion, score|
+              %tr
+                %td= criterion
+                %td.text-end #{score}
+    - if @current_user&.admin? && viva_grade.cost
+      .row.mb-2
+        .col-4.text-end.text-secondary.small LLM cost
+        .col.small
+          #{viva_grade.llm_model}
+          | $#{format('%.4f', viva_grade.cost)}

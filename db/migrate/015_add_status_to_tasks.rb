@@ -1,4 +1,4 @@
-class AddStatusToTasks < ActiveRecord::Migration
+class AddStatusToTasks < ActiveRecord::Migration[4.2]
   def self.up
     add_column :tasks, :status, :integer
     add_column :tasks, :updated_at, :datetime

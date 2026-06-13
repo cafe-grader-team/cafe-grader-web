@@ -1,0 +1,3 @@
+= turbo_stream.update 'submission_comments', partial: 'submissions/comments', locals: {submission: @submission, has_processing: @submission.has_processing_comments?, show_edit: @show_edit}
+- if @toast
+  = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}

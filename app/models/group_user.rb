@@ -1,5 +1,7 @@
-class GroupUser < ActiveRecord::Base
+class GroupUser < ApplicationRecord
   self.table_name = 'groups_users'
+
+  enum :role, {user: 0, reporter: 1, editor: 2}
 
   belongs_to :user
   belongs_to :group

@@ -1,0 +1,7 @@
+-# replace the modal (and show it if necessary)
+= turbo_stream.update :msg_modal_main, partial: 'msg_modal', locals: local_assigns
+
+- id = local_assigns.fetch(:id, 'msg_modal')
+= turbo_stream.append 'js-response' do
+  :javascript
+    $("##{id}").modal('show')

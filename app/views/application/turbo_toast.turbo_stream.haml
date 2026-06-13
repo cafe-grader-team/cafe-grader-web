@@ -1,0 +1,16 @@
+-#
+  this view renders two things:
+
+  If @toast is not nil, it renders a toast, to the toast-area template, 
+    using the details from @toast and the partial application/_toast.html.haml
+    This is used to display a toast fot the user. Mainly it is a notification system.
+
+  If @event_dispatcher is not nil, it will render a div that triggers connection 
+    to a Stimulus controller that fires an event. This is used primarily to trigger
+    DataTables ajax refresh.
+
+  See contest_controllers for more example.
+- if @toast
+  = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}
+- if @event_dispatcher
+  = turbo_stream.append 'toast-area', partial: 'event_dispatcher', locals: {event_name: @event_dispatcher[:event_name], event_detail: @event_dispatcher[:event_detail]}

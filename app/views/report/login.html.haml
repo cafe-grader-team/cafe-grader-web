@@ -1,0 +1,122 @@
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 Logins
+
+.row{data: { controller: 'init-ui-component'}}
+  .col-md-6.mb-3
+    = render partial: 'shared/date_filter'
+  .col-md-6.mb-3
+    = render partial: 'user_select'
+
+.text-secondary.small.mb-3.d-flex.align-items-center
+  %span.mi.md-18.me-1 sync
+  Select filters above, then click Refresh to load data.
+
+.row.mb-3
+  .col-sm-12
+    %ul.nav.nav-tabs
+      %li.nav-item
+        %button.nav-link.active{data: {bs: {toggle: :tab, target: '#detail'}}} Detail
+      %li.nav-item
+        %button.nav-link{data: {bs: {toggle: :tab, target: '#summary'}}} Summary
+.row
+  .col-sm-12
+    .tab-content
+      .tab-pane.fade.show.active#detail
+        %table#detail-table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
+      .tab-pane.fade#summary
+        %table#summary-table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
+
+
+
+:javascript
+  window.addEventListener("load", function() {
+    detail_table = $('#detail-table').DataTable({
+      dom: "<'row'<'col-sm-3'B><'col-sm-3'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+      autoWidth: true,
+      pageLength: 25,
+      processing: true,
+      buttons: [
+        {
+          text: 'Refresh',
+          action: (e,dt,node,config) => {
+            detail_table.clear().draw()
+            detail_table.ajax.reload( () => { detail_table.columns.adjust().draw() } )
+            summary_table.clear().draw()
+            summary_table.ajax.reload( () => { summary_table.columns.adjust().draw() } )
+          }
+        },
+        'copy',
+        {
+          extend: 'excel',
+          title: 'Login detail',
+        }
+      ],
+      columns: [
+        {title: 'User', data: 'login_text'},
+        {title: 'Time', data: 'created_at'},
+        {title: 'IP', data: 'ip_address'},
+        {title: 'uuid', data: 'cookie', class: 'font-monospace'},
+      ],
+      ajax: {
+        url: '#{login_detail_query_report_path}',
+        type: 'POST',
+        data: (d) =>  {
+          d.since_datetime = $('#since_datetime').val()
+          d.until_datetime = $('#until_datetime').val()
+          d.users = $("input[name='users']:checked").val()
+          d.groups = $("#group_id").val()
+        },
+        dataType: 'json',
+        beforeSend: (request) => {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+      }, //end ajax
+    });
+
+    summary_table = $('#summary-table').DataTable({
+      dom: "<'row'<'col-sm-3'B><'col-sm-3'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+      autoWidth: true,
+      pageLength: 25,
+      processing: true,
+      buttons: [
+        {
+          text: 'Refresh',
+          action: (e,dt,node,config) => {
+            summary_table.clear().draw()
+            summary_table.ajax.reload( () => { summary_table.columns.adjust().draw() } )
+            detail_table.clear().draw()
+            detail_table.ajax.reload( () => { detail_table.columns.adjust().draw() } )
+          }
+        },
+        'copy',
+        {
+          extend: 'excel',
+          title: 'Login summary',
+        }
+      ],
+      columns: [
+        {title: 'User', data: 'login_text'},
+        {title: 'Login Count', data: 'count'},
+        {title: 'Earliest', data: 'earliest'},
+        {title: 'Latest', data: 'latest'},
+        {title: 'IP', data: 'ip_address'},
+        {title: 'uuid', data: 'cookie', class: 'font-monospace'},
+      ],
+      ajax: {
+        url: '#{login_summary_query_report_path}',
+        type: 'POST',
+        data: (d) =>  {
+          d.since_datetime = $('#since_datetime').val()
+          d.until_datetime = $('#until_datetime').val()
+          d.users = $("input[name='users']:checked").val()
+          d.groups = $("#group_id").val()
+        },
+        dataType: 'json',
+        beforeSend: (request) => {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+      }, //end ajax
+    });
+
+  });

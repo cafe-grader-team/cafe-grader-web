@@ -1,136 +1,121 @@
-:css
-  .hof_user { color: orangered; font-style: italic; }
-  .hof_language { color: green; font-style: italic; }
-  .hof_value { color: deeppink;font-style: italic; }
-  .info_param { font-weight: bold;text-align: right; }
-  .tooltip {
-    font-family: Verdana,sans-serif;
-    font-weight: normal;
-    text-align: left;
-    font-size: 1.0em;
-    color: black;
-    line-height: 1.1;
-    display: none;
-    min-width: 20em;
-    position: absolute;
-    left: 25px;
-    bottom: 5px;
-    border: 1px solid;
-    padding: 5px;
-    background-color: #FFF;
-    word-wrap: break-word;
-    z-index: 9999;
-    overflow: auto;
-  }
+.row.mb-4
+  -# submission history graph
+  .col-md-8
+    .card.card-shadow.mb-3
+      .card-body
+        %h5.fw-bold.mb-3 Submission History
+        %canvas#chart{height: '50px', data: { controller: 'chart', chart_data_value: @chart_dataset }}
 
-
-.container
-  .row
-    .col-md-4
-      %h2 Overall Stat
-      %table.table.table-hover
-        %thead
-          %tr
-            %th 
-            %th 
-        %tbody
-          %tr
-            %td.info_param Submissions
-            %td= @summary[:count]
-          %tr
-            %td.info_param Solved/Attempted User
-            %td #{@summary[:solve]}/#{@summary[:attempt]} (#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%)
-          - if @best
-            %tr
-              %td.info_param Best Runtime
-              %td
-                by #{link_to @best[:runtime][:user], stat_user_path(@best[:runtime][:user_id])} 
-                %br
-                using <span class="text-success">#{@best[:runtime][:lang]}</span> 
-                %br
-                with <span class="text-success">#{@best[:runtime][:value] * 1000} milliseconds</span> 
-                %br
-                at submission
-                = link_to "#" + @best[:runtime][:sub_id].to_s, submission_path(@best[:runtime][:sub_id]) 
-
-            %tr
-              %td.info_param
-                Best Memory Usage
-                %sup{ id: "xmem_remark",
-                  style: "position:relative; color: blue;",
-                  data: {toggle: 'tooltip', placement: 'top', animation: 'false', delay: 20},
-                  title: "This counts only for submission with 100% score.  Right now, java is excluded from memory usage competition. (Because it always uses 2GB memory...)"} 
-                  [?]
-              %td
-                by #{link_to @best[:memory][:user], stat_user_path(@best[:memory][:user_id])} 
-                %br
-                using <span class="text-success">#{@best[:memory][:lang]}</span> 
-                %br
-                with <span class="text-success">#{number_with_delimiter(@best[:memory][:value])} kbytes </span> 
-                %br
-                at submission
-                = link_to "#" + @best[:memory][:sub_id].to_s, submission_path(@best[:memory][:sub_id])
-
-            %tr
-              %td.info_param Shortest Code
-              %td
-                by #{link_to @best[:length][:user], stat_user_path(@best[:length][:user_id])} 
-                %br
-                using <span class="text-success">#{@best[:length][:lang]}</span> 
-                %br
-                with  <span class="text-success">#{@best[:length][:value]} bytes</span> 
-                %br
-                at submission
-                = link_to "#" + @best[:length][:sub_id].to_s, submission_path(@best[:length][:sub_id])
-
-            %tr
-              %td.info_param First solver
-              %td
-                - if @best[:first][:user] != '(NULL)'
-                  #{link_to @best[:first][:user], stat_user_path(@best[:first][:user_id])} is the first solver 
-                  %br
-                  using <span class="text-success">#{@best[:first][:lang]}</span> 
-                  %br
-                  on <span class="text-success">#{@best[:first][:value]}</span> 
-                  %br
-                  at submission
-                  = link_to "#" + @best[:first][:sub_id].to_s, submission_path( @best[:first][:sub_id])
-                - else
-                  no first solver
-    .col-md-8
-      - if @best
-        %h2 By Language
-        %table.table.table-hover
-          %thead
-            %tr
-              %th Language
-              %th Best runtime (ms)
-              %th Best memory (kbytes)
-              %th Shortest Code (bytes)
-              %th First solver
+  -# submission stat card
+  .col-md-4
+    .card.card-shadow.mb-3
+      .card-body
+        %h5.fw-bold.mb-3 General Info
+        %table.table.table-sm.table-borderless.mb-0
           %tbody
-            - @by_lang.each do |lang,value|
-              %tr
-                %td= lang
-                %td
-                  = link_to value[:runtime][:user], stat_user_path(value[:runtime][:user_id])
-                  %br
-                  = "#{(value[:runtime][:value] * 1000).to_i} @"
-                  = link_to "#" + value[:runtime][:sub_id].to_s, submission_path( value[:runtime][:sub_id])
-                %td
-                  = link_to value[:memory][:user], stat_user_path( value[:memory][:user_id])
-                  %br
-                  = "#{number_with_delimiter(value[:memory][:value])} @"
-                  = link_to "#" + value[:memory][:sub_id].to_s, submission_path(value[:memory][:sub_id])
-                %td
-                  = link_to value[:length][:user], stat_user_path(value[:length][:user_id])
-                  %br
-                  = "#{value[:length][:value]} @"
-                  = link_to "#" + value[:length][:sub_id].to_s, submission_path(value[:length][:sub_id])
-                %td
-                  - if value[:first][:user] != '(NULL)' #TODO: i know... this is wrong...
-                    = link_to value[:first][:user], stat_user_path(value[:first][:user_id])
-                    %br
-                    = "#{value[:first][:value]} @"
-                    = link_to "#" + value[:first][:sub_id].to_s, submission_path( value[:first][:sub_id])
+            %tr
+              %td.text-secondary Submissions
+              %td.fw-semibold.text-end= number_with_delimiter(@summary[:count])
+            %tr
+              %td.text-secondary Solved
+              %td.fw-semibold.text-end= @summary[:solve]
+            %tr
+              %td.text-secondary Attempted
+              %td.fw-semibold.text-end= @summary[:attempt]
+            %tr
+              %td.text-secondary Solve Rate
+              %td.fw-semibold.text-end
+                - if @summary[:attempt] > 0
+                  = "#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%"
+                - else
+                  %span.text-muted —
 
+.row
+  - if @model_subs.any?
+    .col-md-4
+      .card.card-shadow.mb-3
+        .card-body
+          %h5.fw-bold.mb-3 Model Submissions
+          %table.table.table-hover.table-condense.align-middle.mb-0
+            %thead
+              %tr
+                %th Submission
+                %th Author
+            %tbody
+              - @model_subs.each do |sub|
+                %tr
+                  %td
+                    = link_to "##{sub.id}", submission_path(sub), class: 'text-decoration-none'
+                    %span.text-muted= "(#{sub.language.pretty_name})"
+                  %td= sub.user.full_name
+
+  - if @best
+    %div{class: @model_subs.any? ? 'col-md-8' : 'col-12'}
+      .card.card-shadow.mb-3
+        .card-body
+          %h5.fw-bold.mb-3 Top Submissions
+          %table.table.table-hover.table-condense.align-middle.mb-0
+            %thead
+              %tr
+                %th Language
+                %th Best Runtime
+                %th Best Memory
+                %th Shortest Code
+                %th First Solver
+            %tbody
+              %tr.bg-warning-subtle
+                %td
+                  %span.fw-bold Overall
+                %td
+                  .fw-semibold.text-success #{(@best[:runtime][:value]).to_i} ms
+                  .small.text-muted
+                    = link_to @best[:runtime][:user], stat_user_admin_path(@best[:runtime][:user_id]), class: 'text-decoration-none'
+                    = "· #{@best[:runtime][:lang]}"
+                    = link_to "##{@best[:runtime][:sub_id]}", submission_path(@best[:runtime][:sub_id]), class: 'text-decoration-none text-muted'
+                %td
+                  .fw-semibold.text-success #{number_with_delimiter((@best[:memory][:value]).to_i)} kB
+                  .small.text-muted
+                    = link_to @best[:memory][:user], stat_user_admin_path(@best[:memory][:user_id]), class: 'text-decoration-none'
+                    = "· #{@best[:memory][:lang]}"
+                    = link_to "##{@best[:memory][:sub_id]}", submission_path(@best[:memory][:sub_id]), class: 'text-decoration-none text-muted'
+                %td
+                  .fw-semibold.text-success #{number_with_delimiter((@best[:length][:value]).to_i)} bytes
+                  .small.text-muted
+                    = link_to @best[:length][:user], stat_user_admin_path(@best[:length][:user_id]), class: 'text-decoration-none'
+                    = "· #{@best[:length][:lang]}"
+                    = link_to "##{@best[:length][:sub_id]}", submission_path(@best[:length][:sub_id]), class: 'text-decoration-none text-muted'
+                %td
+                  - if @best[:first][:user] != '(NULL)'
+                    .fw-semibold.text-success= @best[:first][:value]
+                    .small.text-muted
+                      = link_to @best[:first][:user], stat_user_admin_path(@best[:first][:user_id]), class: 'text-decoration-none'
+                      = "· #{@best[:first][:lang]}"
+                      = link_to "##{@best[:first][:sub_id]}", submission_path(@best[:first][:sub_id]), class: 'text-decoration-none text-muted'
+                  - else
+                    %span.text-muted —
+              - @by_lang.each do |lang, value|
+                %tr
+                  %td= lang
+                  %td
+                    .fw-semibold #{(value[:runtime][:value]).to_i} ms
+                    .small.text-muted
+                      = link_to value[:runtime][:user], stat_user_admin_path(value[:runtime][:user_id]), class: 'text-decoration-none'
+                      = link_to "##{value[:runtime][:sub_id]}", submission_path(value[:runtime][:sub_id]), class: 'text-decoration-none text-muted'
+                  %td
+                    .fw-semibold #{number_with_delimiter(value[:memory][:value])} kB
+                    .small.text-muted
+                      = link_to value[:memory][:user], stat_user_admin_path(value[:memory][:user_id]), class: 'text-decoration-none'
+                      = link_to "##{value[:memory][:sub_id]}", submission_path(value[:memory][:sub_id]), class: 'text-decoration-none text-muted'
+                  %td
+                    .fw-semibold #{number_with_delimiter(value[:length][:value])} bytes
+                    .small.text-muted
+                      = link_to value[:length][:user], stat_user_admin_path(value[:length][:user_id]), class: 'text-decoration-none'
+                      = link_to "##{value[:length][:sub_id]}", submission_path(value[:length][:sub_id]), class: 'text-decoration-none text-muted'
+                  %td
+                    - if value[:first][:user] != '(NULL)'
+                      .fw-semibold= value[:first][:value]
+                      .small.text-muted
+                        = link_to value[:first][:user], stat_user_admin_path(value[:first][:user_id]), class: 'text-decoration-none'
+                        = link_to "##{value[:first][:sub_id]}", submission_path(value[:first][:sub_id]), class: 'text-decoration-none text-muted'
+                    - else
+                      %span.text-muted —

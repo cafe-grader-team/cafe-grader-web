@@ -1,0 +1,59 @@
+/ Knowledge Card: Tags
+/ border-warning: Matches the yellow "alert" vibe from your original screenshot but cleaner
+.card.border-0.shadow-sm.border-start.border-4.border-info
+  .card-body.p-4
+    
+    / --- Header ---
+    .d-flex.align-items-center.mb-4
+      .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+        %span.mi.md-24.fill label
+      
+      %div
+        %h5.fw-bold.text-dark.mb-0 Tagging System
+        %small.text-secondary Labels for organization, filtering, and special behaviors.
+
+    / --- Content Grid ---
+    / g-4: Adds more space between items since we don't have borders to separate them
+    .row.g-4
+      
+      / 1. Public Tags
+      .col-lg-6.col-xxl-4
+        .d-flex.gap-3
+          / Icon: Visual anchor
+          .text-info.flex-shrink-0
+            %span.mi.md-24 sell
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Public Tags
+            %p.small.text-muted.mb-0.lh-sm
+              Visible under the problem name. Used for general categorization (e.g., "DP", "Graph"). Supports custom colors.
+
+      / 2. Topic Tags
+      .col-lg-6.col-xxl-4
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 filter_list
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Topic Tags
+            %p.small.text-muted.mb-0.lh-sm
+              Appear at the top of the problem list. Clicking one instantly
+              %strong filters
+              the view to show only relevant problems.
+
+      / 3. Special Purpose (LLM/Automation)
+      .col-lg-6.col-xxl-4
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 auto_awesome
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Special Purpose
+            %p.small.text-muted.mb-0.lh-sm
+              Annotates problems with extra metadata. 
+              %br/
+              %span.text-secondary-emphasis.fst-italic Example:
+              Tags like 
+              %code.small.text-dark LLM Prompt
+              can trigger specific automated behaviors.
+

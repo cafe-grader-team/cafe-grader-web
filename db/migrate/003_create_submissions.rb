@@ -1,6 +1,6 @@
-class CreateSubmissions < ActiveRecord::Migration
+class CreateSubmissions < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :submissions do |t|
+    create_table :submissions, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column :user_id, :integer
       t.column :problem_id, :integer
       t.column :language_id, :integer

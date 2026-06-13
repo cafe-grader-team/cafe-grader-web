@@ -1,0 +1,11 @@
+group_a:
+  name: GroupA
+  description: First group
+  enabled: true
+  hidden: false
+
+group_b:
+  name: GroupB
+  description: Second group (disabled)
+  enabled: false
+  hidden: false

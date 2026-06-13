@@ -1,0 +1,8 @@
+= render partial: 'toggle_button',
+                  locals: {button_id: "#group-enabled-#{@group.id}",button_on: @group.enabled }
+:plain
+  r = $("#group-#{@group.id}");
+  r.removeClass('success');
+  r.removeClass('danger');
+  r.addClass("#{@group.enabled? ? 'success' : 'danger'}");
+

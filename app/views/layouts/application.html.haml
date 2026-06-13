@@ -1,16 +1,65 @@
 <!DOCTYPE html>
 %html
-%head
-  %title= GraderConfiguration['contest.name']
-  = stylesheet_link_tag "application", params[:controller], :media => "all"
-  = javascript_include_tag "application", params[:controller]
-  = csrf_meta_tags
-  = content_for :header
-  = yield :head
+  %head
+    %title= GraderConfiguration['ui.site_title']
+    = favicon_link_tag 'icon.svg', type: 'image/svg+xml'
+    = stylesheet_link_tag "application", :media => "all"
+    = stylesheet_link_tag "tempus-dominus/tempus-dominus", :media => "all"
+    = stylesheet_link_tag "highlight/felipec.min"
+    = stylesheet_link_tag "select2/select2.min", :media => "all"
+    = stylesheet_link_tag "select2/select2-bootstrap-5-theme.min", :media => "all"
+    = stylesheet_link_tag "datatables/datatables.min"
+    = csrf_meta_tags
+    = csp_meta_tag
+    = javascript_importmap_tags
+    = content_for :header
+    = yield :head
+    %meta{name: :viewport, content: "width=device-width, initial-scale=1"}
 
-%body
-  = render 'layouts/header'
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  /= content_tag(:p,flash[:notice],class: 'alert alert-success') if flash[:notice]!=nil
-  = flash_messages
-  = yield
+    = render partial: 'layouts/js_route'
+    = render partial: 'layouts/js_ui'
+
+  %body.bg-light{ 'data-controller': "initialize #{@stimulus_controller}" }
+    - unless local_assigns[:skip_header]
+      = render 'layouts/header'
+
+    /= content_tag(:p,flash[:notice],class: 'alert alert-success') if flash[:notice]!=nil
+    #main-content{class: (@container_fluid.nil? || @container_fluid) ? 'container-fluid' : 'container' }
+      - flash.each do |msg_type, message|
+        .alert.alert-dismissible.my-2.fade.show{class: bootstrap_class_for(msg_type)}
+          = message
+          %button.btn-close{type: 'button', 'data-bs-dismiss': :alert}
+      = yield
+
+    -# for msg modal, we have a turbo_frame, ready to be shown via turbo
+      render partial: 'msg_modal_show', locals: {do_popup: true, header_msg: 'Adding users failed', body_msg: e.message}
+    = turbo_frame_tag :msg_modal_main, data: {turbo: true}
+
+    -# -- for adding toast --
+      to respond with additional toast, use
+      = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}
+    = turbo_frame_tag :toast_main, data: {turbo: true} do
+      #toast-area.toast-container.position-fixed.bottom-0.start-0.p-3
+        / place holder
+
+    -# -- for appending javascript response --
+      to response with a javascript, use
+      = turbo_stream.append 'js-response' do
+        :javascript
+          <your code here>
+      Also, if the response is html, it can directly contain :javascript tag.
+    = turbo_frame_tag :js_response, data: {turbo: true} do
+      #js-response
+        / place holder
+
+  %footer.footer.py-1.bg-light.fixed-bottom.border-top
+    .container-fluid.px-3.text-center.small.text-body-secondary
+      ☕
+      %a.text-decoration-none.fw-medium{href: 'https://github.com/nattee/cafe-grader-web'} cafe-grader
+      %span.mx-1.opacity-50 &middot;
+      -# both constants are set in the initializers/version.rb
+      %span.font-monospace rev #{APP_VERSION}#{APP_VERSION_SUFFIX}
+

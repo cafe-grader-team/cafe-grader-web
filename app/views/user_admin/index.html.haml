@@ -1,106 +1,81 @@
-%h1 Users
+.row.my-2
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Management
+      %h2.fw-bold.text-dark.mb-0 Users
 
-.panel.panel-primary
-  .panel-title.panel-heading
-    Quick Add
-  .panel-body
-    = form_tag( {method: 'post'}, {class: 'form-inline'})  do
-      .form-group
-        = label_tag 'user_login', 'Login'
-        = text_field 'user', 'login', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_full_name', 'Full Name'
-        = text_field 'user', 'full_name', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_password', 'Password'
-        = text_field 'user', 'password', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_password_confirmation', 'Confirm'
-        = text_field 'user', 'password_confirmation', :size => 10,class: 'form-control'
-      .form-group
-        = label_tag 'user_email', 'email'
-        = text_field 'user', 'email', :size => 10,class: 'form-control'
-      =submit_tag "Create", class: 'btn btn-primary'
+    .d-flex.flex-wrap.gap-2
+      = link_to mdi('person_add', 'me-1') + 'Add User', { :action => 'new' }, class: 'btn btn-sm btn-success'
+      = link_to mdi('group_add', 'me-1') + 'Import Users', { :action => 'new_list' }, class: 'btn btn-sm btn-outline-success'
+      = link_to mdi('checklist', 'me-1') + 'Bulk Manage', { action: :bulk_manage }, class: 'btn btn-sm btn-outline-secondary'
+      = link_to mdi('admin_panel_settings', 'me-1') + 'Admins', { :action => 'admin' }, class: 'btn btn-sm btn-outline-secondary'
+  .col-md-7.mb-3
+    = render partial: 'user_help'
 
-.panel.panel-primary
-  .panel-title.panel-heading
-    Import from site management
-  .panel-body
-    = form_tag({:action => 'import'}, :multipart => true,class: 'form form-inline') do
-      .form-group
-        = label_tag :file, 'File:'
-        .input-group
-          %span.input-group-btn
-            %span.btn.btn-default.btn-file
-              Browse
-              = file_field_tag 'file'
-          = text_field_tag '' , nil, {readonly: true, class: 'form-control'}
-      = submit_tag 'Submit', class: 'btn btn-default'
+.card.card-shadow
+  .card-body
+    %table#main-table.table.table-hover.table-condense.datatable{'data-controller': 'init-ui-component'}
+      %thead
+        %tr
+          %th Login
+          %th Full name
+          %th email
+          %th Remark
+          %th.text-center
+            Activated
+            = render partial: 'application/tooltip', locals: {title: 'User has already confirmed their email address'}
+          %th.text-center
+            Enabled
+            = render partial: 'application/tooltip', locals: {title: 'Allow the user to log in?'}
+          %th
 
-
-%p
-  = link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
-  = link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}
-  = link_to 'Bulk Manage', bulk_manage_user_admin_path , { class: 'btn btn-default btn-info'}
-  = link_to 'View administrators',{ :action => 'admin'}, { class: 'btn btn-default '}
-  = link_to 'Random passwords',{ :action => 'random_all_passwords'}, { class: 'btn btn-default '}
-  = link_to 'View active users',{ :action => 'active'}, { class: 'btn btn-default '}
-  = link_to 'Mass mailing',{ :action => 'mass_mailing'}, { class: 'btn btn-default '}
-
-- if GraderConfiguration.multicontests?
-  %br/
-  %b Multi-contest:
-  = link_to '[Manage bulk users in contests]', :action => 'contest_management'
-  View users in:
-  - @contests.each do |contest|
-    = link_to "[#{contest.name}]", :action => 'contests', :id => contest.id
-  = link_to "[no contest]", :action => 'contests', :id => 'none'
-
--# Total #{@user_count} users |
--# - if !@paginated
--#   Display all users.
--#   \#{link_to '[show in pages]', :action => 'index', :page => '1'}
--# - else
--#   Display in pages.
--#   \#{link_to '[display all]', :action => 'index', :page => 'all'} |
--#   \#{will_paginate @users, :container => false}
-
-
-%table.table.table-hover.table-condense.datatable
-  %thead
-    %th Login
-    %th Full name
-    %th email
-    %th Remark
-    %th 
-      Activated
-      %sup{class: 'text-primary',data: {toggle: 'tooltip', placement: 'top'}, title: 'User has already confirmed the email?' } [?]
-    %th 
-      Enabled
-      %sup{class: 'text-primary',data: {toggle: 'tooltip', placement: 'top'}, title: 'Allow the user to login?' } [?]
-    %th Last IP
-    %th
-    %th
-    %th
-    %th
-  - for user in @users
-    %tr
-      %td= link_to user.login, stat_user_path(user)
-      %td= user.full_name
-      %td= user.email
-      %td= user.remark
-      %td= toggle_button(user.activated?, toggle_activate_user_path(user),"toggle_activate_user_#{user.id}")
-      %td= toggle_button(user.enabled?, toggle_enable_user_path(user),"toggle_enable_user_#{user.id}")
-      %td= user.last_ip
-      %td= link_to 'Clear IP', {:action => 'clear_last_ip', :id => user, :page=>params[:page]}, :confirm => 'This will reset last logging in ip of the user, are you sure?', class: 'btn btn-default btn-xs btn-block'
-      %td= link_to 'Show', {:action => 'show', :id => user}, class: 'btn btn-default btn-xs btn-block'
-      %td= link_to 'Edit', {:action => 'edit', :id => user}, class: 'btn btn-default btn-xs btn-block'
-      %td= link_to 'Destroy', user_admin_destroy_path(user), data: {confirm: 'Are you sure?'}, method: :delete, class: 'btn btn-danger btn-xs btn-block'
-%br/
-= link_to '+ New user', { :action => 'new' }, { class: 'btn btn-success '}
-= link_to '+ New list of users', { :action => 'new_list' }, { class: 'btn btn-success '}
+-# hidden user action form
+= form_with url: user_action_user_admin_index_path, html: {'data-user-admin--index-target': 'userForm', id: 'do-user-form',
+  data: {turbo: true, action: 'turbo:submit-end->user-admin--index#afterUserAction', 'turbo-confirm': 'placeholder'}} do |f|
+  = f.hidden_field :user_id, 'data-user-admin--index-target': 'userFormUserID'
+  = f.hidden_field :command, 'data-user-admin--index-target': 'userFormCommand'
 
 :javascript
-  $('.datatable').DataTable({
-    'pageLength': 50
-  });
+  window.addEventListener("load", function() {
+    $('#main-table').DataTable({
+      processing: true,
+      rowId: 'id',
+      destroy: true,
+      'pageLength': 50,
+      ajax: {
+        url: "#{index_query_user_admin_index_path}",
+        type: 'POST',
+        headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), },
+        dataSrc: function(json) {
+          return json.data
+        }
+      },
+      layout: {
+        topStart: 'info',
+        topEnd: 'search',
+      },
+      columns: [ 
+        //login with stat link
+        {data: 'login', render: cafe.dt.render.link(null, {path: '#{stat_user_admin_path(-123)}'})},
+        {data: 'full_name'},
+        {data: 'email'},
+        {data: 'remark'},
+        // activated status
+        {data: 'activated', render: cafe.dt.render.yes_no_pill(), className: 'text-center' },
+        // enabled switch
+        {data: 'id', render: cafe.dt.render.button(null, {element_type: 'switch', action: 'user-admin--index#postUserAction', command: 'toggle', checked_data_field: 'enabled'})},
+        // actions
+        {
+          data: 'id',
+          className: 'align-middle py-1 pr-2',
+          render: function(data, type, row) {
+            let clear_btn = cafe.dt.render.button(`${cafe.msi('lock_reset')} Clear`, {element_type: 'link', className: 'btn btn-flex btn-outline-secondary border-0', action: 'user-admin--index#postUserAction', command: 'clear_ip'})(data, type, row);
+            let edit_btn = cafe.dt.render.link(`${cafe.msi('edit')} Edit`, {className: 'btn btn-flex btn-outline-primary border-0', path: '#{edit_user_admin_path(-123)}'})(data, type, row);
+            let destroy_btn = cafe.dt.render.link(`${cafe.msi('delete')}`, {className: 'btn btn-flex btn-outline-danger border-0', path: '#{user_admin_path(-123)}', method: 'delete', confirm: 'Really delete this user?'})(data, type, row);
+            return `<div class="d-flex gap-1 justify-content-end">${clear_btn} ${edit_btn} ${destroy_btn}</div>`;
+          }
+        }
+      ],
+      columnDefs: [{orderable: false, targets: [4,5,6]} ],
+    });
+  })

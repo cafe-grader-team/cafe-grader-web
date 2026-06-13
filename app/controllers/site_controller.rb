@@ -1,6 +1,6 @@
 class SiteController < ApplicationController
 
-  before_filter :site_admin_authorization, :except => 'login'
+  before_action :site_admin_authorization, :except => 'login'
 
   def login
     # Site administrator login

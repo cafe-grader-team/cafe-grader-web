@@ -1,11 +1,337 @@
-%h1
-  Contest: #{h @contest.title}
-.infobox
-  %b Go back to:
-  [#{link_to 'contest management', :controller => 'contest_management', :action => 'index'}]
-%p
-  %b Enabled:
-  = h @contest.enabled
-= link_to 'Edit', edit_contest_path(@contest)
-|
-= link_to 'Back', contests_path
+= render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'Management' } ]
+
+.contest-management-wrapper{data: {controller: 'contest init-ui-component'}}
+  -# hidden action forms (required by Stimulus contest controller)
+  .d-none
+    = form_with url: do_user_contest_path, html: {'data-contest-target': 'userForm', id: 'do-user-form',
+      data: {turbo: true, 'turbo-confirm': 'placeholder'}} do |f|
+      = f.hidden_field :user_id, 'data-contest-target': 'userFormUserID'
+      = f.hidden_field :command, 'data-contest-target': 'userFormCommand'
+
+    = form_with url: extra_time_user_contest_path, html: {'data-contest-target': 'userExtraTimeForm', id: 'extra-time-user-form',
+      data: {turbo: true}} do |f|
+      = f.hidden_field :row_id, 'data-contest-target': 'userExtraTimeFormRowID'
+      = f.hidden_field :start_offset, 'data-contest-target': 'userExtraTimeFormStart'
+      = f.hidden_field :end_offset, 'data-contest-target': 'userExtraTimeFormEnd'
+
+    = form_with url: do_problem_contest_path, html: {'data-contest-target': 'problemForm',
+      data: {turbo: true}} do |f|
+      = f.hidden_field :problem_id, 'data-contest-target': 'problemFormProblemID'
+      = f.hidden_field :command, 'data-contest-target': 'problemFormCommand'
+
+  .d-flex.justify-content-between.align-items-center.mb-3
+    .d-flex.align-items-center.gap-2
+      %h2.fw-bold.text-dark.mb-0.font-monospace
+        = @contest.name
+      %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+        %small Manage
+
+    .d-flex.gap-2
+      = link_to mdi(:summarize, 'me-1') + 'Watch', view_contest_path(@contest), class: 'btn btn-outline-primary btn-flex'
+      = link_to mdi(:edit, 'me-1') + 'Edit', edit_contest_path(@contest), class: 'btn btn-primary btn-flex'
+
+  .row.gx-3
+    .col-md-6
+      .card.card-shadow.mb-3
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill emoji_events
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Contest Detail
+              .text-secondary.small Overview and scheduling
+
+          .row.gy-3
+            = key_pair(obj: @contest, field: :name, label: 'Name', icon: :label)
+            = key_pair(obj: @contest, field: :description, width: 4, label: 'Description', icon: :description)
+            = key_pair(obj: @contest, field: :enabled, as: :yes_no, label: 'Enabled', icon: :visibility)
+            = key_pair(label: 'Start Time', value: @contest&.start&.strftime("%Y-%b-%d %H:%M"), icon: :schedule)
+            = key_pair(label: 'Finish Time', value: @contest&.stop&.strftime("%Y-%b-%d %H:%M"), icon: :event_available)
+            = key_pair(obj: @contest, field: :finalized, as: :yes_no, label: 'Finalized', icon: :lock)
+    .col-md-6
+      .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+        .card-body.p-4
+          .d-flex.align-items-center.mb-3
+            .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+              %span.mi.md-24.fill lightbulb
+            %div
+              %h5.fw-bold.text-dark.mb-0 Tips
+              %small.text-secondary Quick guide to contest behavior.
+
+          .text-secondary.small
+            %ul.mb-0.ps-3
+              %li 
+                The site must be in the 
+                %strong.text-dark Contest Mode
+                for a contest to be displayed to users.
+              %li A contest is shown to users only if it is enabled and the current time falls within its start and stop time range.
+              %li
+                When a contest is
+                %strong.text-dark finalized
+                , users cannot submit to the contest and the contests can no longer be modified.
+
+  .row.mb-3
+    .col-12
+      .card.shadow-sm
+        .card-body
+          %ul.nav.nav-tabs.mb-3
+            %li.nav-item
+              %button.nav-link.active{data: {bs: {toggle: 'tab',target: '#tab-contest-user'},
+                action: 'shown.bs.tab->contest#tabChange', table: {id: 'user_table',init: 'no'}}}
+                .d-inline-flex.align-items-center
+                  %span.mi
+                    person
+                  Users
+            %li.nav-item
+              %button.nav-link{data: {bs: {toggle: 'tab',target: '#tab-contest-problem'}, 
+                action: 'shown.bs.tab->contest#tabChange', table: {id: 'problem_table',init: 'no'}}}
+                .d-inline-flex.align-items-center
+                  %span.mi
+                    task
+                  Problems
+            %li.nav-item
+              %button.nav-link{data: {bs: {toggle: 'tab',target: '#tab-add-users'},
+                action: 'shown.bs.tab->contest#tabChange'}}
+                .d-inline-flex.align-items-center
+                  %span.mi
+                    upload
+                  Import
+          .tab-content
+            -# ==========================================
+            -# ---------- users pane ------------------
+            -# ==========================================
+            #tab-contest-user.tab-pane.fade.show.active{ data: {
+              controller: 'datatables--init',
+              'datatables--init-config-name-value': 'contestManageUser',
+              'datatables--init-ajax-url-value': show_users_query_contest_path(@contest),
+              action: 'datatable:reload@window->datatables--init#reload',
+            }}
+              .row.gx-4
+                .col-md-6
+                  .card.border-0.shadow-sm.bg-light.mb-4
+                    .card-body.p-4
+                      .d-flex.align-items-center.mb-3
+                        .bg-primary.text-white.rounded-circle.d-flex.align-items-center.justify-content-center.me-3{style: "width: 32px; height: 32px"}
+                          %span.mi.md-18 group_add
+                        %h6.fw-bold.text-dark.mb-0 Add Users to Contest
+                      
+                      .row.gy-3
+                        .col-12
+                          =form_tag add_user_contest_path(@contest), class: 'user-add-form', 
+                            data: {turbo: true, action: 'turbo:submit-end->contest#afterUsersAdd'} do
+                            .d-flex.gap-2.align-items-center
+                              .flex-grow-1
+                                =select_tag :user_ids, options_from_collection_for_select(User.all,'id','login_with_name'), 
+                                  class: 'select2', multiple: true, style: 'width: 100%',
+                                  data: {placeholder: 'Select individual users...'}
+                              =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                        .col-12
+                          =form_tag add_user_by_group_contest_path(@contest), class: 'group-add-form', 
+                            data: {turbo: true, action: 'turbo:submit-end->contest#afterUsersAdd'} do
+                            .d-flex.gap-2.align-items-center
+                              .flex-grow-1
+                                =select_tag :user_group_ids, options_from_collection_for_select(Group.all,'id','name'), 
+                                  class: 'select2', multiple: true, style: 'width: 100%',
+                                  data: {placeholder: 'Add all users from groups...'}
+                              =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                  -# bulk actions dropdown
+                  .d-flex.justify-content-start.align-items-center.mb-3
+                    .dropdown
+                      %button.btn.btn-outline-secondary.dropdown-toggle.shadow-sm.d-inline-flex.align-items-center.gap-1{type: 'button', 'data-bs-toggle': 'dropdown'}
+                        %span.mi.md-18 settings_suggest
+                        Bulk Actions
+                      %ul.dropdown-menu.dropdown-menu-end.border-0.shadow-sm
+                        %li
+                          = button_to do_all_users_contest_path(@contest), class: 'dropdown-item d-flex align-items-center gap-2', value: 'enable', name: 'command',
+                            form: {data: {turbo: true}} do
+                            %span.mi.md-18.text-success check_circle
+                            Enable All
+                        %li
+                          = button_to do_all_users_contest_path(@contest), class: 'dropdown-item d-flex align-items-center gap-2', value: 'disable', name: 'command',
+                            form: {data: {turbo: true}} do
+                            %span.mi.md-18.text-secondary block
+                            Disable All
+                        %li
+                          = button_to do_all_users_contest_path(@contest), class: 'dropdown-item d-flex align-items-center gap-2', value: 'clear_ip', name: 'command',
+                            form: {data: {turbo: true}} do
+                            %span.mi.md-18.text-warning lock_reset
+                            Clear Session Locks
+                        %li
+                          %hr.dropdown-divider
+                        %li
+                          = button_to do_all_users_contest_path(@contest), class: 'dropdown-item d-flex align-items-center gap-2 text-danger', value: 'remove', name: 'command',
+                            form: {data: {turbo: true, 'turbo-confirm': 'Really remove all users from the contest?'}} do
+                            %span.mi.md-18 person_remove
+                            Remove All
+                .col-md-6
+                  -# help for GroupUser
+                  .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+                    .card-body
+                      .d-flex.align-items-center.mb-2
+                        %span.mi.text-info.me-2 lightbulb
+                        %h6.fw-bold.text-dark.mb-0 User Management Tips
+                      .text-secondary.small
+                        %ul.mb-0.ps-3
+                          %li.mb-1
+                            If you want to add several users to a contest, use the
+                            = mdi("upload",'mx-1')
+                            %strong.text-dark Import
+                            tab.
+                          %li.mb-1 Only enabled users may access the contest.
+                          %li
+                            %strong.text-dark User Roles:
+                            %ul.ps-3.mt-1.mb-0
+                              %li
+                                %span.badge.bg-info-subtle.text-info-emphasis.border.border-info-subtle User
+                                = "- Standard competition participant."
+                              %li.mt-1
+                                %span.badge.bg-success-subtle.text-success-emphasis.border.border-success-subtle Editor
+                                = "- Has elevated administration and edit rights."
+
+              %table#user_table.table.datatable.table-hover
+                %thead
+                  %tr
+                    %th Login
+                    %th Full name
+                    %th Role (hidden)
+                    %th Seat
+                    %th Contest Remark
+                    %th Extra Time
+                    %th.text-center Enabled
+                    %th.text-center Actions
+            -# ==========================================
+            -# ---------- problem pane ------------------
+            -# ==========================================
+            #tab-contest-problem.tab-pane.fade{ data: {
+              controller: 'datatables--init',
+              'datatables--init-config-name-value': 'contestManageProblem',
+              'datatables--init-ajax-url-value': show_problems_query_contest_path(@contest),
+              action: 'datatable:reload@window->datatables--init#reload',
+            }}
+              .row.gx-4
+                .col-md-6
+                  .card.border-0.shadow-sm.bg-light.mb-4
+                    .card-body.p-4
+                      .d-flex.align-items-center.mb-3
+                        .bg-primary.text-white.rounded-circle.d-flex.align-items-center.justify-content-center.me-3{style: "width: 32px; height: 32px"}
+                          %span.mi.md-18 post_add
+                        %h6.fw-bold.text-dark.mb-0 Add Problems to Contest
+                      
+                      .row.gy-3
+                        .col-12
+                          =form_tag add_problem_contest_path(@contest), class: 'problem-add-form',
+                            data: {turbo: true, action: 'turbo:submit-end->contest#afterProblemsAdd' } do
+                            .d-flex.gap-2.align-items-center
+                              .flex-grow-1
+                                =select_tag :problem_ids, options_from_collection_for_select(@current_user.problems_for_action(:edit),'id','long_name'), 
+                                  class: 'select2', multiple: true, style: 'width: 100%',
+                                  data: {placeholder: 'Select individual problems...'}
+                              =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                        .col-12
+                          =form_tag add_problem_by_group_contest_path(@contest), class: 'group-add-form',
+                            data: {turbo: true, action: 'turbo:submit-end->contest#afterProblemsAdd'} do
+                            .d-flex.gap-2.align-items-center
+                              .flex-grow-1
+                                =select_tag :problem_group_ids, options_from_collection_for_select(@current_user.groups_for_action(:edit),'id','name'), 
+                                  class: 'select2', multiple: true, style: 'width: 100%',
+                                  data: {placeholder: 'Add all problems from groups...'}
+                              =submit_tag "Add", class: 'btn btn-primary px-3 shadow-sm'
+
+                .col-md-6
+                  -# help for group problem
+                  .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+                    .card-body
+                      .d-flex.align-items-center.mb-2
+                        %span.mi.text-info.me-2 lightbulb
+                        %h6.fw-bold.text-dark.mb-0 Problem Management Tips
+                      .text-secondary.small
+                        %ul.mb-0.ps-3
+                          %li.mb-1 
+                            If you want to add multiple problems at once, use the 
+                            = link_to 'Bulk Manage Problems', manage_problems_path, class: 'fw-bold text-dark'
+                            page.
+                          %li.mb-1
+                            A problem is only shown to users if it's 
+                            %strong.text-dark globally available 
+                            and 
+                            %strong.text-dark enabled 
+                            in the contest.
+                          %li 
+                            The 
+                            %strong.text-dark LLM Assistant 
+                            can be enabled individually for each problem.
+                          %li.mt-1
+                            Use the 
+                            %strong.text-dark 
+                              %span.mi.md-18.align-text-bottom arrow_upward
+                              %span.mi.md-18.align-text-bottom arrow_downward
+                            arrows to sort the display order of problems for the contest users.
+              .row
+                .col-12
+                  %table#problem_table.table.datatable.table-hover
+                    %thead
+                      %tr
+                        %th Number
+                        %th Name
+                        %th Full name
+                        %th.text-center Global Available
+                        %th.text-center Enable
+                        %th.text-center Allow LLM
+                        %th.text-end Actions
+            -# ==========================================
+            -# ---------- import users ------------------
+            -# ==========================================
+            #tab-add-users.tab-pane.fade
+              .row
+                .col-md-6
+                  %h5.mb-2.card-subtitle.text-body-secondary Add users to the contest
+                  = form_with url: add_users_from_csv_contest_path(@contest), 
+                    data: {turbo: true, action: 'turbo:submit-end->contest#afterUsersAdd'} do |f|
+                    .row.align-items-center.mb-3
+                      .col-auto
+                        = f.submit 'Add following users',class: 'btn btn-primary'
+                    .row.mb-3
+                      .col-12
+                        = f.text_area :user_list, value: nil, class: 'form-control', style: 'height: 30rem'
+                .col-md-6
+                  .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+                    .card-body
+                      .d-flex.align-items-center.mb-2
+                        %span.mi.text-info.me-2 lightbulb
+                        %h6.fw-bold.text-dark.mb-0 Import Instructions
+                      .text-secondary.small
+                        %p.mb-2
+                          Add or update users by providing a list of user logins in the text area below. Each user must be on a new line and each line must follow this comma-separated format:
+                        .bg-light.p-2.rounded.my-2.font-monospace.small user_login[,contest_seat[,contest_remark]]
+
+                        %ul.mb-0.ps-3
+                          %li
+                            %strong.text-dark contest_seat
+                            and
+                            %strong.text-dark contest_remark
+                            are optional.
+                          %li
+                            %strong.text-dark contest_remark
+                            is a note specific to this user for this contest only.
+
+                        %h6.fw-bold.text-dark.mt-3.mb-2 Updating Rules
+                        %ul.mb-0.ps-3
+                          %li If a user already exists in the contest, their information will be updated.
+                          %li To update a user but keep their existing seat or remark, simply omit that field.
+
+                        %h6.fw-bold.text-dark.mt-3.mb-2 Example
+                        %ul.mb-0.ps-3
+                          %li
+                            %code.small user1
+                            adds user1 to the contest.
+                          %li
+                            %code.small user1,Room 403-8
+                            adds user1 with the given seat.
+                          %li
+                            %code.small user1,,late entry
+                            adds user1 with a blank seat and "late entry" remark.
+

@@ -1,15 +1,33 @@
-%li.list-group-item
-  %strong
-    = announcement.title
-  - if @current_user and @current_user.admin?
-    = link_to 'Edit', edit_announcement_path(announcement), class: 'btn btn-xs btn-default'
-  %small= "(updated #{time_ago_in_words(announcement.updated_at)} ago on #{announcement.updated_at})"
+- is_contest = GraderConfiguration.contest_mode?
+- cookie_key = "dismissed_ann_#{announcement.id}_#{announcement.updated_at.to_i}"
+- is_updated = announcement.updated_at > 1.day.ago
 
-  %br
-    = markdown(announcement.body)
-  :javascript
-    Announcement.updateRecentId(#{announcement.id});
-  - if (defined? announcement_effect) and announcement_effect
-    :javascript
-      $("announcement-#{announcement.id}").blindDown({duration: 0.2});
-      $("announcement-#{announcement.id}").appear({duration: 0.5, queue: 'end'});
+.card.mb-4{:id => "announcement-#{announcement.id}", "data-controller" => "init-ui-component dismiss-announcement", "data-dismiss-announcement-id-value" => announcement.id, "data-dismiss-announcement-timestamp-value" => announcement.updated_at.to_i, :class => "border-1 shadow-sm #{'border-danger border-opacity-50' if is_updated && cookies[cookie_key].blank?}"}
+  .card-body
+    .card-title.mb-1.d-flex.justify-content-between.align-items-start
+      %h5.mb-0.d-flex.align-items-center
+        %strong= announcement.title
+        - if is_updated && cookies[cookie_key].blank?
+          %span.badge.bg-danger.rounded-pill.ms-2{"data-dismiss-announcement-target" => "badge"}
+            Updated
+            %a.text-white.text-decoration-none.ms-1{:href => "#", "data-action" => "dismiss-announcement#dismiss", :title => "Dismiss"} &times;
+      - if @current_user && @current_user.admin?
+        = link_to edit_announcement_path(announcement), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary ms-2 d-inline-flex align-items-center justify-content-center', 'data-bs-toggle' => 'tooltip', title: 'Edit Announcement' do
+          %span.mi{style: 'font-size: 1.1rem;'} edit
+    
+    .card-subtitle.text-secondary.mb-3.mt-0
+      %small{'data-updated-at': announcement.updated_at}= "Updated #{time_ago_in_words(announcement.updated_at)} ago"
+    
+    .card-text.text-dark
+      - if is_contest
+        = markdown(announcement.body)
+      - else
+        = render 'announcements/body_preview', announcement: announcement
+
+    - if announcement.file.attached?
+      %hr.my-2
+      .text-uppercase.small.fw-bold.text-muted.mb-1 Attachments
+      .mt-2
+        %span.badge.bg-light.text-dark.border
+          = mdi('attachment', 'md-18')
+          = link_to announcement.file.filename, url_for(announcement.file), class: 'text-decoration-none ms-1'

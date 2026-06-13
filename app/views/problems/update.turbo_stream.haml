@@ -1,0 +1,6 @@
+= turbo_stream.replace :problem, partial: 'form', locals: {problem: @problem}
+- if @toast
+  = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}
+= turbo_stream.append 'js-response' do
+  :javascript
+    problem_form_init()

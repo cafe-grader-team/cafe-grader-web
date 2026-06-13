@@ -1,6 +1,6 @@
-class CreateTestRequests < ActiveRecord::Migration
+class CreateTestRequests < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :test_requests do |t|
+    create_table :test_requests, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column :user_id, :integer
       t.column :problem_id, :integer
       t.column :submission_id, :integer
@@ -10,7 +10,6 @@ class CreateTestRequests < ActiveRecord::Migration
 
       # these are similar to tasks
       t.column :status, :integer
-      t.column :updated_at, :datetime
 
       # these are intentionally similar to submissions
       t.column :submitted_at, :datetime

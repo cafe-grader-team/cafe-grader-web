@@ -1,6 +1,6 @@
-class CreateUsers < ActiveRecord::Migration
+class CreateUsers < ActiveRecord::Migration[4.2]
   def self.up
-    create_table :users do |t|
+    create_table :users, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.column :login, :string, :limit => 10
       t.column :full_name, :string
       t.column :hashed_password, :string

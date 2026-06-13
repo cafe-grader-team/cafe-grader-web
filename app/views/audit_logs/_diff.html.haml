@@ -1,0 +1,28 @@
+- changes = local_assigns.fetch(:changes) || {}
+- if changes.empty?
+  %p.text-muted.fst-italic.mb-0 No field-level changes recorded.
+- else
+  %table.table.table-sm.table-condense.align-middle.mb-0
+    %thead.table-light
+      %tr
+        %th{style: 'width: 28%'} Field
+        %th Old
+        %th New
+    %tbody
+      - changes.each do |field, (old_value, new_value)|
+        %tr
+          %td.font-monospace.small= field
+          %td.small
+            - if old_value.nil?
+              %span.text-muted.fst-italic —
+            - elsif old_value == AuditLog::REDACTED
+              %span.badge.bg-secondary-subtle.text-secondary-emphasis [redacted]
+            - else
+              %span.text-danger.text-decoration-line-through= old_value.to_s.truncate(200)
+          %td.small
+            - if new_value.nil?
+              %span.text-muted.fst-italic —
+            - elsif new_value == AuditLog::REDACTED
+              %span.badge.bg-secondary-subtle.text-secondary-emphasis [redacted]
+            - else
+              %span.text-success= new_value.to_s.truncate(200)

@@ -1,0 +1,3 @@
+web: AUTO_LOGIN=${AUTO_LOGIN:-} bin/rails server -p ${PORT:-3000}
+css: bin/rails dartsass:watch
+solid_queue: bin/rails solid_queue:start

@@ -1,0 +1,6 @@
+.card.shadow-sm.mt-3
+  = form_with(url: viva_answer_submission_path(submission), method: :post, local: true) do |f|
+    .card-body
+      = f.text_area :content, rows: 3, class: 'form-control', placeholder: (pending_turn ? 'Waiting for interviewer...' : 'Your answer...'), disabled: pending_turn, required: true
+    .card-footer.text-end
+      = f.submit (pending_turn ? 'Waiting...' : 'Send'), class: 'btn btn-primary', disabled: pending_turn

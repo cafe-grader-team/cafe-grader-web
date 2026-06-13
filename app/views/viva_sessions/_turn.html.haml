@@ -1,0 +1,36 @@
+- case turn.role
+- when 'system'
+  - if @current_user&.admin?
+    .alert.alert-secondary.small.py-2
+      %strong SYSTEM
+      = simple_format(turn.content.to_s)
+- when 'assistant'
+  .d-flex.justify-content-start.mb-3
+    .card.shadow-sm{style: 'max-width: 75%;'}
+      .card-body.py-2.px-3
+        - if turn.processing?
+          %em.text-secondary
+            %span.spinner-border.spinner-border-sm.me-2
+            Interviewer is thinking...
+        - elsif turn.error?
+          .text-danger
+            %strong Error:
+            = simple_format(turn.content.to_s)
+          -# Owner or admin can re-enqueue the LLM call without restarting
+          -# the entire viva. See VivaSessionsController#retry_turn.
+          - if @current_user == turn.submission.user || @current_user&.admin?
+            = button_to viva_retry_turn_submission_path(turn.submission, turn_id: turn.id), class: 'btn btn-sm btn-outline-secondary mt-2 d-inline-flex align-items-center gap-1', form: {class: 'd-inline', data: {turbo: true}} do
+              %span.mi.md-18 replay
+              Retry
+        - else
+          .markdown-body= safe_markdown(turn.content.to_s)
+        - if @current_user&.admin? && turn.cost
+          .text-secondary.small.mt-1.border-top.pt-1
+            #{turn.llm_model}
+            | $#{format('%.4f', turn.cost)}
+            | in/out #{turn.token_count_in}/#{turn.token_count_out}
+- when 'student'
+  .d-flex.justify-content-end.mb-3
+    .card.bg-primary.text-white.shadow-sm{style: 'max-width: 75%;'}
+      .card-body.py-2.px-3
+        = simple_format(turn.content.to_s)

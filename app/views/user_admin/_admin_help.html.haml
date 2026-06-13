@@ -1,0 +1,55 @@
+-# The Knowledge Card
+.card.border-0.shadow-sm.border-start.border-4.border-info
+  .card-body.p-4
+
+    -# --- Header ---
+    .d-flex.align-items-center.mb-3
+      .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+        %span.mi.md-24.fill help
+
+      %div
+        %h5.fw-bold.text-dark.mb-0 How Roles Work
+        %small.text-secondary Privileged roles for system management.
+
+    -# --- Section 1: The Roles (Tiles) ---
+    .row.g-3.mb-4
+      -# Tile 1: Admin
+      .col-md-6
+        .d-flex.align-items-start
+          .text-info.me-3.lh-1
+            %span.mi.md-24 admin_panel_settings
+          %div
+            %span.fw-bold.d-block.text-dark Administrator
+            %small.text-muted.lh-sm
+              Full access. Can log in anytime, see all problems, and create or delete users.
+
+      -# Tile 2: TA
+      .col-md-6
+        .d-flex.align-items-start
+          .text-info.me-3.lh-1
+            %span.mi.md-24 supervisor_account
+          %div
+            %span.fw-bold.d-block.text-dark TA
+            %small.text-muted.lh-sm
+              Helper role for class operations.
+
+    -# --- Divider ---
+    %hr.text-secondary-subtle.my-3/
+
+    -# --- Section 2: Guidance ---
+    %h6.fw-bold.text-dark.small.text-uppercase.mb-3 Guidance
+
+    .d-flex.flex-column.gap-2
+      .d-flex.align-items-start.gap-2
+        %span.mi.md-18.text-warning.flex-shrink-0 warning
+        %small.text-secondary
+          Grant
+          %strong.text-dark Administrator
+          only when truly required &mdash; admins can create and delete users.
+
+      .d-flex.align-items-start.gap-2
+        %span.mi.md-18.text-info.flex-shrink-0 lightbulb
+        %small.text-secondary
+          For per-group problem setters, prefer the
+          %strong.text-dark Editor
+          role (managed via Groups) over Administrator.

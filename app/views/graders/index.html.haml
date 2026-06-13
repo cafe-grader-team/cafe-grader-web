@@ -1,0 +1,212 @@
+- content_for :head do
+  <meta http-equiv ="refresh" content="600"/>
+
+= render 'application/breadcrumb', steps: [ { label: 'Grader Processes', path: grader_processes_path, icon: resource_icon_name(Grader) }, { label: 'Monitor' } ]
+
+.grader-management-wrapper{data: {controller: 'init-ui-component'}}
+  .d-flex.justify-content-between.align-items-center.mb-3
+    .d-flex.align-items-center.gap-2
+      %h2.fw-bold.text-dark.mb-0.font-monospace
+        Grader Processes
+      %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+        %small Monitor
+
+    .d-flex.gap-2
+      = link_to mdi(:queue, 'me-1') + 'Solid Queue', queues_grader_processes_path, class: 'btn btn-outline-primary btn-flex'
+      = link_to mdi(:refresh, 'me-1') + 'Refresh', grader_processes_path(limit: (@submission_limit unless @submission_limit == 20)), class: 'btn btn-primary btn-flex'
+
+  .row.gx-3
+    -# ==========================================
+    -# ---------- Left Column -------------------
+    -# ==========================================
+    .col-md-6
+      -# Queue Status Card
+      .card.shadow-sm.mb-4
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill pending_actions
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Queue Status
+              .text-secondary.small Jobs waiting to be processed
+
+          .row.g-3
+            .col-4
+              .card.border-0.bg-info-subtle.text-center.p-3.rounded-3
+                .fw-bold.h3.mb-1.text-info-emphasis= @wait_count['compile'] || 0
+                .text-secondary.small Compile
+            .col-4
+              .card.border-0.bg-warning-subtle.text-center.p-3.rounded-3
+                .fw-bold.h3.mb-1.text-warning-emphasis= @wait_count['evaluate'] || 0
+                .text-secondary.small Evaluate
+            .col-4
+              .card.border-0.bg-success-subtle.text-center.p-3.rounded-3
+                .fw-bold.h3.mb-1.text-success-emphasis= @wait_count['score'] || 0
+                .text-secondary.small Score
+
+      -# Background-Workers Card: single landing for "is anything else
+      -# broken right now?" Surfaces Solid Queue failures and stuck viva
+      -# turns — both invisible to the judge-job machinery above, but
+      -# operators need to see them in the same glance.
+      .card.shadow-sm.mb-4
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-secondary-subtle.text-secondary-emphasis.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill bug_report
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Background Workers
+              .text-secondary.small Solid Queue + LLM job health
+
+          .row.g-3
+            .col-6
+              = link_to queues_grader_processes_path(status: 'failed'), class: 'card border-0 bg-danger-subtle text-center p-3 rounded-3 text-decoration-none' do
+                .fw-bold.h3.mb-1.text-danger-emphasis= @sq_failed_count
+                .text-secondary.small Solid Queue failures
+            .col-6
+              = link_to stuck_viva_turns_grader_processes_path, class: 'card border-0 bg-warning-subtle text-center p-3 rounded-3 text-decoration-none' do
+                .fw-bold.h3.mb-1.text-warning-emphasis= @stuck_viva_count
+                .text-secondary.small Stuck viva turns
+
+      - if @error_jobs&.any?
+        .card.shadow-sm.border-start.border-4.border-danger.mb-4
+          .card-body
+            .d-flex.align-items-start.mb-3
+              .bg-danger-subtle.text-danger-emphasis.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+                %span.mi.md-36.fill error
+
+              .flex-grow-1
+                %h5.fw-bold.text-danger.mb-0 Failed Jobs
+                .text-secondary.small
+                  = pluralize(@error_count, 'job')
+                  failed
+            .d-flex.gap-2.mb-2
+              = button_to 'Retry All', retry_all_error_jobs_grader_processes_path, class: 'btn btn-sm btn-outline-warning', data: {turbo: true}
+              = button_to 'Clear All', clear_all_error_jobs_grader_processes_path, class: 'btn btn-sm btn-outline-danger', data: {turbo: true, 'turbo-confirm': "Clear all #{@error_count} error jobs?"}
+            %table.table.table-hover.table-condense.align-middle
+              %thead
+                %tr
+                  %th Job
+                  %th Type
+                  %th Submission
+                  %th Error
+                  %th Failed
+                  %th
+              %tbody
+                - @error_jobs.each do |job|
+                  %tr
+                    %td= job.id
+                    %td
+                      %span.badge.text-bg-secondary= job.job_type
+                    %td
+                      = link_to "##{job.arg}", submission_path(job.arg)
+                    %td
+                      %small.text-danger= job.result
+                    %td
+                      %small.text-muted= time_ago_in_words(job.updated_at) + " ago"
+                    %td
+                      = button_to retry_error_job_grader_processes_path(job_id: job.id), class: 'btn btn-sm btn-outline-primary border-0', data: {turbo: true, bs_toggle: 'tooltip', bs_title: 'Retry'} do
+                        %span.mi replay
+      -# Worker & Grader Card
+      .card.shadow-sm.mb-4
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill dns
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Workers & Graders
+              .text-secondary.small
+                = pluralize(@graders.size, 'grader process')
+                registered
+
+          %table.table.table-hover.align-middle.mb-0
+            %thead
+              %tr.text-secondary.small
+                %th Worker
+                %th Box
+                %th Job Type
+                %th Heartbeat
+                %th Status
+                %th Job
+                %th.text-center Action
+            %tbody
+              = render partial: 'grader', collection: @graders
+
+    -# ==========================================
+    -# ---------- Right Column ------------------
+    -# ==========================================
+    .col-md-6
+      -# Recent Submissions Card
+      .card.shadow-sm.mb-4
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill history
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Recent Submissions
+              .text-secondary.small= "Last #{@submission_limit} submissions"
+
+            .d-flex.align-items-center.gap-2.small
+              %span.text-secondary Show:
+              - [20, 100, 500].each do |n|
+                - if n == @submission_limit
+                  %span.fw-bold.text-dark= n
+                - else
+                  = link_to n, grader_processes_path(limit: n), class: 'text-decoration-none'
+
+          %table.table.table-hover.align-middle.mb-0
+            %thead
+              %tr.text-secondary.small
+                %th ID
+                %th User
+                %th Problem
+                %th Submitted
+                %th Graded
+                %th Result
+            %tbody
+              - @submission.each do |sub|
+                %tr
+                  %td= link_to sub.id, submission_path(sub.id), class: 'fw-medium text-primary text-decoration-none'
+                  %td= ("" unless sub.user) || link_to(sub.try(:user).try(:full_name), stat_user_admin_path(sub.user.id), class: 'text-decoration-none')
+                  %td= ("" unless sub.problem) || link_to(sub.try(:problem).try(:full_name), stat_problem_path(sub.problem.id), class: 'text-decoration-none')
+                  %td.text-secondary.small= "#{time_ago_in_words(sub.submitted_at)} ago"
+                  %td.text-secondary.small= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : ""
+                  %td
+                    %span.font-monospace.small= sub.grader_comment
+
+      -# Ungraded Submissions Card
+      - if @backlog_submission.any?
+        .card.shadow-sm.border-start.border-4.border-warning.mb-4
+          .card-body
+            .d-flex.align-items-start.mb-3
+              .bg-warning-subtle.text-warning-emphasis.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+                %span.mi.md-36.fill hourglass_top
+
+              .flex-grow-1
+                %h5.fw-bold.text-dark.mb-0 Ungraded Submissions
+                .text-secondary.small
+                  = pluralize(@backlog_submission.size, 'submission')
+                  pending
+
+            %table.table.table-hover.align-middle.mb-0
+              %thead
+                %tr.text-secondary.small
+                  %th ID
+                  %th User
+                  %th Problem
+                  %th Submitted
+                  %th Graded
+                  %th Result
+              %tbody
+                - @backlog_submission.each do |sub|
+                  %tr
+                    %td= link_to sub.id, submission_path(sub.id), class: 'fw-medium text-primary text-decoration-none'
+                    %td= ("" unless sub.user) || link_to(sub.try(:user).try(:full_name), stat_user_admin_path(sub.user.id), class: 'text-decoration-none')
+                    %td= ("" unless sub.problem) || link_to(sub.try(:problem).try(:full_name), stat_problem_path(sub.problem.id), class: 'text-decoration-none')
+                    %td.text-secondary.small= "#{time_ago_in_words(sub.submitted_at)} ago"
+                    %td.text-secondary.small= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : ""
+                    %td
+                      %span.font-monospace.small= sub.grader_comment

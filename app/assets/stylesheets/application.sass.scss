@@ -1,0 +1,9 @@
+// Entry point for your Sass build
+@import "my_bootstrap_var";
+@import "bootstrap/scss/bootstrap";
+//@use "select2/dist/css/select2.min.css";
+
+
+@import 'my_font';
+@import 'my_custom';
+@import 'configurations';

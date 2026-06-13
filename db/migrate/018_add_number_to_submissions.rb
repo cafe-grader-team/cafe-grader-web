@@ -1,4 +1,4 @@
-class AddNumberToSubmissions < ActiveRecord::Migration
+class AddNumberToSubmissions < ActiveRecord::Migration[4.2]
   def self.up
     add_column :submissions, :number, :integer
 

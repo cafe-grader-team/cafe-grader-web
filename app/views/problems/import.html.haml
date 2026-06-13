@@ -1,71 +1,130 @@
-- content_for :head do
-  = stylesheet_link_tag 'problems'
+= render 'application/breadcrumb', steps: [{ label: 'Problems', path: problems_path, icon: resource_icon_name(Problem) }, { label: 'Import' }]
 
-%h1 Import problems
+.d-flex.align-items-center.gap-2.mb-4
+  %h2.fw-bold.text-dark.mb-0 Import Problem
+  %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium
+    %small New
 
-%p= link_to '[Back to problem list]', problems_path
+- if @errors
+  .alert.alert-danger.d-flex.align-items-start.gap-2
+    = mdi(:error, 'text-danger mt-1')
+    %div
+      %strong Import failed
+      %ul.mb-0.mt-1
+        - @errors.each do |msg|
+          %li= msg.html_safe
 
-- if @problem and @problem.errors
-  =error_messages_for 'problem'
+.row
+  .col-md-6
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3
+          = mdi(:upload_file, 'me-1')
+          Import Details
+        = simple_form_for :problem, url: do_import_problems_path, html: {multipart: true}, wrapper: :horizontal_form do |f|
+          = f.input :name
+          = f.input :full_name
+          = f.input :time_limit, required: false
+          = f.input :memory_limit, required: false
+          = f.input :groups, collection: @current_user.groups_for_action(:edit), label_method: :name, value_method: :id, input_html: {class: 'select2'}, include_blank: @allow_blank_group, style: 'width: 100%', wrapper: :horizontal_select
+          .card.bg-light.border-0.mb-3
+            .card-body.py-3
+              %h6.fw-bold.text-secondary.mb-3
+                = mdi(:dataset, 'me-1')
+                Dataset
+              = f.input :file, label: 'ZIP file', as: :file, wrapper: :horizontal_file
+              = f.input :input_pattern, input_html: { value: '*.in' }
+              = f.input :sol_pattern, input_html: { value: '*.sol' }
+              = f.input :replace, label: 'Replace all existing datasets', as: :boolean, wrapper: :horizontal_boolean
+          = f.button :submit, class: 'btn-primary'
 
-= form_tag({:action => 'do_import'}, :multipart => true)  do
-  .submitbox
-    %table
-      %tr
-        %td Name:
-        %td= text_field_tag 'name'
-      %tr
-        %td Full name:
-        %td
-          = text_field_tag 'full_name'
-          %span{:class => 'help'} Leave blank to use the same value as the name above.
-      %tr
-        %td Testdata file:
-        %td= file_field_tag 'file'
-      %tr
-        %td
-        %td
-          %span{:class => 'help'}
-            In .zip, .tgz, tar.gz, .tar format.  
-            It should includes inputs (e.g., 1.in, 2a.in, 2b.in) 
-            and solutions (e.g., 1.sol, 2a.sol, 2b.sol).
-            %br/
-            You may put task description in *.html for raw html
-            and *.md or *.markdown for markdown.
-            %br/
-            You may also put a pdf file for the task description
-      %tr
-        %td Checker:
-        %td= select_tag 'checker', options_for_select([['Text checker','text'],['Float checker','float']], 'text')
-      %tr
-        %td
-        %td
-          %span{:class => 'help'}
-            "Text" checker checks if the text (including numbers) is the same, ignoring any whitespace
-            %br/
-            "Float" checker checks if all numbers is within EPSILON error using formula |a-b| < EPSILON * max(|a|,|b|)
+  .col-md-6
+    .card.border-0.shadow-sm.border-start.border-4.border-info.mb-4
+      .card-body.p-4
+        .d-flex.align-items-center.mb-4
+          .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+            %span.mi.md-24.fill help
+          %div
+            %h5.fw-bold.text-dark.mb-0 Usage Guide
+            %small.text-secondary How to import problems via ZIP upload.
 
-      - if @allow_test_pair_import
-        %tr
-          %td
-          %td
-            = check_box_tag 'import_to_db'
-            Import test data to database (for a test-pair task)
-      %tr
-        %td Time limit:
-        %td
-          = text_field_tag 'time_limit'
-          %span{:class => 'help'} In seconds. Leave blank to use 1 sec.
-      %tr
-        %td Memory limit:
-        %td
-          = text_field_tag 'memory_limit'
-          %span{:class => 'help'} In MB. Leave blank to use 32MB.
-      %tr
-        %td
-        %td= submit_tag 'Import problem'
+        .row.g-4
+          .col-12
+            .d-flex.gap-3
+              .text-info.flex-shrink-0
+                %span.mi.md-24 upload_file
+              %div
+                %h6.fw-bold.text-dark.mb-2 Upload Behavior
+                %ul.small.text-muted.lh-sm.mb-0
+                  %li
+                    Upload a ZIP file to create a new problem with your specified name.
+                    If a problem with that name already exists, the system will add the ZIP content as
+                    a new dataset within the existing problem.
+                  %li.mt-1
+                    You can assign newly imported problems to a specific group by setting the
+                    %strong Groups
+                    property.
+
+          .col-12
+            .d-flex.gap-3
+              .text-info.flex-shrink-0
+                %span.mi.md-24 folder_zip
+              %div
+                %h6.fw-bold.text-dark.mb-2 ZIP File Format
+                %ul.small.text-muted.lh-sm.mb-0
+                  %li
+                    Each testcase is a pair of files with the same name but different extension:
+                    %code.text-info-emphasis .in
+                    for input and
+                    %code.text-info-emphasis .sol
+                    for output.
+                  %li.mt-1
+                    Any
+                    %code.text-info-emphasis .pdf
+                    file will be used as the problem statement.
+                  %li.mt-1
+                    Example:
+                    %code 1.in
+                    ,
+                    %code 1.sol
+                    ,
+                    %code 2.in
+                    ,
+                    %code 2.sol
+                    creates two testcases.
+
+          .col-12
+            .d-flex.gap-3
+              .text-info.flex-shrink-0
+                %span.mi.md-24 download
+              %div
+                %h6.fw-bold.text-dark.mb-2 Example ZIP Files
+                %p.small.text-muted.lh-sm.mb-2 Download an example to see the expected format. All examples use an A+B problem (read two integers, print their sum).
+                .d-flex.flex-column.gap-2
+                  %div
+                    %a.btn.btn-sm.btn-outline-info.d-inline-flex.align-items-center.gap-1{href: '/example_import_basic.zip', download: 'example_import_basic.zip'}
+                      = mdi(:download, 'md-16')
+                      Basic
+                    %span.small.text-muted.ms-2
+                      1 testcase &mdash; bare minimum
+                  %div
+                    %a.btn.btn-sm.btn-outline-info.d-inline-flex.align-items-center.gap-1{href: '/example_import_minimal.zip', download: 'example_import_minimal.zip'}
+                      = mdi(:download, 'md-16')
+                      Standard
+                    %span.small.text-muted.ms-2
+                      3 testcases + PDF statement
+                  %div
+                    %a.btn.btn-sm.btn-outline-info.d-inline-flex.align-items-center.gap-1{href: '/example_import_advanced.zip', download: 'example_import_advanced.zip'}
+                      = mdi(:download, 'md-16')
+                      Advanced
+                    %span.small.text-muted.ms-2
+                      5 testcases, PDF, config.yml (groups, weights, tags, limits)
 
 - if @log
-  %h3 Import log
-  %pre.import-log
-    = @log
+  .card.shadow-sm.mb-4
+    .card-body
+      %h5.fw-bold.text-secondary.mb-3
+        = mdi(:receipt_long, 'me-1')
+        Import Log
+      %pre.import-log.bg-light.rounded.p-3.mb-0.small
+        = @log

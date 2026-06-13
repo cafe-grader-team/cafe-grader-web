@@ -1,49 +1,18 @@
-%h1 Maximum score
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 Best Score
 
-= form_tag report_show_max_score_path
-.row
-  .col-md-4
-    .panel.panel-primary
-      .panel-heading
-        Problems
-      .panel-body
-        %p
-          Select problem(s) that we wish to know the score.
-        = label_tag :problem_id, "Problems"
-        = select_tag 'problem_id[]',
-            options_for_select(Problem.all.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]},params[:problem_id]),
-            { class: 'select2 form-control', multiple: "true" }
-  .col-md-4
-    .panel.panel-primary
-      .panel-heading
-        Submission range
-      .panel-body
-        %p
-          Input minimum and maximum range of submission ID that should be included. A blank value for min and max means -1 and infinity, respectively.
-        .form-group
-          = label_tag :from, "Min"
-          = text_field_tag 'from_id', @since_id, class: "form-control"
-        .form-group
-          = label_tag :from, "Max"
-          = text_field_tag 'to_id', @until_id, class: "form-control"
-  .col-md-4
-    .panel.panel-primary
-      .panel-heading
-        Users
-      .panel-body
-        .radio
-          %label
-            = radio_button_tag 'users', 'all', (params[:users] == "all")
-            All users
-        .radio
-          %label
-            = radio_button_tag 'users', 'enabled', (params[:users] == "enabled")
-            Only enabled users
-.row
-  .col-md-12
-    = button_tag 'Show', class: "btn btn-primary btn-large", value: "show"
-    = button_tag 'Download CSV', class: "btn btn-primary btn-large", value: "download"
-
-- if @scorearray
-  %h2 Result
-  =render "score_table"
+= form_with id: 'max-score-filter-form', url: max_score_table_report_path, data: {turbo: true, controller: 'init-ui-component'} do |f|
+  .row
+    .col-lg-4
+      = render partial: 'problem_select'
+    .col-lg-4
+      = render partial: 'submission_range'
+    .col-lg-4
+      = render partial: 'user_select'
+.text-secondary.small.mb-3.d-flex.align-items-center
+  %span.mi.md-18.me-1 sync
+  Select filters above, then click Refresh to load data.
+.mt-3
+  = turbo_frame_tag "max_score_result", data: {turbo: "true"} do
+    = render partial: 'score_table', locals: {problems: Problem.none, link_for_data: max_score_query_report_path, refresh_submit_form_id: 'max-score-filter-form' }

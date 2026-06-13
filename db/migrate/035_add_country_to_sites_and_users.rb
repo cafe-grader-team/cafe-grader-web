@@ -1,4 +1,4 @@
-class AddCountryToSitesAndUsers < ActiveRecord::Migration
+class AddCountryToSitesAndUsers < ActiveRecord::Migration[4.2]
   def self.up
     add_column 'sites', 'country_id', :integer
     add_column 'sites', 'password', :string

@@ -1,0 +1,13 @@
+= turbo_frame_tag :problem_table_frame do
+  %table#problem_table.table.datatable.table-hover.table-condense.align-middle
+    %thead
+      %tr
+        %th Name
+        %th Full name
+        %th Tags
+        %th Date added
+        %th.text-center Global Available
+        %th.text-center Enabled
+        %th.text-end Actions
+    %tbody
+      -# we use datatable ajax data source (see _groups_users.haml for example)

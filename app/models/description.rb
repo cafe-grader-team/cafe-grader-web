@@ -1,2 +1,2 @@
-class Description < ActiveRecord::Base
+class Description < ApplicationRecord
 end

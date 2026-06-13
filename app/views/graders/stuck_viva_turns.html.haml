@@ -1,0 +1,57 @@
+= render 'application/breadcrumb', steps: [{label: 'Grader Processes', path: grader_processes_path, icon: resource_icon_name(Grader)}, {label: 'Stuck Viva Turns'}]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0.font-monospace Stuck Viva Turns
+    %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.fw-medium
+      %small= pluralize(@turns.size, 'turn')
+  .d-flex.gap-2
+    = link_to mdi(:arrow_back, 'me-1') + 'Back to Monitor', grader_processes_path, class: 'btn btn-outline-secondary btn-flex'
+
+.card.shadow-sm.mb-4
+  .card-body
+    .d-flex.align-items-start.mb-3
+      .bg-warning-subtle.text-warning-emphasis.rounded-3.d-flex.align-items-center.justify-content-center.me-3{style: "width: 48px; height: 48px; flex-shrink: 0;"}
+        %span.mi.md-36.fill schedule_send
+      .flex-grow-1
+        %h5.fw-bold.text-dark.mb-0 Viva turns blocking active sessions
+        .text-secondary.small
+          Either marked
+          %code :error
+          (Retry available) or
+          %code :processing
+          for over
+          = VivaTurn::STALE_AFTER.inspect
+          (sweeper hasn't caught it yet). Click a row to open the viva.
+
+    - if @turns.any?
+      %table.table.table-hover.table-condense.align-middle.mb-0
+        %thead
+          %tr.text-secondary.small
+            %th Submission
+            %th User
+            %th Problem
+            %th Turn
+            %th Status
+            %th Updated
+            %th.text-end Actions
+        %tbody
+          - @turns.each do |turn|
+            - sub = turn.submission
+            %tr
+              %td= link_to "##{sub.id}", viva_submission_path(sub), class: 'fw-medium text-primary text-decoration-none'
+              %td= sub.user&.login
+              %td= sub.problem&.name
+              %td.font-monospace.small= "##{turn.id} (seq #{turn.sequence})"
+              %td
+                - if turn.error?
+                  %span.badge.text-bg-danger error
+                - else
+                  %span.badge.text-bg-warning processing
+              %td.text-secondary.small= "#{time_ago_in_words(turn.updated_at)} ago"
+              %td.text-end
+                = link_to mdi(:open_in_new, 'me-1') + 'Open viva', viva_submission_path(sub), class: 'btn btn-sm btn-outline-primary border-0 d-inline-flex align-items-center'
+    - else
+      .text-center.text-success.py-4
+        %span.mi.md-48 check_circle
+        .fw-medium.mt-2 No stuck viva turns. Everything's flowing.

@@ -1,5 +1,3 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-
 <%
 User.public_class_method :encrypt
 
@@ -21,12 +19,18 @@ admin:
   roles: admin
   activated: true
 
+mary:
+  login: mary
+  full_name: Mary Editor
+  hashed_password: <%= User.encrypt("mary",salt) %>
+  salt: <%= salt %>
+  activated: true
+
 james:
   login: james
   full_name: James
   hashed_password: <%= User.encrypt("morning",salt) %>
   salt: <%= salt %>
-  contests: contest_a
   activated: true
 
 jack:
@@ -34,5 +38,11 @@ jack:
   full_name: Jack
   hashed_password: <%= User.encrypt("morning",salt) %>
   salt: <%= salt %>
-  contests: contest_a, contest_b
   activated: true
+
+disabled_user:
+  login: disabled
+  full_name: Disabled User
+  hashed_password: <%= User.encrypt("disabled",salt) %>
+  salt: <%= salt %>
+  activated: false

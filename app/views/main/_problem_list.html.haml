@@ -1,0 +1,26 @@
+-# topic filter badge
+
+.card.card-shadow
+  .card-body{'data-controller' => 'init-ui-component'}
+    %h5.fw-bold Problems
+    - if @primary_tags.count > 0
+      .row
+        .col-auto.d-flex.align-items-center
+          Topic:
+          %span.mi.text-info.ms-1{style: 'font-size: 1.1rem; cursor: help;', data: { bs: { toggle: 'tooltip', title: 'Click a topic button to filter problems. Click again to clear.', placement: 'top' } } } help_outline
+        .col-auto
+          - @primary_tags.each do |tag|
+            - data_hash = { action: 'click->main#setActiveTopic',  bs: tag.description.present? ?  { toggle: 'tooltip', title: tag.description } : nil }
+            %span.btn.btn-outline-secondary.btn-sm.rounded-pill.topic-badge.me-1{data: data_hash}= tag.name
+    %table#main_table.table.table-hover.align-middle{width: '100%'}
+      %thead
+        %tr
+          %th No.
+          %th.all Name
+          %th Best Score
+          %th.all Latest Results
+          %th.all
+      %tbody{data: {controller: 'problem-name'}}
+        - @numbering = 1
+        / problem count = #{problems.count}
+        = render partial: 'problem', collection: problems

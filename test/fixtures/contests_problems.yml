@@ -1,0 +1,25 @@
+# prob_add and easy are in contest_a
+add_in_contest_a:
+  contest: contest_a
+  problem: prob_add
+  number: 1
+  enabled: true
+
+easy_in_contest_a:
+  contest: contest_a
+  problem: easy
+  number: 2
+  enabled: true
+
+# easy and hard are in contest_b
+easy_in_contest_b:
+  contest: contest_b
+  problem: easy
+  number: 1
+  enabled: true
+
+hard_in_contest_b:
+  contest: contest_b
+  problem: hard
+  number: 2
+  enabled: true

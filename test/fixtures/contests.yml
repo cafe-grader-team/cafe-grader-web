@@ -1,16 +1,20 @@
-# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
-
 contest_a:
   name: contest_a
-  title: Contest A
+  description: Contest A
   enabled: true
+  start: <%= 1.hour.ago.to_fs(:db) %>
+  stop: <%= 3.hours.from_now.to_fs(:db) %>
 
 contest_b:
   name: contest_b
-  title: Contest B
+  description: Contest B
   enabled: true
+  start: <%= 2.hours.ago.to_fs(:db) %>
+  stop: <%= 2.hours.from_now.to_fs(:db) %>
 
 contest_c:
   name: contest_c
-  title: Contest C
+  description: Contest C
   enabled: false
+  start: <%= 1.day.ago.to_fs(:db) %>
+  stop: <%= (1.day.ago + 4.hours).to_fs(:db) %>

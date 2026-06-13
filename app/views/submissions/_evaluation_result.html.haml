@@ -1,0 +1,15 @@
+-# render the code with explanation
+-# color class
+.row
+  .col-12
+    %span.grader-comment.me-2= Evaluation.result_enum_to_code(ev.result)
+    %span
+      %div.badge{class: Evaluation.class_for_result(ev.result)}= t(ev.result, scope: "activerecord.attributes.evaluation.results")
+-# show error badge
+-# TODO: FIX THIS!!!! won't work when ev is a testcase
+- if ['grader_error','unknown_error'].include? ev.result
+  .badge.text-bg-danger Please notify the admin
+-# render comment if any
+- unless ev.result_text.blank? || ev.result_text == Evaluation.result_enum_to_code(ev.result)
+  %div.text-body-tertiary
+    = ev.result_text

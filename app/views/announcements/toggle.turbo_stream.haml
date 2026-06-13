@@ -1,0 +1,5 @@
+= turbo_stream.append 'js-response' do
+  :javascript
+    set_announcement_switch(#{@announcement.id},#{@announcement.published},#{@announcement.frontpage})
+- if @toast
+  = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}

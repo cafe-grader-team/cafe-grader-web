@@ -1,0 +1,8 @@
+= turbo_frame_tag dom_id(@grader,"grader_job_type") do
+  = simple_form_for @grader do |f|
+    - ['compile', 'evaluate', 'score'].each do |k|
+      %div.form-check
+        %input.form-check-input{ id: "jt-#{k}", type: 'checkbox', name: "jt-#{k}", checked: @job_type.include?(k)}
+        %label.form-check-label{for: "jt-#{k}"} #{k}
+    = f.submit "Update", class: 'btn btn-sm btn-primary'
+    = link_to "Cancel", grader_processes_path, class: 'btn btn-sm btn-outline-secondary'

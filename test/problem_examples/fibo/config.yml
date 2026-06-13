@@ -1,0 +1,51 @@
+---
+testcases_pattern: "*"
+testcases_dir: testcases
+testcases:
+  '1':
+    group: 1
+    group_name: '1'
+    weight: 10
+  '2':
+    group: 2
+    group_name: '2'
+    weight: 10
+  '3':
+    group: 3
+    group_name: '3'
+    weight: 10
+  '4':
+    group: 4
+    group_name: '4'
+    weight: 10
+  '5':
+    group: 5
+    group_name: '5'
+    weight: 10
+  '6':
+    group: 6
+    group_name: '6'
+    weight: 10
+  '7':
+    group: 7
+    group_name: '7'
+    weight: 10
+  '8':
+    group: 8
+    group_name: '8'
+    weight: 10
+name: ex02e1_fibo
+full_name: Fibonacci Number
+task_type: batch
+compilation_type: self_contained
+time_limit: 1.0
+memory_limit: 512
+score_type: sum
+evaluation_type: default
+ds_name: default
+managers_dir: managers
+checker_dir: checker
+solutions_dir: model_solutions
+tags:
+- DP
+- Book

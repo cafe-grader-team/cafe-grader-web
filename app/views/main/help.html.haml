@@ -43,5 +43,5 @@
           %tt <tt>{<br/>LANG: Pascal<br/>TASK: mobiles<br/>}</tt>
     
     %p
-      = raw(t('help.ask_questions_at_messages',:message_link_name => (t 'menu.messages'),:url => url_for(:controller => 'messages', :action => 'list')))
+      = raw(t('help.ask_questions_at_messages',:message_link_name => (t 'menu.messages'),url: messages_path ))
 

@@ -1,0 +1,23 @@
+john_in_group_a:
+  group: group_a
+  user: john
+  role: 0
+  enabled: true
+
+admin_editor_group_a:
+  group: group_a
+  user: admin
+  role: 2
+  enabled: true
+
+mary_editor_group_a:
+  group: group_a
+  user: mary
+  role: 2
+  enabled: true
+
+james_in_group_a:
+  group: group_a
+  user: james
+  role: 0
+  enabled: true

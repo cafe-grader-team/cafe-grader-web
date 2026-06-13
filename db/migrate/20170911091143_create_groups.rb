@@ -1,17 +1,17 @@
-class CreateGroups < ActiveRecord::Migration
+class CreateGroups < ActiveRecord::Migration[4.2]
 
   def change
-    create_table :groups do |t|
+    create_table :groups, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       t.string :name
       t.string :description
     end
 
-    create_join_table :groups, :users do |t|
+    create_join_table :groups, :users, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       # t.index [:group_id, :user_id]
       t.index [:user_id, :group_id]
     end
 
-    create_join_table :problems, :groups do |t|
+    create_join_table :problems, :groups, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci" do |t|
       # t.index [:problem_id, :group_id]
       t.index [:group_id, :problem_id]
     end

@@ -1,112 +1,156 @@
-%h1= "Submission: #{@submission.id}"
+%h2= "Submission: ##{@submission.id}"
 
-%textarea#data{style: "display:none;"}
-  :preserve
-    #{@submission.source}
-
-//%div.highlight{:style => "border: 1px solid black;"}
-//=@formatted_code.html_safe
-
-
-.containter
+// fluid-container
+%div{'data-controller': :editor}
+  - unless @as_binary
+    -# hidden area that shows the original code
+    %textarea#text_sourcecode{style: "display:none", data: {editor_target: 'source'}}~ @submission.source
   .row
-    .col-md-7
-      %h2 Source Code
-    .col-md-5
-      %h2 Stat
-  .row
-    .col-md-7
-      %div#editor{ style: "font-size: 14px; height: 400px; border-radius:5px;" }
-      :javascript
-        e = ace.edit("editor")
-        e.setOptions({ maxLines: Infinity })
-        e.setValue($("#data").text())
-        e.gotoLine(1)
-        e.getSession().setMode("#{get_ace_mode(@submission.language)}")
-        e.setReadOnly(true)
-    .col-md-5
-      %table.table.table-striped
-        %tr
-          %td.text-right
-            %strong User
-          %td
-            - if @submission.user 
-              = link_to "#{@submission.user.login}", stat_user_path(@submission.user)
-              = @submission.user.full_name
-            - else
-              = "(n/a)"
-        %tr
-          %td.text-right
-            %strong Task
-          %td
-            - if @submission.problem!=nil
-              = link_to "[#{@submission.problem.name}]", stat_problem_path(@submission.problem)
-              = @submission.problem.full_name
-            - else
-              = "(n/a)"
-        %tr
-          %td.text-right
-            %strong Tries
-          %td= @submission.number
-        %tr
-          %td.text-right
-            %strong Language
-          %td= @submission.language.pretty_name
-        %tr
-          %td.text-right
-            %strong Submitted
-          %td #{time_ago_in_words(@submission.submitted_at)} ago (at #{@submission.submitted_at.to_formatted_s(:long)})
-        %tr
-          %td.text-right
-            %strong Graded
-          - if @submission.graded_at
-            %td #{time_ago_in_words(@submission.graded_at)} ago (at #{@submission.graded_at.to_formatted_s(:long)})
-          - else
-            %td -
-        %tr
-          %td.text-right
-            %strong Points
-          %td #{@submission.points}/#{@submission.try(:problem).try(:full_score)}
-        %tr
-          %td.text-right
-            %strong Comment
-          %td #{@submission.grader_comment}
-        %tr
-          %td.text-right
-            %strong Runtime (s)
-          %td #{@submission.max_runtime}
-        %tr
-          %td.text-right
-            %strong Memory (kb)
-          %td #{@submission.peak_memory}
-        %tr
-          %td.text-right
-            %strong Compiler result
-          %td
-            %button.btn.btn-info.btn-xs{type: 'button', data: {toggle: 'modal', target: '#compiler'}}
-              view
-        - if session[:admin]
-          %tr
-            %td.text-right
-              %strong IP
-            %td #{@submission.ip_address}
-        %tr
-          %td.text-right
-            %strong Grading Task Status
-          %td
-            = @task.status_str if @task
-            - if session[:admin]
-              = link_to "rejudge", rejudge_submission_path, data: {remote: true}, class: 'btn btn-info btn-xs'
+    .col-lg-7
+      - if @submission.language.binary?
+        .alert.alert-warning
+          The file is marked as a binary, viewing is impossible. Please
+          = link_to 'download', download_submission_path(@submission)
+          instead
+      - else
+        .mb-2
+          %div#editor{ style: "font-size: 14px; height: 400px; border-radius:5px;", data: {editor_mode: :view, editor_target: :editor, language: @submission.language.pretty_name} }
+    .col-lg-5
+      -# Submission detail card
+      .card.mb-3.shadow-sm{data: {controller: 'problem-name'}}
+        .card-body
+          %h4 Submission Detail
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              User
+            .col
+              - if @current_user.admin? ||@current_user == @submission.user
+                - if @submission.user
+                  = link_to "#{@submission.user.login}", stat_user_admin_path(@submission.user)
+                  = @submission.user.full_name
+                - else
+                  = "(n/a)"
+              - else
+                = '-- REDACTED --'
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Problem
+            .col
+              = render partial: 'problems/problem_name', locals: {problem: @submission.problem} if @submission.problem
+              - if @current_user.admin?
+                = link_to 'Edit', edit_problem_path(@submission.problem)
+                |
+                = link_to 'Stat', stat_problem_path(@submission.problem)
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Tries
+            .col
+              = @submission.number
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Language
+            .col
+              = @submission.language.pretty_name
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Submitted
+            .col
+              #{time_ago_in_words(@submission.submitted_at)} ago 
+              %span.text-secondary (at #{@submission.submitted_at.to_formatted_s(:long)})
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Graded
+            .col
+              - if @submission.graded_at
+                #{time_ago_in_words(@submission.graded_at)} ago
+                %span.text-secondary (at #{@submission.graded_at.to_formatted_s(:long)})
+              - else
+                = "-"
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Points
+            .col
+              - live_dataset = @submission.problem&.live_dataset
+              - if @submission.points.nil?
+                = '-'
+              - elsif live_dataset&.st_raw_sum?
+                = @submission.points
+              - else
+                = "#{@submission.points}/100"
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Result
+            .col
+              %tt.grader-comment #{@submission.grader_comment}
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Runtime
+            .col
+              %span= (@submission.max_runtime || 0)/1000.to_d
+              %span.text-body-tertiary s
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Memory
+            .col
+              %span= @submission.peak_memory
+              %span.text-body-tertiary kb
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Compiler result
+            .col
+              %a{href: '#', data: {bs: {toggle: 'modal', target: '#compiler-msg-modal'}}}
+                View
+          .row.mb-2
+            .col-4.text-end.text-secondary
+              Grading Task Status
+            .col
+              = @submission.status
+        -# if @current_user.admin?
+        - if @current_user.can_edit_problem?(@submission.problem)
+          .card-footer
+            .row.align-items-center.g-2
+              .col-auto
+                %strong ADMIN Section
+              .col-auto
+                = button_to "Rejudge", rejudge_submission_path(@submission),
+                    class: 'btn btn-warning btn-sm',
+                    form: {class: 'd-inline', data: {turbo: true}}
+              .col-auto
+                = link_to "Testcase", show_problem_testcases_path(@submission.problem_id), data: {turbo: false}, class: 'btn btn-sm btn-primary'
+              .col-auto
+                - if @submission.tag_model?
+                  = link_to "Remove model status", set_tag_submission_path(@submission, tag: :default), class: 'btn btn-danger btn-sm'
+                - else
+                  = link_to "Set as model solution", set_tag_submission_path(@submission, tag: :model), class: 'btn btn-success btn-sm'
+              .col-auto
+                IP: #{@submission.ip_address}
+      -# Submission Comment
+      .card.mb-3.shadow-sm{data: {turbo: "true", controller: 'submission-comment', submission_comment_create_url_value: submission_comments_path(@submission) }}
+        .card-body
+          .row.align-items-center
+            .col-auto
+              %h4
+                Submission Comment
+            .col-auto
+              = link_to 'Refresh', submission_comments_path(@submission), data: {turbo: "true", turbo_prefetch: false}, class: 'btn btn-outline-secondary btn-sm'
+            .col
+            - if @current_user.problems_for_action(:report).where(id: @submission.problem).any?
+              .col-auto.text-end
+                %button.btn.btn-primary.btn-sm{data: { bs_toggle: 'modal', bs_target: '#comment-modal', action: 'submission-comment#prepareFormForCreate'}} Add Comment
+          = turbo_frame_tag :submission_comments do
+            = render partial: 'comments', locals: {submission: @submission, show_edit: true}
+          -# add comment modal
+          = render partial: 'add_comment', locals: {submission: @submission}
+        -# GenAI request
+        - if @models && @models.any? && GraderConfiguration['system.llm_assist']
+          .card-footer
+            = render partial: 'add_assist', locals: {models: @models}
+      -# Evaluation Card
+      .card.mb-3.shadow-sm
+        .card-body
+          %h4 Evaluations
+          = render partial: 'evaluations', locals: {testcases: @testcases, evaluations_by_tcid: @evaluations_by_tcid}
 
+-# compiler msg modal
+= render partial: 'msg_modal', locals: {id: 'compiler-msg-modal', header_msg: 'Compiler message', body_msg: "<pre>#{@submission.compiler_message}</pre>".html_safe}
 
-.modal.fade#compiler{tabindex: -1,role: 'dialog'}
-  .modal-dialog.modal-lg{role:'document'}
-    .modal-content
-      .modal-header
-        %button.close{type: 'button', data: {dismissed: :modal}, aria: {label: 'close'}}
-          %span{aria: {hidden: 'true'}, data: {dismiss: 'modal'}} &times;
-        %h4 Compiler message
-      .modal-body
-        %pre#compiler_msg= @submission.compiler_message
-      .modal-footer
-        %button.btn.btn-default{type: 'button', data: {dismiss: 'modal'}} Close

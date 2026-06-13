@@ -1,0 +1,29 @@
+.card.shadow-sm.mb-2
+  .card-body
+    %h6.fw-bold.mb-3.d-flex.align-items-center
+      %span.mi.me-2.text-secondary calendar_month
+      Date range
+    .row.g-2.align-items-center.mb-2
+      .col-auto
+        %label.col-form-label.text-secondary.small From
+      .col
+        .input-group.input-group-sm.td-date
+          = text_field_tag :since_datetime, nil, class: 'form-control', placeholder: 'start of today'
+          %span.input-group-text
+            %span.mi.md-18 event
+    .row.g-2.align-items-center
+      .col-auto
+        %label.col-form-label.text-secondary.small Until
+      .col
+        .input-group.input-group-sm.date
+          = text_field_tag :until_datetime, nil, class: 'form-control', placeholder: 'end of today'
+          %span.input-group-text
+            %span.mi.md-18 event
+
+:javascript
+  window.addEventListener("load", function() {
+    $(function() {
+      since_datetime = new TempusDominus(document.getElementById('since_datetime'), cafe.config.td.datetime );
+      until_datetime = new TempusDominus(document.getElementById('until_datetime'), cafe.config.td.datetime );
+    })
+  })

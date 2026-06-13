@@ -1,0 +1,20 @@
+-# dataset tabs
+- @active_dataset_tab ||= '#settings'
+%ul.nav.nav-tabs
+  %li.nav-item
+    %button.nav-link{href: '#', data: {bs: {toggle: :tab, target: "#settings"}},class: ('active' if @active_dataset_tab == '#settings') } Settings
+  %li.nav-item
+    %button.nav-link{href: '#', data: {bs: {toggle: :tab, target: "#testcases"}},class: ('active' if @active_dataset_tab == '#testcases')} Testcases
+  %li.nav-item
+    %button.nav-link{href: '#', data: {bs: {toggle: :tab, target: "#files"}},class: ('active' if @active_dataset_tab == '#files')} Files
+-# dataset tabs content
+.tab-content.mt-3
+  %div#settings.tab-pane.fade{class: (' show active ' if @active_dataset_tab == '#settings')}
+    %div.mb-3
+      = turbo_frame_tag 'dataset_settings', src: settings_dataset_path(ds,{active_dataset_tab: @active_dataset_tab}), data: {'problem-target': 'datasetSettings'}
+  %div#testcases.tab-pane.fade{class: (' show active ' if @active_dataset_tab == '#testcases')}
+    %div.mb-3
+      = turbo_frame_tag 'dataset_testcases', src: testcases_dataset_path(ds,{active_dataset_tab: @active_dataset_tab}), data: {'problem-target': 'datasetTestcases'}
+  %div#files.tab-pane.fade{class: (' show active ' if @active_dataset_tab == '#files')}
+    %div.mb-3
+      = turbo_frame_tag 'dataset_files', src: files_dataset_path(ds,{active_dataset_tab: @active_dataset_tab}), data: {'problem-target': 'datasetFiles'}

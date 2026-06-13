@@ -1,49 +1,81 @@
-require 'test_helper'
+require "test_helper"
 
-class TagsControllerTest < ActionController::TestCase
-  setup do
-    @tag = tags(:one)
+class TagsControllerTest < ActionDispatch::IntegrationTest
+  # --- Authorization ---
+
+  test "unauthenticated cannot list tags" do
+    get tags_path
+    assert_redirected_to login_main_path
   end
 
-  test "should get index" do
-    get :index
+  test "normal user cannot list tags" do
+    sign_in_as("john", "hello")
+    get tags_path
+    assert_redirected_to list_main_path
+  end
+
+  test "group editor cannot list tags" do
+    sign_in_as("mary", "mary")
+    get tags_path
+    assert_redirected_to list_main_path
+  end
+
+  # --- Admin happy paths ---
+
+  test "admin can access tags index" do
+    sign_in_as("admin", "admin")
+    get tags_path
     assert_response :success
-    assert_not_nil assigns(:tags)
   end
 
-  test "should get new" do
-    get :new
+  test "admin can view new tag form" do
+    sign_in_as("admin", "admin")
+    get new_tag_path
     assert_response :success
   end
 
-  test "should create tag" do
-    assert_difference('Tag.count') do
-      post :create, tag: { description: @tag.description, name: @tag.name, public: @tag.public }
+  test "admin can edit tag" do
+    sign_in_as("admin", "admin")
+    get edit_tag_path(tags(:tag_easy))
+    assert_response :success
+  end
+
+  test "admin can create tag" do
+    sign_in_as("admin", "admin")
+    assert_difference("Tag.count") do
+      post tags_path, params: { tag: { name: "new_tag", description: "A new tag", public: true } }
     end
-
-    assert_redirected_to tag_path(assigns(:tag))
   end
 
-  test "should show tag" do
-    get :show, id: @tag
-    assert_response :success
+  test "admin can update tag" do
+    sign_in_as("admin", "admin")
+    t = tags(:tag_easy)
+    patch tag_path(t), params: { tag: { description: "Updated description" } }
+    assert_equal "Updated description", t.reload.description
   end
 
-  test "should get edit" do
-    get :edit, id: @tag
-    assert_response :success
-  end
-
-  test "should update tag" do
-    patch :update, id: @tag, tag: { description: @tag.description, name: @tag.name, public: @tag.public }
-    assert_redirected_to tag_path(assigns(:tag))
-  end
-
-  test "should destroy tag" do
-    assert_difference('Tag.count', -1) do
-      delete :destroy, id: @tag
+  test "admin can destroy tag" do
+    sign_in_as("admin", "admin")
+    assert_difference("Tag.count", -1) do
+      delete tag_path(tags(:tag_hard))
     end
+  end
 
-    assert_redirected_to tags_path
+  # --- Toggles ---
+
+  test "admin can toggle public" do
+    sign_in_as("admin", "admin")
+    t = tags(:tag_easy)
+    was = t.public
+    post toggle_public_tag_path(t), as: :turbo_stream
+    assert_equal !was, t.reload.public
+  end
+
+  # --- Datatable JSON ---
+
+  test "admin can query tag list as JSON" do
+    sign_in_as("admin", "admin")
+    post index_query_tags_path, as: :json
+    assert_response :success
   end
 end

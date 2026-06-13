@@ -1,0 +1,43 @@
+# cafe_grader judge configuration
+# this is per machine configuration
+
+#any config under shared is merged into development and production
+shared:
+
+  #directory
+  directory:
+    isolate_working_dir: /var/local/lib/isolate/
+    judge_path: <%= ENV['HOME'] %>/cafe_grader/judge
+    judge_path: <%= Rails.root.join('..', 'judge').cleanpath %>
+    judge_raw_path: <%= Rails.root.join('..', 'judge','raw').cleanpath %>
+    judge_log_file: <%= Rails.root.join 'log','judge' %>
+    grader_stdout_base_file: <%= Rails.root.join 'log','grader-' %>
+
+  #executable
+  compiler:
+    cpp: /usr/bin/g++
+    c: <%= `which gcc`.strip %>
+    ruby: <%= `which ruby`.strip %>
+    python: /venv/grader/bin/python3
+    javac: <%= `which javac`.strip %>
+    java: <%= `which java`.strip %>
+    digital: <%= Rails.root.join 'lib','language', 'digital','Digital.jar' %>
+    haskell: <%= `which ghc`.strip %>
+    rust: <%= `which rustc`.strip %>
+    go: <%= `which go`.strip %>
+    pas: <%= `which fpc`.strip %>
+  isolate_path: <%= `which isolate`.strip %>
+
+  #hosts
+  hosts:
+    web: http://localhost
+
+development:
+  server_key: c2f7966dee
+  worker_id: 1
+  worker_passcode: aa0429lljka429ukljh3904i2ljk1kj
+
+production:
+  server_key: c2f7966dee
+  worker_id: 1
+  worker_passcode: aa0429lljka429ukljh3904i2ljk1kj

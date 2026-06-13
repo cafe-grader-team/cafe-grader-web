@@ -1,0 +1,8 @@
+= turbo_frame_tag dom_id(@config,"config"), class: 'w-100' do
+  = simple_form_for @config, html: { class: 'config-edit-form' } do |f|
+    = f.input :value, label: false, autofocus: true, input_html: { class: 'form-control-sm' }, wrapper: false
+    .btn-group
+      = button_tag type: 'submit', class: 'btn btn-sm btn-primary' do
+        %span.mi.md-18 check
+      = link_to grader_configuration_index_path, class: 'btn btn-sm btn-outline-secondary' do
+        %span.mi.md-18 close

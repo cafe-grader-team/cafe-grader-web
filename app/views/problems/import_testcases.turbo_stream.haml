@@ -1,0 +1,3 @@
+= turbo_stream.replace :import_dataset_into_problem, partial: 'problems/ds_import', locals: {problem: @problem, updated: @updated}
+- if @dataset
+  = turbo_stream.replace :dataset_update, partial: 'datasets/form', locals: {ds: @dataset, updated: @updated}

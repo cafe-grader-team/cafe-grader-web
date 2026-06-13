@@ -1,0 +1,45 @@
+.d-flex.flex-wrap.align-items-center.gap-2.mb-3
+  -# Dataset-selector form contains ONLY the dropdown + active-tab input.
+  -# Action buttons below are SIBLINGS, not children — so their button_to
+  -# forms don't produce illegal nested <form> tags inside this form.
+  = simple_form_for :null, url: view_dataset_path(ds), wrapper: :inline_form, html: { class: 'd-inline-flex align-items-center gap-2 mb-0', data: { controller: 'init-ui-component', 'problem-target': 'datasetSelectForm', turbo: 'true' } } do |f|
+    = f.input :dsid, label: false, collection: problem.datasets.reload, selected: ds.id, include_blank: false, wrapper: :inline_form,
+      input_html: {class: 'select2', style: 'min-width: 12rem;', data: {turbo: true, action: 'change->problem#viewDataset', 'problem-target': 'datasetSelect'}}
+    %input#dataset-select-active-tab{type: 'hidden', name: 'active_dataset_tab', value: @active_dataset_tab, data: {'bs-tab-target': 'activeTabInput', 'problem-target': 'activeTabInput'}}
+
+  -# State indicator vs. promotion button — never both.
+  - if ds == problem.live_dataset
+    %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium Live
+  - else
+    = button_to set_as_live_dataset_path(ds), method: :post,
+                class: 'btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1',
+                form: { class: 'd-inline mb-0', data: { turbo: true } } do
+      %span.mi.md-18 star
+      Set as live
+
+  = button_to add_dataset_problem_path(problem), method: :post,
+              class: 'btn btn-sm btn-success d-inline-flex align-items-center gap-1',
+              form: { class: 'd-inline mb-0 ms-auto', data: { turbo: true } } do
+    %span.mi.md-18 add
+    Add dataset
+
+  -# Heavier / destructive actions tucked behind more_horiz per CLAUDE.md
+  -# Progressive Condensation rule (>2 controls including a destructive one).
+  .dropdown
+    %button.btn.btn-sm.bg-white.shadow-sm.border-0.text-secondary.d-inline-flex.align-items-center.justify-content-center{type: 'button', data: {bs_toggle: 'dropdown', bs_title: 'More dataset actions'}, 'aria-expanded': 'false'}
+      %span.mi more_horiz
+    %ul.dropdown-menu.dropdown-menu-end
+      %li
+        = button_to rejudge_dataset_path(ds), method: :post,
+                    class: 'dropdown-item d-inline-flex align-items-center gap-1',
+                    form: { class: 'd-inline mb-0', data: { turbo: true, 'turbo-confirm': "Rejudge all #{problem.submissions.count} submissions of #{problem.name} using the dataset \"#{ds.name}\"?" } } do
+          %span.mi.md-18 replay
+          Rejudge all submissions
+      %li
+        %hr.dropdown-divider
+      %li
+        = button_to dataset_path(ds), method: :delete,
+                    class: 'dropdown-item text-danger d-inline-flex align-items-center gap-1',
+                    form: { class: 'd-inline mb-0', data: { turbo: true, 'turbo-confirm': "Delete the dataset \"#{ds.name}\"? This cannot be undone." } } do
+          %span.mi.md-18 delete
+          Delete dataset

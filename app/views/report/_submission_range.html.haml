@@ -1,0 +1,50 @@
+.card.shadow-sm.mb-2{data: {controller: 'form--filter-submission', action: 'change->form--filter-submission#filterChanged change.td->form--filter-submission#filterChanged'}}
+  .card-body
+    %h6.fw-bold.mb-3.d-flex.align-items-center
+      %span.mi.me-2.text-secondary filter_alt
+      Submission range
+    .form-check.mb-2
+      = radio_button_tag 'sub_range[use]', :sub_id, true, class: 'form-check-input', data: {'form--filter-submission-target': 'useOption'}
+      %label.form-check-label{for: 'sub_range_use_sub_id'} Use submission ID
+    .ms-4.mb-3
+      .row.g-2.align-items-center
+        .col-auto
+          %label.col-form-label.text-secondary.small{for: 'sub_range_from_id'} Min
+        .col
+          = text_field_tag 'sub_range[from_id]', @since_id, class: "form-control form-control-sm", placeholder: "earliest", data: {'form--filter-submission-target': 'fromId'}
+        .col-auto
+          %label.col-form-label.text-secondary.small{for: 'sub_range_to_id'} Max
+        .col
+          = text_field_tag 'sub_range[to_id]', @until_id, class: "form-control form-control-sm", placeholder: "latest", data: {'form--filter-submission-target': 'toId'}
+    .form-check.mb-2
+      = radio_button_tag 'sub_range[use]', :sub_time, false, class: 'form-check-input', data: {'form--filter-submission-target': 'useOption'}
+      %label.form-check-label{for: 'sub_range_use_sub_time'} Use date and time
+    .ms-4
+      .row.g-2.align-items-center.mb-2
+        .col-auto
+          %label.col-form-label.text-secondary.small From
+        .col
+          .input-group.input-group-sm.td-date
+            = text_field_tag 'sub_range[from_time]', nil, class: 'form-control', placeholder: 'start of today', data: {'form--filter-submission-target': 'fromTime', action: 'change.td->form--filter-submission#filterChanged'}
+            %span.input-group-text
+              %span.mi.md-18 event
+      .row.g-2.align-items-center
+        .col-auto
+          %label.col-form-label.text-secondary.small Until
+        .col
+          .input-group.input-group-sm.date
+            = text_field_tag 'sub_range[to_time]', nil, class: 'form-control', placeholder: 'end of today', data: {'form--filter-submission-target': 'toTime', action: 'change.td->form--filter-submission#filterChanged'}
+            %span.input-group-text
+              %span.mi.md-18 event
+:javascript
+  window.addEventListener("load", function() {
+    $(function() {
+      since_datetime = new TempusDominus(document.getElementById('sub_range_from_time'), cafe.config.td.datetime );
+      until_datetime = new TempusDominus(document.getElementById('sub_range_to_time'), cafe.config.td.datetime );
+    })
+  })
+
+  function build_sub_range_params(d) {
+    $('input[name^="sub_range"]').each( function(a,b) {d[b.name]  = b.value }  )
+    d['sub_range[use]'] = $('input[name="sub_range[use]"]:checked').val()
+  }

@@ -1,0 +1,60 @@
+/ Knowledge Card: Problems
+.card.border-0.shadow-sm.border-start.border-4.border-info
+  .card-body.p-4
+    
+    / --- Header ---
+    .d-flex.align-items-center.mb-4
+      .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+        %span.mi.md-24.fill settings
+      
+      %div
+        %h5.fw-bold.text-dark.mb-0 Problem Management
+        %small.text-secondary System configurations and usage guidelines.
+
+    / --- Content Grid ---
+    .row.g-4
+      
+      / 1. Configurations Status
+      .col-lg-6
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 rule
+          
+          %div
+            %h6.fw-bold.text-dark.mb-2 Configuration Status
+            
+            / Status Badge
+            .d-flex.align-items-center.gap-2.mb-2
+              %span.small.text-secondary Problem Group Mode:
+              - if GraderConfiguration.use_problem_group?
+                %span.badge.bg-success-subtle.text-success.border.border-success-subtle On
+              - else
+                %span.badge.bg-secondary-subtle.text-secondary.border.border-secondary-subtle Off
+
+            .small.text-muted.lh-sm
+              - if GraderConfiguration.use_problem_group?
+                Users only see 
+                %strong.text-dark enabled
+                problems in their assigned groups.
+                #{link_to 'Manage Groups', groups_path, class: 'text-decoration-none'}
+              - else
+                Users see 
+                %strong.text-dark every
+                available problem.
+
+      / 2. Usage Guidelines
+      .col-lg-6
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 help_outline
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Usage Guidelines
+            .small.text-muted.lh-sm
+              %p.mb-1
+                %strong.text-dark Available:
+                Global setting. Problems set to false are hidden from everyone. 
+              %p.mb-0
+                Only admins can change availability. Group editors use the
+                %strong.text-dark enabled
+                option in group management.

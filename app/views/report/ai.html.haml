@@ -1,0 +1,24 @@
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+  %h2.fw-bold.text-dark.mb-0 AI Assist
+
+= form_with url: '#', id: 'filter_form' do |f|
+  .row{data: {controller: 'init-ui-component'}}
+    .col-lg-4
+      = render partial: 'problem_select', locals: {all: true}
+    .col-lg-4
+      = render partial: 'submission_range'
+    .col-lg-4
+      = render partial: 'user_select'
+
+.text-secondary.small.mb-3.d-flex.align-items-center
+  %span.mi.md-18.me-1 sync
+  Select filters above, then click Refresh to load data.
+
+.col-sm-12{ data: { turbo: true,
+    controller: 'datatables--init init-ui-component',
+    'datatables--init-config-name-value': 'aiAssistReport',
+    'datatables--init-ajax-url-value': ai_query_report_path
+  }
+}
+  %table#table.table.table-hover.table-condense

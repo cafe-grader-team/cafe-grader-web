@@ -1,0 +1,15 @@
+.alert.alert-info
+  %ul.mb-0
+    %li
+      This assistantce was generated using the
+      %span.font-monospace "#{@comment.llm_model}"
+      large language model as a suggested improvement
+      for the source code in submission
+      = link_to "##{@submission.id}", submission_path(@submission)
+      (score
+      %span.font-monospace #{@submission.points} [#{@submission.grader_comment}]
+      )
+    %li
+      Please note that a large language model can make mistakes.
+%script
+  hljs.highlightAll();

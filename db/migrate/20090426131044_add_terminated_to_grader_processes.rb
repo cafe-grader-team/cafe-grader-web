@@ -1,4 +1,4 @@
-class AddTerminatedToGraderProcesses < ActiveRecord::Migration
+class AddTerminatedToGraderProcesses < ActiveRecord::Migration[4.2]
   def self.up
     add_column :grader_processes, :terminated, :boolean
   end

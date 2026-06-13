@@ -1,0 +1,144 @@
+-# Offcanvas help drawer for problems/edit.
+-# Triggered by the Help (?) icon button in the edit-page header.
+-# Content here is intended to grow over time; keep sections short and
+-# link out to the wiki for deep reference rather than duplicating it.
+#problem-edit-help.offcanvas.offcanvas-end.offcanvas-help{tabindex: -1, 'aria-labelledby': 'problem-edit-help-label'}
+  .offcanvas-header.border-bottom
+    %div
+      %h5#problem-edit-help-label.offcanvas-title.fw-bold.mb-0
+        %span.mi.me-1 help_outline
+        Problem Editor Help
+      %small.text-secondary Quick reference for the fields and panels on this page.
+    %button.btn-close{type: 'button', 'data-bs-dismiss': 'offcanvas', 'aria-label': 'Close'}
+
+  .offcanvas-body
+    -# ---- Section: Detail fields ----
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Detail Card
+      %dl.row.small.mb-0
+        %dt.col-4.fw-semibold Full name
+        %dd.col-8.text-secondary Human-readable title shown to students. Required.
+        %dt.col-4.fw-semibold Name
+        %dd.col-8.text-secondary
+          Short identifier used in filenames and the engine. Must be
+          %strong unique
+          and stable — renaming may break links and imports.
+        %dt.col-4.fw-semibold Description
+        %dd.col-8.text-secondary
+          Markdown source used internally —
+          %strong not shown to students directly.
+          Two uses: (a) auto-generates the downloadable PDF statement, (b) feeds LLM-assisted hints. Optional; when present, its content should match the uploaded PDF.
+        %dt.col-4.fw-semibold Time / memory limit
+        %dd.col-8.text-secondary Per-test-case caps. Time in seconds, memory in MB.
+        %dt.col-4.fw-semibold Tags
+        %dd.col-8.text-secondary
+          Free-form labels. For viva exams, attach
+          %code llm_prompt
+          (interviewer persona + rubric) and
+          %code viva_grounding
+          (course materials) here.
+        %dt.col-4.fw-semibold Compilation type
+        %dd.col-8.text-secondary
+          How the submission is built before grading:
+          %ul.ps-3.mb-0
+            %li
+              %strong Self contained
+              — the submitted source compiles standalone. The default for most problems.
+            %li
+              %strong With managers
+              — the submission is compiled together with one or more
+              %em manager
+              files attached to the dataset. Use this when students implement a function called by a fixed harness, or when there's a shared header/grader stub.
+            %li
+              %strong Viva Exam
+              — special mode: no compilation and no test cases. The submission is an answer to an LLM-driven oral interview, graded against a rubric supplied via the
+              %code llm_prompt
+              tag.
+        %dt.col-4.fw-semibold Submission filename
+        %dd.col-8.text-secondary
+          The on-disk filename used when the submission is written into the compile sandbox. Leave
+          %strong blank
+          to default to
+          %code submission.<ext>
+          (e.g.
+          %code submission.cpp
+          ). Override only when the harness or manager requires a specific filename — e.g. when a manager does
+          %code #include "mySolution.cpp"
+          set the override to match. Most common with
+          %em with-managers
+          problems.
+
+    -# ---- Section: Datasets ----
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Datasets
+      %p.small.text-secondary.mb-2
+        A problem can have multiple datasets; exactly one is the
+        %strong live dataset
+        — that's what runs when a student submits. Switch the live
+        dataset via the dropdown on the right.
+      %p.small.text-secondary.mb-0
+        Viva-exam problems don't use datasets at all — they're driven by
+        the LLM tags described above.
+
+    -# ---- Section: Scoring & evaluation ----
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Scoring & evaluation
+      %p.small.text-secondary.mb-2
+        %strong Score type
+        controls how per-testcase scores aggregate into a final grade:
+        %strong Sum
+        (weighted sum, scaled to 100 — the default),
+        %strong Group Min
+        (IOI/ICPC subtask style — a group is only as strong as its
+        weakest testcase), or
+        %strong Raw Sum
+        (literal sum, no normalization).
+      %p.small.text-secondary.mb-2
+        %strong Evaluation type
+        controls how a submission's output is judged against the
+        expected answer. Built-in evaluators are
+        %code default
+        (diff that ignores whitespace + blank lines — most problems),
+        %code exact
+        (strict diff), and
+        %code relative
+        (token-by-token; numbers compared with tolerance). Custom
+        evaluators —
+        %code cafe
+        ,
+        %code cms
+        , and
+        %code cms-raw
+        — run a checker file you attach to the dataset (Files tab).
+      %p.small.text-secondary.mb-0
+        %strong Heads up:
+        the
+        %code Raw Sum
+        score type is designed to pair with the
+        %code CMS-raw
+        custom evaluator — other combinations will produce strange
+        totals because non-custom evaluators only emit pass/fail per
+        testcase.
+      %ul.small.text-secondary.mb-0.ps-3
+        %li
+          %span.mi.md-18.align-text-bottom query_stats
+          %strong Statistics
+          — submission counts, scores, language breakdown.
+        %li
+          %span.mi.md-18.align-text-bottom download
+          %strong Download Archive
+          — exports the problem + live dataset for backup or transfer.
+        %li
+          %span.mi.md-18.align-text-bottom history
+          %strong Change history
+          — audit log of edits to this problem, its dataset, and testcases.
+
+    -# ---- Section: External links ----
+    %section
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 More
+      %p.small.text-secondary.mb-1
+        For deep reference (import format, checker scripts, manager files,
+        initializer scripts), see the project wiki.
+      %a.btn.btn-sm.btn-outline-secondary.d-inline-flex.align-items-center.gap-1{href: 'https://github.com/cafe-grader-team/cafe-grader-web/wiki/Adding-a-problem', target: '_blank', rel: 'noopener'}
+        %span.mi.md-18 open_in_new
+        Wiki: Adding a problem

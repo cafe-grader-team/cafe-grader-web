@@ -1,4 +1,4 @@
-class AddTaskTypeToGraderProcesses < ActiveRecord::Migration
+class AddTaskTypeToGraderProcesses < ActiveRecord::Migration[4.2]
   def self.up
     add_column 'grader_processes', 'task_type', :string
   end

@@ -1,0 +1,13 @@
+- problem.comments_with_reveal_status(@current_user,kind: [:hint]).each do |hint|
+  .row
+    .col-8
+      .badge.rounded-pill.text-success.bg-success-subtle.me-2 Hint
+      #{hint.title}
+    .col-4.text-end
+      -# view the hint
+      - if hint.is_acquired?
+        = link_to 'View', problem_hint_path(problem,hint), data: {turbo_stream: true}
+      - else
+        - body_text = render partial: 'problems/acquire_hint_confirm', locals: {hint: hint}
+        - confirmation = {title: "Confirm getting a hint", body: body_text}
+        = link_to 'Get', acquire_problem_hint_path(problem,hint), data: {turbo_stream: true, turbo_method: 'POST', turbo_confirm: confirmation.to_json}

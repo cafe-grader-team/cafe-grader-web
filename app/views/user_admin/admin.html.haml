@@ -1,25 +1,37 @@
-%h1 Administrators
+.row.my-2{data: {controller: 'init-ui-component'}}
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Access Control
+      %h2.fw-bold.text-dark.mb-0 Administrators &amp; TAs
 
-%table{:class => 'info'}
-  %tr{:class => 'info-head'}
-    %th #
-    %th Login
-    %th Full name
-    %th 
-  - @admins.each_with_index do |user, i|
-    %tr
-      %td= i+1
-      %td= user.login
-      %td= user.full_name
-      %td
-        - if user.login!='root'
-          = link_to '[revoke]', :action => 'revoke_admin', :id => user.id
-%hr
+    .d-flex.flex-wrap.gap-2
+      = link_to "#{mdi(:arrow_back, 'me-1')}Back".html_safe, user_admin_index_path, class: 'btn btn-flex btn-outline-secondary'
+  .col-md-7.mb-3
+    = render partial: 'admin_help'
 
-= form_tag :action => 'grant_admin' do
-  Grant admin permission to:
-  = text_field_tag 'login'
-  = submit_tag 'Grant'
-
-%hr/
-= link_to '[go back to index]', :action => 'index'
+.row.g-3{data: {controller: 'init-ui-component'}}
+  - [{role: 'admin', title: 'Administrators', table_id: 'admin-table', query_url: admin_query_user_admin_index_path},
+     {role: 'ta',    title: 'TAs',            table_id: 'ta-table',    query_url: ta_query_user_admin_index_path}].each do |panel|
+    .col-md-6
+      .card.shadow-sm
+        .card-body
+          %h4= panel[:title]
+          = form_tag modify_role_user_admin_index_path, class: 'role-form', data: {turbo: true, role_table: panel[:table_id], action: 'turbo:submit-end->user-admin--admin#afterUserAction'} do
+            = hidden_field_tag :role, panel[:role]
+            = hidden_field_tag :command, 'grant', class: 'role-command'
+            .row.row-cols-lg-auto.g-3.align-items-center
+              .col
+                %label.form-check-label= "Grant #{panel[:role]} role to"
+              .col
+                = select_tag :id, options_from_collection_for_select(User.all, 'id', 'login_with_name'),
+                             id: "#{panel[:role]}_user_id",
+                             class: 'select2 role-user-select', multiple: false, style: 'width: 20rem'
+              .col
+                = submit_tag 'Grant', class: 'btn btn-primary',
+                             data: {action: 'click->user-admin--admin#setGrantCommand'}
+          %br
+          %table.role-table.table.table-condense.table-hover{id: panel[:table_id], data: {query_url: panel[:query_url], role: panel[:role]}}
+            %thead{:class => 'info-head'}
+              %th Login
+              %th Full name
+              %th.text-end Action

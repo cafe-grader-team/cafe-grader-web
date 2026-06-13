@@ -1,0 +1,181 @@
+//---- dae 2026 ----
+.card-shadow {
+  @extend .shadow-sm;
+  @extend .border-secondary;
+  @extend .border-opacity-25;
+}
+
+.config-card {
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /*
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  background: white;
+  */
+
+  &:hoverxxx {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-header {
+    border: none;
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #334488;
+      margin: 0;
+      text-transform: none;
+      display: flex;
+      align-items: center;
+
+      i {
+        margin-right: 8px;
+        color: #5566bb;
+      }
+    }
+  }
+
+}
+
+.config-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &:last-child {
+    border-bottom: none;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .config-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .config-info {
+    flex: 1;
+    padding-right: 20px;
+
+    .config-key {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #1e293b;
+      display: block;
+      word-break: break-all;
+      text-transform: bold;
+    }
+
+    .config-description {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .config-type-badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+  }
+
+  .config-value-wrapper {
+    min-width: 140px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    text-align: right;
+  }
+
+  .config-value-text {
+    font-family: 'Inconsolata', monospace;
+    font-size: 1rem;
+    color: #334488;
+    background: #f8fafc;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-right: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .edit-link {
+    color: #5566bb;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px;
+    border-radius: 6px;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+}
+
+.config-search-wrapper {
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  .input-group-text {
+    background: transparent;
+    border-right: none;
+    color: #94a3b8;
+  }
+
+  .form-control {
+    border-left: none;
+    padding-left: 0;
+
+    &:focus {
+      box-shadow: none;
+      border-color: #dee2e6;
+    }
+  }
+}
+
+/* Fix toggle centering */
+.form-check.form-switch {
+  margin-bottom: 0;
+  padding-left: 2.5em;
+  min-height: auto;
+
+  .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    cursor: pointer;
+  }
+}
+
+/* Edit form compacting */
+.config-edit-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+
+  .form-group {
+    margin-bottom: 0;
+    flex-grow: 1;
+  }
+
+  .form-control-sm {
+    font-family: 'Inconsolata', monospace;
+  }
+}

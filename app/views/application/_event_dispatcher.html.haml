@@ -1,0 +1,18 @@
+-#
+  render this div, via turbo:append to some id so that it will fire an event.
+  See `event_dispatcher_controller.js` for more detail.
+
+  Usage: Here is an example that renders both the toast and this dispatcher
+
+    render turbo_stream: [
+      turbo_stream.append('toast-area', partial: 'toast', locals: {toast: @toast}),
+      turbo_stream.append('toast-area', partial: 'event_dispatcher', locals: {event_name: 'datatable:reload', event_detail: { "h": 1}}),
+    ]
+
+    We also have a view `application/turbo_toast` that renders something like above by calling `render :turbo_toast`
+%div{ data: { controller: 'event-dispatcher',
+  event_name: event_name,
+  event_detail: event_detail.to_json
+} }
+
+

@@ -1,18 +1,8 @@
 class TestController < ApplicationController
 
-  before_filter :authenticate, :check_viewability
+  before_action :check_valid_login, :check_viewability
+  before_action :admin_authorization
 
-#
-#  COMMENT OUT: filter in each action instead
-#
-#  before_filter :verify_time_limit, :only => [:submit]
-
-  verify :method => :post, :only => [:submit],
-         :redirect_to => { :action => :index }
-
-  def index
-    prepare_index_information
-  end
 
   def submit
     @user = User.find(session[:user_id])

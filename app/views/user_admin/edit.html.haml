@@ -1,13 +1,85 @@
-%h1 Editing user
+= render 'application/breadcrumb', steps: [{ label: 'Users', path: user_admin_index_path, icon: resource_icon_name(User) }, { label: 'Edit' }]
 
-= form_tag( {:action => 'update', :id => @user}, {class: 'form-horizontal'}) do
-  = error_messages_for 'user'
-  = render partial: "form"
-  .form-group
-    .col-md-offset-2.col-md-4
-      = submit_tag "Edit", class: 'btn btn-primary'
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0
+      - if @user.full_name.present?
+        = @user.full_name
+      - else
+        %span.text-muted.fst-italic [User ##{@user.id}]
+      %span.font-monospace.text-secondary.fw-normal= "[#{@user.login}]"
+    %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
+      %small Editing
 
+  .d-flex.gap-2
+    = link_to 'Cancel', user_admin_index_path, class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'edit_user_form'} Save Changes
 
-= link_to 'Show', :action => 'show', :id => @user 
-|
-= link_to 'Back', :action => 'list'
+.row
+  .col-md-5
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Basic Info
+        = simple_form_for @user, url: user_admin_path(@user), wrapper: :horizontal_form, html: { id: 'edit_user_form' } do |f|
+          = render partial: 'form', locals: {f: f}
+  .col-md-7
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Groups
+        %p.small.text-muted.d-flex.align-items-center.gap-1.mb-3
+          %span.mi.md-16 info
+          Manage membership from each group's page. Click a group name to navigate there.
+        - if @user.groups_users.any?
+          %table.table.table-sm.align-middle.mb-0
+            %thead
+              %tr
+                %th Group
+                %th Description
+                %th.text-center Enabled
+                %th Role
+            %tbody
+              - @user.groups_users.each do |gu|
+                %tr
+                  %td= link_to gu.group.name, group_path(gu.group), class: 'text-decoration-none'
+                  %td.text-muted= gu.group.description
+                  %td.text-center
+                    - if gu.group.enabled
+                      %span.badge.bg-success-subtle.text-success.border.border-success-subtle Yes
+                    - else
+                      %span.badge.bg-secondary-subtle.text-secondary.border.border-secondary-subtle No
+                  %td
+                    %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle= gu.role
+        - else
+          .text-center.text-muted.py-4
+            %span.mi.md-24.d-block.mb-2 group_off
+            %p.small.mb-0 Not a member of any group.
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Contests
+        %p.small.text-muted.d-flex.align-items-center.gap-1.mb-3
+          %span.mi.md-16 info
+          Manage membership from each contest's page. Click a contest name to navigate there.
+        - if @user.contests_users.any?
+          %table.table.table-sm.align-middle.mb-0
+            %thead
+              %tr
+                %th Contest
+                %th Description
+                %th.text-center Enabled
+                %th Role
+            %tbody
+              - @user.contests_users.each do |cu|
+                %tr
+                  %td= link_to cu.contest.name, contest_path(cu.contest), class: 'text-decoration-none'
+                  %td.text-muted= cu.contest.description
+                  %td.text-center
+                    - if cu.contest.enabled
+                      %span.badge.bg-success-subtle.text-success.border.border-success-subtle Yes
+                    - else
+                      %span.badge.bg-secondary-subtle.text-secondary.border.border-secondary-subtle No
+                  %td
+                    %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle= cu.role
+        - else
+          .text-center.text-muted.py-4
+            %span.mi.md-24.d-block.mb-2 emoji_events
+            %p.small.mb-0 Not enrolled in any contest.

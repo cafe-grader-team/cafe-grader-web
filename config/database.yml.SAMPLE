@@ -1,42 +1,42 @@
-# MySQL.  Versions 4.1 and 5.0 are recommended.
-# 
-# Install the MYSQL driver
-#   gem install mysql2
-#
-# Ensure the MySQL gem is defined in your Gemfile
-#   gem 'mysql2'
-#
-# And be sure to use new-style password hashing:
-#   http://dev.mysql.com/doc/refman/5.0/en/old-client.html
-development:
+# change this to your setting
+user_pass: &user_pass
+  username: grader
+  password: grader
+
+default: &default
   adapter: mysql2
-  encoding: utf8
-  reconnect: false
-  database: ioi
-  pool: 5
-  username: ioi
-  password: ioi
+  encoding: utf8mb4
+  # canonical collation — MySQL 8 only, MariaDB unsupported (doc/decisions.md)
+  collation: utf8mb4_0900_ai_ci
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: localhost
   socket: /var/run/mysqld/mysqld.sock
 
-# Warning: The database defined as "test" will be erased and
-# re-generated from your development database when you run "rake".
-# Do not set this db to the same as development or production.
 test:
-  adapter: mysql2
-  encoding: utf8
-  reconnect: false
-  database: ioi_test
-  pool: 5
-  username: ioi
-  password: ioi
-  socket: /var/run/mysqld/mysqld.sock
+  primary:
+    <<: [*user_pass]
+    adapter: mysql2
+    database: grader_test
+  queue:
+    <<: [*user_pass]
+    adapter: mysql2
+    database: grader_queue_test
+    migrations_paths: db/queue_migrate
 
 production:
-  adapter: mysql2
-  encoding: utf8
-  reconnect: false
-  database: ioi
-  pool: 5
-  username: ioi
-  password: ioi
-  socket: /var/run/mysqld/mysqld.sock
+  primary:
+    <<: [*user_pass, *default]
+    database: grader
+  queue:
+    <<: [*user_pass, *default]
+    database: grader_queue
+    migrations_paths: db/queue_migrate
+
+development:
+  primary:
+    <<: [*user_pass, *default]
+    database: grader
+  queue:
+    <<: [*user_pass, *default]
+    database: grader_queue
+    migrations_paths: db/queue_migrate

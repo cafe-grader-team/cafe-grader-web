@@ -1,4 +1,4 @@
-class ProblemTag < ActiveRecord::Base
+class ProblemTag < ApplicationRecord
   self.table_name = 'problems_tags'
 
   belongs_to :problem

@@ -1,27 +1,35 @@
-:css
-  .fix-width {
-    font-family: "Consolas, Monaco, Droid Sans Mono,Mono, Monospace,Courier"
-  }
+= render partial: 'problems/problem_head', locals: {problem: @problem}
 
-%h1 Problem stat: #{@problem.name}
-%h2 Overview
+.row
+  .col-md-8.mb-3
+    .card
+      .card-body
+        %h2.card-title Submission History
+        %canvas#chart{height: '50px', data: { controller: 'chart', chart_data_value: @chart_dataset }}
 
-
-%table.info
-  %thead
-    %tr.info-head
-      %th Stat
-      %th Value
-  %tbody
-    %tr{class: cycle('info-even','info-odd')}
-      %td Submissions
-      %td= @submissions.count
-    %tr{class: cycle('info-even','info-odd')}
-      %td Solved/Attempted User
-      %td #{@summary[:solve]}/#{@summary[:attempt]} (#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%)
-
-%h2 Submissions Count
-= render partial: 'application/bar_graph', locals: { histogram: @histogram }
+  .col-md-4.mb-3
+    .card
+      .card-body
+        %h2.card-title General Info
+        .row.my-2
+          .col-sm-6.text-end.text-secondary
+            Name
+          .col-sm-6{data: {controller: 'problem-name'}}
+            = render partial: 'problem_name', locals: {problem: @problem}
+            - if @current_user.admin?
+              = link_to 'Edit', edit_problem_path(@problem)
+              |
+              = link_to 'Stat', stat_problem_path(@problem)
+        .row.my-2
+          .col-sm-6.text-end.text-secondary
+            Subs
+          .col-sm-6
+            = @submissions.count
+        .row.my-2
+          .col-sm-6.text-end.text-secondary
+            Solved/Attempted User
+          .col-sm-6
+            #{@summary[:solve]}/#{@summary[:attempt]} (#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%)
 
 %h2 Submissions
 - if @submissions and @submissions.count > 0
@@ -31,11 +39,12 @@
         %th ID
         %th Login
         %th Name
-        %th Submitted_at
-        %th language
-        %th Points
-        %th comment
-        %th IP
+        %th Language
+        %th Submitted at
+        %th Result
+        %th Score
+        - if @can_view_ip
+          %th IP
     %tbody
       - row_odd,curr = true,''
       - @submissions.each do |sub|
@@ -43,17 +52,22 @@
         - row_odd,curr = !row_odd, sub.user if curr != sub.user
         %tr
           %td= link_to sub.id, submission_path(sub)
-          %td= link_to sub.user.login, stat_user_path(sub.user)
+          %td= link_to sub.user.login, stat_user_admin_path(sub.user)
           %td= sub.user.full_name
-          %td{data: {order: sub.submitted_at}}= time_ago_in_words(sub.submitted_at) + " ago"
-          %td= sub.language.name
-          %td= sub.points
-          %td.fix-width= sub.grader_comment
+          %td= sub.language.pretty_name
+          %td{data: {order: sub.submitted_at}}
+            #{sub.submitted_at.strftime('%Y-%m-%d %H:%M')}
+            %span.text-secondary (#{time_ago_in_words(sub.submitted_at)} ago)
+          %td.grader-comment= sub.grader_comment
+          %td.text-end= sub.points
           %td= sub.ip_address
 - else
   No submission
 
 :javascript
-  $("#main_table").DataTable({
-    paging: false
+  window.addEventListener("load", function() {
+    $("#main_table").DataTable({
+      paging: false
+    });
   });
+

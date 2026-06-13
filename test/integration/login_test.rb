@@ -1,40 +1,34 @@
 require 'test_helper'
 
 class LoginTest < ActionDispatch::IntegrationTest
-  # test "the truth" do
-  #   assert true
-  # end
-
   test "login with invalid information" do
     get root_path
     assert_response :success
-    post login_login_path, login: "root", password: "hahaha"
-    assert_redirected_to root_path
+    post login_login_path, params: { login: "root", password: "hahaha" }
+    assert_redirected_to login_main_path
   end
 
   test "normal user login" do
     get root_path
     assert_response :success
-    post login_login_path, {login: "john", password: "hello" }
-    assert_redirected_to main_list_path
+    post login_login_path, params: { login: "john", password: "hello" }
+    assert_redirected_to list_main_path
   end
 
   test "normal user login in single_user mode" do
-    GraderConfiguration.find_by(key: GraderConfiguration::SINGLE_USER_KEY).update_attributes(value: 'true')
-    GraderConfiguration.reload
+    set_grader_config('system.single_user_mode', 'true')
     get root_path
     assert_response :success
-    post login_login_path, {login: "john", password: "hello" }
+    post login_login_path, params: { login: "john", password: "hello" }
     follow_redirect!
-    assert_redirected_to root_path
+    assert_redirected_to login_main_path
   end
 
-  test "root login in in single_user mode" do
-    GraderConfiguration.find_by(key: GraderConfiguration::SINGLE_USER_KEY).update_attributes(value: 'true')
-    GraderConfiguration.reload
+  test "root login in single_user mode" do
+    set_grader_config('system.single_user_mode', 'true')
     get root_path
     assert_response :success
-    post login_login_path, {login: "admin", password: "admin" }
-    assert_redirected_to main_list_path
+    post login_login_path, params: { login: "admin", password: "admin" }
+    assert_redirected_to list_main_path
   end
 end

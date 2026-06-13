@@ -1,27 +1,200 @@
-%h1 Listing contests
-.infobox
-  %b Go back to:
-  [#{link_to 'contest management', :controller => 'contest_management', :action => 'index'}]
-%p= link_to 'New contest', new_contest_path, class: 'btn btn-success'
-%table.table.table-striped
-  %tr
-    %th Name
-    %th Title
-    %th Enabled
-    %th
-    %th
-    %th
+.row.my-2
+  .col-md-5
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Management
+      %h2.fw-bold.text-dark.mb-0 Contests
 
-  - @contests.each do |contest|
-    - @contest = contest
-    %tr
-      -#%td= in_place_editor_field :contest, :name, {}, :rows => 1
-      -#%td= in_place_editor_field :contest, :title, {}, :rows => 1
-      -#%td= in_place_editor_field :contest, :enabled, {}, :rows => 1
-      %td= best_in_place @contest, :name
-      %td= best_in_place @contest, :title
-      %td= best_in_place @contest, :enabled
-      %td= link_to 'Show', contest
-      %td= link_to 'Edit', edit_contest_path(contest)
-      %td= link_to 'Destroy', contest, :confirm => 'Are you sure?', :method => :delete
-%br/
+    .d-flex.flex-wrap.gap-2.mb-4
+      = link_to mdi(:add, 'me-1') + 'New Contest', new_contest_path, class: 'btn btn-sm btn-success btn-flex'
+
+    .card.card-shadow.mb-3
+      .card-body
+        -# --- SECTION 1: SYSTEM MODE ---
+        .d-flex.align-items-start.mb-3
+          -# 1. New Icon for Balance (Tune/Settings)
+          .bg-success-subtle.text-success.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+            %span.mi.md-36.fill tune
+
+          .flex-grow-1
+            .d-flex.justify-content-between.align-items-center.mb-1
+              %h5.fw-bold.text-dark.mb-0 System Mode
+
+              -# Optional: Status Badge (Kept your logic)
+              - mode_class = 'success' # Replace with your helper
+              %span.badge.rounded-pill.border{class: "bg-#{mode_class}-subtle text-#{mode_class} border-#{mode_class}-subtle"}
+                = mode_to_text
+
+            .text-secondary.small
+              Select the operating mode for the system
+
+        = form_with url: set_system_mode_contests_path, class: 'w-100' do |form|
+          .btn-group.w-100
+            - mode = GraderConfiguration.get('system.mode')
+            %button.btn.btn-flex.w-100{type: 'submit', name: 'mode', value: 'standard',class: mode == 'standard' ? 'btn-success' : 'btn-outline-secondary' } 
+              - if mode == 'standard'
+                %span.mi.fill check_circle
+              Normal
+            %button.btn.btn-flex.w-100{type: 'submit', name: 'mode', value: 'contest',class: mode == 'contest' ? 'btn-warning' : 'btn-outline-secondary'}
+              - if mode == 'contest'
+                %span.mi.fill check_circle
+              Contest
+            %button.btn.btn-flex.w-100{type: 'submit', name: 'mode', value: 'analysis',class: mode == 'analysis' ? 'btn-info' : 'btn-outline-secondary'}
+              - if mode == 'analysis'
+                %span.mi.fill check_circle
+              Analysis
+
+    .card.card-shadow.mb-3
+      .card-body
+        .d-flex.flex-wrap
+          .d-flex.flex-grow-1.align-items-start.mb-1{style: "max-width: 250px; flex-basis: 150px;"}
+            -# 1. The Icon Box
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill shield_lock
+
+            -# 2. Title and Status
+            .flex-grow-1{style: "width: 100px; min-width: 50px;"}
+              %h5.fw-bold.text-dark.mb-1 Device Session Lock
+              .d-flex.align-items-center
+                -# 4. The "Read More" (Collapsible Help)
+                %small.text-secondary Enforcing single-device logins
+        .d-flex
+          .flex-grow-1.bg-light.p-3.rounded-3
+            .d-flex.justify-content-between.align-items-start.mb-1
+              .small.text-muted.me-3
+                Need to reset everyone?
+                .fw-semibold.text-dark Clear all active session keys.
+              -# The Button (Using your original path)
+              .d-flex.justify-content-end.align-items-center
+                %a.text-decoration-none.small.text-primary.fst-italic.btn-flex.me-3{ data: { bs_toggle: "collapse" }, href: "#lockHelp", role: "button", aria: { expanded: "false", controls: "lockHelp" } }
+                  %span.mi.fill help
+                  How does this work?
+                = link_to clear_user_ip_grader_configuration_index_path, class: 'btn btn-flex btn-outline-danger text-nowrap', data: { turbo: true, 'turbo-method': 'post' } do
+                  %span.mi lock_open
+                  Clear Locks
+            .text-center
+
+              #lockHelp.collapse.mt-2.text-start
+                .small.text-muted.rounded.bg-light.border-0
+                  %p.mb-2
+                    %strong Security Feature:
+                    Limits users to one active login. A unique Session Key is saved to their browser.
+                  %ul.mb-0.ps-3
+                    %li Clearing locks allows the next request from any device to establish a new session.
+                    %li Use the button above to clear locks for all users instantly.
+                    %li Contest managers can also clear locks for specific users in the contest management page.
+
+  .col-md-7
+    -# 1. The Container: White card, Shadow, with a Yellow 'Accent' border on the left
+    .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
+      .card-body.p-4
+        -# --- Header ---
+        .d-flex.align-items-center.mb-4
+          -# Icon Circle
+          .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+            %span.mi.md-24.fill lightbulb
+          
+          -# Title
+          %div
+            %h5.fw-bold.text-dark.mb-0 How Contests Work
+            %small.text-secondary A timed event challenging a specific group of users.
+
+        -# --- Section 1: Key Features (Grid Layout) ---
+        .row.g-4.mb-4
+          -# Feature 1
+          .col-xxl-3.col-lg-6
+            .d-flex.align-items-start
+              .text-info.me-3.lh-1
+                %span.mi.md-24 schedule
+              %div
+                %span.fw-bold.d-block.text-dark.small Time-Bound
+                %small.text-muted.lh-sm Defined Start & End times.
+          
+          -# Feature 2
+          .col-xxl-3.col-lg-6
+            .d-flex.align-items-start
+              .text-info.me-3.lh-1
+                %span.mi.md-24 group
+              %div
+                %span.fw-bold.d-block.text-dark.small Scoped Access
+                %small.text-muted.lh-sm Isolate users & problems.
+
+          -# Feature 3
+          .col-xxl-3.col-lg-6
+            .d-flex.align-items-start
+              .text-info.me-3.lh-1
+                %span.mi.md-24 monitoring
+              %div
+                %span.fw-bold.d-block.text-dark.small Live Monitoring
+                %small.text-muted.lh-sm Real-time score tracking.
+
+          -# Feature 4
+          .col-xxl-3.col-lg-6
+            .d-flex.align-items-start
+              .text-info.me-3.lh-1
+                %span.mi.md-24 emoji_events
+              %div
+                %span.fw-bold.d-block.text-dark.small Finalized Scoring
+                %small.text-muted.lh-sm Official scores on finish.
+
+        -# --- Divider ---
+        %hr.text-secondary-subtle.my-4
+
+        -# --- Section 2: Operating Modes ---
+        %h6.fw-bold.text-dark.mb-3 System Modes
+        
+        .d-flex.flex-column.gap-3
+          -# Normal Mode Row
+          .d-flex.align-items-start
+            %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.me-3.flex-shrink-0{style: "width: 80px; text-align: center"} Normal
+            %div
+              %small.text-secondary
+                Problem visibility is determined by the user's 
+                %strong.text-dark Group memberships.
+
+          -# Contest Mode Row
+          .d-flex.align-items-start
+            %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.me-3.flex-shrink-0{style: "width: 80px; text-align: center"} Contest
+            %div
+              %small.text-secondary
+                Visibility limited to the 
+                %strong.text-dark active contest
+                problems.
+              
+              -# Sub-restrictions (The critical warnings)
+              .mt-2.p-2.bg-light.rounded.border.border-light-subtle
+                .d-flex.align-items-center.mb-1
+                  %span.mi.md-18.text-danger.me-2.lh-1 person_off
+                  %small.fw-bold.text-dark Single Session Login
+                .d-flex.align-items-center
+                  %span.mi.md-18.text-danger.me-2.lh-1 visibility_off
+                  %small.fw-bold.text-dark Disabled History & Test Cases
+
+
+.card.card-shadow{data: {controller: 'contest'}}
+  .card-body{data: {
+      controller: 'datatables--init init-ui-component',
+      'datatables--init-config-name-value': 'contestIndex',
+      'datatables--init-ajax-url-value': index_query_contests_path,
+      action: 'datatable:reload@window->datatables--init#reload',
+    }
+  }
+
+    %table#contest_table.table.table-hover.table-condense{'data-turbo': true}
+      %thead
+        %tr
+          %th Name
+          %th Description
+          %th Enabled
+          %th.text-center Finalized
+          %th User:Problem
+          %th Start
+          %th End
+          %th
+
+  -# hidden contest action form
+  = form_with url: contest_action_contests_path, html: {'data-contest-target': 'contestForm', id: 'do-contest-form',
+    data: {turbo: true,
+      'turbo-confirm': '.'}} do |f|
+    = f.hidden_field :contest_id, 'data-contest-target': 'contestFormContestID'
+    = f.hidden_field :command, 'data-contest-target': 'contestFormCommand'
+

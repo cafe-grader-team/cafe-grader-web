@@ -1,0 +1,42 @@
+= turbo_frame_tag :import_dataset_into_problem, data: {turbo: true} do
+  %h5.fw-bold.text-secondary.mb-3
+    = mdi(:upload_file, 'me-1')
+    Import Testcases
+
+  - if @errors
+    .alert.alert-danger.d-flex.align-items-start.gap-2
+      = mdi(:error, 'text-danger mt-1')
+      %div
+        %strong Import failed
+        %ul.mb-0.mt-1
+          - @errors.each do |msg|
+            %li= msg
+  - if local_assigns[:updated]
+    .alert.alert-success.alert-dismissible.d-flex.align-items-center.gap-2
+      = mdi(:check_circle, 'text-success')
+      = updated
+      %button.btn-close{data: {bs_dismiss: :alert}}
+
+  = simple_form_for :import, url: import_testcases_problem_path(problem), html: {multipart: true}, wrapper: :horizontal_form do |f|
+    = f.input :file, label: 'ZIP file', as: :file, wrapper: :horizontal_file
+    = f.input :input_pattern, input_html: { value: '*.in' }
+    = f.input :sol_pattern, input_html: { value: '*.sol' }
+    = f.input :target, label: "Import to dataset",  collection: [['As a new dataset','new'],['Into the selected dataset','replace']], checked: :new,  as: :radio_buttons, wrapper: :horizontal_collection, input_html: {onclick: 'update_import_target()'}
+    = f.input :dataset, collection: problem.datasets, selected: problem.live_dataset, wrapper: :horizontal_select
+    = f.button :submit, value: 'Import', class: 'btn-primary'
+
+  - if @log
+    %h6.fw-bold.text-secondary.mt-4.mb-3
+      = mdi(:receipt_long, 'me-1')
+      Import Log
+    %pre.import-log.bg-light.rounded.p-3.mb-0.small
+      = @log.join("\n")
+
+  :javascript
+    function update_import_target() {
+      $('#import_dataset').prop('disabled',
+        $('input[name="import[target]"]:checked').val() == 'new'
+      );
+    }
+
+    update_import_target()

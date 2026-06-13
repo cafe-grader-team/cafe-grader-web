@@ -1,0 +1,69 @@
+= render 'application/breadcrumb', steps: [{ label: 'Audit Logs', icon: 'history' }]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  %h2.fw-bold.text-dark.mb-0
+    %span.mi.me-2 history
+    Audit Log
+  - if @auditable_type.present? && @auditable_id.present?
+    = link_to audit_logs_path, class: 'btn btn-sm btn-outline-secondary' do
+      %span.mi.md-18 close
+      Clear filter
+
+- if @auditable_type.present? || @filter_user
+  .alert.alert-info.d-flex.align-items-center.mb-3
+    %span.mi.me-2 filter_alt
+    Filtered by:
+    - if @auditable_type.present?
+      %span.badge.bg-primary.ms-2= "#{@auditable_type}#{" ##{@auditable_id}" if @auditable_id}"
+    - if @filter_user
+      %span.badge.bg-primary.ms-2= "User: #{@filter_user.full_name.presence || @filter_user.login}"
+
+.card.shadow-sm.mb-4
+  .card-body.p-0
+    %table.table.table-hover.table-condense.align-middle.mb-0
+      %thead.table-light
+        %tr
+          %th Time
+          %th User
+          %th IP
+          %th Target
+          %th Action
+          %th Changed Fields
+          %th.text-end
+      %tbody
+        - if @audits.empty?
+          %tr
+            %td.text-center.text-muted.py-4{colspan: 7} No audit records match this filter.
+        - @audits.each do |log|
+          %tr
+            %td.font-monospace.small= log.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            %td
+              - if log.user
+                = log.user.full_name.presence || log.user.login
+              - else
+                %span.text-muted.fst-italic
+                  = log.actor_note.presence || 'system'
+            %td.font-monospace.small.text-muted= log.ip_address
+            %td.font-monospace.small= audit_target_label(log)
+            %td= audit_action_badge(log.action)
+            %td.small
+              - keys = (log.object_changes || {}).keys
+              - if keys.empty?
+                %span.text-muted —
+              - else
+                = keys.first(3).join(', ')
+                - if keys.size > 3
+                  %span.text-muted= " +#{keys.size - 3} more"
+            %td.text-end.py-1.pr-2
+              = link_to audit_log_path(log), class: 'btn btn-outline-secondary border-0 py-1 px-2', title: 'View details' do
+                %span.mi visibility
+
+- if @total_pages > 1
+  %nav.mt-3
+    %ul.pagination.justify-content-center
+      %li.page-item{class: ('disabled' if @page <= 1)}
+        = link_to '« Prev', url_for(params.to_unsafe_h.merge(page: @page - 1)), class: 'page-link'
+      %li.page-item.disabled
+        %span.page-link= "Page #{@page} of #{@total_pages} (#{@total_count} total)"
+      %li.page-item{class: ('disabled' if @page >= @total_pages)}
+        = link_to 'Next »', url_for(params.to_unsafe_h.merge(page: @page + 1)), class: 'page-link'

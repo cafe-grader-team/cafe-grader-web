@@ -1,0 +1,47 @@
+/ Knowledge Card: Users
+.card.border-0.shadow-sm.border-start.border-4.border-info
+  .card-body.p-4
+    
+    / --- Header ---
+    .d-flex.align-items-center.mb-4
+      .bg-info-subtle.text-info-emphasis.rounded-circle.d-flex.align-items-center.justify-content-center.me-3.lh-1{style: "width: 48px; height: 48px"}
+        %span.mi.md-24.fill manage_accounts
+      
+      %div
+        %h5.fw-bold.text-dark.mb-0 User Management
+        %small.text-secondary Guidelines for account statuses and roles.
+
+    / --- Content Grid ---
+    .row.g-4
+      
+      / 1. Account Status
+      .col-lg-6
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 toggle_on
+          
+          %div
+            %h6.fw-bold.text-dark.mb-2 Account Status
+            .small.text-muted.lh-sm
+              %p.mb-1
+                %strong.text-dark Activated:
+                User has confirmed their email address.
+              %p.mb-0
+                %strong.text-dark Enabled:
+                User is allowed to log into the system. If disabled, they cannot access the site even if activated.
+
+      / 2. Tools
+      .col-lg-6
+        .d-flex.gap-3
+          .text-info.flex-shrink-0
+            %span.mi.md-24 rule_folder
+          
+          %div
+            %h6.fw-bold.text-dark.mb-1 Tools
+            .small.text-muted.lh-sm
+              %p.mb-1
+                %strong.text-dark Import Users:
+                Add multiple users at once via formatted text (Login, Name, Password).
+              %p.mb-0
+                %strong.text-dark Bulk Manage:
+                Assign multiple users to a specific group simultaneously.

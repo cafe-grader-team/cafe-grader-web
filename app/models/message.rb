@@ -1,9 +1,9 @@
-class Message < ActiveRecord::Base
+class Message < ApplicationRecord
 
   belongs_to :sender, :class_name => "User"
-  belongs_to :receiver, :class_name => "User"
+  belongs_to :receiver, :class_name => "User", optional: true
 
-  belongs_to :replying_message, :class_name => "Message"
+  belongs_to :replying_message, :class_name => "Message", optional: true
 
   # commented manually do it
   #

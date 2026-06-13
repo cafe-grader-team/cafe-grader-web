@@ -1,0 +1,20 @@
+= render 'application/breadcrumb', steps: [{ label: 'Languages', path: languages_path, icon: resource_icon_name(Language) }, { label: 'New' }]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0
+      New Language
+    %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium
+      %small Creating
+
+  .d-flex.gap-2
+    = link_to 'Cancel', languages_path, class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'edit_form'} Create Language
+
+.row.my-3.gx-3
+  .col-md-6
+    .card.shadow-sm
+      .card-body
+        = render 'form'
+  .col-md-6
+    = render 'language_help'

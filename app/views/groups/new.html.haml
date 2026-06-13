@@ -1,5 +1,19 @@
-%h1 New group
+= render 'application/breadcrumb', steps: [{ label: 'Groups', path: groups_path, icon: 'group' }, { label: 'New' }]
 
-= render 'form'
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0 New Group
+    %span.badge.bg-success-subtle.text-success.border.border-success-subtle.rounded-pill.fw-medium
+      %small Creating
 
-= link_to 'Back', groups_path
+  .d-flex.gap-2
+    = link_to 'Cancel', groups_path, class: 'btn btn-link text-secondary text-decoration-none'
+    %button.btn.btn-primary.px-4.shadow-sm{type: 'submit', form: 'new_group_form'} Create Group
+
+.row
+  .col-md-6
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Basic Info
+        = simple_form_for @group, url: groups_path, wrapper: :horizontal_form, html: { id: 'new_group_form' } do |f|
+          = render partial: 'form', locals: { f: f }

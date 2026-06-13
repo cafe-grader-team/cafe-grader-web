@@ -1,4 +1,4 @@
-class AddTestAllowedToProblems < ActiveRecord::Migration
+class AddTestAllowedToProblems < ActiveRecord::Migration[4.2]
   def self.up
     add_column :problems, :test_allowed, :boolean
     Problem.reset_column_information

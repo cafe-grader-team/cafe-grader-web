@@ -1,0 +1,25 @@
+job_waiting:
+  status: 0
+  job_type: 1
+  arg: 1
+  priority: 0
+
+job_processing:
+  status: 1
+  job_type: 2
+  arg: 1
+  priority: 0
+
+job_success:
+  status: 2
+  job_type: 1
+  arg: 1
+  priority: 0
+  result: "OK"
+
+job_error:
+  status: 3
+  job_type: 1
+  arg: 1
+  priority: 0
+  result: "compilation error"

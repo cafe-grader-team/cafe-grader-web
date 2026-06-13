@@ -1,4 +1,4 @@
-class AddNotesToAnnouncements < ActiveRecord::Migration
+class AddNotesToAnnouncements < ActiveRecord::Migration[4.2]
   def self.up
     add_column :announcements, :notes, :string
   end

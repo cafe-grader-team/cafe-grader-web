@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!--
+    Cafe-Grader favicon — letter "C" on a diagonal gradient background.
+    Colors blend the two contributor universities:
+      0%   #DE5C8E  Chulalongkorn ("Phra Kiao Pink")
+      60%  #C78B56  warm sandy midmix (shifted toward pink)
+      100% #B1BA1D  Kasetsart (yellow-green)
+    The 60% midpoint stop is what gives pink slightly more visual area
+    than green — a smooth no-plateau gradient.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#DE5C8E"/>
+      <stop offset="60%" stop-color="#C78B56"/>
+      <stop offset="100%" stop-color="#B1BA1D"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="url(#bg)"/>
+  <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-weight="700" font-size="42" fill="#fff">C</text>
+</svg>

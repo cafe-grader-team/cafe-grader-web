@@ -2,7 +2,6 @@
                   locals: {button_id: "#problem-avail-#{@problem.id}",button_on: @problem.available }
 :plain
   r = $("#prob-#{@problem.id}");
-  r.removeClass('success');
-  r.removeClass('danger');
-  r.addClass("#{@problem.available? ? 'success' : 'danger'}");
+  r.removeClass('table-success');
+  r.addClass("#{@problem.available? ? 'table-success' : ''}");
 
