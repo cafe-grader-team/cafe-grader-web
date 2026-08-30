@@ -56,6 +56,7 @@
                 %li= link_to 'Announcements', announcements_path, class: 'dropdown-item'+active_class_when(controller: :announcements)
                 %li= link_to 'Problems', problems_path, class: 'dropdown-item'+active_class_when(controller: :problems)
                 %li= link_to 'Tags', tags_path, class: 'dropdown-item'+active_class_when(controller: :tags)
+                %li= link_to 'Grounding', grounding_materials_path, class: 'dropdown-item'+active_class_when(controller: :grounding_materials)
                 %li= link_to 'Users', user_admin_index_path, class: 'dropdown-item'+active_class_when(controller: :user_admin) if @current_user.admin?
                 %li= link_to 'Groups', groups_path, class: 'dropdown-item'+active_class_when(controller: :groups)
                 %li= link_to 'Graders', grader_processes_path, class: 'dropdown-item'+active_class_when(controller: :graders) if @current_user.admin?
@@ -82,6 +83,8 @@
                 %li= link_to 'Activity Report', activity_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :activity)
                 %li= link_to 'Login Report', login_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :login)
                 %li= link_to 'AI Report', ai_report_path, class: 'dropdown-item'+active_class_when(controller: :report, action: :ai)
+                - if @current_user.admin?
+                  %li= link_to 'Near-Miss Runs', near_miss_runs_path, class: 'dropdown-item'+active_class_when(controller: :near_miss_runs)
             .d-flex
               =link_to "#{@backlog} backlogs!",
                 grader_processes_path,
@@ -153,7 +156,7 @@
   }
 
   function checkInLoop() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // Get the CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'); // Get the CSRF token
     const check_in_url = '#{user_check_in_contests_path}'
     const check_in_interval_seconds = #{Contest.check_in_interval}
     let response_received_time = moment()

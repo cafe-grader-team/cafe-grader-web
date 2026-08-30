@@ -53,7 +53,8 @@ paths:
                   error:
                     type: string
         '403':
-          description: account disabled
+          description: account disabled, or single-user lockdown is on (non-admins
+            get no token)
           content:
             application/json:
               schema:
@@ -63,7 +64,8 @@ paths:
                   error:
                     type: string
         '429':
-          description: too many login attempts (rate limited per client IP)
+          description: too many failed login attempts (per-IP / per-account failure
+            budget, pooled with the web login form)
           content:
             application/json:
               schema:
@@ -720,6 +722,16 @@ paths:
                   description:
                     type: string
                     nullable: true
+        '403':
+          description: viva scenario blocked for students
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  error:
+                    type: string
   "/api/v1/problems/{id}/files/{type}":
     get:
       summary: Get problem file by type
@@ -1548,9 +1560,10 @@ components:
           - exact
           - relative
           - custom_cafe
-          - custom_cms
+          - custom_testlib
           - postgres
-          - custom_cms_raw
+          - custom_testlib_raw
+          - cms_comparator
         score_param:
           type: string
           nullable: true
@@ -1617,9 +1630,10 @@ components:
               - exact
               - relative
               - custom_cafe
-              - custom_cms
+              - custom_testlib
               - postgres
-              - custom_cms_raw
+              - custom_testlib_raw
+              - cms_comparator
             score_param:
               type: string
             main_filename:

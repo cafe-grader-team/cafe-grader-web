@@ -41,34 +41,41 @@
           - else
             %ul
               %li You have not submitted any file to this problem.
-      -# Form for submit & Language select
-      .alert.mb-3{class: (@as_binary ? 'alert-warning' : 'alert-info')}
-        .mb-2
-          - if @as_binary
-            :markdown
-              This problem accepts only a binary file upload, such as a `.zip` file. Please select the
-              file using the **"Browse"** button and click **"submit."**
-          - else
-            - if @language_forced
-              Write your code in the box above and then click the **"Submit"** button to submit the code. This problem requires that the submission must be in 
-              %strong= @language.pretty_name
-              only.
-            - else
+      -# Form for submit & Language select — only when the user can actually
+      -# submit (a reporter can view a student-hidden problem but not submit;
+      -# don't offer a button that can only fail)
+      - if @can_submit
+        .alert.mb-3{class: (@as_binary ? 'alert-warning' : 'alert-info')}
+          .mb-2
+            - if @as_binary
               :markdown
-                Write your code in the box above, choose a language, and then click the **"Submit"** button to submit the code.
-        = form_with url: submit_main_path, :multipart => true, class: 'row row-cols-lg-auto g-3 align-items-center', data: {action: 'editor#submit'} do |form|
-          = hidden_field_tag 'editor_text', @submission_source, data: {editor_target: 'submitSource'}
-          = hidden_field_tag 'submission[problem_id]', @problem.id
-          .col-auto
-            = form.label :language_id, 'Language'
-          .col-auto
-            - options = options_from_collection_for_select(Language.where(id: @problem.get_permitted_lang_as_ids).order(:id), 'id', 'pretty_name', @language.id )
-            = form.select :language_id, options, {},  class: 'form-select', data: {action: 'change->editor#setLanguage', editor_target: 'languageSelect'}, style: "width: 100px", id: 'language_id', disabled: @language_forced
-          .col-auto
-            = form.file_field :file, class: 'form-control', id: 'load_file', data: {action: 'change->editor#loadFileToEditor'}
-          .col-auto
-            = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit', 
-              data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}
+                This problem accepts only a binary file upload, such as a `.zip` file. Please select the
+                file using the **"Browse"** button and click **"submit."**
+            - else
+              - if @language_forced
+                Write your code in the box above and then click the **"Submit"** button to submit the code. This problem requires that the submission must be in
+                %strong= @language.pretty_name
+                only.
+              - else
+                :markdown
+                  Write your code in the box above, choose a language, and then click the **"Submit"** button to submit the code.
+          = form_with url: submit_main_path, :multipart => true, class: 'row row-cols-lg-auto g-3 align-items-center', data: {action: 'editor#submit'} do |form|
+            = hidden_field_tag 'editor_text', @submission_source, data: {editor_target: 'submitSource'}
+            = hidden_field_tag 'submission[problem_id]', @problem.id
+            .col-auto
+              = form.label :language_id, 'Language'
+            .col-auto
+              - options = options_from_collection_for_select(Language.where(id: @problem.get_permitted_lang_as_ids).order(:id), 'id', 'pretty_name', @language.id )
+              = form.select :language_id, options, {},  class: 'form-select', data: {action: 'change->editor#setLanguage', editor_target: 'languageSelect'}, style: "width: 100px", id: 'language_id', disabled: @language_forced
+            .col-auto
+              = form.file_field :file, class: 'form-control', id: 'load_file', data: {action: 'change->editor#loadFileToEditor'}
+            .col-auto
+              = submit_tag 'Submit', class: 'btn btn-success', id: 'live_submit',
+                data: {confirm: "Submitting this source code for task #{@problem.long_name}?"}
+      - else
+        .alert.alert-secondary.mb-3
+          %span.mi.md-18 visibility
+          You can view this problem, but it is not open for your submissions.
 
     .col-lg-4{ data: {turbo: true}}
       -# latest submission status

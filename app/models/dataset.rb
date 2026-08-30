@@ -17,23 +17,45 @@ class Dataset < ApplicationRecord
   #   exact          diff -q (strict)
   #   relative       lib/checker/relative.rb (numbers compared with 1e-6)
   #   custom_cafe    user's checker; line1=CORRECT/INCORRECT/COMMENT, line2=score/10
-  #   custom_cms     user's checker; CMS/Codeforces — score on stdout, comment on stderr
+  #   custom_testlib user's checker; testlib/Codeforces argv order (input, USER,
+  #                  correct); CMS result protocol — score 0..1 on stdout,
+  #                  comment on stderr. Named custom_cms until rev 2047; the
+  #                  order is NOT what CMS itself passes — see cms_comparator.
   #   postgres       lib/checker/postgres_checker.rb (CMS-style, strips CREATE/DROP VIEW)
-  #   custom_cms_raw user's checker; raw decimal stdout. Pair with score_type :raw_sum.
+  #   custom_testlib_raw
+  #                  as custom_testlib, but stdout is a raw decimal score stored
+  #                  verbatim (not clamped). Pair with score_type :raw_sum.
+  #                  Named custom_cms_raw until rev 2047.
+  #   cms_comparator user's checker, CMS-native argv order (input, correct, USER);
+  #                  score on stdout, comment on stderr. Use this (not
+  #                  custom_testlib) for checkers taken from CMS task packages.
   enum :evaluation_type, { default: 0,
                            exact: 1,
                            relative: 2,
                            custom_cafe: 3,
-                           custom_cms: 4,
+                           custom_testlib: 4,
                            postgres: 5,
-                           custom_cms_raw: 6}
+                           custom_testlib_raw: 6,
+                           cms_comparator: 7}
+
+  # Names used before rev 2047 (2026-08-30). The integer values are unchanged,
+  # so stored rows need no migration; this alias keeps the old strings working
+  # wherever a name is *assigned* — import packages exported by older versions,
+  # API clients, the dataset form. Keep it indefinitely: old zips keep turning
+  # up. Reads always return the new names.
+  LEGACY_EVALUATION_TYPES = { 'custom_cms'     => 'custom_testlib',
+                              'custom_cms_raw' => 'custom_testlib_raw' }.freeze
+
+  def evaluation_type=(value)
+    super(LEGACY_EVALUATION_TYPES.fetch(value.to_s, value))
+  end
 
   # How per-testcase scores aggregate into the submission's final grade.
   # Computed in app/engine/scorer.rb (sum_of_all_testcases, group_min, raw_sum).
   # Quick reference:
   #   sum         weighted sum / total weight × 100 (default)
   #   group_min   IOI/ICPC subtask style — a group earns only as much as its weakest case
-  #   raw_sum     literal Σ of testcase scores. Pair with evaluation_type :custom_cms_raw.
+  #   raw_sum     literal Σ of testcase scores. Pair with evaluation_type :custom_testlib_raw.
   enum :score_type,      { sum: 0,
                            group_min: 1,
                            raw_sum: 2,
@@ -66,7 +88,7 @@ class Dataset < ApplicationRecord
 
   def set_default
     self.compilation_type ||= 'self_contained'
-    self.evaluation_type ||= 'wdiff'
+    self.evaluation_type ||= 'default'   # was 'wdiff', not a valid enum value (never reached: column default is 0)
     self.score_type ||= 'sum'
     self.time_limit ||= 1
     self.memory_limit ||= 512
@@ -101,24 +123,44 @@ class Dataset < ApplicationRecord
     end
   end
 
-  # set testcases parameters *field* by array
+  # set testcases parameters *field* by array.
+  #
+  # Each element assigns *field* to a run of testcases:
+  #   scalar          → one testcase (the next in display order)
+  #   [value, count]  → the next `count` testcases, positionally
+  #   [value, "regex"]→ CMS mode only: every testcase whose code_name matches
+  #                     the regexp, anchored at the start like CMS's re.match
+  #                     (e.g. "1-.*" selects code_names 1-1, 1-2, …).
+  #
+  # CMS mode (auto-enabled when the first element is an array and the caller
+  # permits it) also writes an incrementing `group` per element, so one array
+  # declares group_min groups + weights at once. Regexp selectors are honoured
+  # ONLY in CMS mode; the hash-form callers (group / group_name) pass
+  # can_use_cms_mode: false and keep integer counts.
   def set_by_array(field, array, can_use_cms_mode: true)
-    tc_ids = testcases.display_order.ids
+    tcs = testcases.display_order.pluck(:id, :code_name)
     idx = 0
     group = 0
     cms_mode = array[0].is_a?(Array) && can_use_cms_mode
     array.each do |config|
-      count = 1
       group += 1
       if config.is_a? Array
-        value = config[0]
-        count = config[1].to_i
+        value, selector = config[0], config[1]
       else
-        value = config
+        value, selector = config, 1
       end
-      # take next count ids
-      ids = tc_ids[idx...(idx+count)]
-      idx += count
+
+      if cms_mode && selector.is_a?(String)
+        # CMS-style codename match, anchored at the start (Python re.match).
+        # The (?:…) wrap keeps top-level alternation inside the anchor.
+        re = Regexp.new("\\A(?:#{selector})")
+        ids = tcs.select { |_id, cn| re.match?(cn.to_s) }.map(&:first)
+      else
+        count = selector.to_i
+        ids = tcs[idx...(idx + count)].to_a.map(&:first)
+        idx += count
+      end
+
       hash = {}
       hash[field] = value
       hash['group'] = group if cms_mode
@@ -130,6 +172,23 @@ class Dataset < ApplicationRecord
     set_by_array(:weight, options[:weight], can_use_cms_mode: false) if options.has_key? :weight
     set_by_array(:group, options[:group], can_use_cms_mode: false) if options.has_key? :group
     set_by_array(:group_name, options[:group_name], can_use_cms_mode: false) if options.has_key? :group_name
+  end
+
+  # Groups whose testcases don't all share a single weight. Only meaningful
+  # under group_min scoring: scorer.rb#group_min collapses each group to its
+  # MINIMUM weight (CMS/IOI semantics — a group has ONE weight by convention),
+  # so mixed weights inside a group silently mis-score and are an authoring
+  # error. Returns { group => [sorted distinct weights] } for the offending
+  # groups, or {} when weights are uniform or the score type isn't group_min.
+  # A nil weight counts as 0 to match the scorer (weight = ev[:weight] || 0).
+  # Single source of truth for both the import warning
+  # (ProblemImporter#warn_mixed_group_weights) and the dataset edit UI.
+  def mixed_weight_groups
+    return {} unless st_group_min?
+    testcases.pluck(:group, :weight).group_by(&:first).each_with_object({}) do |(g, pairs), acc|
+      weights = pairs.map { |_, w| w || 0 }.uniq.sort
+      acc[g] = weights if weights.size > 1
+    end
   end
 
   # Drop workers' cached copy of this dataset so they re-download testcases

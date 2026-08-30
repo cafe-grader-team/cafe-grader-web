@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -209,6 +209,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
     t.index ["host", "pid"], name: "index_grader_processes_on_host_and_pid"
   end
 
+  create_table "grounding_materials", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "description"
+    t.text "body", size: :medium
+    t.integer "estimated_tokens", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "extraction_draft", size: :medium
+    t.datetime "extraction_requested_at"
+  end
+
+  create_table "grounding_materials_problems", id: false, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "grounding_material_id", null: false
+    t.integer "problem_id", null: false
+    t.index ["grounding_material_id", "problem_id"], name: "idx_gm_problems_unique", unique: true
+    t.index ["problem_id"], name: "index_grounding_materials_problems_on_problem_id"
+  end
+
   create_table "groups", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name"
     t.string "description"
@@ -270,6 +288,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.string "cookie"
+    t.boolean "success", default: true, null: false
+    t.string "attempted_login"
     t.index ["user_id"], name: "index_logins_on_user_id"
   end
 
@@ -316,6 +336,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
     t.text "log", size: :medium
     t.boolean "allow_hint", default: true
     t.boolean "view_submission", default: true
+    t.text "viva_prompt", size: :medium
+    t.integer "viva_soft_cap", default: 10, null: false
+    t.integer "viva_hard_cap", default: 15, null: false
+    t.integer "viva_daily_limit"
     t.index ["live_dataset_id"], name: "index_problems_on_live_dataset_id"
   end
 
@@ -367,6 +391,33 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
     t.string "password"
   end
 
+  create_table "submission_repairs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "original_submission_id", null: false
+    t.integer "repaired_submission_id"
+    t.integer "status", limit: 1, default: 0, null: false
+    t.text "patch", size: :medium
+    t.integer "changed_lines"
+    t.integer "changed_chars"
+    t.integer "budget_lines", null: false
+    t.integer "budget_chars", null: false
+    t.integer "rounds_used", default: 0, null: false
+    t.text "rounds_log"
+    t.string "fix_category"
+    t.string "llm_model"
+    t.integer "token_count_in"
+    t.integer "token_count_out"
+    t.float "cost", default: 0.0
+    t.text "llm_response", size: :medium
+    t.text "remark"
+    t.string "run_label"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["original_submission_id", "run_label"], name: "idx_sub_repairs_on_original_and_run"
+    t.index ["original_submission_id"], name: "index_submission_repairs_on_original_submission_id"
+    t.index ["repaired_submission_id"], name: "index_submission_repairs_on_repaired_submission_id"
+    t.index ["run_label"], name: "index_submission_repairs_on_run_label"
+  end
+
   create_table "submission_view_logs", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "user_id"
     t.integer "submission_id"
@@ -398,8 +449,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
     t.string "content_type"
     t.datetime "viva_archived_at"
     t.datetime "viva_terminated_at"
+    t.datetime "updated_at", precision: nil
+    t.integer "repaired_from_id"
     t.index ["graded_at"], name: "index_submissions_on_graded_at"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
+    t.index ["repaired_from_id"], name: "index_submissions_on_repaired_from_id"
     t.index ["submitted_at"], name: "index_submissions_on_submitted_at"
     t.index ["tag"], name: "index_submissions_on_tag"
     t.index ["user_id", "problem_id", "number"], name: "index_submissions_on_user_id_and_problem_id_and_number", unique: true
@@ -529,6 +583,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
     t.integer "token_count_out"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "alerted", default: false, null: false
     t.index ["submission_id", "sequence"], name: "index_viva_turns_on_submission_id_and_sequence", unique: true
   end
 
@@ -546,6 +601,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_10_120000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_logs", "users", on_delete: :nullify
+  add_foreign_key "grounding_materials_problems", "grounding_materials"
+  add_foreign_key "grounding_materials_problems", "problems"
   add_foreign_key "problem_stats", "problems"
   add_foreign_key "problems_tags", "problems"
   add_foreign_key "problems_tags", "tags"

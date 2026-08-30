@@ -42,12 +42,13 @@ class SubmissionsTest < ApplicationSystemTestCase
       click_on 'Submission'
       click_link 'View'
     end
-    click_on 'Go'
+    # the old "Go" button is gone — a select2 problem chooser now navigates on pick
+    choose_submission_problem 'add_full_name'
 
     #click the first <a> item in the table
     first('table a').click
-    assert_text "Source Code"
-    assert_text "Task"
+    assert_text "Submission Detail"
+    assert_text "Grading Task Status"
 
     #view other submission of available problem
     within 'header' do
@@ -64,13 +65,13 @@ class SubmissionsTest < ApplicationSystemTestCase
     within find('tr', text: 'john') do
       first('a').click
     end
-    assert_text "Source Code"
-    assert_text "Task"
+    assert_text "Submission Detail"
+    assert_text "Grading Task Status"
 
     #view  other submission of unavailable problem
     visit submission_path( submissions(:sub1_by_james) )
-    assert_text "Source Code"
-    assert_text "Task"
+    assert_text "Submission Detail"
+    assert_text "Grading Task Status"
   end
 
   test "user view submissions" do
@@ -81,26 +82,27 @@ class SubmissionsTest < ApplicationSystemTestCase
       click_on 'Submission'
       click_on 'View'
     end
-    click_on 'Go'
+    # the old "Go" button is gone — a select2 problem chooser now navigates on pick
+    choose_submission_problem 'add_full_name'
 
     #click the first <a> item in the table
     first('table a').click
-    assert_text "Source Code"
-    assert_text "Task"
+    assert_text "Submission Detail"
+    assert_text "Grading Task Status"
 
     #view other submission of available problem
     GraderConfiguration.where(key: 'right.user_view_submission').update(value: 'true')
 
     #using direct link
     visit submission_path( submissions(:add1_by_james) )
-    assert_text "Source Code"
-    assert_text "Task"
+    assert_text "Submission Detail"
+    assert_text "Grading Task Status"
 
     #view admin's submission of available problem
     #using direct link
     visit submission_path( submissions(:add1_by_admin) )
-    assert_text "Source Code"
-    assert_text "Task"
+    assert_text "Submission Detail"
+    assert_text "Grading Task Status"
 
     #view  other submission of unavailable problem
     visit submission_path( submissions(:sub1_by_james) )
@@ -124,5 +126,12 @@ class SubmissionsTest < ApplicationSystemTestCase
     fill_in "Password", with: password
     click_on "Login"
     assert_current_path list_main_path, wait: 5
+  end
+
+  # Pick a problem from the submissions-index select2 chooser (id
+  # #submission_problems), which navigates to that problem's submissions on change.
+  def choose_submission_problem(text)
+    find('#submission_problems + .select2-container').click
+    find('.select2-results__option', text: text).click
   end
 end

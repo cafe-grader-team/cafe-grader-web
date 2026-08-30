@@ -1,0 +1,112 @@
+= render 'application/breadcrumb', steps: [{ label: 'Near-Miss Runs', path: near_miss_runs_path, icon: 'healing' }, { label: @repair.run_label, path: near_miss_run_path(runs: @repair.run_label) }, { label: "Attempt ##{@repair.id}" }]
+
+.d-flex.justify-content-between.align-items-center.flex-wrap.gap-2.mb-3
+  .d-flex.flex-column.gap-1
+    %small.text-secondary.text-uppercase.fw-bold.ls-1 Near-Miss repair attempt
+    %h2.fw-bold.text-dark.mb-0= "Attempt ##{@repair.id}"
+  = near_miss_status_badge(@repair.status)
+
+.row
+  .col-lg-5
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Attempt
+        %dl.row.mb-0
+          %dt.col-sm-4 Run
+          %dd.col-sm-8= link_to @repair.run_label, near_miss_run_path(runs: @repair.run_label), class: 'font-monospace text-decoration-none'
+          %dt.col-sm-4 Submitter
+          %dd.col-sm-8
+            = @original.user&.login
+            - if @original.user&.full_name.present?
+              %span.text-secondary.small= "(#{@original.user.full_name})"
+          %dt.col-sm-4 Problem
+          %dd.col-sm-8
+            = @original.problem&.name
+            - if @original.problem&.full_name.present?
+              %span.text-secondary.small= "(#{@original.problem.full_name})"
+          %dt.col-sm-4 Original
+          %dd.col-sm-8
+            = link_to "##{@original.id}", submission_path(@original.id), class: 'fw-medium text-primary text-decoration-none'
+            = "— #{near_miss_score(@original)}"
+            - if @original.grader_comment.present?
+              %div
+                = grader_comment_strip(@original.grader_comment)
+          %dt.col-sm-4 Repaired
+          %dd.col-sm-8
+            - if @shadow
+              = link_to "##{@shadow.id}", submission_path(@shadow.id), class: 'fw-medium text-primary text-decoration-none'
+              - if @repair.shadow_graded?
+                = "— #{near_miss_score(@shadow)}"
+              - else
+                %span.text-secondary= "— #{@shadow.status.humanize.downcase}, no judge outcome (score not counted)"
+              - if @shadow.grader_comment.present?
+                %div
+                  = grader_comment_strip(@shadow.grader_comment)
+            - else
+              %span.text-secondary — no shadow (gate never accepted a patch)
+          %dt.col-sm-4 Gap
+          %dd.col-sm-8= near_miss_gap(@repair)
+          %dt.col-sm-4 Budget
+          %dd.col-sm-8= "#{@repair.budget_lines} lines / #{@repair.budget_chars} chars"
+          %dt.col-sm-4 Measured
+          %dd.col-sm-8
+            - if @repair.changed_lines
+              = "#{@repair.changed_lines} lines / #{@repair.changed_chars} chars"
+            - else
+              %span.text-secondary — (no parseable patch)
+          %dt.col-sm-4 Rounds used
+          %dd.col-sm-8= @repair.rounds_used
+          %dt.col-sm-4 Category
+          %dd.col-sm-8= near_miss_category_badge(@repair.fix_category) || '—'
+          %dt.col-sm-4 Model
+          %dd.col-sm-8.font-monospace.small= @repair.llm_model || '—'
+          %dt.col-sm-4 Tokens in / out
+          %dd.col-sm-8= "#{number_with_delimiter(@repair.token_count_in.to_i)} / #{number_with_delimiter(@repair.token_count_out.to_i)}"
+          %dt.col-sm-4 Cost
+          %dd.col-sm-8.font-monospace= format('$%.4f', @repair.cost.to_f)
+          %dt.col-sm-4 Attempted
+          %dd.col-sm-8.font-monospace.small= @repair.created_at.in_time_zone.strftime('%Y-%m-%d %H:%M:%S')
+        - if @repair.remark.present?
+          %hr
+          %h6.fw-bold.text-secondary Remark
+          %p.small.mb-0= @repair.remark
+
+  .col-lg-7
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Patch (original → repaired)
+        - if @repair.patch.present?
+          %pre.small.mb-0.border.rounded.p-3.overflow-auto{style: 'max-height: 24rem'}= near_miss_patch(@repair.patch)
+        - else
+          %p.text-muted.small.mb-0 No measured patch — the LLM never returned a parseable file within the round cap.
+
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Rounds
+        - if @repair.rounds_log.present?
+          %table.table.table-sm.table-condense.align-middle.mb-0
+            %thead.table-light
+              %tr
+                %th Round
+                %th.text-end Changed lines
+                %th.text-end Changed chars
+                %th Gate
+            %tbody
+              - Array(@repair.rounds_log).each do |r|
+                %tr
+                  %td= r['round']
+                  %td.text-end= r['changed_lines'] || '—'
+                  %td.text-end= r['changed_chars'] || '—'
+                  %td= near_miss_status_badge(r['gate'])
+        - else
+          %p.text-muted.small.mb-0 No rounds recorded (attempt has not run yet).
+
+    .card.shadow-sm.mb-4
+      .card-body
+        %h5.fw-bold.text-secondary.mb-3 Raw LLM response
+        - if @repair.llm_response.present?
+          %details
+            %summary.text-secondary.small= "show raw response (#{number_to_human_size(@repair.llm_response.bytesize)})"
+            %pre.small.mt-2.border.rounded.p-3.overflow-auto{style: 'max-height: 30rem'}= @repair.llm_response
+        - else
+          %p.text-muted.small.mb-0 — nothing stored (attempt has not run, or the transport failed before a response).

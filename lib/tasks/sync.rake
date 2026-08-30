@@ -1,35 +1,49 @@
 namespace :sync do
-  # Updated description to mention the configurable environment variables
-  desc "
-  Sync Active Storage attachments from a remote host for a specific problem.
-  Configuration can be overridden with environment variables.
-  - REMOTE_HOST (default: 10.0.5.80)
-  - REMOTE_RAILS_ROOT (default: cafe_grader/web)
-  "
+  DEFAULT_REMOTE_HOST = '10.0.5.80'.freeze
+  DEFAULT_REMOTE_RAILS_ROOT = 'cafe_grader/web'.freeze
 
-  # Task to sync attachments for a single problem by its ID
-  # Usage: rails "sync:problem[problem_id]"
-  # Example: REMOTE_HOST=other.host rails "sync:problem[1590]"
+  desc 'Sync a problem\'s Active Storage files from a remote host (override REMOTE_HOST / REMOTE_RAILS_ROOT); run with no id for help'
   task :problem, [:id] => :environment do |_task, args|
+    # Resolve the remote source once, so the help text and the actual run agree.
+    remote_host = ENV['REMOTE_HOST'] || DEFAULT_REMOTE_HOST
+    remote_rails_root = ENV['REMOTE_RAILS_ROOT'] || DEFAULT_REMOTE_RAILS_ROOT
+    remote_base = "#{remote_host}:#{remote_rails_root}/storage"
+    host_note = ENV['REMOTE_HOST'] ? '(from REMOTE_HOST)' : '(default — set REMOTE_HOST to change)'
+    root_note = ENV['REMOTE_RAILS_ROOT'] ? '(from REMOTE_RAILS_ROOT)' : '(default — set REMOTE_RAILS_ROOT to change)'
+
     unless args[:id]
-      puts 'Error: Please provide a problem ID.'
-      puts 'Usage: rails "sync:problem[id]"'
+      warn <<~USAGE
+        Sync one problem's Active Storage files (testcases, checker, managers,
+        initializers, data files, statement, attachment) from a remote server
+        into this machine's storage/. Use it when the DB was migrated without
+        the storage/ files (e.g. a local dev copy).
+
+        Usage:
+          rails "sync:problem[<problem_id>]"
+
+        Remote source currently resolves to:
+          REMOTE_HOST       = #{remote_host}  #{host_note}
+          REMOTE_RAILS_ROOT = #{remote_rails_root}  #{root_note}
+          rsync source      = #{remote_base}/<key>
+
+        Override the server / path with environment variables:
+          REMOTE_HOST=192.168.1.10 rails "sync:problem[1590]"
+          REMOTE_HOST=user@host REMOTE_RAILS_ROOT=apps/cafe/web rails "sync:problem[1590]"
+
+        (REMOTE_HOST may be a bare host or user@host; rsync connects over ssh.)
+      USAGE
       next
     end
 
     problem = Problem.find_by(id: args[:id])
-
     unless problem
-      puts "Error: Problem with ID=#{args[:id]} not found."
+      warn "Error: Problem with ID=#{args[:id]} not found."
       next
     end
 
-    remote_host = ENV['REMOTE_HOST'] || '10.0.5.80'
-    remote_rails_root = ENV['REMOTE_RAILS_ROOT'] || 'cafe_grader/web'
-
-    remote_base = "#{remote_host}:#{remote_rails_root}/storage"
-
-    puts "--> Syncing attachments for Problem ##{problem.id} from #{remote_host}"
+    puts "--> Syncing Problem ##{problem.id} (#{problem.name})"
+    puts "    from  #{remote_base}  #{host_note}"
+    puts "    (override with REMOTE_HOST / REMOTE_RAILS_ROOT — run 'rails sync:problem' with no id for help)"
     sync_problem(problem, remote_base: remote_base)
 
     puts '--> Sync complete.'

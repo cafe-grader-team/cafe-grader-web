@@ -15,8 +15,6 @@ class ApplicationController < ActionController::Base
   include ActiveStorage::SetCurrent
 
   MULTIPLE_IP_LOGIN_CONF_KEY = 'right.multiple_ip_login'
-  WHITELIST_IGNORE_CONF_KEY = 'right.whitelist_ignore'
-  WHITELIST_IP_CONF_KEY = 'right.whitelist_ip'
 
   # ---------------------------------------------------
   # ---- migration to Hotwire Stimulus and Turbo ------
@@ -195,14 +193,11 @@ class ApplicationController < ActionController::Base
       return false
     end
 
-    # check if user ip is allowed
-    unless @current_user.admin? ||
-        GraderConfiguration[WHITELIST_IGNORE_CONF_KEY] ||   # if the config allows any IP
-        @current_user.problems_for_action(:edit).any?       # if the user has "editing" right on any problem
-      unless is_request_ip_allowed?
-        unauthorized_redirect(msg: 'Your IP is not allowed to log in at this time.', logout: true)
-        return false
-      end
+    # check if user ip is allowed (User#allowed_from_ip? exempts admins,
+    # whitelist-ignore config, and problem editors)
+    unless @current_user.allowed_from_ip?(request.remote_ip)
+      unauthorized_redirect(msg: 'Your IP is not allowed to log in at this time.', logout: true)
+      return false
     end
 
     # check unique visitor id
@@ -231,22 +226,6 @@ class ApplicationController < ActionController::Base
     if user.contest_finished?
       flash[:notice] = 'Error: the contest you are participating is over.'
       redirect_to :back
-      return false
-    end
-    return true
-  end
-
-  def is_request_ip_allowed?
-    unless GraderConfiguration[WHITELIST_IGNORE_CONF_KEY]
-      user_ip = IPAddr.new(request.remote_ip)
-      allowed = GraderConfiguration[WHITELIST_IP_CONF_KEY] || ''
-
-      allowed.delete(' ').split(',').each do |ips|
-        allow_ips = IPAddr.new(ips)
-        if allow_ips.include?(user_ip)
-          return true
-        end
-      end
       return false
     end
     return true

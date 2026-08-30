@@ -1,0 +1,59 @@
+= render 'application/breadcrumb', steps: [{ label: 'Near-Miss Runs', icon: 'healing' }]
+
+.row.my-2
+  .col-md-5.mb-3
+    .d-flex.flex-column.gap-1.mb-3
+      %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+      %h2.fw-bold.text-dark.mb-0 Near-Miss Runs
+    %p.small.text-muted.mb-0
+      Batch bounded-repair runs over failing submissions. Runs are started from
+      the command line (#{content_tag :code, 'rake near_miss:repair'}); this
+      page browses their results.
+  .col-md-7.mb-3
+    = render 'near_miss_help'
+
+= form_with url: near_miss_run_path, method: :get do
+  .card.shadow-sm.mb-3
+    .card-body.p-0
+      .table-responsive
+        %table.table.table-hover.table-condense.align-middle.mb-0
+          %thead.table-light
+            %tr
+              %th
+              %th Run
+              %th Activity
+              %th.text-end Attempts
+              %th.text-end Problems
+              %th Outcomes
+              %th.text-end{title: 'accepted attempts whose repaired score beat the original'} Rescued
+              %th Budget
+              %th Models
+              %th.text-end Tokens in / out
+              %th.text-end Cost
+          %tbody
+            - if @runs.empty?
+              %tr
+                %td.text-center.text-muted.py-4{colspan: 11}
+                  No repair runs yet — start one with
+                  %code rake near_miss:repair CONTEST=…
+            - @runs.each do |run|
+              %tr
+                %td= check_box_tag 'runs[]', run[:label], false, class: 'form-check-input', id: "run-check-#{run[:label].parameterize}"
+                %td= link_to run[:label], near_miss_run_path(runs: run[:label]), class: 'fw-medium text-primary text-decoration-none font-monospace'
+                %td.small.text-secondary.font-monospace= near_miss_activity_range(run[:first_at], run[:last_at])
+                %td.text-end= run[:attempts]
+                %td.text-end= run[:problems]
+                %td
+                  .d-flex.flex-wrap.gap-1
+                    - run[:statuses].sort_by { |s, _| NearMissRunsHelper::STATUS_ORDER.index(s) || 99 }.each do |s, n|
+                      = near_miss_status_badge(s, count: n)
+                %td.text-end
+                  %span{class: run[:rescued] > 0 ? 'text-success fw-semibold' : 'text-secondary'}= run[:rescued]
+                %td.small.text-secondary.text-nowrap= run[:budgets]
+                %td.small= run[:models]
+                %td.text-end.small= "#{number_with_delimiter(run[:tokens_in])} / #{number_with_delimiter(run[:tokens_out])}"
+                %td.text-end.font-monospace.small= format('$%.4f', run[:cost])
+  - if @runs.size > 1
+    %button.btn.btn-outline-secondary.btn-sm.d-inline-flex.align-items-center.gap-1{type: 'submit'}
+      %span.mi.md-18 compare_arrows
+      Compare selected runs

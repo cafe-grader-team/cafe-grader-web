@@ -16,6 +16,11 @@
 #    that the matching job will instantiate. On master both are unset, so the
 #    abstract bases raise NotImplementedError at call time (intentional). On
 #    chula_cp they point at Llm::VivaTurnGenieAssist / Llm::VivaGradeGenieAssist.
+#
+#    `grounding_extract_service` follows the same pattern (design D4): it
+#    names a concrete subclass of Llm::GroundingExtractAssist that
+#    Llm::GroundingExtractJob instantiates. Blank on master; a deployment
+#    branch wires e.g. Llm::GroundingExtractGenieAssist.
 
 llm_services: &services
   # Per-model service registrations
@@ -25,6 +30,90 @@ llm_services: &services
   # Direct viva service overrides (leave blank on master)
   viva_turn_service:
   viva_grade_service:
+  grounding_extract_service:
+
+  # --- Near-Miss Grading / self-hosted providers (blank on master; real
+  #     values live on chula_cp, same convention as the viva keys) ---
+
+  # Concrete Llm::SubmissionRepairAssist subclass used by SubmissionRepairJob.
+  # chula_cp sets: Llm::SubmissionRepairSelfHostAssist
+  submission_repair_service:
+
+  # Registry of self-hosted OpenAI-compatible endpoints. Keys are operator
+  # labels (model identity is config data, never code). max_tokens: reasoning
+  # models spend completion budget on thinking — 4096 yields empty content on
+  # repair-sized prompts (pilot-verified: finish_reason=length); use 16384 for
+  # the DGX reasoning residents. chula_cp example:
+  #   self_hosted_default: qwen
+  #   self_hosted_models:
+  #     qwen:  { base_url: "http://<dgx>:8000",  completion_path: "/v1/chat/completions", model: "qwen3.5",     max_tokens: 16384 }
+  #     glm:   { base_url: "http://<dgx>:8001",  completion_path: "/v1/chat/completions", model: "glm-5.2",     max_tokens: 16384 }
+  #     kimi:  { base_url: "http://<dgx>:8002",  completion_path: "/v1/chat/completions", model: "kimi-k2.6",   max_tokens: 16384 }
+  #     gemma: { base_url: "http://<a100>:8000", completion_path: "/v1/chat/completions", model: "gemma-4-31b", max_tokens: 4096 }
+  # To expose them in the submission-assist picker, also register the served
+  # names:  SelfHostAssist: qwen3.5,gemma-4-31b
+  self_hosted_default:
+  self_hosted_models:
+
+  # --- Hosted OpenAI-compatible gateway (bearer key) ---------------------
+  # Generic transport for a LiteLLM proxy / OpenRouter-style aggregator
+  # (Llm::AiGatewayTransport + the *AiGateway* role subclasses). Blank on
+  # master; a deployment fills the block. The API key NEVER goes here (this
+  # file is checked in) — it lives in Rails credentials:
+  #   llm:
+  #     ai_gateway:
+  #       api_key: sk-...
+  # chula_cp example:
+  #   ai_gateway:
+  #     display_name: "Chula AI Gateway"
+  #     base_url: "https://api.gateway.chula-ai.com"
+  #     completion_path: "/v1/chat/completions"
+  #     models_path: "/v1/models"
+  #     default_model: claude-sonnet-4-5     # any role without an override
+  #     default_models:                      # optional per-role overrides; keys:
+  #       grounding_extract: gemini-3.7-flash  # assist, viva_turn, viva_grade,
+  #                                            # grounding_extract, submission_repair
+  #     models:                              # served roster: allowlist + admin pickers
+  #       [claude-opus-4-5, claude-sonnet-4-5, claude-haiku-4-5,
+  #        gemini-3.7-flash, gemini-3.6-flash, gemini-3.5-flash]
+  # To expose models in the submission-assist picker, also register them:
+  #   AiGatewayAssist: claude-sonnet-4-5,gemini-3.7-flash
+  #
+  # The same block drives any bearer-key OpenAI-compatible aggregator. An
+  # OpenRouter deployment would look like this -- NOTE THE PATH SPLIT, which is
+  # the one trap here and costs an afternoon if you get it wrong:
+  #
+  #   ai_gateway:
+  #     display_name: "OpenRouter"
+  #     base_url: "https://openrouter.ai"          # NOT ".../api"
+  #     completion_path: "/api/v1/chat/completions" # the /api lives HERE
+  #     models_path: "/api/v1/models"
+  #     usage_in_body: true                        # see below
+  #     default_model: anthropic/claude-sonnet-4.5
+  #     models: [anthropic/claude-sonnet-4.5, google/gemini-2.5-flash]
+  #
+  # Why the split: the transport POSTs an *absolute* path, and Faraday resolves
+  # that against base_url with URI-join semantics, so an absolute path replaces
+  # the prefix's path entirely --
+  #   "https://openrouter.ai/api" + "/v1/chat/completions"
+  #     => "https://openrouter.ai/v1/chat/completions"   (404, no /api)
+  # Keeping base_url bare and putting the whole path in completion_path avoids
+  # it. LiteLLM proxies are normally mounted at the root, so they are unaffected.
+  #
+  # `usage_in_body: true` makes the transport send `usage: {include: true}` with
+  # each request; that is what makes an OpenRouter-style gateway report per-call
+  # cost as `usage.cost` in the response body. Leave it unset for LiteLLM, which
+  # reports cost in the x-litellm-response-cost header instead and would forward
+  # the unknown key upstream. With neither source available every call records
+  # $0.00 and logs a WARN naming the model.
+  #
+  # UNVERIFIED against a live OpenRouter account (no code path is OpenRouter-
+  # specific, but nothing here has been exercised end to end): (a) the exact
+  # `usage.cost` field name and its opt-in key, (b) whether OpenRouter accepts
+  # the OpenAI `file` content part that Llm::AiGatewayTransport.convert_pdf_parts
+  # emits for PDFs -- that rewrite was built and tested for LiteLLM. Viva
+  # grounding and statement PDFs are the only features that depend on (b).
+  ai_gateway:
 
 development:
   <<: *services

@@ -1,0 +1,26 @@
+%h3.mb-4 Edit Grounding Material
+.d-flex.flex-column.gap-4{data: {controller: 'grounding-draft'}}
+  = render 'form'
+
+  - if @grounding_material.files.attached?
+    .card.bg-light.border-0
+      .card-body
+        %h5.mb-2 Extract text from PDF (draft)
+        %p.text-secondary.small.mb-3
+          One-time AI pass over the attached PDF#{'s' if @grounding_material.files.count > 1} into a draft Markdown
+          document below.
+          %strong Review the draft, then copy it into the Body field and edit before saving — extraction is lossy, especially for Thai and formulas.
+          The body is only used once YOU save it.
+        = button_to 'Extract text from PDF (draft)', extract_grounding_material_path(@grounding_material),
+            method: :post, class: 'btn btn-primary', form: { class: 'd-inline', data: { turbo: true } }
+
+        - if @grounding_material.extraction_draft.present?
+          .mt-3
+            %label.form-label.fw-bold Draft (not saved — review before using)
+            %pre.border.rounded.bg-white.p-2{style: 'max-height: 320px; overflow-y: auto; white-space: pre-wrap;',
+                data: {grounding_draft_target: 'draft'}}= @grounding_material.extraction_draft
+            %button.btn.btn-outline-primary.mt-2{type: 'button', data: {action: 'grounding-draft#copyIntoBody'}}
+              Copy draft into Body (review before saving)
+        - elsif @grounding_material.extraction_requested_at.present?
+          .mt-3.text-secondary
+            %em Extraction in progress… refresh this page in a minute or two.

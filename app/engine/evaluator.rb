@@ -152,7 +152,7 @@ class Evaluator
 
   def score_bounds_for_dataset
     # Keep all non-raw modes compatible with historical scoring semantics.
-    return [0.to_d, 1.to_d] unless @working_dataset&.custom_cms_raw?
+    return [0.to_d, 1.to_d] unless @working_dataset&.custom_testlib_raw?
 
     raw_max_score = [max_score_supported_by_column, TARGET_SCORE_ABS_LIMIT].min
     [-raw_max_score, raw_max_score]

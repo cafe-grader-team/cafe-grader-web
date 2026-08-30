@@ -10,9 +10,8 @@
       = render partial: 'submission_range'
     .col-lg-4
       = render partial: 'user_select'
-.text-secondary.small.mb-3.d-flex.align-items-center
-  %span.mi.md-18.me-1 sync
-  Select filters above, then click Refresh to load data.
+= render 'empty_report_notice'
+= render 'report_help'
 .mt-3
   = turbo_frame_tag "max_score_result", data: {turbo: "true"} do
     = render partial: 'score_table', locals: {problems: Problem.none, link_for_data: max_score_query_report_path, refresh_submit_form_id: 'max-score-filter-form' }

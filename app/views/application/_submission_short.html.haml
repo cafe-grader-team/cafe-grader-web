@@ -3,6 +3,13 @@
 - if submission.nil?
   = "-"
 - else
+  -# Viva rows render differently (no compiler/testcase links, a marker badge
+  -# instead of the verdict string). Callers that already hold the problem
+  -# pass it (main list) or set @problem (per-problem index, turbo refresh) so
+  -# this stays free of a per-row problem query; anything else falls back.
+  - problem = local_assigns[:problem] || @problem
+  - problem = submission.problem unless problem&.id == submission.problem_id
+  - viva = problem.viva_exam?
   - if local_assigns[:show_id]
     -# show submission id row (with tries and compiler message)
     .row
@@ -11,15 +18,37 @@
         = link_to submission.id, submission_path(submission), data: {turbo: false}
         %span.ms-2
           = "(#{link_to pluralize(sub_count || '-',"try"), problem_submissions_path(submission.problem_id), data: {turbo: false}})"
-        %span.ms-2
-          - if submission.status == 'compilation_error'
-            - compiler_msg_class = 'link-danger'
-          - elsif !submission.compiler_message.blank?
-            - compiler_msg_class = 'link-warning'
-          - else
-            - compiler_msg_class = ''
-          = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission), {class: compiler_msg_class, data: {turbo: true, turbo_method: :post} }
-  - unless submission.graded_at
+        - unless viva
+          %span.ms-2
+            - if submission.status == 'compilation_error'
+              - compiler_msg_class = 'link-danger'
+            - elsif !submission.compiler_message.blank?
+              - compiler_msg_class = 'link-warning'
+            - else
+              - compiler_msg_class = ''
+            = link_to "#{t 'main.cmp_msg'}", compiler_msg_submission_path(submission), {class: compiler_msg_class, data: {turbo: true, turbo_method: :post} }
+  - if viva && !submission.graded_at
+    -# viva in flight: interview running (submitted), grading in flight
+    -# (evaluating), or grading failed (grader_error — graded_at stays nil, so
+    -# without this branch a failed viva reads "Waiting to be graded..." forever)
+    .row
+      .col-12.d-flex.align-items-center
+        %span.me-1.mi.mr-2.text-secondary hourglass
+        started
+        %span= time_ago_in_words(submission.submitted_at) + ' ago'
+        %span.text-secondary (#{format_short_time(submission.submitted_at)})
+    .row
+      .col-12.d-flex.align-items-center
+        - case submission.status.to_s
+        - when 'grader_error'
+          = link_to viva_submission_path(submission), class: 'badge rounded-pill text-decoration-none d-inline-flex align-items-center gap-1 bg-danger-subtle text-danger-emphasis', title: 'View viva', data: {turbo: false} do
+            = mdi('error', 'md-18')
+            Grader error
+        - when 'evaluating'
+          Grading in progress...
+        - else
+          Interview in progress
+  - elsif !submission.graded_at
     -# show waiting to be graded
     .row
       .col-12.d-flex.align-items-center
@@ -43,13 +72,27 @@
     - if GraderConfiguration['ui.show_score']
       .row
         //.col-lg-3.text-secondary=t 'main.score'
-        .col-12.d-flex.align-items-center
+        -# top-aligned (not centred): the verdict strip can be several rows
+        -# tall and the score should sit beside its first row
+        .col-12.d-flex.align-items-start
           %span.me-1.mi.mr-2.text-secondary speed
           %span{class: ('text-success' if submission.points >= 100)}
             = submission.points
-          %span.grader-comment.text-break
-            = " [#{submission.grader_comment}]"
-          = link_to mdi('ballot'), evaluations_submission_path(submission), data: {turbo: true, turbo_method: :post}
+          - if viva
+            -# The narrative lives on the viva page (grade card); here only a
+            -# marker badge that links there. Terminated is read from the
+            -# column, not from grader_comment.
+            - if submission.viva_terminated_at?
+              = link_to viva_submission_path(submission), class: 'ms-2 badge rounded-pill text-decoration-none d-inline-flex align-items-center gap-1 bg-danger-subtle text-danger-emphasis', title: 'View grade', data: {turbo: false} do
+                = mdi('report', 'md-18')
+                terminated
+            - else
+              = link_to viva_submission_path(submission), class: 'ms-2 badge rounded-pill text-decoration-none d-inline-flex align-items-center gap-1 bg-secondary-subtle text-secondary-emphasis', title: 'View grade', data: {turbo: false} do
+                = mdi('grading', 'md-18')
+                viva
+          - else
+            = grader_comment_strip(submission.grader_comment)
+            = link_to mdi('ballot'), evaluations_submission_path(submission), data: {turbo: true, turbo_method: :post}
   - if local_assigns[:show_button]
     -# show links
     - if submission.graded_at
@@ -58,4 +101,3 @@
     = link_to "#{t 'main.submissions_link'} (#{sub_count rescue '-'})", problem_submissions_path(submission.problem_id), class: 'my-1 btn btn-sm btn-info'
     - if GraderConfiguration.show_testcase
       = link_to "testcases", show_problem_testcases_path(submission.problem_id), class: 'my-1 btn btn-sm btn-info'
-

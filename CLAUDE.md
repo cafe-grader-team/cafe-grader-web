@@ -12,6 +12,17 @@ Cafe-Grader is an online programming contest and assignment grading platform (us
 
 Local VCS is **Mercurial (hg)**, mirrored to **GitHub** via the **hg-git** extension. Use `hg` for all local operations (`hg status`, `hg commit`, `hg diff`, `hg push`). Issues and PRs live on GitHub — use the `gh` CLI for those (e.g., `gh issue close 51`).
 
+**Branch workflow (`master` ↔ `chula_cp`).** Two long-lived bookmarks:
+- **`master`** — trunk / the upstream-facing line. **All commits land here.**
+- **`chula_cp`** — the Chula CP deployment branch. It carries deployment-specific config that is intentionally absent on master (e.g. the viva LLM services in `config/llm.yml` are `Llm::VivaTurnGenieAssist` / `Llm::VivaGradeGenieAssist` on chula_cp but blank on master). The dev server / Solid Queue worker should run **on chula_cp**, since those classes only exist there.
+- **LLM-provider placement rule** (`doc/decisions.md` 2026-07-30): the branch is decided by *generality*, not abstractness — provider code any third-party deployment could use (self-hosted OpenAI-compatible endpoints, hosted aggregators like OpenRouter) lives on **master**, dormant until config activates it; only integrations that cannot work outside Chula (the ChulaGenie classes) live on chula_cp. Config values and secrets are per-deployment on either branch and never a reason to move code.
+
+`chula_cp` **only ever receives batch-merges from master** — `hg update chula_cp && hg merge master && hg commit -m "merge master: …"` — bundled at logical stopping points, not per commit. **Never commit directly on `chula_cp`** (it skips master and creates divergence to clean up later). Before any `hg commit`, check the active bookmark (`hg log -r . --template '{activebookmark}\n'`); if `chula_cp` is active, `hg update master` first. One `hg push` mirrors both bookmarks via hg-git. Fuller context: the `/release` skill's conventions and `doc/llm-refactor-handoff-2026-05-07.md`.
+
+## Changelog
+
+`CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/); the top `[Unreleased]` section accumulates changes between releases. **Maintain it incrementally — don't reconstruct it from the commit log at release time.** When a commit makes a *user- or operator-facing* change (new feature/report/endpoint, behavior change, bug fix, or a config/setup change that affects fresh clones), add a curated `### Added/Changed/Fixed/Security` bullet under `[Unreleased]` in the *same commit*, citing the rev. Skip pure internals — refactors, test-only changes, dependency bumps, and Claude/dev tooling (skills, editor config) that don't change app behavior (e.g. the `/release` and `/upstream-sync` skills are deliberately not in the changelog). Cutting a release is then just renaming `[Unreleased]` → `[X.Y.Z] — YYYY-MM-DD`; the `/release` skill's log-backfill step is a safety net, not the primary path.
+
 ## Tech Stack
 
 - **Ruby 3.4.4, Rails 8.0.0** (with `load_defaults 7.0`)
@@ -61,6 +72,14 @@ bin/rails swagger:verify         # fail if swagger.yaml is stale (also part of `
 
 The system operates in either **contest mode** or **group mode** (configured via `GraderConfiguration`). This affects how problems are scoped and presented to users.
 
+- **Server-global and exclusive.** `GraderConfiguration.contest_mode?` / `.indv_contest_mode?` / `.analysis_mode?` all read the same single site-wide config key (`SYSTEM_MODE_CONF_KEY`) — the *entire* site is in one mode at a time, never per-contest, per-group, or per-user. Contests are enforced as the source of problem visibility only while contest mode (or indv-contest mode) is on; outside it, contest start/stop windows are inert and access falls back to normal/group rules.
+- **The instructor's operational model** (authoritative — this is the intended day-to-day usage, not just a technical description): the server lives in normal/group mode almost all the time; scores there are feedback, not authoritative — academic integrity in normal mode is handled socially, outside the grader. Contest mode is a short-lived "strict exam preset"; it is kept short both pedagogically (it blocks normal learning) and technically (several features assume small in-contest submission volumes, e.g. the O(N²) submission comparison and dataset rejudge).
+- **Consequences, one line each** (see `User#problems_for_action`, `Problem.contests_problems_for_user`, `User#active_contests_range`, `MainController#prepare_list_information`):
+  - In contest mode, students see ONLY the problems belonging to their currently-active, enrolled contests — the normal/group problem list is replaced wholesale, not merged in.
+  - The main list scopes each student's displayed submissions/scores to `active_contests_range` — the union of their active contests' start/stop windows (adjusted for per-user offset/extra time) — so out-of-window submissions don't count toward the shown max score or count.
+  - A user can lose the ability to view their OWN out-of-contest submissions while contest mode is on: `User#can_view_submission?` gates on the submission's problem being in `problems_for_action(:submit)` *before* the owner check, so a problem that falls outside the active-contest set becomes invisible even to its own submitter. This is intended, and symmetric across both code submissions and viva sessions.
+- Viva-specific policy semantics (daily start limits, retakes, archived-session visibility, alert handling) build on top of this mode system but are documented separately — see `docs/superpowers/specs/2026-07-21-viva-context-policy-design.md` and `doc/Viva-Exam.md`.
+
 ### Key Domain Models
 
 - **User** — has roles (admin, group_editor, reporter) via HABTM; scoped access to problems/contests
@@ -83,7 +102,7 @@ The system operates in either **contest mode** or **group mode** (configured via
 
 - Lives in `app/controllers/api/v1/`, routes under `namespace :api / :v1`
 - **JWT auth** via `Authorization: Bearer <token>` (session auth is NOT used)
-- **Must reuse existing model authorization** (`User#problems_for_action`, `User#can_view_testcase?`, `User#can_view_submission?`, etc.) — never duplicate business logic in API controllers
+- **Must reuse existing model authorization** (`User#problems_for_action`, `User#can_submit_to_problem?`, `User#can_view_testcase?`, `User#can_view_submission?`, etc.) — never duplicate business logic in API controllers. The API must accept exactly what the web accepts — never less or more (decision 2026-08-22: the running web app is authoritative)
 - **rswag** specs in `spec/requests/api/v1/` double as tests and Swagger docs
 - After changing any API spec: **always run `rails rswag:specs:swaggerize`** to regenerate `swagger/v1/swagger.yaml`
 - Swagger UI is served at `/api-docs`
@@ -105,6 +124,8 @@ Session-based auth (`session[:user_id]`). Key controller methods:
 - `current_user` — logged-in user
 - `admin_authorization` — restricts to admin role
 - `group_editor_authorization` — restricts to group editors
+
+Submit authorization is ONE predicate, `User#can_submit_to_problem?` (admin ∨ `:submit` ∨ `:edit` — the `:edit` arm is the editor's test-submit right on draft/hidden problems in their own groups). It backs the web submit, the API create, viva start, the submit-form UI, and the model-layer validation (`Submission#must_have_valid_problem`, the last line of defense; trusted tooling bypasses with `save!(validate: false)`). Never hand-roll a submit check from scopes — add to or call the predicate. A disabled `groups_users` row grants NO role (member, reporter, or editor). Full design + role matrix: `doc/decisions.md` 2026-08-22, `docs/guide/authorization.html`.
 
 ### Background Processing
 
@@ -174,6 +195,10 @@ AuditLog.record!(auditable: @contest,                 # one manual row
 ## Testing Notes
 
 - **System tests + Turbo login:** the login form (`_login_box.html.haml`) uses `form_with`, which submits via Turbo. Capybara's `click_on 'Login'` returns once the click event fires, *before* Turbo's async fetch lands and replaces the page. A bare `visit some_path` immediately after will race the login and end up on the wrong page. In the local `login` helper for any new system test, sync after the click (e.g. `assert_current_path list_main_path, wait: 5`) before doing anything else.
+- **Async turbo_stream submits race the DB read.** A form that responds with a turbo_stream (e.g. the `do_manage` "Apply to Selected" bulk actions, which append a Bootstrap toast) updates the DB *before* the response renders, but the submission is async — a test that does `record.reload` immediately after clicking submit reads stale data. Wait for a deterministic post-submit signal first: those bulk actions append a toast, so `assert_selector ".toast", wait: 10` before the DB assertion; a redirect-with-notice form, `assert_text "<notice>"`. This made 5 tests (Clusters 3 & 4 + the languages bulk-set) look like real regressions when the logic was fine.
+- **Use an explicit `wait:` on assertions that follow an async submit.** The default Capybara wait (~2s) can time out under full-suite load, making a good test look "flaky." **Don't skip a flaky system test on a hunch** — verify the actual failure mechanism first (a controller-level test of the same logic, or a `page.evaluate_script` DOM diagnostic). Two tests were *wrongly skipped* on unverified diagnoses before the real causes (a load timeout; an async-submit race) were found.
+- **Admin index DataTables load rows via AJAX on `window load`.** Tables like `user_admin/index` and problems-manage init the DataTable on a full page load and fetch rows via POST. After a create→redirect, reload the index and `assert_text …, wait: 10` for a row (a turbo redirect won't fire `window load`). The AJAX init reads the CSRF token — keep it null-safe (`querySelector('meta[name="csrf-token"]')?.getAttribute('content')` or the jQuery `.attr()` form); the unguarded `.getAttribute` throws when the meta tag is absent (forgery protection is off in test) and silently kills the whole table.
+- **`fill_in` on a pre-filled field can append, not replace** (editing a Name that already reads "easy" → "easybeginner"). Pass `fill_options: { clear: :backspace }` when overwriting an existing value.
 
 ## Key Configuration
 

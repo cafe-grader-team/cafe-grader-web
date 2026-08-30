@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Sees What</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f4f7f7; --surface: #ffffff; --surface-2: #eef3f3;
+    --ink: #1d2a2c; --muted: #5d6f72; --line: #d7e0e0; --line-strong: #b7c6c6;
+    --accent: #0f766e; --accent-ink: #0b5a54;
+    --allow: #15803d; --allow-bg: #e5f3ea;
+    --deny: #b91c1c; --deny-bg: #f9ecec; --deny-dim: #a05252;
+    --warn: #b45309; --warn-bg: #fdf1de; --warn-line: #e5b96f;
+    --code-bg: #eef3f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101718; --surface: #182022; --surface-2: #1f2a2c;
+      --ink: #dbe7e7; --muted: #8fa4a6; --line: #2a3739; --line-strong: #3b4c4e;
+      --accent: #3fb8ad; --accent-ink: #5accc2;
+      --allow: #4ade80; --allow-bg: #16321f;
+      --deny: #f47272; --deny-bg: #3a1d1d; --deny-dim: #9c6b6b;
+      --warn: #f0a848; --warn-bg: #38290f; --warn-line: #7a5a1f;
+      --code-bg: #1f2a2c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101718; --surface: #182022; --surface-2: #1f2a2c;
+    --ink: #dbe7e7; --muted: #8fa4a6; --line: #2a3739; --line-strong: #3b4c4e;
+    --accent: #3fb8ad; --accent-ink: #5accc2;
+    --allow: #4ade80; --allow-bg: #16321f;
+    --deny: #f47272; --deny-bg: #3a1d1d; --deny-dim: #9c6b6b;
+    --warn: #f0a848; --warn-bg: #38290f; --warn-line: #7a5a1f;
+    --code-bg: #1f2a2c;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    font-size: 16.5px; line-height: 1.55;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 34px 26px 90px; }
+  h1, h2 { font-family: "Archivo", "Segoe UI", system-ui, sans-serif; text-wrap: balance; }
+  h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.015em; margin: 6px 0 10px; }
+  h2 { font-size: 1.25rem; font-weight: 650; margin: 0 0 12px; }
+  section { margin-top: 52px; }
+  p { max-width: 72ch; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+  }
+  .lede { color: var(--muted); font-size: 1.05rem; margin: 0; }
+  code { font-family: "IBM Plex Mono", monospace; font-size: 0.85em; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: 0.08em 0.35em; }
+  a { color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  .authority {
+    display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline;
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 12px 18px; margin-top: 22px; font-size: 0.92rem;
+  }
+  .authority b { font-family: "Archivo", sans-serif; font-weight: 600; }
+
+  /* matrix */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  thead th {
+    font-family: "Archivo", sans-serif; font-size: 0.74rem; letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 600; color: var(--muted);
+    padding: 11px 12px; border-bottom: 1px solid var(--line-strong);
+    text-align: center; white-space: nowrap; background: var(--surface-2);
+  }
+  thead th.left { text-align: left; }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: center; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.scenario {
+    text-align: left; vertical-align: top; padding-top: 12px;
+    border-right: 1px solid var(--line); font-family: "Archivo", sans-serif;
+    font-weight: 600; font-size: 0.88rem; max-width: 240px;
+  }
+  td.scenario small { display: block; font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 0.7rem; color: var(--muted); margin-top: 3px; white-space: normal; }
+  td.func { text-align: left; color: var(--muted); font-size: 0.84rem; white-space: nowrap; }
+  tr.scen-start td { border-top: 1px solid var(--line-strong); }
+  .pill {
+    display: inline-block; min-width: 40px; padding: 1px 9px; border-radius: 999px;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; font-weight: 600; line-height: 1.7;
+  }
+  .ok { background: var(--allow-bg); color: var(--allow); }
+  .no { color: var(--deny-dim); font-weight: 400; }
+  .web { background: var(--warn-bg); color: var(--warn); outline: 1px solid var(--warn-line); }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 2px 0; font-size: 0.82rem; color: var(--muted); align-items: center; }
+
+  /* flowchart */
+  .funnel { display: flex; flex-direction: column; gap: 0; margin-top: 8px; max-width: 860px; }
+  .step { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+  .q {
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px;
+    padding: 12px 16px; font-weight: 600; font-family: "Archivo", sans-serif; font-size: 0.95rem;
+  }
+  .q small { display: block; font-family: "Source Sans 3", sans-serif; font-weight: 400; color: var(--muted); font-size: 0.82rem; margin-top: 3px; }
+  .out {
+    background: var(--deny-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px; font-size: 0.86rem; color: var(--ink);
+  }
+  .out b { color: var(--deny); font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; letter-spacing: 0.06em; }
+  .down { text-align: left; color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; padding: 4px 0 4px 24px; }
+  .final {
+    background: var(--allow-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 16px; font-weight: 600; font-family: "Archivo", sans-serif; color: var(--allow); max-width: 860px;
+  }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; max-width: 860px; }
+  .foot { margin-top: 56px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.84rem; color: var(--muted); max-width: 80ch; }
+
+  @media (max-width: 700px) {
+    h1 { font-size: 1.6rem; }
+    .step { grid-template-columns: 1fr; gap: 6px; }
+    .down { padding-left: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">cafe-grader · guide · for instructors &amp; admins</div>
+  <h1>Who sees what — and who can submit</h1>
+  <p class="lede">Visual companions to the access-control rules: one matrix for problem visibility and
+    submitting, and a checklist for debugging “my student can’t see problem X.”</p>
+  <div class="authority">
+    <b>Authoritative text:</b>
+    <a href="https://github.com/cafe-grader-team/cafe-grader-web/wiki/Users-Roles-and-Access-Control">wiki · Users, Roles &amp; Access Control</a>
+    <span style="color:var(--muted)">— these pages only add the pictures. Rules shown reflect the running application (group mode, normal operation).</span>
+  </div>
+</header>
+
+<section id="matrix">
+  <h2>The matrix: visibility and submitting, by role and switch</h2>
+  <p>Roles are <em>per group</em> — Reporter/Editor privileges apply only inside groups where the user
+    holds that role, and only while that membership row is <em>enabled</em>: a disabled membership grants
+    no role at all (not member, reporter, or editor). “See” means the problem appears in the student
+    list / its statement opens.</p>
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="left">Scenario</th>
+        <th class="left">Function</th>
+        <th>Not in group</th>
+        <th>Member</th>
+        <th>Reporter</th>
+        <th>Editor</th>
+        <th>Admin</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="scen-start">
+        <td class="scenario" rowspan="2">Normal<small>available ✓ · group enabled ✓ · in-group switch ✓</small></td>
+        <td class="func">See</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr>
+        <td class="func">Submit</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr class="scen-start">
+        <td class="scenario" rowspan="2">In-group switch OFF<small>student-only hide, one problem in one group</small></td>
+        <td class="func">See</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr>
+        <td class="func">Submit</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill web">✓ editor</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr class="scen-start">
+        <td class="scenario" rowspan="2">Problem Available OFF<small>draft or retired problem</small></td>
+        <td class="func">See</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr>
+        <td class="func">Submit</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill web">✓ editor</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr class="scen-start">
+        <td class="scenario" rowspan="2">Group disabled<small>archived course</small></td>
+        <td class="func">See</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+      <tr>
+        <td class="func">Submit</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill web">✓ editor</span></td><td><span class="pill ok">✓</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="legend">
+    <span><span class="pill ok">✓</span> allowed</span>
+    <span><span class="pill no">✗</span> hidden / refused</span>
+    <span><span class="pill web">✓ editor</span> editor test-submit in their own groups (web, API, and viva start)</span>
+  </div>
+</section>
+
+<section id="flowchart">
+  <h2>“Why can’t this student see / submit problem X?”</h2>
+  <p>Walk the checks top to bottom — the first “no” is your answer.</p>
+  <div class="funnel">
+    <div class="step">
+      <div class="q">1 · Is the user account enabled?<small>User Admin → the user’s Enabled flag</small></div>
+      <div class="out"><b>NO →</b> blocked everywhere, all problems.</div>
+    </div>
+    <div class="down">↓ yes</div>
+    <div class="step">
+      <div class="q">2 · Is the site in contest mode?<small>a site-wide setting — the whole server is in one mode</small></div>
+      <div class="out"><b>YES →</b> different rules apply: students see <em>only</em> problems of their currently-active contests. (Contest-mode guide: to come.)</div>
+    </div>
+    <div class="down">↓ no — normal operation</div>
+    <div class="step">
+      <div class="q">3 · Is group mode on?<small>system.use_problem_group</small></div>
+      <div class="out"><b>NO →</b> groups are ignored: every enabled user sees and can submit every <em>Available</em> problem. If they can’t, the problem isn’t Available.</div>
+    </div>
+    <div class="down">↓ yes — group mode</div>
+    <div class="step">
+      <div class="q">4 · Is the student in a group that contains the problem?<small>and is that membership row Enabled?</small></div>
+      <div class="out"><b>NO →</b> invisible to them. Add them to the group (or re-enable the membership).</div>
+    </div>
+    <div class="down">↓ yes</div>
+    <div class="step">
+      <div class="q">5 · Is that group Enabled?<small>archived courses are disabled groups</small></div>
+      <div class="out"><b>NO →</b> hidden from members and reporters. The group’s editors (and admins) still have access.</div>
+    </div>
+    <div class="down">↓ yes</div>
+    <div class="step">
+      <div class="q">6 · Is the problem Available?<small>the problem’s master switch</small></div>
+      <div class="out"><b>NO →</b> hidden from members and reporters. Editors of its groups still see it (and can test-submit).</div>
+    </div>
+    <div class="down">↓ yes</div>
+    <div class="step">
+      <div class="q">7 · Is the in-group switch Enabled for this problem in this group?<small>the per-group toggle on the group’s problem list</small></div>
+      <div class="out"><b>NO →</b> hidden from students in that group only. Reporters and editors still see it; only editors/admins can submit.</div>
+    </div>
+    <div class="down">↓ yes</div>
+    <div class="final">All checks pass → the student sees the problem and can submit. ✓</div>
+  </div>
+</section>
+
+<section id="no-group-mode">
+  <h2>When group mode is off</h2>
+  <div class="panel">
+    <p style="margin:0">Groups, per-group roles, and both enable switches are ignored entirely.
+      Every enabled user — even one in no group — sees and can submit every <em>Available</em> problem.
+      Problems with Available OFF are admin-only. Editors keep their problem-management pages,
+      but their draft-submit privilege disappears with the rest of the group machinery.</p>
+  </div>
+</section>
+
+<p class="foot">Behavior on this page was measured against the running application (integration probe, 2026-08-22)
+  rather than transcribed from code. Developers can read the full audit — entry-point matrices, findings,
+  test-coverage gaps — in the <a href="../reports/submit-authorization.html">submit-authorization report</a>.</p>
+
+</div>
+</body>
+</html>

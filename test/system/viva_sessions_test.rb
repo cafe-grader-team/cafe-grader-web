@@ -124,7 +124,7 @@ class VivaSessionsTest < ApplicationSystemTestCase
   # (the test queue adapter swallows it). After the redirect the
   # "Interviewer is thinking..." spinner replaces the error message.
 
-  # --- Form: viva-mode-toggle Stimulus controller ------------------
+  # --- Form: viva-exam-toggle Stimulus controller ------------------
   #
   # When compilation_type is set to viva_exam, the form hides the
   # fields that don't apply (Allowed Language, Submission filename).

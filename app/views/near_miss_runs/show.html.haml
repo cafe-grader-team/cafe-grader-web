@@ -1,0 +1,123 @@
+- run_title = @labels.join(', ')
+= render 'application/breadcrumb', steps: [{ label: 'Near-Miss Runs', path: near_miss_runs_path, icon: 'healing' }, { label: run_title }]
+
+.d-flex.flex-column.gap-1.mb-3
+  %small.text-secondary.text-uppercase.fw-bold.ls-1 Near-Miss run report
+  %h2.fw-bold.text-dark.mb-0.font-monospace= run_title
+
+- if @report.empty?
+  .card.shadow-sm.mb-4
+    .card-body.text-center.text-muted.py-5
+      No attempts found for
+      %code= run_title
+      = succeed '.' do
+        — check the label on the
+        = link_to 'runs page', near_miss_runs_path
+- else
+  - multi_run = @report.size > 1
+  .card.shadow-sm.mb-4
+    .card-header.bg-white.fw-bold Per-problem results
+    .card-body.p-0
+      .table-responsive
+        %table.table.table-hover.table-condense.align-middle.mb-0
+          %thead.table-light
+            %tr
+              - if multi_run
+                %th Run
+              %th Problem
+              %th.text-end Targets
+              %th Outcomes
+              %th.text-end{title: 'accepted attempts whose repaired score beat the original'} Rescued
+              %th.text-end Rescue rate
+              %th.text-end{title: 'mechanical gap = repaired − original score, over accepted attempts'} Gap mean / median
+              %th.text-end{title: 'median measured patch size (characters) over attempts with a parseable patch'} Median size
+              %th Categories
+              %th{title: 'per LLM round: patches within budget / patches measured'} Compliance
+              %th.text-end Tokens in / out
+              %th.text-end Cost
+          %tbody
+            - @report.each do |label, per_problem|
+              - per_problem.each do |pname, s|
+                %tr
+                  - if multi_run
+                    %td.font-monospace.small= label
+                  %td.fw-medium= pname
+                  %td.text-end= s[:targets]
+                  %td
+                    .d-flex.flex-wrap.gap-1
+                      - s[:statuses].sort_by { |st, _| NearMissRunsHelper::STATUS_ORDER.index(st) || 99 }.each do |st, n|
+                        = near_miss_status_badge(st, count: n)
+                      - if s[:ungradeable] > 0
+                        %span{title: 'accepted attempts whose shadow has no judge outcome (grader_error or still in flight) — excluded from gap/rescue stats'}
+                          = near_miss_status_badge('ungradeable', count: s[:ungradeable])
+                  %td.text-end
+                    %span{class: s[:rescued] > 0 ? 'text-success fw-semibold' : 'text-secondary'}= s[:rescued]
+                  %td.text-end= number_to_percentage(s[:rescue_rate] * 100, precision: 1)
+                  %td.text-end= "#{s[:mean_gap] || '—'} / #{s[:median_gap] || '—'}"
+                  %td.text-end= SubmissionRepair.median(s[:sizes].sort) || '—'
+                  %td
+                    .d-flex.flex-wrap.gap-1
+                      - s[:categories].sort_by { |_, n| -n }.each do |cat, n|
+                        = near_miss_category_badge("#{cat} × #{n}")
+                  %td.small.text-secondary.text-nowrap
+                    = s[:compliance].sort.map { |round, c| "r#{round}: #{c[:within]}/#{c[:total]}" }.join(' · ')
+                  %td.text-end.small= "#{number_with_delimiter(s[:tokens_in])} / #{number_with_delimiter(s[:tokens_out])}"
+                  %td.text-end.font-monospace.small= format('$%.4f', s[:cost])
+
+  .card.shadow-sm.mb-4
+    .card-header.bg-white.d-flex.justify-content-between.align-items-center.flex-wrap.gap-2
+      %span.fw-bold Attempts
+      .d-flex.flex-wrap.gap-1
+        - all_active = @status_filter.nil?
+        = link_to "All (#{@status_counts.values.sum})", near_miss_run_path(runs: @labels.join(',')), class: "btn btn-sm #{all_active ? 'btn-secondary' : 'btn-outline-secondary'}"
+        - NearMissRunsHelper::STATUS_ORDER.each do |st|
+          - n = @status_counts[st]
+          - next unless n
+          = link_to "#{st.humanize.downcase} (#{n})", near_miss_run_path(runs: @labels.join(','), status: st), class: "btn btn-sm #{@status_filter == st ? 'btn-secondary' : 'btn-outline-secondary'}"
+    .card-body.p-0
+      .table-responsive
+        %table.table.table-hover.table-condense.align-middle.mb-0
+          %thead.table-light
+            %tr
+              %th #
+              - if multi_run
+                %th Run
+              %th User
+              %th Problem
+              %th Status
+              %th.text-end{title: 'original → repaired score (links open the submissions)'} Score
+              %th.text-end Gap
+              %th.text-end{title: 'measured patch size vs the run budget'} Size
+              %th.text-end Rounds
+              %th Category
+              %th Model
+              %th.text-end Cost
+              %th When
+          %tbody
+            - if @attempts.empty?
+              %tr
+                %td.text-center.text-muted.py-4{colspan: multi_run ? 13 : 12} No attempts match this filter.
+            - @attempts.each do |a|
+              %tr
+                %td= link_to "##{a.id}", near_miss_repair_path(a), class: 'fw-medium text-primary text-decoration-none'
+                - if multi_run
+                  %td.font-monospace.small= a.run_label
+                %td= a.original_submission.user&.login
+                %td= a.original_submission.problem&.name
+                %td= near_miss_status_badge(a.status)
+                %td.text-end.text-nowrap
+                  = link_to near_miss_points(a.original_submission.points), submission_path(a.original_submission_id), class: 'text-decoration-none', title: 'original submission'
+                  - if a.repaired_submission
+                    %span.text-secondary &rarr;
+                    = link_to near_miss_points(a.repaired_submission.points), submission_path(a.repaired_submission_id), class: 'text-decoration-none', title: 'shadow (repaired) submission'
+                %td.text-end= near_miss_gap(a)
+                %td.text-end.small.text-nowrap
+                  - if a.changed_lines
+                    = "#{a.changed_lines}L / #{a.changed_chars}C"
+                  - else
+                    %span.text-secondary —
+                %td.text-end= a.rounds_used
+                %td= near_miss_category_badge(a.fix_category)
+                %td.small.font-monospace= a.llm_model
+                %td.text-end.font-monospace.small= format('$%.4f', a.cost.to_f)
+                %td.small.text-secondary.font-monospace= a.created_at.strftime('%Y-%m-%d %H:%M')

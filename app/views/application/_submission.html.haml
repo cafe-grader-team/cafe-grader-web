@@ -26,6 +26,13 @@
     - else
       %span.text-secondary —
   %td.text-end.pe-3
-    = link_to edit_submission_path(submission.id), class: 'btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1', title: 'Edit & resubmit', data: {turbo: false} do
-      = mdi('edit', 'md-18')
-      Edit
+    -# All rows on this page share @problem (index scopes by problem_id) —
+    -# read that instead of submission.problem to avoid an N+1 per row.
+    - if @problem.viva_exam?
+      = link_to viva_submission_path(submission.id), class: 'btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1', title: 'View viva session', data: {turbo: false} do
+        = mdi('open_in_new', 'md-18')
+        View Viva
+    - else
+      = link_to edit_submission_path(submission.id), class: 'btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1', title: 'Edit & resubmit', data: {turbo: false} do
+        = mdi('edit', 'md-18')
+        Edit

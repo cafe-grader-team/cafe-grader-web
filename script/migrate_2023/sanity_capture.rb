@@ -18,7 +18,7 @@
 #                           # (comma-separated; values from each enum AND together)
 #
 # KIND values:
-#   evaluation_type:  default, exact, relative, custom_cafe, custom_cms, postgres, custom_cms_raw
+#   evaluation_type:  default, exact, relative, custom_cafe, custom_testlib (was custom_cms), postgres, custom_testlib_raw (was custom_cms_raw), cms_comparator
 #   score_type:       sum, group_min, raw_sum
 
 require 'json'

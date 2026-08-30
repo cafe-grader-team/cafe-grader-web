@@ -50,7 +50,7 @@
         url: "#{index_query_tags_path}",
         type: 'POST',
         headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
         },
       },
       rowId: 'id',

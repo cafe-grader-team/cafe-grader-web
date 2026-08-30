@@ -81,7 +81,7 @@
             .col-4.text-end.text-secondary
               Result
             .col
-              %tt.grader-comment #{@submission.grader_comment}
+              = grader_comment_strip(@submission.grader_comment)
           .row.mb-2
             .col-4.text-end.text-secondary
               Runtime

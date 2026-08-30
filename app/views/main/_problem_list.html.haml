@@ -18,9 +18,25 @@
           %th No.
           %th.all Name
           %th Best Score
-          %th.all Latest Results
+          %th.all
+            Latest Results
+            -# Labelled trigger on purpose (see CLAUDE.md, help triggers): the
+            -# students who need the legend are the ones least likely to try a
+            -# bare "?" icon. An <a tabindex=0 role=button> with trigger=focus
+            -# is Bootstrap's recipe for a popover that closes on the next
+            -# click anywhere. The popover is initialised by the card's
+            -# init-ui-component controller; its body is the hidden
+            -# #verdict-legend element below the table (bs_content_selector).
+            = content_tag(:a, tabindex: 0, role: 'button', class: 'verdict-legend-btn',
+              data: {bs_toggle: 'popover', bs_trigger: 'focus', bs_placement: 'bottom',
+                     bs_title: 'Reading the results', bs_content_selector: '#verdict-legend'}) do
+              %span.mi help
+              legend
           %th.all
       %tbody{data: {controller: 'problem-name'}}
         - @numbering = 1
         / problem count = #{problems.count}
         = render partial: 'problem', collection: problems
+    -# body of the "legend" popover in the header (cloned into the popover on show)
+    #verdict-legend{hidden: true}
+      = render 'main/result_legend'

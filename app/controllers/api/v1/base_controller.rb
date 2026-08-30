@@ -27,6 +27,36 @@ class Api::V1::BaseController < ActionController::API
       render json: { error: "Account is disabled" }, status: :forbidden and return
     end
 
+    unless @current_user.admin?
+      # Lockdown parity with check_valid_login: single-user mode blocks every
+      # non-admin request no matter how the token was obtained.
+      if GraderConfiguration.single_user_mode?
+        @current_user = nil
+        render json: { error: "The system is in single-user mode and does not permit usage at this time" },
+               status: :forbidden and return
+      end
+
+      # Bearer tokens cannot be revoked individually, so honor the site-wide
+      # revocation timestamp instead: switching single-user mode ON bumps
+      # min_last_login_time (killing all web sessions), and any token issued
+      # before that moment must die with them.
+      iat = payload["iat"]
+      unless iat && Time.zone.at(iat) >= GraderConfiguration.minimum_last_login_time.to_time
+        @current_user = nil
+        render json: { error: "Token was issued before the last system lockdown; please log in again" },
+               status: :unauthorized and return
+      end
+
+      # IP whitelist parity with the web (check_valid_login): the whitelist is
+      # re-checked on every request, so a JWT obtained inside the lab must
+      # stop working the moment requests come from outside it.
+      unless @current_user.allowed_from_ip?(request.remote_ip)
+        @current_user = nil
+        render json: { error: "Your IP is not allowed to use the system at this time" },
+               status: :forbidden and return
+      end
+    end
+
     # Actor for AuditLog rows created during this request (Auditable reads
     # Current.user / Current.ip). Mirrors ApplicationController#set_current_audit_context;
     # without this every API mutation of an audited model is anonymous.

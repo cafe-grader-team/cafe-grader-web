@@ -28,6 +28,14 @@ class ProblemsController < ApplicationController
 
   def index
     @problem = problem_for_manage(@current_user)
+    # For viva rows the action column offers Start Viva / View Viva instead of
+    # Submit (a viva can't be reached through the code editor; see
+    # SubmissionsController#direct_edit_problem). One query for the current
+    # user's active viva session per problem, keyed by problem_id.
+    @my_active_viva = Submission.regular
+      .where(user: @current_user, viva_archived_at: nil,
+             problem: @problems.select(&:viva_exam?))
+      .index_by(&:problem_id)
   end
 
   def manage_query
@@ -160,6 +168,7 @@ class ProblemsController < ApplicationController
   end
 
   def update
+    was_viva = @problem.viva_exam?
     if @problem.update(problem_params)
       msg = 'Problem was successfully updated. '
       msg += 'A new statement PDF is uploaded' if problem_params[:statement]
@@ -182,6 +191,10 @@ class ProblemsController < ApplicationController
                                                  header_class: 'bg-danger-subtle',
                                                  body_msg: error_html.html_safe}
     else
+      # Crossing the viva boundary swaps the edit page between its two layouts
+      # (Detail + Dataset cards vs. one form over Detail + Viva Exam cards), so
+      # update.turbo_stream redraws the whole #problem-edit body, not just the form.
+      @layout_changed = was_viva != @problem.viva_exam?
       render :update
     end
   end
@@ -192,8 +205,12 @@ class ProblemsController < ApplicationController
   end
 
   def download_archive
-    result = @problem.export
-    send_file result[:zip], type: 'application/x-zip',  disposition: 'attachment', filename: result[:zip].basename.to_s
+    unless @problem.live_dataset
+      redirect_to problems_path, alert: "Problem '#{@problem.name}' has no live dataset to export."
+      return
+    end
+    result = @problem.export(all_datasets: params[:all_datasets].present?)
+    send_file result[:zip], type: 'application/x-zip', disposition: 'attachment', filename: result[:zip].basename.to_s
   end
 
   def toggle_available
@@ -223,7 +240,7 @@ class ProblemsController < ApplicationController
       redirect_to controller: 'main', action: 'list'
       return
     end
-    @submissions = Submission.includes(:user).includes(:language).where(problem_id: params[:id]).order(:user_id, :id)
+    @submissions = Submission.regular.includes(:user).includes(:language).where(problem_id: params[:id]).order(:user_id, :id)
 
     # stat summary
     range =65
@@ -242,6 +259,10 @@ class ProblemsController < ApplicationController
     # for new graph
     @chart_dataset = @problem.get_jschart_history.to_json.html_safe
     @can_view_ip =  true
+
+    # Group pre-picked by the "Score report" toolbar link (nil -> the report
+    # opens with its default user filter instead).
+    @report_group = @problem.report_group_for(@current_user)
   end
 
   def manage
@@ -325,6 +346,14 @@ class ProblemsController < ApplicationController
       render :import and return
     end
 
+    # importing over an existing name updates that problem — require edit rights on it
+    existing = Problem.find_by(name: name)
+    if existing && !@current_user.admin? &&
+       !@current_user.problems_for_action(:edit).where(id: existing.id).exists?
+      @errors = ["A problem named '#{name}' already exists and you do not have the right to edit it"]
+      render :import and return
+    end
+
     pi = ProblemImporter.new
 
     # unzip uploaded file to raw folder
@@ -352,6 +381,7 @@ class ProblemsController < ApplicationController
       delete_existing: params[:problem][:replace] == '1',
       memory_limit: memory_limit,
       time_limit: time_limit,
+      user: @current_user,
     )
 
     if pi.errors.count > 0
@@ -376,10 +406,7 @@ class ProblemsController < ApplicationController
 
   # import into existing problem
   def import_testcases
-    unless params[:import][:file]
-      @errors = ['There is no uploaded file']
-      return
-    end
+    return render_import_testcases_error('There is no uploaded file') unless params[:import][:file]
 
     replacing = params[:import][:target] == 'replace'
     uploaded_file_path = params[:import][:file].to_path
@@ -392,14 +419,12 @@ class ProblemsController < ApplicationController
       @problem.name,
       Rails.configuration.worker[:directory][:judge_raw_path])
 
-    if pi.errors.count > 0
-      @errors = pi.errors
-      render :import and return
-    end
+    return render_import_testcases_error(pi.errors.join('; ')) if pi.errors.count > 0
 
     if replacing
       @dataset = @problem.datasets.where(id: params[:import][:dataset]).first
-      WorkerDataset.where(dataset_id: @dataset).delete_all
+      return render_import_testcases_error('The dataset to replace was not found') unless @dataset
+      WorkerDataset.where(dataset_id: @dataset.id).delete_all
     end
 
     # load data
@@ -411,7 +436,9 @@ class ProblemsController < ApplicationController
                                 do_statement: false,
                                 do_checker: false,
                                 do_cpp_extras: false,
-                                do_solutions: false
+                                do_solutions: false,
+                                do_attachment: false,
+                                do_additional_datasets: false
                               )
     @updated = 'Testcases has been imported'
     @log = pi.log
@@ -431,10 +458,21 @@ class ProblemsController < ApplicationController
       @problem = Problem.find(params[:id])
     end
 
+    # import_testcases responds as a turbo_stream rendered into the problem
+    # edit page's frame; surface errors as a toast rather than re-rendering
+    # the standalone import page (simple_form_for :problem binds to @problem
+    # and reads dataset-only fields, crashing for a persisted problem).
+    def render_import_testcases_error(message)
+      @toast = {title: 'Import testcases failed', body: message, type: :alert}
+      render 'turbo_toast'
+    end
+
     def problem_params
       params.require(:problem).permit(:name, :full_name, :change_date_added, :date_added, :available, :compilation_type,
                                       :submission_filename, :difficulty, :attachment, :statement, :markdown, :view_testcase,
-                                      :test_allowed, :output_only, :url, :description, :description, :view_submission, tag_ids: [], group_ids: [])
+                                      :test_allowed, :output_only, :url, :description, :description, :view_submission,
+                                      :viva_daily_limit, :viva_prompt, :viva_soft_cap, :viva_hard_cap,
+                                      tag_ids: [], group_ids: [], grounding_material_ids: [])
     end
 
     def description_params

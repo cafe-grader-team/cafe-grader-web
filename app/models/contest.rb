@@ -148,7 +148,7 @@ class Contest < ApplicationRecord
   # return a submissions of this contests
   # this includes extra_time_second and start_offset_second as well
   def submissions
-    Submission.joins(user: :contests_users)
+    Submission.regular.joins(user: :contests_users)
       .where('contest_id = ?', self.id)
       .where(user: users, problem: problems)
       .where('submitted_at >= DATE_SUB(?,INTERVAL start_offset_second SECOND)', start)
@@ -159,7 +159,7 @@ class Contest < ApplicationRecord
     cu = contests_users.where(user: user).take
     actual_start = start - cu.start_offset_second.second
     actual_stop = stop + cu.extra_time_second.second
-    Submission.where(user: user, problem: problems)
+    Submission.regular.where(user: user, problem: problems)
       .where('submitted_at >= ?', actual_start)
       .where('submitted_at <= ?', actual_stop)
   end

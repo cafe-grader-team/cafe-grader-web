@@ -1,0 +1,20 @@
+-# Shared offcanvas help-drawer chrome (header with icon/title/subtitle + close,
+-# and the scrollable body). Use it as a LAYOUT, passing the body as a block:
+-#
+-#   = render layout: 'shared/help_drawer', locals: { id: 'x-help', title: 'Title', subtitle: '...' } do
+-#     ...body content...
+-#
+-# Locals: id (required, also drives the aria-labelledby), title (required),
+-# subtitle (optional), icon (optional Material Symbol name; default help_outline).
+- icon = local_assigns.fetch(:icon, 'help_outline')
+%div.offcanvas.offcanvas-end.offcanvas-help{id: id, tabindex: -1, 'aria-labelledby': "#{id}-label"}
+  .offcanvas-header.border-bottom
+    %div
+      %h5.offcanvas-title.fw-bold.mb-0{id: "#{id}-label"}
+        %span.mi.me-1= icon
+        = title
+      - if local_assigns[:subtitle].present?
+        %small.text-secondary= subtitle
+    %button.btn-close{type: 'button', 'data-bs-dismiss': 'offcanvas', 'aria-label': 'Close'}
+  .offcanvas-body
+    = yield

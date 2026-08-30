@@ -55,7 +55,7 @@ RSpec.describe "Auth API", type: :request do
         end
       end
 
-      response "403", "account disabled" do
+      response "403", "account disabled, or single-user lockdown is on (non-admins get no token)" do
         schema type: :object, additionalProperties: false, properties: { error: { type: :string } }
 
         before { users(:john).update!(enabled: false) }
@@ -66,21 +66,19 @@ RSpec.describe "Auth API", type: :request do
         end
       end
 
-      response "429", "too many login attempts (rate limited per client IP)" do
+      response "429", "too many failed login attempts (per-IP / per-account failure budget, pooled with the web login form)" do
         schema type: :object, additionalProperties: false, properties: { error: { type: :string } }
 
-        # The test cache is a NullStore, so the limiter never accumulates;
-        # force the counter past the limit to exercise the 429 path. The
-        # rate_limit macro captured the controller's cache_store at class
-        # load, so stub that exact object.
+        # The test cache is a NullStore, so the counters never accumulate;
+        # swap in a real store and pre-fill the client IP's failure budget.
         before do
-          allow(Api::V1::AuthController.cache_store)
-            .to receive(:increment).and_return(999)
+          allow(Rails).to receive(:cache).and_return(ActiveSupport::Cache::MemoryStore.new)
+          Rails.cache.write("login-failures:ip:127.0.0.1", LoginThrottling::FAILURE_LIMIT)
         end
         let(:body) { { login: "admin", password: "admin" } }
 
         run_test! do |response|
-          expect(JSON.parse(response.body)["error"]).to match(/Too many login attempts/)
+          expect(JSON.parse(response.body)["error"]).to match(/Too many failed login attempts/)
         end
       end
     end

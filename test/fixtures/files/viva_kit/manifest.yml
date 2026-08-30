@@ -1,0 +1,26 @@
+batch: fixture-kit
+conduct_tag:
+  name: fixture-viva-conduct
+  file: _conduct.md
+defaults:
+  viva_soft_cap: 10
+  viva_hard_cap: 15
+  viva_daily_limit: 5
+  available: false
+problems:
+  - name: vk_alpha
+    full_name: "Viva: Alpha"
+    scenario: alpha.scenario.md
+    briefing: alpha.briefing.md
+    viva_soft_cap: 8
+    viva_hard_cap: 12
+  - name: vk_beta
+    full_name: "Viva: Beta"
+    scenario: beta.scenario.md
+    briefing: beta.briefing.md
+    available: true
+grounding:
+  - title: fixture-grounding
+    file: _grounding.md
+    description: Fixture reference text
+    problems: [vk_alpha]

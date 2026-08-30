@@ -329,6 +329,71 @@ class UserAuthorizationTest < ActiveSupport::TestCase
   end
 
   # -------------------------------------------------------
+  # SECTION 5b: can_view_submission? — archived viva sessions are
+  # owner/staff-only, even when the problem otherwise allows transcript
+  # sharing (view_submission true + right.user_view_submission true).
+  # -------------------------------------------------------
+
+  test "can_view_submission: owner can view their own submission whether or not it's archived" do
+    set_grader_config("system.mode", "standard")
+    set_grader_config("system.use_problem_group", "false")
+    set_grader_config("right.user_view_submission", "false")
+
+    john = users(:john)
+    sub = submissions(:add1_by_john)
+    assert john.can_view_submission?(sub)
+
+    sub.update!(viva_archived_at: Time.zone.now)
+    assert john.can_view_submission?(sub), "owner must still see their own submission once archived"
+  end
+
+  test "can_view_submission: peer with view_submission + global right CAN view a non-archived submission" do
+    set_grader_config("system.mode", "standard")
+    set_grader_config("system.use_problem_group", "false")
+    set_grader_config("right.user_view_submission", "true")
+
+    john = users(:john)
+    sub = submissions(:add1_by_james) # owned by james; prob_add view_submission defaults to true
+    assert_nil sub.viva_archived_at
+    assert john.can_view_submission?(sub)
+  end
+
+  test "can_view_submission: same peer is denied once that submission is archived" do
+    set_grader_config("system.mode", "standard")
+    set_grader_config("system.use_problem_group", "false")
+    set_grader_config("right.user_view_submission", "true")
+
+    john = users(:john)
+    sub = submissions(:add1_by_james)
+    sub.update!(viva_archived_at: Time.zone.now)
+    assert_not john.can_view_submission?(sub),
+      "archived viva attempts are superseded — peers may only ever see the canonical (non-archived) session"
+  end
+
+  test "can_view_submission: peer without view_submission right is denied regardless of archive state" do
+    set_grader_config("system.mode", "standard")
+    set_grader_config("system.use_problem_group", "false")
+    set_grader_config("right.user_view_submission", "false")
+
+    john = users(:john)
+    sub = submissions(:add1_by_james)
+    assert_not john.can_view_submission?(sub)
+
+    sub.update!(viva_archived_at: Time.zone.now)
+    assert_not john.can_view_submission?(sub)
+  end
+
+  test "can_view_submission: admin can view an archived submission" do
+    set_grader_config("system.mode", "standard")
+    set_grader_config("system.use_problem_group", "false")
+    set_grader_config("right.user_view_submission", "false")
+
+    sub = submissions(:add1_by_james)
+    sub.update!(viva_archived_at: Time.zone.now)
+    assert users(:admin).can_view_submission?(sub)
+  end
+
+  # -------------------------------------------------------
   # SECTION 6: can_view_testcase? (prevents data leakage)
   # -------------------------------------------------------
 

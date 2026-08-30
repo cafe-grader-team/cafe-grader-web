@@ -1,0 +1,24 @@
+= simple_form_for @grounding_material, html: { id: 'edit_form' }, wrapper: :horizontal_form do |f|
+  = render 'application/error_for_model', model: @grounding_material
+  = f.input :title
+  = f.input :description, input_html: { rows: 2 }, hint: 'Internal note: what this is / when to use it.'
+  = f.input :body, label: 'Grounding text (markdown)', wrapper_html: { data: markdown_editor_data },
+      input_html: { rows: 12, data: { grounding_draft_target: 'body', **markdown_editor_source } },
+      hint: 'Typed reference material. Files below are sent to the model as PDFs.'
+
+  .mb-3
+    %label.form-label Files (PDF)
+    = f.input :files, as: :file, label: false, input_html: { multiple: true }, wrapper: :horizontal_file
+    - if @grounding_material.files.attached?
+      .mt-2
+        - @grounding_material.files.each do |file|
+          .card.bg-light.border-0.mb-1
+            .card-body.p-2.d-flex.align-items-center.justify-content-between
+              = link_to "#{content_tag(:span, 'description', class: 'mi md-18')} #{file.filename}".html_safe, url_for(file), class: 'text-decoration-none text-truncate'
+              = button_to delete_file_grounding_material_path(@grounding_material, blob_id: file.id),
+                  method: :delete, class: 'btn btn-sm btn-link text-danger p-0', form: { class: 'd-inline', data: { turbo: true, turbo_confirm: 'Remove this file?' } } do
+                %span.mi.md-18 delete
+
+  .d-flex.gap-2
+    = f.button :submit, 'Save', class: 'btn btn-primary'
+    = link_to 'Cancel', grounding_materials_path, class: 'btn btn-outline-secondary'

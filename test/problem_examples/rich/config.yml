@@ -1,0 +1,21 @@
+---
+name: rich
+full_name: Rich Example
+submission_filename: student.h
+task_type: batch
+compilation_type: with_managers
+permitted_lang: cpp python
+time_limit: 2.5
+memory_limit: 256
+score_type: group_min
+evaluation_type: custom_cms   # legacy name (pre-rev-2047), kept on purpose: exercises Dataset::LEGACY_EVALUATION_TYPES on import
+score_param: 'p=1'
+main_filename: grader.cpp
+initializer_filename: init.sql
+markdown: true
+tags:
+- roundtrip
+testcases:
+  1-1: { group: 1, group_name: 'easy', weight: 30 }
+  1-2: { group: 1, group_name: 'easy', weight: 30 }
+  2-1: { group: 2, group_name: 'hard', weight: 40 }

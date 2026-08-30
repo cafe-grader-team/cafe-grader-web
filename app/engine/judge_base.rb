@@ -310,14 +310,20 @@ module JudgeBase
       tc_hash[:testcases][tc.id][:ans_file] = @ans_file
     end
 
+    # argv form: system(*argv) bypasses the shell, so no quoting/escaping is
+    # needed. The previous single-string `system(init_cmd.join ' ')` used
+    # String#dump — Ruby-source escaping, NOT shell escaping — to "quote" three
+    # of the four args (and left @prob_init_file unquoted), which breaks on any
+    # space / $ / backtick in a path. Nothing here is student-controlled, but
+    # argv is the robust form regardless.
     init_cmd = [@prob_init_file.to_s,
-                tc_hash.to_json.dump,              # dump is to escape the quote
-                @prob_config_file.to_s.dump,
-                @prob_init_work_path.to_s.dump,
+                tc_hash.to_json,
+                @prob_config_file.to_s,
+                @prob_init_work_path.to_s,
                ]
     judge_log "init file = #{@prob_init_file}"
     judge_log "init command = #{init_cmd.join ' '}"
-    system(init_cmd.join ' ')
+    system(*init_cmd)
   end
 
   # set up directory and path/filename of the testcase directory
@@ -340,6 +346,14 @@ module JudgeBase
       @sub_testcase_path.mkpath
       @output_path.mkpath
       @output_path.chmod(0777)
+      # A run that died mid-way (box collision, killed grader) leaves stdout.txt
+      # owned by that box's uid at 0644; a rerun landing on a different box then
+      # cannot truncate-open it and isolate fails with open("/output/stdout.txt")
+      # -> grader_error (14 of 142 rejudged submissions, 2026-08-27). We own the
+      # 0777 directory, so unlinking works whoever owns the file. rm_f, not
+      # unlink: main_loop only rescues GraderError, and an EACCES raised here
+      # would take the whole grader down with the job left in :process.
+      FileUtils.rm_f(@output_file)
     end
   end
 

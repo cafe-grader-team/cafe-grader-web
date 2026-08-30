@@ -1,4 +1,17 @@
-= render partial: 'problems/problem_head', locals: {problem: @problem}
+.d-flex.justify-content-between.align-items-center.flex-wrap.gap-2.mb-2
+  = render partial: 'problems/problem_head', locals: {problem: @problem}
+  -# Toolbar. Anyone who reaches this page passed can_report_problem, so the
+  -# report link needs no extra gate. The report opens with this problem
+  -# preselected and @report_group (Problem#report_group_for: the section
+  -# that actually has submissions) pre-picked, so it loads with that
+  -# section's scores; switching the group there compares sections. Labeled
+  -# (not icon-only) on purpose: this is a discoverability link, same
+  -# reasoning as the "? Help" buttons.
+  - report_tip = @report_group ? "Best Score report for this problem, opened on the #{@report_group.name} group — switch the group there to compare sections" : "Best Score report for this problem — choose a user group there to compare sections"
+  .d-flex.gap-2.align-items-center{data: {controller: 'init-ui-component'}}
+    = link_to problem_score_report_path(@problem, @report_group), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center gap-1', data: {bs_toggle: 'tooltip', bs_title: report_tip} do
+      %span.mi table_view
+      Score report
 
 .row
   .col-md-8.mb-3
@@ -58,7 +71,7 @@
           %td{data: {order: sub.submitted_at}}
             #{sub.submitted_at.strftime('%Y-%m-%d %H:%M')}
             %span.text-secondary (#{time_ago_in_words(sub.submitted_at)} ago)
-          %td.grader-comment= sub.grader_comment
+          %td{data: {order: sub.grader_comment.to_s, search: sub.grader_comment.to_s}}= grader_comment_strip(sub.grader_comment)
           %td.text-end= sub.points
           %td= sub.ip_address
 - else

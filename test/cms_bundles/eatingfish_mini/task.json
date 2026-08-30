@@ -1,0 +1,53 @@
+{
+ "bundle_version": 1,
+ "dump_version": 39,
+ "task_id": "408",
+ "objects": {
+  "408": {
+   "_class": "Task",
+   "name": "eatingfish_mini",
+   "title": "กินปลา mini",
+   "num": 1,
+   "contest": "7",
+   "submission_format": ["eatingfish.%l"],
+   "primary_statements": ["th"],
+   "statements": {"en": "1415", "th": "1416"},
+   "attachments": {"starter.zip": "1417"},
+   "datasets": ["1418", "1414"],
+   "active_dataset": "1414",
+   "score_mode": "max_subtask",
+   "score_precision": 0,
+   "token_mode": "disabled",
+   "max_submission_number": 75
+  },
+  "1414": {
+   "_class": "Dataset", "task": "408", "description": "main",
+   "autojudge": false, "time_limit": 1.0, "memory_limit": 512,
+   "task_type": "Batch",
+   "task_type_parameters": ["grader", ["", ""], "diff"],
+   "score_type": "GroupMin",
+   "score_type_parameters": [[30, 1], [70, 2]],
+   "managers": {"eatingfish.h": "10096", "grader.cpp": "10095"},
+   "testcases": {"1-01": "20001", "2-01": "20002", "2-02": "20003"}
+  },
+  "1418": {
+   "_class": "Dataset", "task": "408", "description": "rev2",
+   "autojudge": false, "time_limit": 2.0, "memory_limit": 256,
+   "task_type": "Batch",
+   "task_type_parameters": ["alone", ["", ""], "diff"],
+   "score_type": "Sum",
+   "score_type_parameters": 100,
+   "managers": {},
+   "testcases": {"1-01": "20004"}
+  },
+  "10095": {"_class": "Manager", "dataset": "1414", "filename": "grader.cpp", "digest": "dig-grader"},
+  "10096": {"_class": "Manager", "dataset": "1414", "filename": "eatingfish.h", "digest": "dig-header"},
+  "1415": {"_class": "Statement", "task": "408", "language": "en", "digest": "dig-st-en"},
+  "1416": {"_class": "Statement", "task": "408", "language": "th", "digest": "dig-st-th"},
+  "1417": {"_class": "Attachment", "task": "408", "filename": "starter.zip", "digest": "dig-att"},
+  "20001": {"_class": "Testcase", "dataset": "1414", "codename": "1-01", "public": true,  "input": "dig-in-101", "output": "dig-out-101"},
+  "20002": {"_class": "Testcase", "dataset": "1414", "codename": "2-01", "public": false, "input": "dig-in-201", "output": "dig-out-201"},
+  "20003": {"_class": "Testcase", "dataset": "1414", "codename": "2-02", "public": false, "input": "dig-in-202", "output": "dig-out-202"},
+  "20004": {"_class": "Testcase", "dataset": "1418", "codename": "1-01", "public": true,  "input": "dig-in-101", "output": "dig-out-101"}
+ }
+}

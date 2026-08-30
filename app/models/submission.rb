@@ -9,9 +9,46 @@ class Submission < ApplicationRecord
 
   has_many :evaluations, dependent: :destroy
 
+  belongs_to :repaired_from, class_name: 'Submission', optional: true
+  has_many :repair_attempts, class_name: 'SubmissionRepair', foreign_key: :original_submission_id
+
   # viva exam
   has_many :viva_turns, -> { order(:sequence) }, dependent: :destroy
   has_one :viva_grade, dependent: :destroy
+
+  # How long a viva submission may sit in :evaluating (grading in flight)
+  # before fail_stale_viva_evaluating! treats it as abandoned — the worker
+  # process was killed mid-call (deploy, crash, OOM) so neither the graceful
+  # success path (handle_response) nor the graceful failure path
+  # (Llm::VivaGradeAssistJob#on_retries_exhausted) ever ran to move the
+  # submission out of :evaluating.
+  #
+  # Must sit safely ABOVE the worst-case span Llm::VivaGradeAssistJob's own
+  # retry_on chain (Llm::RequestJob) can legitimately spend before it gives
+  # up and flips the submission to :grader_error itself — otherwise this
+  # sweeper would yank a submission out from under a job that's still
+  # retrying normally. The longest of RequestJob's four retry_on handlers is
+  # Faraday::TimeoutError (wait: :polynomially_longer, attempts: 3): each of
+  # the 3 attempts can run up to Llm::Request.connection's 300s request
+  # timeout before raising, and ActiveJob's polynomially_longer backoff
+  # between attempts is (1**4)+2=3s then (2**4)+2=18s. Worst case:
+  #   3 attempts * 300s  +  3s + 18s backoff  =  921s (~15.35 min)
+  # 20 minutes leaves a ~4.5 minute margin above that, and doubles
+  # VivaTurn::STALE_AFTER (10 min) as a round-number floor.
+  STALE_EVALUATING_AFTER = 20.minutes
+
+  # What a successful viva grading run writes into grader_comment. The LLM
+  # narrative lives only in viva_grades.narrative (rendered by the grade card
+  # on the viva page); grader_comment is a compact verdict field everywhere
+  # else (main list, stat tables, Submission report, API last_result), so a
+  # viva gets one of these short markers instead. Read viva_terminated_at?
+  # for the flag itself — never parse this string.
+  VIVA_RESULT_MARKER            = 'viva'.freeze
+  VIVA_RESULT_TERMINATED_MARKER = 'viva:terminated'.freeze
+
+  # Viva sessions with no turn activity for this long, still :submitted,
+  # are finalized by reap_abandoned_vivas! (recurring, production only).
+  ABANDONED_VIVA_REAP_AFTER = 24.hours
 
   # comments
   has_many :comments, as: :commentable, dependent: :destroy
@@ -42,6 +79,32 @@ class Submission < ApplicationRecord
     query = query.where('submissions.submitted_at >= ?', from) if from.present?
     query = query.where('submissions.submitted_at <= ?', to) if to.present?
     query
+  }
+
+  # Near-Miss Grading: shadow submissions are machine-generated repaired
+  # copies (repaired_from_id points at the original). Every student-visible
+  # query and every quota count must read .regular; the judge worker, admin
+  # monitoring, and number-assignment must NOT filter. See the exclusion
+  # audit in docs/superpowers/plans/2026-07-30-near-miss-grading.md.
+  scope :regular, -> { where(repaired_from_id: nil) }
+  scope :shadow,  -> { where.not(repaired_from_id: nil) }
+
+  # Viva submissions parked in :evaluating with no viva_grade row yet,
+  # older than STALE_EVALUATING_AFTER — i.e. what
+  # fail_stale_viva_evaluating! would sweep right now. A viva_grade row
+  # already existing on an :evaluating submission means grading is
+  # mid-write (handle_response persists the grade row before flipping
+  # status to :done, see Llm::VivaGradeAssist#handle_response) — a
+  # different bug if it lingers, and NOT something this scope or the
+  # sweeper should touch.
+  #
+  # Used by GradersController to surface count + rows on the graders
+  # "stuck" monitoring page, mirroring VivaTurn.stuck.
+  scope :stale_evaluating, -> {
+    evaluating
+      .joins(:problem).merge(Problem.viva_exam)
+      .where.missing(:viva_grade)
+      .where("submissions.updated_at < ?", STALE_EVALUATING_AFTER.ago)
   }
 
   scope :with_llm_stat_by_problem, ->  {
@@ -97,6 +160,8 @@ class Submission < ApplicationRecord
   }
 
 
+  def shadow? = repaired_from_id.present?
+
   def add_judge_job(dataset = problem.live_dataset, priority = 0)
     evaluations.delete_all
     self.update(status: 'submitted', points: nil, grader_comment: nil, graded_at: nil)
@@ -112,6 +177,12 @@ class Submission < ApplicationRecord
     viva_archived_at.present?
   end
 
+  # See VIVA_RESULT_MARKER. Shared by Llm::VivaGradeAssist (success path)
+  # and Viva::GraderCommentCleaner (one-off rewrite of pre-marker rows).
+  def viva_result_marker
+    viva_terminated_at? ? VIVA_RESULT_TERMINATED_MARKER : VIVA_RESULT_MARKER
+  end
+
 
   def set_grading_complete(point, grading_text, max_time, max_mem)
     update(points: point, status: :done, graded_at: Time.zone.now, grader_comment: grading_text, max_runtime: max_time, peak_memory: max_mem)
@@ -121,9 +192,79 @@ class Submission < ApplicationRecord
     update(points: 0, status: :grader_error, graded_at: Time.zone.now, grader_comment: error_text)
   end
 
+  # Marks any viva submission stuck in :evaluating (grading in flight, no
+  # viva_grade row) for longer than `threshold` as :grader_error, so the
+  # existing admin "Rejudge"/re-grade path (SubmissionsController#rejudge)
+  # applies. Runs from the same Solid Queue recurring task as
+  # VivaTurn.fail_stale! (see config/recurring.yml). Without this, a worker
+  # process killed mid-grade-call (deploy, crash, OOM) — as opposed to a
+  # graceful failure, which Llm::VivaGradeAssistJob#on_retries_exhausted
+  # already handles — leaves the submission in :evaluating forever, and the
+  # student sees "Grading in progress..." forever.
+  def self.fail_stale_viva_evaluating!(threshold: STALE_EVALUATING_AFTER, now: Time.zone.now)
+    stale = evaluating
+              .joins(:problem).merge(Problem.viva_exam)
+              .where.missing(:viva_grade)
+              .where("submissions.updated_at < ?", now - threshold)
+    count = 0
+    stale.find_each do |sub|
+      sub.update(
+        status:         :grader_error,
+        grader_comment: "Grading timed out (worker process likely crashed mid-call, no response after #{threshold.inspect}). Use Rejudge to try again."
+      )
+      count += 1
+    end
+    Rails.logger.info "Submission.fail_stale_viva_evaluating!: marked #{count} stuck viva submission(s) as :grader_error" if count.positive?
+    count
+  end
+
+  # Finalizes viva sessions abandoned mid-interview. Grading fires only on
+  # the done-sentinel, the hard cap, or the student's End button — a student
+  # who closes the tab triggers none of them, so their session sat parked in
+  # :submitted forever (2026-08-24 student trial: ~17 sessions with real
+  # progress, plus ~27 greeting-only peeks). A session idle for `idle_for`
+  # (no turn activity, status still :submitted, not archived):
+  #   - with at least one student answer: finalized exactly like the
+  #     hard-cap / End-button paths — system turn, :evaluating, grade job
+  #     with no model: (the grade service default decides, rev 2011) — so
+  #     the student gets a grade for what they showed;
+  #   - greeting-only: archived (the restart flow's soft-hide). Under the
+  #     engaged-only limit accounting (rev 2014) it never counted anyway.
+  # Sessions with a :processing turn are skipped: VivaTurn.fail_stale!
+  # owns stuck turns, and once it flips them to :error a later sweep here
+  # picks the session up.
+  # Registered production-only in config/recurring.yml — in development it
+  # would silently spend LLM tokens grading forgotten local sessions.
+  def self.reap_abandoned_vivas!(idle_for: ABANDONED_VIVA_REAP_AFTER, now: Time.zone.now)
+    cutoff = now - idle_for
+    stale = submitted
+              .joins(:problem).merge(Problem.viva_exam)
+              .where(viva_archived_at: nil)
+              .where("submissions.submitted_at < ?", cutoff)
+              .where.not(id: VivaTurn.where("updated_at >= ?", cutoff).select(:submission_id))
+              .where.not(id: VivaTurn.where(status: :processing).select(:submission_id))
+    graded = archived = 0
+    stale.find_each do |sub|
+      if sub.viva_turns.where(role: :student).exists?
+        sub.viva_turns.create!(role: :system, status: :ok,
+          content: '(session expired after inactivity — grading begins)')
+        sub.update!(status: :evaluating)
+        Llm::VivaGradeAssistJob.perform_later(sub)
+        graded += 1
+      else
+        sub.viva_turns.create!(role: :system, status: :ok,
+          content: '(session expired after inactivity — archived)')
+        sub.update!(viva_archived_at: now)
+        archived += 1
+      end
+    end
+    Rails.logger.info "Submission.reap_abandoned_vivas!: graded #{graded}, archived #{archived} abandoned viva session(s)" if (graded + archived).positive?
+    {graded: graded, archived: archived}
+  end
+
 
   def self.find_last_by_user_and_problem(user_id, problem_id)
-    where("user_id = ? AND problem_id = ?", user_id, problem_id).last
+    regular.where("user_id = ? AND problem_id = ?", user_id, problem_id).last
   end
 
   def self.find_all_last_by_problem(problem_id)
@@ -133,6 +274,7 @@ class Submission < ApplicationRecord
         "(SELECT MAX(id) FROM submissions AS subs " +
       "WHERE subs.user_id = submissions.user_id AND " +
         "problem_id = " + problem_id.to_s + " " +
+        "AND repaired_from_id IS NULL " +
       "GROUP BY user_id) " +
       "ORDER BY user_id")
   end
@@ -227,7 +369,7 @@ class Submission < ApplicationRecord
 
   # deprecated
   def self.find_by_user_problem_number(user_id, problem_id, number)
-    where("user_id = ? AND problem_id = ? AND number = ?", user_id, problem_id, number).first
+    regular.where("user_id = ? AND problem_id = ? AND number = ?", user_id, problem_id, number).first
   end
 
 
@@ -310,23 +452,32 @@ class Submission < ApplicationRecord
     end
   end
 
+  # Last line of defense behind the controller gates: the DB write itself
+  # re-checks submit authorization via THE shared gate
+  # (User#can_submit_to_problem? — also used by main#submit, the API create,
+  # and viva start), so a future controller that forgets its gate still can't
+  # create an unauthorized submission. Creation-only (new_record?): grading
+  # updates to existing rows never re-run authorization. Applies to binary
+  # submissions too (the old version skipped them via `return if source==nil`,
+  # and its errors[:base] << never registered on Rails >= 6.1 — the check had
+  # been a silent no-op). Trusted server-side tooling that must write
+  # submissions regardless (repair shadows, replay engines, model-solution
+  # import) bypasses explicitly with save!(validate: false).
   def must_have_valid_problem
-    return if self.source==nil
-    if self.problem==nil
-      errors.add(:problem, :blank, 'aaa')
-    else
-      # admin always have right
-      return if self.user.admin?
-
-      # check if user has the right to submit the problem
-      errors[:base] << "Authorization error: you have no right to submit to this problem" if (!self.user.problems_for_action(:submit).include?(self.problem)) and (self.new_record?)
+    if self.problem.nil?
+      errors.add(:problem, :blank)
+    elsif self.new_record? && !self.user.can_submit_to_problem?(self.problem)
+      errors.add(:base, 'Authorization error: you have no right to submit to this problem')
     end
   end
 
   # callbacks
   def assign_latest_number_if_new_recond
     return if !self.new_record?
-    latest = Submission.find_last_by_user_and_problem(self.user_id, self.problem_id)
+    # Unfiltered on purpose: shadows occupy numbers in the same unique
+    # sequence (index on user_id, problem_id, number), so the next number
+    # must be computed across ALL rows including shadows.
+    latest = Submission.where(user_id: self.user_id, problem_id: self.problem_id).last
     self.number = (latest==nil) ? 1 : latest.number + 1
   end
 

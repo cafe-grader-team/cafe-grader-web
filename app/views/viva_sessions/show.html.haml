@@ -3,7 +3,7 @@
 .row
   .col-lg-8
     = render partial: 'viva_session', locals: {submission: @submission, turns: @turns, viva_grade: @viva_grade, pending_turn: @pending_turn, finished: @finished}
-  .col-lg-4
+  .col-lg-4{data: {controller: 'init-ui-component'}}
     .card.shadow-sm.mb-3
       .card-body
         %h4 Viva Info
@@ -43,6 +43,25 @@
               %div.small.text-secondary.fst-italic
                 This viva no longer counts for grading. You may start a fresh viva on this problem.
 
+        .row.mb-2
+          .col-5.text-end.text-secondary Starts
+          .col
+            - if @current_user == @submission.user && @current_user.admin?
+              | Unlimited starts (admin)
+            - elsif @submission.problem.viva_daily_limit == 0
+              | Contest-only viva — starts are governed by the contest
+            - else
+              = "#{@starts_left} of #{@daily_start_limit} starts left today"
+
+        - if @current_user == @submission.user && @submission.viva_archived_at.nil?
+          - if @submission.status.to_s == 'submitted' && @submission.problem.viva_daily_limit != 0 && @submission.viva_turns.where(role: :student).exists?
+            = button_to 'End interview & get graded', viva_finish_submission_path(@submission),
+                class: 'btn btn-sm btn-success mt-2 me-1',
+                form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'End the interview now and get graded? Topics not yet discussed will score zero.'}}
+          = button_to 'Restart practice viva', viva_restart_submission_path(@submission),
+              class: 'btn btn-sm btn-warning mt-2',
+              form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Archive this session and start over? The transcript is kept for instructors.'}}
+
     - if @current_user.can_edit_problem?(@submission.problem)
       - grader_class = (Rails.configuration.llm[:viva_grade_service].presence || 'Llm::VivaGradeAssist').constantize
       - known_models = grader_class.const_defined?(:KNOWN_MODELS) ? grader_class::KNOWN_MODELS : []
@@ -65,8 +84,9 @@
               %em Archived #{time_ago_in_words(@submission.viva_archived_at)} ago.
               The student has been able to start a new viva since then.
           - elsif @submission.status.to_s.in?(%w[done grader_error])
-            = button_to 'Archive viva', archive_viva_submission_path(@submission),
-                class: 'btn btn-outline-warning btn-sm mt-2',
+            = button_to 'Archive & allow retake', archive_viva_submission_path(@submission),
+                class: 'btn btn-warning btn-sm mt-2',
+                data: {bs_toggle: 'tooltip', bs_title: 'Soft-hides this session (kept for reports and audit) and lets the student start a fresh viva. Practice-mode starts still count toward the daily limit.'},
                 form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Archive this viva so the student can take a fresh one? Transcript and grade are preserved for audit but no longer count for grading.'}}
 
       -# Editor-visible diagnostics: grader response/request, per-turn raw responses.

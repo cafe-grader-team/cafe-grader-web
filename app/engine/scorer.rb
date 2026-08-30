@@ -32,9 +32,11 @@ class Scorer
   end
 
   # score_type :group_min — IOI/ICPC subtask style. For each group take
-  # the minimum testcase score, multiply by the group's max weight, then
+  # the minimum testcase score, multiply by the group's weight, then
   # normalize to 100. One failure in a group drags the whole group to
-  # its min.
+  # its min. A group has ONE weight by convention (CMS semantics); if
+  # weights inside a group differ, the minimum weight is used — the
+  # importer warns about such packages.
   def group_min
     # evs = evaluations sorted by group
     evs = sorted_evaluation.select(:group, :group_name, :score, :weight, :testcase_id).map { |r| r.attributes.symbolize_keys }
@@ -45,7 +47,7 @@ class Scorer
     last_group = max_group[:group]+2
     sum_user_score, sum_total_weight = 0.to_d, 0.to_d
     min_score = 0
-    max_weight = 0
+    group_weight = 0
     evs.each.with_index do |ev, idx|
       group = ev[:group]
       score = ev[:score] || 0
@@ -54,16 +56,16 @@ class Scorer
       # process group
       if last_group != group
         # found new group, save old group result
-        # the nil group has min_score, max_weight as 0
-        sum_user_score += min_score * max_weight
-        sum_total_weight += max_weight
+        # the nil group has min_score, group_weight as 0
+        sum_user_score += min_score * group_weight
+        sum_total_weight += group_weight
 
         # reset group tally
         min_score = score
-        max_weight = weight
+        group_weight = weight
       else
         min_score = [min_score, score].min
-        max_weight = [max_weight, weight].min
+        group_weight = [group_weight, weight].min
       end
       last_group = group
     end
@@ -74,7 +76,7 @@ class Scorer
   end
 
   # score_type :raw_sum — literal Σ of per-testcase scores. No weighting,
-  # no scaling. Designed to pair with evaluation_type :custom_cms_raw,
+  # no scaling. Designed to pair with evaluation_type :custom_testlib_raw,
   # where the custom checker emits the score it wants summed directly.
   def raw_sum
     sum_user_score = 0.to_d

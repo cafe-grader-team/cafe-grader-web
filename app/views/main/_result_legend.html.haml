@@ -1,0 +1,18 @@
+-# Body of the "legend" popover in the main list's Latest Results header
+-# (main/_problem_list): rendered hidden on the page and cloned into the
+-# popover by init-ui-component (data-bs-content-selector).
+.verdict-legend
+  - %w[P - T x s].each do |code|
+    .d-flex.align-items-center.mb-1
+      = content_tag(:span, code, class: "verdict-tile verdict-#{GraderCommentHelper::VERDICT_RESULTS[code]} me-2")
+      %span= verdict_word(code)
+  .d-flex.align-items-center.mt-2.mb-1
+    %span.verdict-group.me-2
+      %span.verdict-tile.verdict-correct P
+      %span.verdict-tile.verdict-correct P
+      %span.verdict-tile.verdict-wrong -
+    %span a box = tests scored together
+  %p.mb-1.mt-2
+    One tile per test case, in order. A box earns the <b>lowest</b> score inside it — one failing tile fails the whole box.
+  %p.mb-0.text-secondary
+    Hover a tile or a box for details · <span class="mi">ballot</span> shows time &amp; memory per test.

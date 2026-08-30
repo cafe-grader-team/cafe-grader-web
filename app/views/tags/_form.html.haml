@@ -2,9 +2,14 @@
   = render 'application/error_for_model', model: @tag
   = f.input :name
   = f.input :description, input_html: {style: 'height: 7rem', class: 'mb-4'}
-  = f.input :public, wrapper: :horizontal_boolean
+  - unless @tag.llm_kind?
+    = f.input :public, wrapper: :horizontal_boolean
   = f.input :kind, label: 'Type', collection: Tag.kinds.keys.map { |key| [I18n.t("activerecord.attributes.tag.kinds.#{key}"), key] }, include_blank: false, wrapper: :horizontal_select, input_html: { style: 'max-width: 300px;' }
   = f.input :color, as: :color, input_html: {class: 'form-control-color', style: 'max-width: 100px;'}
-  -# kind specifc params
-  - if @tag.kind == 'llm_prompt'
-    = f.input :params, label: 'LLM Prompt', input_html: {style: 'height: 20rem'}
+  -# kind specific params
+  - if @tag.llm_kind?
+    .form-text.text-secondary.mb-2
+      Staff-only kind — never visible to students.
+      - if @tag.persisted?
+        Used by #{@tag.problems.distinct.count} problem(s) — edits apply to all of them.
+    = f.input :params, label: (@tag.viva_conduct? ? 'Viva conduct (shared examiner persona)' : 'AI-helper prompt'), wrapper_html: {data: markdown_editor_data}, input_html: {rows: 18, data: markdown_editor_source}

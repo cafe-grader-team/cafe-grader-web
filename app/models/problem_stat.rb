@@ -4,7 +4,7 @@ class ProblemStat < ApplicationRecord
   # Recompute stats for all problems in a single aggregate query,
   # then upsert into problem_stats.
   def self.recompute_all
-    rows = Problem.joins("LEFT JOIN submissions ON submissions.problem_id = problems.id")
+    rows = Problem.joins("LEFT JOIN submissions ON submissions.problem_id = problems.id AND submissions.repaired_from_id IS NULL")
       .group("problems.id")
       .pluck(
         Arel.sql("problems.id"),

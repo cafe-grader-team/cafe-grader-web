@@ -21,3 +21,12 @@ james_in_group_a:
   user: james
   role: 0
   enabled: true
+
+# reba is a plain reporter of group_a (role 1) — used to test that reporters
+# stay gated by Problem#available / Group#enabled while editors (mary) bypass.
+# (Kept off `jack`, which other suites rely on as the "user in no group" actor.)
+reba_reporter_group_a:
+  group: group_a
+  user: reba
+  role: 1
+  enabled: true

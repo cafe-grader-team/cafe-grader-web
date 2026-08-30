@@ -6,7 +6,9 @@ class GroupsTest < ApplicationSystemTestCase
     visit groups_path
 
     click_on "New Group"
-    fill_in "Name", with: "Test Group"
+    # Name is a machine-readable identifier (NameFormatValidator: no spaces);
+    # the human-readable text lives in Description.
+    fill_in "Name", with: "Test_Group"
     click_on "Create Group"
 
     assert_text "Group was successfully created."
@@ -16,7 +18,7 @@ class GroupsTest < ApplicationSystemTestCase
     login("admin", "admin")
     visit edit_group_path(groups(:group_a))
 
-    fill_in "Name", with: "Updated Group"
+    fill_in "Name", with: "Updated_Group"
     click_on "Save Changes"
 
     assert_text "Group was successfully updated."

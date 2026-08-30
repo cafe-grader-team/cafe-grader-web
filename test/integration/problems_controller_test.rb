@@ -46,6 +46,43 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "do_manage set_languages persists permitted_lang" do
+    sign_in_as("admin", "admin")
+    prob = problems(:prob_add)
+    c   = languages(:Language_c)
+    cpp = languages(:Language_cpp)
+    post manage_problems_path, params: {
+      "prob-#{prob.id}" => "on",
+      set_languages: "1",
+      lang_ids: [c.id, cpp.id]
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    prob.reload
+    assert_not_nil prob.permitted_lang, "permitted_lang should be set by the bulk action"
+    assert_includes prob.permitted_lang.split, "c"
+    assert_includes prob.permitted_lang.split, "cpp"
+  end
+
+  test "do_manage change_enable toggles available" do
+    sign_in_as("admin", "admin")
+    prob = problems(:prob_sub) # starts available: false
+    post manage_problems_path, params: {
+      "prob-#{prob.id}" => "on", change_enable: "1", enable: "yes"
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    assert prob.reload.available?, "change_enable=yes should set available true"
+  end
+
+  test "do_manage change_date_added sets date_added" do
+    sign_in_as("admin", "admin")
+    prob = problems(:prob_add)
+    post manage_problems_path, params: {
+      "prob-#{prob.id}" => "on", change_date_added: "1", date_added: "2025-01-15"
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    assert_equal Date.new(2025, 1, 15), prob.reload.date_added.to_date
+  end
+
   test "problems without any dataset still appear on index" do
     sign_in_as("admin", "admin")
     # Build a Problem with no associated Dataset. The previous INNER JOIN
@@ -115,6 +152,72 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
       problem: { full_name: "Updated Name", permitted_lang: [] }
     }, as: :turbo_stream
     assert_equal "Updated Name", p.reload.full_name
+  end
+
+  test "admin can set viva_daily_limit through update, including 0 (contest-only)" do
+    sign_in_as("admin", "admin")
+    p = problems(:prob_viva)
+    patch problem_path(p), params: {
+      problem: { viva_daily_limit: "5", permitted_lang: [] }
+    }, as: :turbo_stream
+    assert_equal 5, p.reload.viva_daily_limit
+
+    patch problem_path(p), params: {
+      problem: { viva_daily_limit: "0", permitted_lang: [] }
+    }, as: :turbo_stream
+    assert_equal 0, p.reload.viva_daily_limit
+
+    patch problem_path(p), params: {
+      problem: { viva_daily_limit: "", permitted_lang: [] }
+    }, as: :turbo_stream
+    assert_nil p.reload.viva_daily_limit
+  end
+
+  test "edit form offers llm_prompt tags in the generic picker, not viva_conduct" do
+    # Regression test for the T8 review fix: Problem#tag_ids= is a
+    # whole-collection replacement, and the generic picker used to be
+    # scoped to Tag.where(kind: %i[normal topic]) — filtering llm_prompt
+    # out entirely. That silently detached a problem's AI-helper prompt
+    # tag on every ordinary save, since no other on-screen control offers
+    # llm_prompt tags. Against the old scope this assertion on 'codey-x'
+    # fails (option absent from the generic select).
+    #
+    # Use a NON-viva fixture problem: the Conduct-profile select
+    # (id=problem_conduct_tag_ids) is rendered unconditionally in the DOM
+    # (only CSS-hidden via viva-exam-toggle for non-viva problems), so a
+    # viva_conduct tag legitimately appears there. To discriminate
+    # precisely we scope assertions to each select's own id rather than
+    # just grepping the whole response body.
+    codey = Tag.create!(name: "codey-x", kind: :llm_prompt, params: "helper prompt")
+    conduct = Tag.create!(name: "conduct-x", kind: :viva_conduct, params: "persona")
+
+    sign_in_as("admin", "admin")
+    get edit_problem_path(problems(:prob_add))
+    assert_response :success
+
+    # llm_prompt tag must be offered in the generic picker.
+    assert_select "select#problem_tag_ids option", text: "codey-x"
+    # viva_conduct tag must NOT be offered in the generic picker, even
+    # though it's a valid option in the (separately-scoped) conduct
+    # select elsewhere in the same form.
+    assert_select "select#problem_tag_ids option", text: "conduct-x", count: 0
+    # Sanity check that our scoping actually discriminates: the conduct
+    # tag genuinely renders somewhere on the page (in the conduct
+    # select), so the count: 0 above isn't vacuously true because the
+    # option is simply never rendered at all.
+    assert_select "select#problem_conduct_tag_ids option", text: "conduct-x"
+  end
+
+  test "generic and conduct tag selects merge into tag_ids" do
+    sign_in_as("admin", "admin")
+    problem = Problem.create!(name: "viva-t8b", full_name: "viva-t8b", full_score: 100,
+                              compilation_type: :viva_exam, viva_prompt: "# Rubric\nok")
+    topic = Tag.create!(name: "topic-t8", kind: :topic)
+    conduct = Tag.create!(name: "conduct-t8", kind: :viva_conduct, params: "persona")
+    patch problem_path(problem), params: {
+      problem: { tag_ids: [topic.id.to_s, conduct.id.to_s], permitted_lang: [] }
+    }, as: :turbo_stream
+    assert_equal [conduct.id, topic.id].sort, problem.reload.tag_ids.sort
   end
 
   test "admin can destroy problem" do

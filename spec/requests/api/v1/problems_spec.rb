@@ -140,6 +140,17 @@ RSpec.describe "Problems API", type: :request do
 
         run_test!
       end
+
+      response "403", "viva scenario blocked for students" do
+        schema type: :object, additionalProperties: false, properties: { error: { type: :string } }
+
+        # description IS the hidden interview scenario for viva problems —
+        # gated the same as the PDF branch of the file endpoint below.
+        let(:user) { users(:john) }
+        let(:id) { problems(:prob_viva).id }
+
+        run_test!
+      end
     end
   end
 
@@ -226,6 +237,21 @@ RSpec.describe "Problems API", type: :request do
 
         run_test!
       end
+    end
+  end
+
+  # Plain (non-swagger) regression test: a second `response "200"` block on
+  # the same path/verb above would silently clobber the documented schema
+  # for the happy path in swagger.yaml (rswag only keeps the last-run
+  # example per status code), so this is intentionally NOT a `path`/`response`
+  # swagger block.
+  describe "GET /api/v1/problems/{id}/testcases — datasetless problem" do
+    it "returns an empty list instead of 500 when the problem has no live dataset (viva)" do
+      get "/api/v1/problems/#{problems(:prob_viva).id}/testcases",
+          headers: { "Authorization" => "Bearer #{jwt_token_for(user)}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to eq([])
     end
   end
 end

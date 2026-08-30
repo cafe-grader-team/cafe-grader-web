@@ -1,0 +1,36 @@
+-# Everything below the page header. Replaced wholesale by update.turbo_stream
+-# when a save flips compilation_type across the viva boundary (the layout
+-# differs); otherwise only the :problem frame inside is replaced.
+#problem-edit
+  - if @problem.viva_exam?
+    -# viva: one row, both cards, one form — all inside the :problem frame (see _form)
+    = render 'form', problem: @problem
+  - else
+    .row
+      -# problem card (Detail)
+      .col-md-6
+        = render 'form', problem: @problem
+      -# dataset card
+      .col-md-6
+        .card.shadow-sm.mb-4
+          .card-body{data: {controller: 'bs-tab dataset-mode-toggle', 'dataset-mode-toggle-compilation-type-value': @problem.compilation_type, action: 'mode:compilation-type-changed@window->dataset-mode-toggle#syncCompilationType'}}
+            %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Datasets
+            - if @problem.live_dataset
+              -# dataset selector
+              = turbo_frame_tag :dataset_select do
+                = render partial: 'datasets/dataset_select', locals: {ds: @problem.live_dataset, problem: @problem}
+              -# dataset form
+              = turbo_frame_tag :dataset, src: edit_dataset_path(@problem.live_dataset), data: {'problem-target': 'dataset', 'current-id': @problem.live_dataset.id}
+            - else
+              -# No dataset at all (e.g. a viva just turned back into a code problem):
+              -# the selector partial needs a dataset, so offer to create the first one.
+              -# Both frames exist so datasets/update can fill them in place.
+              = turbo_frame_tag :dataset_select do
+                .d-flex.flex-wrap.align-items-center.gap-2.mb-3
+                  %span.text-secondary No dataset yet — a code problem needs at least one test-case dataset.
+                  = button_to add_dataset_problem_path(@problem), method: :post,
+                              class: 'btn btn-sm btn-success d-inline-flex align-items-center gap-1',
+                              form: { class: 'd-inline mb-0 ms-auto', data: { turbo: true } } do
+                    %span.mi.md-18 add
+                    Add dataset
+              = turbo_frame_tag :dataset

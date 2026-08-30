@@ -1,0 +1,33 @@
+.d-flex.justify-content-between.align-items-center.mb-4
+  %h3.mb-0 Grounding Materials
+  = link_to new_grounding_material_path, class: 'btn btn-primary d-inline-flex align-items-center gap-1' do
+    %span.mi add
+    Add grounding
+
+%table.table.table-hover.table-condense.align-middle
+  %thead
+    %tr
+      %th Title
+      %th Content
+      %th.text-end Est. tokens
+      %th.text-end Used by
+      %th
+  %tbody
+    - @grounding_materials.each do |gm|
+      %tr
+        %td= gm.title
+        %td.text-secondary
+          - bits = []
+          - bits << "#{gm.files.count} file#{'s' if gm.files.count != 1}" if gm.files.attached?
+          - bits << 'text' if gm.body.present?
+          = bits.join(' · ').presence || '—'
+        %td.text-end{ title: 'Approximate — body chars/4 + file size proxy' }= "≈ #{number_with_delimiter(gm.estimated_tokens)}"
+        %td.text-end= pluralize(gm.problems.count, 'problem')
+        %td.align-middle.py-1.pr-2
+          .d-flex.gap-1.justify-content-end
+            = link_to edit_grounding_material_path(gm), class: 'btn btn-outline-secondary border-0 py-1 px-2', title: 'Edit' do
+              %span.mi edit
+            = button_to grounding_material_path(gm), method: :delete, class: 'btn btn-outline-danger border-0 py-1 px-2', title: 'Delete', form: { class: 'd-inline', data: { turbo: true, turbo_confirm: "Delete '#{gm.title}'?" } } do
+              %span.mi delete
+- if @grounding_materials.empty?
+  %p.text-secondary.mt-3 No grounding materials yet.

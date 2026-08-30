@@ -25,11 +25,21 @@ class Checker
       # Strips CREATE VIEW / DROP VIEW lines, then CMS-style scoring.
       prog = Rails.root.join 'lib', 'checker', 'postgres_checker.rb'
       return "#{prog} #{input_file} #{output_file} #{ans_file}"
-    when 'custom_cms', 'custom_cms_raw'
-      # User's checker. CMS/Codeforces convention: exit 0, score on
-      # stdout, comment on stderr. _raw variant outputs a raw decimal
-      # score meant to pair with score_type :raw_sum.
+    when 'custom_testlib', 'custom_testlib_raw'
+      # User's checker, testlib/Codeforces argv order (input, USER, correct),
+      # CMS result protocol: exit 0, score on stdout, comment on stderr. The
+      # _raw variant outputs a raw decimal score meant to pair with
+      # score_type :raw_sum. Named custom_cms / custom_cms_raw until rev 2047
+      # — the order is NOT what CMS itself passes (see 'cms_comparator').
+      # Every deployed problem on these types was written to this order
+      # (verified 2026-08-29/30, doc/decisions.md) — do NOT change.
       return "#{@prob_checker_file} #{input_file} #{output_file} #{ans_file}"
+    when 'cms_comparator'
+      # User's checker, CMS-native argv order (input, CORRECT, USER) — this is
+      # what CMS itself invokes (cms/grading/steps/trusted.py), swapped from
+      # custom_testlib's order. Same result protocol as custom_testlib: exit 0,
+      # score on stdout, comment on stderr (see process_result_cms).
+      return "#{@prob_checker_file} #{input_file} #{ans_file} #{output_file}"
     when 'custom_cafe'
       # User's checker. Receives <lang> <tc_num> <in> <out> <ans> 10.
       # Output is two lines: line1 CORRECT/INCORRECT/COMMENT:, line2 score
@@ -85,11 +95,11 @@ class Checker
       end
     when 'postgres'
       return process_result_cms(out, err)
-    when 'custom_cms', 'custom_cms_raw', 'custom_cafe'
+    when 'custom_testlib', 'custom_testlib_raw', 'custom_cafe', 'cms_comparator'
       if status.exitstatus == 0
-        if evaluation_type == 'custom_cms'
+        if evaluation_type == 'custom_testlib' || evaluation_type == 'cms_comparator'
           return process_result_cms(out, err)
-        elsif evaluation_type == 'custom_cms_raw'
+        elsif evaluation_type == 'custom_testlib_raw'
           return process_result_cms_raw(out, err)
         else
           return process_result_cafe(out, err)
@@ -110,7 +120,7 @@ class Checker
   def check_for_required_file
     raise "Output file [#{@output_file.cleanpath}] does not exists" unless @output_file.exist?
     raise "Answer file [#{@ans_file.cleanpath}] does not exists" unless @ans_file.exist?
-    if ['custom_cms', 'custom_cms_raw', 'custom_cafe'].include?(@ds.evaluation_type) &&
+    if ['custom_testlib', 'custom_testlib_raw', 'custom_cafe', 'cms_comparator'].include?(@ds.evaluation_type) &&
         (@prob_checker_file.nil? || @prob_checker_file.exist? == false)
       raise GraderError.new("Checker file does not exists", submission_id: @sub.id)
     end

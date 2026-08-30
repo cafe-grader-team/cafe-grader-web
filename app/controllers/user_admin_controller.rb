@@ -78,7 +78,7 @@ class UserAdminController < ApplicationController
   end
 
   def stat
-    @submission = Submission.joins(:problem).includes(:problem).includes(:language).where(user_id: params[:id])
+    @submission = Submission.regular.joins(:problem).includes(:problem).includes(:language).where(user_id: params[:id])
 
     build_stat
 

@@ -93,7 +93,7 @@
         %td{data: {order: s.submitted_at}}
           #{s.submitted_at.strftime('%Y-%m-%d %H:%M')} 
           %span.text-secondary (#{time_ago_in_words(s.submitted_at)} ago)
-        %td.grader-comment= s.grader_comment
+        %td{data: {order: s.grader_comment.to_s, search: s.grader_comment.to_s}}= grader_comment_strip(s.grader_comment)
         %td.text-end= s.points
         - if session[:admin]
           %td= s.ip_address

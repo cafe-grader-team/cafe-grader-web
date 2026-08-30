@@ -2,7 +2,9 @@ class Problem < ApplicationRecord
   include Auditable
   audited only: %i[name full_name full_score available live_dataset_id
                    view_testcase view_submission allow_hint
-                   permitted_lang submission_filename task_type compilation_type]
+                   permitted_lang submission_filename task_type compilation_type
+                   viva_daily_limit viva_prompt viva_soft_cap viva_hard_cap],
+          redact: %i[viva_prompt]
 
   # -- fields --
   # how the submission should be compiled
@@ -52,8 +54,26 @@ class Problem < ApplicationRecord
 
   validates_presence_of :full_name
 
+  # viva_soft_cap / viva_hard_cap are NOT NULL columns with defaults (10/15);
+  # unconditional so a blanked form field surfaces as a form error instead of
+  # an ActiveRecord::NotNullViolation 500, and 0 can't force-finish a viva on
+  # its very first answer (VivaSessionsController#answer hard-caps on this).
+  validates :viva_soft_cap, :viva_hard_cap, numericality: {only_integer: true, greater_than: 0}
+
+  # Context-based viva policy (2026-07-21 design, Phase A): nil falls back to
+  # GraderConfiguration['viva.practice_daily_start_limit']; 0 is meaningful
+  # (contest-only) and must remain a valid, distinct value from nil/blank —
+  # never coerce it away with a presence-style validation.
+  validates :viva_daily_limit, numericality: {only_integer: true, greater_than_or_equal_to: 0, allow_nil: true}
+
 
   # -- callback --
+  # Blank and nil must collapse to one canonical value (nil) — otherwise every
+  # form save of a non-viva problem (which still submits the hidden viva_prompt
+  # field as "") churns viva_prompt nil -> "" and writes a redundant [redacted]
+  # audit row on every save.
+  before_validation { self.viva_prompt = viva_prompt.presence }
+
   after_save :generate_and_attach_pdf_statement_later, if: :should_generate_pdf?
 
   # -- scope --
@@ -79,23 +99,40 @@ class Problem < ApplicationRecord
       .distinct(:id)                            # get distinct
   }
 
-  # Similar to group_submittable_by_user, but does not required GroupProblem.enabled to be enabled
-  scope :group_reportable_by_user, ->(user_id) {
-    group_actionable_by_user(user_id, ['editor', 'reporter'])
-  }
-
-  # Similar to group_submittable_by_user, but does not required GroupProblem.enabled to be enabled
+  # EDITOR = group-scoped content curator. An editor sees EVERY problem in a
+  # group they edit, regardless of Problem#available, Group#enabled, or
+  # GroupProblem#enabled — the group-scoped analogue of an admin's Problem.all,
+  # minus user management. This lets an editor manage a finished (archived) or
+  # not-yet-available (draft) problem in their own group; the old scope required
+  # available: true, which silently locked editors out of their own drafts.
+  # GroupUser#enabled is NOT ignored: a disabled membership row is not an
+  # editor at all (intended design, 2026-08-22) — matching the group-level
+  # Group.editable_by_user, which always required an enabled row.
   scope :group_editable_by_user, ->(user_id) {
-    group_actionable_by_user(user_id, ['editor'])
+    joins(groups_problems: {group: :groups_users})
+      .where('groups_users.user_id': user_id)   # user is in the group
+      .where('groups_users.enabled': true)      # ...with an enabled membership
+      .where('groups_users.role': 'editor')     # ...as an editor
+      .distinct
   }
 
-  scope :group_actionable_by_user, ->(user_id, roles = ['editor']) {
-    joins(groups_problems: {group: :groups_users})
+  # REPORTER = read-only on LIVE content: available problems in an enabled group.
+  # The report set is the editor set (curators see everything, incl. archived /
+  # unavailable) UNIONed with the reporter-gated set, so "editor >= reporter"
+  # holds everywhere. GroupProblem#enabled is intentionally ignored for both (a
+  # problem disabled within a group is a student-only hide; staff still report).
+  # GroupUser#enabled is NOT ignored: a reporter is "a member with extra sight",
+  # so a disabled membership row revokes the reporter's sight the same way it
+  # revokes a member's (intended design, 2026-08-22).
+  scope :group_reportable_by_user, ->(user_id) {
+    reporter_gated = Problem.joins(groups_problems: {group: :groups_users})
       .where(available: true)                   # available problems only
       .where('groups.enabled': true)            # groups is enabled
       .where('groups_users.user_id': user_id)   # user is in the group
-      .where('groups_users.role': roles)        # filter for user with roles
-      .distinct(:id)                            # get distinct
+      .where('groups_users.enabled': true)      # ...with an enabled membership
+      .where('groups_users.role': 'reporter')   # ...as a reporter
+    Problem.where(id: Problem.group_editable_by_user(user_id))
+           .or(Problem.where(id: reporter_gated))
   }
 
   # These contest_xxx scope ALWAYS take contest into account
@@ -148,24 +185,21 @@ class Problem < ApplicationRecord
   has_one_attached :generated_statement # statement generated from the description
   has_one_attached :attachment  # this is public files seen by contestant
 
+  has_and_belongs_to_many :grounding_materials
+
   def set_default_value
   end
 
-  def viva_grounding_tags
-    tags.where(kind: :viva_grounding)
+  # Shared examiner persona layer (design D6). Ordered by name so multi-tag
+  # concatenation is deterministic.
+  def viva_conduct_tags
+    tags.where(kind: :viva_conduct).order(:name)
   end
 
-  def viva_prompt_tags
-    tags.where(kind: :llm_prompt)
-  end
-
-  # Required-section markers a viva problem's llm_prompt content must
-  # contain. Keeping this as a constant so it's easy to relax / extend
-  # without rewriting the validation method. The scenario itself is
-  # delivered to the model via the attached statement PDF, not via
-  # problem.description, so we don't validate the description text.
+  # Required-section markers the per-problem examiner briefing
+  # (problems.viva_prompt) must contain.
   VIVA_PROMPT_REQUIRED_SECTIONS = {
-    /^#+\s*Rubric\b/im => "an llm_prompt section starting with '# Rubric' (or ##/###)"
+    /^#+\s*Rubric\b/im => "a section starting with '# Rubric' (or ##/###)"
   }.freeze
 
   # Whether the problem's statement PDF (or external description URL) is
@@ -187,12 +221,12 @@ class Problem < ApplicationRecord
     return [] unless viva_exam?
     errors = []
 
-    prompt = viva_prompt_tags.map(&:params).reject(&:blank?).join("\n\n")
-    if prompt.blank?
-      errors << "Problem has no llm_prompt tag attached"
+    prompt = viva_prompt.to_s
+    if prompt.strip.blank?
+      errors << "Problem has a blank examiner briefing (viva_prompt)"
     else
       VIVA_PROMPT_REQUIRED_SECTIONS.each do |pattern, label|
-        errors << "llm_prompt is missing #{label}" unless prompt =~ pattern
+        errors << "examiner briefing is missing #{label}" unless prompt =~ pattern
       end
     end
 
@@ -210,7 +244,7 @@ class Problem < ApplicationRecord
   def get_jschart_history
     start = 4.month.ago.beginning_of_day
     start_date = start.to_date
-    count = Submission.where(problem: self).where('submitted_at >= ?', start).group('DATE(submitted_at)').count
+    count = Submission.regular.where(problem: self).where('submitted_at >= ?', start).group('DATE(submitted_at)').count
     i = 0
     label = []
     value = []
@@ -241,38 +275,6 @@ class Problem < ApplicationRecord
   end
 
 
-  def self.create_from_import_form_params(params, old_problem = nil)
-    org_problem = old_problem || Problem.new
-    import_params, problem = Problem.extract_params_and_check(params,
-                                                              org_problem)
-    if !problem.errors.empty?
-      return problem, 'Error importing'
-    end
-
-    problem.date_added = Time.new
-    problem.test_allowed = true
-    problem.output_only = false
-    problem.available = false
-
-    if not problem.save
-      return problem, 'Error importing'
-    end
-
-    import_to_db = params.has_key? :import_to_db
-
-    importer = TestdataImporter.new(problem)
-
-    if not importer.import_from_file(import_params[:file],
-                                     import_params[:time_limit],
-                                     import_params[:memory_limit],
-                                     import_params[:checker_name],
-                                     import_to_db)
-      problem.errors.add(:base, 'Import error.')
-    end
-
-    return problem, importer.log_msg
-  end
-
   def self.download_file_basedir
     return "#{Rails.root}/data/tasks"
   end
@@ -280,9 +282,9 @@ class Problem < ApplicationRecord
   def get_submission_stat
     result = Hash.new
     # total number of submission
-    result[:total_sub] = Submission.where(problem_id: self.id).count
-    result[:attempted_user] = Submission.where(problem_id: self.id).group(:user_id)
-    result[:pass] = Submission.where(problem_id: self.id).where("points >= ?", 100).count
+    result[:total_sub] = Submission.regular.where(problem_id: self.id).count
+    result[:attempted_user] = Submission.regular.where(problem_id: self.id).group(:user_id)
+    result[:pass] = Submission.regular.where(problem_id: self.id).where("points >= ?", 100).count
     return result
   end
 
@@ -415,10 +417,10 @@ class Problem < ApplicationRecord
     end
   end
 
-  # export  the problem into the default dump dir
-  def export
+  # export the problem into the given dir (default: judge dump dir)
+  def export(all_datasets: false, base_dir: Rails.root.join('../judge/dump'), zip: true)
     pe = ProblemExporter.new
-    pe.export_problem_to_dir(self, zip: true)
+    pe.export_problem_to_dir(self, base_dir: base_dir, zip: zip, all_datasets: all_datasets)
   end
 
   def regenerate_pdf_statement!
@@ -426,9 +428,40 @@ class Problem < ApplicationRecord
   end
 
   # -- private section --
+  # The group to pre-pick when deep-linking from this problem's stat page into
+  # the Best Score report (ProblemsHelper#problem_score_report_path), chosen
+  # among the groups this problem is live in that `user` may report on:
+  #
+  #   1. a live (non-archived) group whose members have submitted it — the
+  #      current section of a running course; most submissions, then newest;
+  #   2. otherwise the group whose members submitted it the most, archived
+  #      included — the cohort an old exam problem was actually used in
+  #      (yearly sections get archived, but that is where the data lives);
+  #   3. otherwise the newest live group (nobody has submitted yet).
+  #
+  # Returns nil when there is no candidate at all.
+  def report_group_for(user)
+    candidates = user.groups_for_action(:report)
+                     .where(id: groups.where(groups_problems: { enabled: true }).select(:id))
+                     .to_a
+    return nil if candidates.empty?
+
+    sub_counts = Submission.regular.where(problem_id: id)
+                           .joins(user: :groups_users)
+                           .where(groups_users: { group_id: candidates.map(&:id), enabled: true })
+                           .group('groups_users.group_id').count
+    candidates.max_by do |g|
+      subs = sub_counts.fetch(g.id, 0)
+      tier = if g.enabled && subs > 0 then 2 elsif subs > 0 then 1 else 0 end
+      [tier, subs, g.enabled ? 1 : 0, g.id]
+    end
+  end
+
   private
 
   def should_generate_pdf?
+    return false if viva_exam?   # D5: the description IS the scenario; no side-PDF for vivas
+
     (new_record? || saved_change_to_attribute?(:description)) && description.present?
   end
 

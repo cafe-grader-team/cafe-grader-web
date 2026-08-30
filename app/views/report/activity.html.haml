@@ -16,9 +16,8 @@
           Also show selected users with zero submissions
         .form-text Inactive rows are highlighted; applies to the user filter above.
 
-.text-secondary.small.mb-3.d-flex.align-items-center
-  %span.mi.md-18.me-1 sync
-  Select filters above, then click Refresh to load data. Solved counts problems with a 100-point submission (raw-sum problems excluded).
+= render 'empty_report_notice'
+= render 'report_help', refresh_hint: 'Select filters above, then click Refresh to load data. Solved counts problems with a 100-point submission (raw-sum problems excluded).'
 
 .row
   .col-sm-12

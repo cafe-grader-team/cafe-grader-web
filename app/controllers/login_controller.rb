@@ -1,4 +1,6 @@
 class LoginController < ApplicationController
+  include LoginThrottling
+
   @@authenticators = []
 
   def index
@@ -8,11 +10,18 @@ class LoginController < ApplicationController
   end
 
   def login
+    if login_throttled?
+      redirect_to login_main_path, alert: 'Too many failed login attempts. Please wait a few minutes and try again.'
+      return
+    end
+
     user = get_authenticated_user(params[:login], params[:password])
     unless user
+      record_login_failure!
       redirect_to login_main_path, alert: 'Wrong password'
       return
     end
+    clear_login_failures!
 
     if (!GraderConfiguration['right.bypass_agreement']) && (!params[:accept_agree]) && !user.admin?
       redirect_to login_main_path, alert: 'You must accept the agreement before logging in'

@@ -16,7 +16,9 @@ class TagsTest < ApplicationSystemTestCase
     login("admin", "admin")
     visit edit_tag_path(tags(:tag_easy))
 
-    fill_in "Name", with: "beginner"
+    # clear via backspace first — a plain fill_in intermittently appends to the
+    # pre-filled value (e.g. "easy" + "beginner" -> "easybeginner")
+    fill_in "Name", with: "beginner", fill_options: { clear: :backspace }
     click_on "Save Changes"
 
     assert_text "Tag beginner was successfully updated."

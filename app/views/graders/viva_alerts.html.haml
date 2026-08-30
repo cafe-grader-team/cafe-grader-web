@@ -1,0 +1,54 @@
+= render 'application/breadcrumb', steps: [{label: 'Grader Processes', path: grader_processes_path, icon: resource_icon_name(Grader)}, {label: 'Viva Alerts'}]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0.font-monospace Viva Alerts
+    %span.badge.bg-danger-subtle.text-danger-emphasis.border.border-danger-subtle.rounded-pill.fw-medium
+      %small= pluralize(@alerts.size, 'flagged session')
+  .d-flex.gap-2
+    = link_to mdi(:arrow_back, 'me-1') + 'Back to Monitor', grader_processes_path, class: 'btn btn-outline-secondary btn-flex'
+
+.card.shadow-sm.mb-4
+  .card-body
+    .d-flex.align-items-start.mb-3
+      .bg-danger-subtle.text-danger-emphasis.rounded-3.d-flex.align-items-center.justify-content-center.me-3{style: "width: 48px; height: 48px; flex-shrink: 0;"}
+        %span.mi.md-36.fill flag
+      .flex-grow-1
+        %h5.fw-bold.text-dark.mb-0 Sessions with examiner-flagged utterances
+        .text-secondary.small
+          The examiner detects a suspected jailbreak attempt and flags the turn
+          (log-only during the practice month — nothing terminates). Use this
+          list to judge whether the detection prompt is too sensitive or too
+          lenient. Click a row to open the full transcript.
+
+    - if @alerts.any?
+      %table.table.table-hover.table-condense.align-middle.mb-0
+        %thead
+          %tr.text-secondary.small
+            %th User
+            %th Problem
+            %th Status
+            %th.text-center Alerts
+            %th Latest alert
+            %th Flagged utterance
+            %th.text-end Actions
+        %tbody
+          - @alerts.each do |alert|
+            - sub = alert.submission
+            %tr
+              %td= link_to sub.user&.login, viva_submission_path(sub), class: 'fw-medium text-primary text-decoration-none'
+              %td= sub.problem&.name
+              %td
+                = sub.status
+                - if sub.viva_archived?
+                  %span.badge.text-bg-warning.ms-1 archived
+              %td.text-center
+                %span.badge.text-bg-danger= alert.alert_count
+              %td.text-secondary.small= "#{time_ago_in_words(alert.latest_alert_at)} ago"
+              %td.small= alert.utterance.to_s.truncate(200)
+              %td.text-end
+                = link_to mdi(:open_in_new, 'me-1') + 'Open viva', viva_submission_path(sub), class: 'btn btn-sm btn-outline-primary border-0 d-inline-flex align-items-center'
+    - else
+      .text-center.text-success.py-4
+        %span.mi.md-48 check_circle
+        .fw-medium.mt-2 No flags yet.

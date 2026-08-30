@@ -291,6 +291,136 @@ RSpec.describe "API Authorization", type: :request do
   end
 
   # ==============================
+  # Single-user (lockdown) mode
+  # ==============================
+  describe "single-user (lockdown) mode" do
+    it "refuses to issue a token to a non-admin" do
+      set_grader_config("system.single_user_mode", "true")
+      post "/api/v1/auth/login", params: { login: "john", password: "hello" }
+      expect(response).to have_http_status(:forbidden)
+      expect(JSON.parse(response.body)["error"]).to match(/single-user/i)
+    end
+
+    it "still issues a token to an admin" do
+      set_grader_config("system.single_user_mode", "true")
+      post "/api/v1/auth/login", params: { login: "admin", password: "admin" }
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["token"]).to be_present
+    end
+
+    it "rejects a non-admin holding a still-valid token" do
+      token = jwt_token_for(users(:john))
+      set_grader_config("system.single_user_mode", "true")
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:forbidden)
+      expect(JSON.parse(response.body)["error"]).to match(/single-user/i)
+    end
+
+    it "blocks submission creation for a non-admin holding a valid token" do
+      # The 2026-08-19 incident path: web sessions were locked out but a JWT
+      # obtained hours earlier kept POST /problems/:id/submissions working.
+      token = jwt_token_for(users(:john))
+      set_grader_config("system.single_user_mode", "true")
+      expect {
+        post "/api/v1/problems/#{problems(:prob_add).id}/submissions",
+          params: { source: "int main(){}", language_id: languages(:Language_c).id },
+          headers: { "Authorization" => "Bearer #{token}" }
+      }.not_to change(Submission, :count)
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "lets admin requests through" do
+      set_grader_config("system.single_user_mode", "true")
+      get "/api/v1/me", headers: auth_header_for(users(:admin))
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
+  # ==============================
+  # IP whitelist
+  # ==============================
+  # Per-request enforcement over the whole API surface lives in
+  # authorization_sweep_spec.rb; this covers the login door. Request specs
+  # arrive from 127.0.0.1.
+  describe "IP whitelist" do
+    def activate_whitelist(ranges)
+      set_grader_config("right.whitelist_ignore", "false")
+      set_grader_config("right.whitelist_ip", ranges)
+    end
+
+    it "refuses to issue a token to a non-admin from a non-whitelisted IP" do
+      activate_whitelist("10.99.0.0/16")
+      post "/api/v1/auth/login", params: { login: "john", password: "hello" }
+      expect(response).to have_http_status(:forbidden)
+      expect(JSON.parse(response.body)["error"]).to match(/IP is not allowed/i)
+    end
+
+    it "issues a token from a whitelisted IP" do
+      activate_whitelist("127.0.0.0/8")
+      post "/api/v1/auth/login", params: { login: "john", password: "hello" }
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["token"]).to be_present
+    end
+
+    it "still issues a token to an admin from a non-whitelisted IP" do
+      activate_whitelist("10.99.0.0/16")
+      post "/api/v1/auth/login", params: { login: "admin", password: "admin" }
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)["token"]).to be_present
+    end
+  end
+
+  # ==============================
+  # Retroactive token invalidation (min_last_login_time)
+  # ==============================
+  describe "tokens issued before the last lockdown" do
+    # Turning single-user mode ON (ConfigurationsController#toggle) bumps
+    # system.min_last_login_time, which kills all web sessions. Tokens must
+    # die with them: a bearer token cannot be revoked, so the iat claim is
+    # checked against that timestamp on every request.
+    def token_issued_at(user, time)
+      JWT.encode(
+        { user_id: user.id, exp: 7.days.from_now.to_i, iat: time.to_i },
+        Rails.application.secret_key_base, "HS256"
+      )
+    end
+
+    def bump_min_last_login
+      GraderConfiguration.update_min_last_login
+      GraderConfiguration.instance_variable_set(:@config_cache, nil)
+    end
+
+    it "rejects a non-admin token issued before the bump" do
+      token = token_issued_at(users(:john), 1.hour.ago)
+      bump_min_last_login
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "accepts a non-admin token issued after the bump" do
+      bump_min_last_login
+      get "/api/v1/me", headers: auth_header_for(users(:john))
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "does not invalidate admin tokens" do
+      token = token_issued_at(users(:admin), 1.hour.ago)
+      bump_min_last_login
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "rejects a non-admin token that carries no iat claim" do
+      token = JWT.encode(
+        { user_id: users(:john).id, exp: 7.days.from_now.to_i },
+        Rails.application.secret_key_base, "HS256"
+      )
+      get "/api/v1/me", headers: { "Authorization" => "Bearer #{token}" }
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  # ==============================
   # Disabled user
   # ==============================
   describe "disabled user" do

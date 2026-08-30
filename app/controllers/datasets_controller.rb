@@ -165,6 +165,8 @@ class DatasetsController < ApplicationController
       @toast = {body: "Testcases' parameters are updated.", title: 'Testcase updated'}
     rescue JSON::ParserError => e
       @toast = {body: "Weight parameter is malformed.", title: 'Testcase updated', type: 'alert'}
+    rescue RegexpError => e
+      @toast = {body: "A codename pattern is not a valid regexp: #{e.message}", title: 'Testcase updated', type: 'alert'}
     end
     render :update
   end
@@ -178,7 +180,19 @@ class DatasetsController < ApplicationController
   end
 
   def rejudge
-    @dataset.problem.submissions.each do |sub|
+    # Viva submissions are LLM-graded and carry no compiled source — sweeping
+    # them into a code-grader rejudge would wipe their points/grader_comment
+    # (add_judge_job resets both) and enqueue a testcase Job the judge worker
+    # can't run. A dataset's submissions can include stray viva ones (e.g. a
+    # problem that was reconfigured after collecting viva attempts), so this
+    # is filtered per-submission via the durable 'viva' sentinel language
+    # (see Language.seed / VivaSessionsController::VIVA_LANGUAGE_NAME) rather
+    # than the problem's current viva_exam? mode.
+    submissions = @dataset.problem.submissions
+    viva_language = Language.find_by(name: "viva")
+    submissions = submissions.where.not(language: viva_language) if viva_language
+
+    submissions.each do |sub|
       # mass rejudge, priority is very low
       sub.add_judge_job(@dataset, -50)
     end

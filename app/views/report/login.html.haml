@@ -19,6 +19,8 @@
         %button.nav-link.active{data: {bs: {toggle: :tab, target: '#detail'}}} Detail
       %li.nav-item
         %button.nav-link{data: {bs: {toggle: :tab, target: '#summary'}}} Summary
+      %li.nav-item
+        %button.nav-link{data: {bs_toggle: :tab, bs_target: '#failure'}} Failed attempts
 .row
   .col-sm-12
     .tab-content
@@ -26,6 +28,10 @@
         %table#detail-table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
       .tab-pane.fade#summary
         %table#summary-table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
+      .tab-pane.fade#failure
+        .text-secondary.small.mb-2
+          Failed password attempts in the date range (web and API). The user/group filter does not apply — most failures match no user.
+        %table#failure-table.table.table-hover.table-condense.datatable{style: 'width: 100%'}
 
 
 
@@ -44,6 +50,8 @@
             detail_table.ajax.reload( () => { detail_table.columns.adjust().draw() } )
             summary_table.clear().draw()
             summary_table.ajax.reload( () => { summary_table.columns.adjust().draw() } )
+            failure_table.clear().draw()
+            failure_table.ajax.reload( () => { failure_table.columns.adjust().draw() } )
           }
         },
         'copy',
@@ -87,6 +95,8 @@
             summary_table.ajax.reload( () => { summary_table.columns.adjust().draw() } )
             detail_table.clear().draw()
             detail_table.ajax.reload( () => { detail_table.columns.adjust().draw() } )
+            failure_table.clear().draw()
+            failure_table.ajax.reload( () => { failure_table.columns.adjust().draw() } )
           }
         },
         'copy',
@@ -111,6 +121,50 @@
           d.until_datetime = $('#until_datetime').val()
           d.users = $("input[name='users']:checked").val()
           d.groups = $("#group_id").val()
+        },
+        dataType: 'json',
+        beforeSend: (request) => {
+          request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
+        },
+      }, //end ajax
+    });
+
+    failure_table = $('#failure-table').DataTable({
+      dom: "<'row'<'col-sm-3'B><'col-sm-3'l><'col-sm-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+      autoWidth: true,
+      pageLength: 25,
+      processing: true,
+      order: [[2, 'desc']],
+      buttons: [
+        {
+          text: 'Refresh',
+          action: (e,dt,node,config) => {
+            failure_table.clear().draw()
+            failure_table.ajax.reload( () => { failure_table.columns.adjust().draw() } )
+            detail_table.clear().draw()
+            detail_table.ajax.reload( () => { detail_table.columns.adjust().draw() } )
+            summary_table.clear().draw()
+            summary_table.ajax.reload( () => { summary_table.columns.adjust().draw() } )
+          }
+        },
+        'copy',
+        {
+          extend: 'excel',
+          title: 'Failed login attempts',
+        }
+      ],
+      columns: [
+        {title: 'Attempted login', data: 'attempted_login', class: 'font-monospace'},
+        {title: 'Matched user', data: 'login_text'},
+        {title: 'Time', data: 'created_at'},
+        {title: 'IP', data: 'ip_address'},
+      ],
+      ajax: {
+        url: '#{login_failure_query_report_path}',
+        type: 'POST',
+        data: (d) =>  {
+          d.since_datetime = $('#since_datetime').val()
+          d.until_datetime = $('#until_datetime').val()
         },
         dataType: 'json',
         beforeSend: (request) => {

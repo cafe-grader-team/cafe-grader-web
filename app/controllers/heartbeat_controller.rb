@@ -8,7 +8,7 @@ class HeartbeatController < ApplicationController
     full.strip! if full
 
     if full && full != ''
-      l = Login.where(ip_address: request.remote_ip).last
+      l = Login.successful.where(ip_address: request.remote_ip).last
       @user = l&.user
       if @user&.solve_all_available_problems?
         render plain: (full || 'OK')

@@ -157,4 +157,11 @@ GraderConfiguration_25:
   value_type: boolean
   value: 'true'
 
+GraderConfiguration_26:
+  key: viva.practice_daily_start_limit
+  value_type: integer
+  value: '3'
+  description: Max viva practice-mode session starts per student per problem per
+    day (practice mode only; admins exempt).
+
 

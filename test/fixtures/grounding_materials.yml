@@ -1,0 +1,8 @@
+gm_dijkstra:
+  title: Dijkstra notes
+  body: "Shortest paths and priority queues."
+  estimated_tokens: 0
+
+gm_empty:
+  title: Empty ref
+  estimated_tokens: 0

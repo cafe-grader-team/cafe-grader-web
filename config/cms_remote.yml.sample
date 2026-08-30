@@ -1,0 +1,5 @@
+# CMS clone connection settings. Copy to config/cms_remote.yml (which is
+# NOT committed -- listed in .gitignore) and adjust per host.
+# ENV overrides: CMS_SSH_HOST, CMS_REMOTE_PYTHON.
+host: nattee@c2.thailandoi.org          # ssh target with passwordless `sudo -u cms`
+python: /home/cms/cms_venv/bin/python3  # CMS venv python on that host

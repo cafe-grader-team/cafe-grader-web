@@ -6,7 +6,9 @@ class ContestsTest < ApplicationSystemTestCase
     visit contests_path
 
     click_on "New Contest"
-    fill_in "Name", with: "System Test Contest"
+    # Name is a machine-readable identifier (NameFormatValidator: no spaces);
+    # the human-readable text lives in Description.
+    fill_in "Name", with: "System_Test_Contest"
     click_on "Create Contest"
 
     assert_text "Contest was successfully created."
@@ -16,7 +18,7 @@ class ContestsTest < ApplicationSystemTestCase
     login("admin", "admin")
     visit edit_contest_path(contests(:contest_a))
 
-    fill_in "Name", with: "Updated Contest"
+    fill_in "Name", with: "Updated_Contest"
     click_on "Save Changes"
 
     assert_text "Contest was successfully updated."

@@ -48,7 +48,8 @@
         - for problem in @problems
           %tr{:class => "#{(problem.available) ? "table-success" : ""}", :id => "prob-#{problem.id}", :name => "prob-#{problem.id}"}
             - @problem=problem
-            %td.font-monospace= problem.name
+            %td.font-monospace
+              = problem.name
             %td
               .d-inline-flex.align-items-center
                 = problem.full_name
@@ -69,7 +70,17 @@
             %td
               - problem.tags.each do |t|
                 %span.badge.text-bg-secondary.bg-opacity-100= t.name
-            %td.py-1.align-middle= link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-sm btn-primary'
+            %td.py-1.align-middle
+              - if problem.viva_exam?
+                -# a viva has no code editor — offer the same Start/View pair as
+                -# the main list, so staff can test-start hidden vivas that the
+                -# main list (student-scoped) never shows
+                - if (viva_sub = @my_active_viva[problem.id])
+                  = link_to 'View Viva', viva_submission_path(viva_sub), class: 'btn btn-sm btn-outline-primary'
+                - else
+                  = button_to 'Start Viva', viva_start_problem_path(problem), class: 'btn btn-sm btn-primary', form: {style: 'display:inline-block'}
+              - else
+                = link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-sm btn-primary'
             %td= problem.date_added
             %td
               .form-check.form-switch.d-flex.justify-content-center

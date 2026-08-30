@@ -40,6 +40,15 @@ jack:
   salt: <%= salt %>
   activated: true
 
+# A plain reporter of group_a (see groups_users.yml). Dedicated to the report
+# scope tests so `jack` stays the canonical "user in no group" actor.
+reba:
+  login: reba
+  full_name: Reba Reporter
+  hashed_password: <%= User.encrypt("reba",salt) %>
+  salt: <%= salt %>
+  activated: true
+
 disabled_user:
   login: disabled
   full_name: Disabled User

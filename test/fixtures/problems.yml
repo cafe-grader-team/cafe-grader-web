@@ -32,3 +32,9 @@ prob_viva:
   available: true
   full_score: 30
   compilation_type: 2  # viva_exam (see Problem#compilation_type enum)
+  # Not prob_add: prob_add backs submissions(:add1_by_admin), which
+  # test/services/llm/viva_turn_assist_test.rb and viva_grade_assist_test.rb
+  # reuse with hard-coded plain-string message assertions. Attaching
+  # grounding here keeps this HABTM fixture from silently reshaping their
+  # message arrays into content-part arrays.
+  grounding_materials: gm_dijkstra

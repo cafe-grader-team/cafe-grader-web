@@ -9,6 +9,16 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "admin can update a user's remark via user_admin#update" do
+    sign_in_as("admin", "admin")
+    u = users(:john)
+    patch user_admin_path(u), params: { user: {
+      login: u.login, full_name: u.full_name, email: u.email,
+      alias: "hahaha", remark: "section 2", enabled: "1"
+    } }
+    assert_equal "section 2", u.reload.remark, "remark should persist via user_admin#update"
+  end
+
   test "profile redirects when user_setting_enabled is off" do
     set_grader_config("system.user_setting_enabled", "false")
     sign_in_as("john", "hello")
@@ -22,6 +32,18 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     post "/users/chg_passwd", params: { password: new_pw, password_confirmation: new_pw }
     assert_redirected_to action: "profile"
     # Re-login with new password
+    post login_login_path, params: { login: "john", password: new_pw }
+    assert_redirected_to list_main_path
+  end
+
+  test "update_self changes the password (profile form path)" do
+    sign_in_as("john", "hello")
+    new_pw = "1234asdf"
+    patch update_self_users_path, params: { user: { password: new_pw, password_confirmation: new_pw } }
+    assert_redirected_to profile_users_path
+    # the old password no longer works; the new one does
+    post login_login_path, params: { login: "john", password: "hello" }
+    assert_redirected_to login_main_path # rejected, back to login
     post login_login_path, params: { login: "john", password: new_pw }
     assert_redirected_to list_main_path
   end

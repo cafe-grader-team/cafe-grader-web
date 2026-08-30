@@ -49,7 +49,7 @@ export const configs = {
     ...baseConfig,
     ajax: {
       type: 'POST',
-      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), },
+      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), },
       dataSrc: function (json) {
         window.userCount = json.userCount
         window.probCount = json.probCount
@@ -83,7 +83,7 @@ export const configs = {
     order: [[0, 'asc']],
     ajax: {
       type: 'POST',
-      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), },
+      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), },
     },
     layout: {
       topStart: 'info',
@@ -164,7 +164,7 @@ export const configs = {
     order: [[0, 'asc']],
     ajax: {
       type: 'POST',
-      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), },
+      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), },
     },
     layout: {
       topStart: 'info',
@@ -225,7 +225,7 @@ export const configs = {
     ],
     ajax: {
       type: 'POST',
-      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), },
+      headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), },
       dataSrc: function (json) {
         const processedJson = processScore(json)
         draw_graph(processedJson)

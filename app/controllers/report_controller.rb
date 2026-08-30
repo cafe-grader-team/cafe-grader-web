@@ -4,6 +4,8 @@ class ReportController < ApplicationController
   before_action :check_valid_login
   before_action :selected_problems, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query, :activity_query ]
   before_action :selected_users, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query, :activity_query ]
+  before_action :set_report_empty_hint, only: [ :max_score, :submission, :activity, :ai ]
+  before_action :set_report_scope_help, only: [ :max_score, :submission, :activity, :ai ]
 
   # for all action except hall of fame (which is viewable by any user if the feature is enabled)
   before_action(except: [:problem_hof, :problem_hof_view, :problem_hof_query]) {
@@ -85,6 +87,7 @@ class ReportController < ApplicationController
   end
 
   def login
+    @groups = @current_user.groups_for_action(:report)
   end
 
   def login_summary_query
@@ -93,6 +96,7 @@ class ReportController < ApplicationController
     @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
     record = User
       .left_outer_joins(:logins).group('users.id')
+      .where(logins: { success: true })
       .where("logins.created_at >= ? AND logins.created_at <= ?", @since_time, @until_time)
     case params[:users]
     when 'enabled'
@@ -103,7 +107,7 @@ class ReportController < ApplicationController
 
     record = record.pluck("users.id,users.login,users.full_name,count(logins.created_at),min(logins.created_at),max(logins.created_at)")
     record.each do |user|
-      query = Login.where("user_id = ? AND created_at >= ? AND created_at <= ?", user[0], @since_time, @until_time)
+      query = Login.successful.where("user_id = ? AND created_at >= ? AND created_at <= ?", user[0], @since_time, @until_time)
       ips =  query.pluck(:ip_address).uniq
       cookie = query.pluck(:cookie).uniq
 
@@ -124,13 +128,23 @@ class ReportController < ApplicationController
     @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
     @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
 
-    @logins = Login.includes(:user).where("logins.created_at >= ? AND logins.created_at <= ?", @since_time, @until_time)
+    @logins = Login.successful.includes(:user).where("logins.created_at >= ? AND logins.created_at <= ?", @since_time, @until_time)
     case params[:users]
     when 'enabled'
       @logins = @logins.where(users: {enabled: true})
     when 'group'
       @logins = @logins.joins(user: :groups).where(user: {groups: {id: params[:groups]}}) if params[:groups]
     end
+  end
+
+  def login_failure_query
+    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
+    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+
+    # The user/group filter deliberately does not apply: the interesting
+    # failures (attacks, typo'd logins) mostly match no user at all.
+    @failures = Login.includes(:user).where(success: false)
+      .where("logins.created_at >= ? AND logins.created_at <= ?", @since_time, @until_time)
   end
 
   def submission
@@ -306,7 +320,7 @@ class ReportController < ApplicationController
     @user = User.find(session[:user_id])
 
     # model submission
-    @model_subs = Submission.where(problem: @problem, tag: Submission.tags[:model])
+    @model_subs = Submission.regular.where(problem: @problem, tag: Submission.tags[:model])
 
 
     # calculate best submission
@@ -314,7 +328,7 @@ class ReportController < ApplicationController
 
     @summary = {count: 0, solve: 0, attempt: 0}
     user = Hash.new(0)
-    Submission.where(problem_id: @problem.id).includes(:language).each do |sub|
+    Submission.regular.where(problem_id: @problem.id).includes(:language).each do |sub|
       # histogram
 
       next unless sub.points
@@ -325,6 +339,15 @@ class ReportController < ApplicationController
       lang = sub.language
       next unless lang
       next unless sub.points >= 100
+
+      # Viva submissions are LLM-graded and never run on the judge — source,
+      # max_runtime, and peak_memory all stay nil forever. None of the
+      # competitive code stats below (runtime/memory/shortest-code) apply to
+      # them; without this guard a 100-point viva submission still creates a
+      # @by_lang bucket whose runtime/memory sub-hashes are left at their
+      # "unavailable" defaults (no user_id set), which later crashes the view
+      # when it links to the record holder.
+      next if sub.source.nil?
 
       # initialize
       unless @by_lang.has_key?(lang.pretty_name)
@@ -349,8 +372,12 @@ class ReportController < ApplicationController
         @by_lang[lang.pretty_name][:first] = { avail: true, user_id: sub.user_id, value: sub.submitted_at, sub_id: sub.id }
       end
 
-      if @by_lang[lang.pretty_name][:length][:value] > (sub.source.length || 2**30-1)
-        @by_lang[lang.pretty_name][:length] = { avail: true, user_id: sub.user_id, value: (sub.source.length || 2**30-1), sub_id: sub.id }
+      # sub.source is guaranteed non-nil here (viva submissions, the only
+      # nil-source case, are skipped above). The old
+      # `sub.source.length || 2**30-1` fallback was dead code — `.length`
+      # raises NoMethodError on nil before `||` can substitute a default.
+      if @by_lang[lang.pretty_name][:length][:value] > sub.source.length
+        @by_lang[lang.pretty_name][:length] = { avail: true, user_id: sub.user_id, value: sub.source.length, sub_id: sub.id }
       end
     end
 
@@ -399,7 +426,7 @@ class ReportController < ApplicationController
     tries = 0
     @struggle = Array.new
     record = {}
-    Submission.includes(:problem, :user).order(:problem_id, :user_id).find_each do |sub|
+    Submission.regular.includes(:problem, :user).order(:problem_id, :user_id).find_each do |sub|
       next unless sub.problem and sub.user
       if user != sub.user_id or problem != sub.problem_id
         @struggle << { user: record[:user], problem: record[:problem], tries: tries } unless solve
@@ -421,7 +448,7 @@ class ReportController < ApplicationController
 
   def multiple_login
     # user with multiple IP
-    raw = Submission.joins(:user).joins(:problem).where("problems.available != 0").group("login,ip_address").order(:login)
+    raw = Submission.regular.joins(:user).joins(:problem).where("problems.available != 0").group("login,ip_address").order(:login)
     last, count = 0, 0
     first = 0
     @users = []
@@ -438,7 +465,7 @@ class ReportController < ApplicationController
     end
 
     # IP with multiple user
-    raw = Submission.joins(:user).joins(:problem).where("problems.available != 0").group("login,ip_address").order(:ip_address)
+    raw = Submission.regular.joins(:user).joins(:problem).where("problems.available != 0").group("login,ip_address").order(:ip_address)
     last, count = 0, 0
     first = 0
     @ip = []
@@ -471,7 +498,7 @@ class ReportController < ApplicationController
     end
 
     # multi login
-    @ml = Login.joins(:user).where("logins.created_at >= ? and logins.created_at <= ?", @since_time, @until_time).select('users.login,count(distinct ip_address) as count,users.full_name').group("users.id").having("count > 1")
+    @ml = Login.successful.joins(:user).where("logins.created_at >= ? and logins.created_at <= ?", @since_time, @until_time).select('users.login,count(distinct ip_address) as count,users.full_name').group("users.id").having("count > 1")
 
     st = <<-SQL
   SELECT l2.*
@@ -479,23 +506,23 @@ class ReportController < ApplicationController
     (SELECT u.id,COUNT(DISTINCT ip_address) as count,u.login,u.full_name
       FROM logins l
       INNER JOIN users u ON l.user_id =  u.id
-      WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
+      WHERE l.success = TRUE and l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
       GROUP BY u.id
       HAVING count > 1
     ) ml ON l2.user_id = ml.id
-    WHERE l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
+    WHERE l2.success = TRUE and l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
 UNION
   SELECT l2.*
     FROM logins l2 INNER JOIN
     (SELECT l.ip_address,COUNT(DISTINCT u.id) as count
       FROM logins l
       INNER JOIN users u ON l.user_id =  u.id
-      WHERE l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
+      WHERE l.success = TRUE and l.created_at >= '#{@since_time.in_time_zone("UTC")}' and l.created_at <= '#{@until_time.in_time_zone("UTC")}'
       GROUP BY l.ip_address
       HAVING count > 1
     ) ml on ml.ip_address = l2.ip_address
     INNER JOIN users u ON l2.user_id = u.id
-    WHERE l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
+    WHERE l2.success = TRUE and l2.created_at >= '#{@since_time.in_time_zone("UTC")}' and l2.created_at <= '#{@until_time.in_time_zone("UTC")}'
 ORDER BY ip_address,created_at
               SQL
     @mld = Login.find_by_sql(st)
@@ -506,22 +533,22 @@ ORDER BY ip_address,created_at
     (SELECT u.id,COUNT(DISTINCT ip_address) as count,u.login,u.full_name
       FROM logins l
       INNER JOIN users u ON l.user_id =  u.id
-      WHERE l.created_at >= ? and l.created_at <= ?
+      WHERE l.success = TRUE and l.created_at >= ? and l.created_at <= ?
       GROUP BY u.id
       HAVING count > 1
     ) ml ON s.user_id = ml.id
-    WHERE s.submitted_at >= ? and s.submitted_at <= ?
+    WHERE s.submitted_at >= ? and s.submitted_at <= ? AND s.repaired_from_id IS NULL
 UNION
   SELECT s.id,s.user_id,s.ip_address,s.submitted_at,s.problem_id
     FROM submissions s INNER JOIN
     (SELECT l.ip_address,COUNT(DISTINCT u.id) as count
       FROM logins l
       INNER JOIN users u ON l.user_id =  u.id
-      WHERE l.created_at >= ? and l.created_at <= ?
+      WHERE l.success = TRUE and l.created_at >= ? and l.created_at <= ?
       GROUP BY l.ip_address
       HAVING count > 1
     ) ml on ml.ip_address = s.ip_address
-    WHERE s.submitted_at >= ? and s.submitted_at <= ?
+    WHERE s.submitted_at >= ? and s.submitted_at <= ? AND s.repaired_from_id IS NULL
 ORDER BY ip_address,submitted_at
             SQL
     @subs = Submission.joins(:problem).find_by_sql([st, @since_time, @until_time,
@@ -559,11 +586,11 @@ ORDER BY ip_address,submitted_at
     @st = <<-SQL
   SELECT l.created_at as submitted_at ,-1 as id,u.login,u.full_name,l.ip_address,"" as problem_id,"" as points,l.user_id
   FROM logins l INNER JOIN users u on l.user_id  = u.id
-  WHERE l.created_at >= ? AND l.created_at <= ? AND #{condition}
+  WHERE l.success = TRUE AND l.created_at >= ? AND l.created_at <= ? AND #{condition}
 UNION
   SELECT s.submitted_at,s.id,u.login,u.full_name,s.ip_address,s.problem_id,s.points,s.user_id
   FROM submissions s INNER JOIN users u ON s.user_id = u.id
-  WHERE s.submitted_at >= ? AND s.submitted_at <= ? AND #{condition}
+  WHERE s.submitted_at >= ? AND s.submitted_at <= ? AND #{condition} AND s.repaired_from_id IS NULL
 ORDER BY submitted_at
   SQL
 
@@ -573,18 +600,51 @@ ORDER BY submitted_at
 
   protected
 
+    # Explain an empty report to a non-admin reporter. The report screen is
+    # reachable whenever the user is a reporter/editor of *any* group (the gate
+    # ignores group.enabled), but the data scope (problems_for_action(:report))
+    # additionally requires the problem to be `available` and its group enabled.
+    # So a reporter whose problems are all unavailable / whose group is archived
+    # passes the gate but sees nothing. When that happens, count the problems
+    # that exist in their reporter/editor groups (ignoring those two flags) so
+    # the view can tell them WHY the report is blank instead of showing a silent
+    # empty table. Admins see Problem.all, so they never need the hint.
+    def set_report_empty_hint
+      return if @current_user.admin?
+      return if @current_user.problems_for_action(:report).exists?
+
+      group_ids = @current_user.groups_users.where(enabled: true, role: [ :reporter, :editor ]).pluck(:group_id)
+      @hidden_report_problem_count = Problem.joins(:groups_problems)
+        .where(groups_problems: { group_id: group_ids }).distinct.count
+    end
+
+    # Role-aware scope help for the report filter pages. Access differs per group
+    # (a user may edit some groups and report on others), so the help lists the
+    # actual courses. Editors curate archived courses too, so their list includes
+    # disabled groups (flagged in the drawer); reporters only see live courses, so
+    # theirs is limited to enabled groups. Skipped for admins (scope = everything).
+    def set_report_scope_help
+      return if @current_user.admin?
+      @help_editor_groups = @current_user.groups_users
+        .where(role: :editor, enabled: true).joins(:group)
+        .order('groups.name').pluck('groups.name', 'groups.enabled')
+      @help_reporter_groups = @current_user.groups_users
+        .where(role: :reporter, enabled: true).joins(:group)
+        .where('groups.enabled': true).order('groups.name').pluck('groups.name')
+    end
+
     # receive an ActiveRecord::AAssociation *query* of submissions
     # and add more where clause limiting the submission to be in the
     # rnage specified only
     def submission_in_range(range_params)
       range_params ||= {}
       if range_params[:use] ==  'sub_id'
-        Submission.by_id_range(range_params[:from_id], range_params[:to_id])
+        Submission.regular.by_id_range(range_params[:from_id], range_params[:to_id])
       else
         # use sub time
         since_time = Time.zone.parse(range_params[:from_time]) || Time.zone.now.beginning_of_day rescue Time.zone.now.beginning_of_day
         until_time = Time.zone.parse(range_params[:to_time]) || Time.zone.now.end_of_day rescue Time.zone.now.end_of_day
-        Submission.by_submitted_at(since_time, until_time)
+        Submission.regular.by_submitted_at(since_time, until_time)
       end
     end
 

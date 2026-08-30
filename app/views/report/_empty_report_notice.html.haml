@@ -1,0 +1,11 @@
+-# Shown to a non-admin reporter when their report scope is empty but problems
+-# exist in their group(s), hidden because they're unavailable or the group is
+-# archived. @hidden_report_problem_count is set by ReportController#set_report_empty_hint.
+- count = @hidden_report_problem_count.to_i
+- if count > 0
+  .alert.alert-info.border-0.shadow-sm.mb-3.d-flex.align-items-start.gap-2{role: 'alert'}
+    %span.mi.text-info info
+    %div
+      %div.fw-bold Nothing to report yet
+      %div.small.text-secondary
+        Your group(s) contain #{pluralize(count, 'problem')} that #{count == 1 ? 'is' : 'are'} currently hidden from reports, because the problem is not marked “available” or the group is archived (disabled). Only admins can report on hidden problems — ask an admin to make #{count == 1 ? 'it' : 'them'} available if you expected data here.

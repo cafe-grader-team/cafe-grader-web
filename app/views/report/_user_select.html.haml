@@ -1,19 +1,23 @@
+-# Prefill from the query string (see ReportHelper#report_filter_param);
+-# unknown `use` values fall back to "all" so one radio is always checked.
+- users_use = report_filter_param(:users, :use, default: 'all')
+- users_use = 'all' unless %w[all enabled group].include?(users_use)
 .card.shadow-sm.mb-2{data: {controller: 'form--filter-user', action: 'change->form--filter-user#filterChanged'}}
   .card-body
     %h6.fw-bold.mb-3.d-flex.align-items-center
       %span.mi.me-2.text-secondary group
       Users
     .form-check.mb-2
-      = radio_button_tag :'users[use]', :all, true, class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
+      = radio_button_tag :'users[use]', :all, users_use == 'all', class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
       = label_tag :users_use_all, 'All Users', class: 'form-check-label'
     .form-check.mb-2
-      = radio_button_tag :'users[use]', :enabled, false, class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
+      = radio_button_tag :'users[use]', :enabled, users_use == 'enabled', class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
       = label_tag :users_use_enabled, 'Only enabled users', class: 'form-check-label'
     .form-check.mb-2
-      = radio_button_tag :'users[use]', :group, false, class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
+      = radio_button_tag :'users[use]', :group, users_use == 'group', class: 'form-check-input', data: {'form--filter-user-target': 'useOption'}
       = label_tag :users_use_group, 'Only users from this group', class: 'form-check-label'
     .ms-4.mb-3
-      = select_tag "users[group_ids]", options_from_collection_for_select( Group.all.order('id DESC'), 'id','name',params[:group_id]),
+      = select_tag "users[group_ids]", options_for_select(@groups.order('id DESC').map { |g| [g.name, g.id, { 'data-archived' => (!g.enabled).to_s }] }, report_filter_param(:users, :group_ids)),
         class: 'select2', style: 'width: 100%', data: {'form--filter-user-target': 'groupSelect'};
     .form-check
       %input#only-users.form-check-input{type: 'checkbox', name: 'users[only_users]', checked: true, data: {'form--filter-user-target': 'onlyUsers'}}

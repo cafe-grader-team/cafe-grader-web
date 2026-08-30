@@ -3,6 +3,12 @@
   requires 
     testcases, which should be @submission.problem.live_dataset.testcases.order(:group, :num)
     evaluations_by_tcid, which should be Evaluation.where(submission: @submission, testcase: @testcases.ids).index_by(&:testcase_id)
+- groups = testcases.pluck(:group_name)
+-# one-line key for the shaded group blocks below; same idea as the legend
+-# popover on the main list (main/_result_legend)
+- if groups.tally.values.any? { |n| n > 1 }
+  %p.small.text-secondary.mb-2
+    Tests in the same shaded block are scored together — the block earns the lowest score inside it.
 -# header row
 .alert.my-0.py-0
   .row
@@ -19,7 +25,6 @@
     .col.text-end
       %strong Weight
 -# body row
-- groups = testcases.pluck(:group_name)
 - raw_sum_mode = testcases.first&.dataset&.st_raw_sum?
 - group_count, group_min, group_weight = 0,0,0
 - testcases.each.with_index do |tc,idx|

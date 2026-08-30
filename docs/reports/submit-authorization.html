@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Can Submit?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f4f7f7;
+    --surface: #ffffff;
+    --surface-2: #eef3f3;
+    --ink: #1d2a2c;
+    --muted: #5d6f72;
+    --line: #d7e0e0;
+    --line-strong: #b7c6c6;
+    --accent: #0f766e;
+    --accent-ink: #0b5a54;
+    --allow: #15803d;
+    --allow-bg: #e5f3ea;
+    --deny: #b91c1c;
+    --deny-bg: #f9ecec;
+    --deny-dim: #a05252;
+    --warn: #b45309;
+    --warn-bg: #fdf1de;
+    --warn-line: #e5b96f;
+    --code-bg: #eef3f3;
+    --dead: #8b3a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101718;
+      --surface: #182022;
+      --surface-2: #1f2a2c;
+      --ink: #dbe7e7;
+      --muted: #8fa4a6;
+      --line: #2a3739;
+      --line-strong: #3b4c4e;
+      --accent: #3fb8ad;
+      --accent-ink: #5accc2;
+      --allow: #4ade80;
+      --allow-bg: #16321f;
+      --deny: #f47272;
+      --deny-bg: #3a1d1d;
+      --deny-dim: #9c6b6b;
+      --warn: #f0a848;
+      --warn-bg: #38290f;
+      --warn-line: #7a5a1f;
+      --code-bg: #1f2a2c;
+      --dead: #e08a8a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101718;
+    --surface: #182022;
+    --surface-2: #1f2a2c;
+    --ink: #dbe7e7;
+    --muted: #8fa4a6;
+    --line: #2a3739;
+    --line-strong: #3b4c4e;
+    --accent: #3fb8ad;
+    --accent-ink: #5accc2;
+    --allow: #4ade80;
+    --allow-bg: #16321f;
+    --deny: #f47272;
+    --deny-bg: #3a1d1d;
+    --deny-dim: #9c6b6b;
+    --warn: #f0a848;
+    --warn-bg: #38290f;
+    --warn-line: #7a5a1f;
+    --code-bg: #1f2a2c;
+    --dead: #e08a8a;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 28px 90px; }
+  .prose { max-width: 72ch; }
+
+  h1, h2, h3 { font-family: "Archivo", "Segoe UI", system-ui, sans-serif; text-wrap: balance; }
+  h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.015em; margin: 6px 0 10px; }
+  h2 { font-size: 1.35rem; font-weight: 650; margin: 0 0 14px; letter-spacing: -0.005em; }
+  h3 { font-size: 1.02rem; font-weight: 600; margin: 0 0 8px; }
+  section { margin-top: 58px; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .lede { color: var(--muted); max-width: 72ch; margin: 0; font-size: 1.06rem; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 22px;
+    margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line);
+    font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; color: var(--muted);
+  }
+  .meta b { color: var(--ink); font-weight: 500; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.86em;
+  }
+  code {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.08em 0.35em;
+    white-space: nowrap;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    margin: 12px 0 0;
+  }
+  pre code { background: none; border: none; padding: 0; white-space: pre; }
+
+  /* ---------- method chips ---------- */
+  .chips-grid { display: grid; grid-template-columns: 108px 1fr; gap: 10px 16px; align-items: baseline; margin-top: 6px; }
+  .chips-grid .lbl {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); padding-top: 4px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 12px; font-size: 0.83rem; white-space: nowrap;
+  }
+  .chip b { font-weight: 600; }
+  .chip small { color: var(--muted); font-size: 0.9em; }
+
+  /* ---------- gate map ---------- */
+  .gatemap { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+  .lane {
+    display: grid; grid-template-columns: 200px 1fr; gap: 0 18px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; align-items: center;
+  }
+  .lane-name { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 0.92rem; }
+  .lane-name small { display: block; font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.83rem; }
+  .gate {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.76rem;
+    border: 1px solid var(--line-strong); border-radius: 6px; padding: 4px 10px;
+    background: var(--surface-2);
+  }
+  .gate.hard { border-color: var(--accent); color: var(--accent-ink); font-weight: 500; }
+  .gate.dead {
+    border-style: dashed; border-color: var(--dead); color: var(--dead);
+    text-decoration: line-through; text-decoration-thickness: 1px;
+  }
+  .flow .arr { color: var(--muted); font-size: 0.8rem; }
+  .gate-note { font-size: 0.78rem; color: var(--muted); margin-top: 10px; max-width: 80ch; }
+  .gate-note .dead-key { color: var(--dead); }
+
+  /* ---------- matrices ---------- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+  thead th {
+    font-family: "Archivo", sans-serif; font-size: 0.74rem; letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 600; color: var(--muted);
+    padding: 11px 12px; border-bottom: 1px solid var(--line-strong);
+    text-align: center; white-space: nowrap; background: var(--surface-2);
+  }
+  thead th small { display: block; font-family: "IBM Plex Mono", monospace; font-size: 0.85em; text-transform: none; letter-spacing: 0; font-weight: 400; margin-top: 2px; }
+  thead th.actor-h, thead th.prob-h { text-align: left; }
+  tbody td { padding: 7px 12px; border-bottom: 1px solid var(--line); text-align: center; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.actor {
+    font-family: "Archivo", sans-serif; font-weight: 600; font-size: 0.88rem;
+    text-align: left; vertical-align: top; padding-top: 12px;
+    border-right: 1px solid var(--line); white-space: nowrap;
+  }
+  td.actor small { display: block; font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  td.prob { text-align: left; white-space: nowrap; font-size: 0.84rem; }
+  td.prob .flags { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; color: var(--muted); display: block; }
+  tr.actor-start td { border-top: 1px solid var(--line-strong); }
+
+  .pill {
+    display: inline-block; min-width: 44px; padding: 1px 9px; border-radius: 999px;
+    font-family: "IBM Plex Mono", monospace; font-size: 0.76rem; font-weight: 600;
+    line-height: 1.7;
+  }
+  .ok   { background: var(--allow-bg); color: var(--allow); }
+  .no   { background: transparent; color: var(--deny-dim); font-weight: 400; }
+  .anom { background: var(--warn-bg); color: var(--warn); outline: 1px solid var(--warn-line); }
+  sup.f { font-size: 0.68rem; }
+  sup.f a { color: var(--warn); text-decoration: none; font-weight: 600; }
+  sup.f a:hover, sup.f a:focus-visible { text-decoration: underline; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 2px 0; font-size: 0.8rem; color: var(--muted); align-items: center; }
+  .legend .pill { min-width: 34px; }
+
+  /* ---------- findings ---------- */
+  .finding {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--warn);
+    border-radius: 8px; padding: 18px 22px; margin-top: 14px; max-width: 86ch;
+  }
+  .finding.info { border-left-color: var(--accent); }
+  .finding h3 { display: flex; gap: 10px; align-items: baseline; }
+  .finding h3 .fid {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; font-weight: 600;
+    color: var(--warn); flex-shrink: 0;
+  }
+  .finding.info h3 .fid { color: var(--accent); }
+  .finding p { margin: 8px 0 0; max-width: 78ch; }
+  .finding .where { font-family: "IBM Plex Mono", monospace; font-size: 0.74rem; color: var(--muted); margin-top: 10px; }
+
+  /* ---------- rules ---------- */
+  .rules { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .rule {
+    display: grid; grid-template-columns: 190px 1fr; gap: 16px; align-items: baseline;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 18px;
+  }
+  .rule .who { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 0.9rem; }
+  .rule .expr { font-family: "IBM Plex Mono", monospace; font-size: 0.8rem; line-height: 1.8; }
+  .rule .expr .op { color: var(--accent); font-weight: 600; }
+  .rule .expr small { color: var(--muted); }
+
+  /* ---------- coverage ---------- */
+  .cover { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .cover-col { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; }
+  .cover-col h3 { font-size: 0.92rem; }
+  .cover-col.have h3 { color: var(--allow); }
+  .cover-col.gap h3 { color: var(--deny); }
+  .cover-col ul { margin: 10px 0 0; padding-left: 18px; }
+  .cover-col li { margin-top: 8px; font-size: 0.92rem; }
+  .cover-col li code { font-size: 0.78rem; }
+
+  ol.decisions { max-width: 80ch; padding-left: 22px; }
+  ol.decisions li { margin-top: 12px; }
+
+  a { color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  @media (max-width: 760px) {
+    h1 { font-size: 1.9rem; }
+    .lane, .rule { grid-template-columns: 1fr; gap: 8px; }
+    .cover { grid-template-columns: 1fr; }
+    .chips-grid { grid-template-columns: 1fr; gap: 4px 0; }
+    .chips-grid .lbl { padding-top: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="border:1px solid var(--line); border-left:3px solid var(--warn); border-radius:8px; background:var(--surface); padding:10px 16px; margin-bottom:26px; font-size:0.88rem;">
+  <b style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--warn);">Developer report</b>
+  <span style="color:var(--muted)"> — user-facing docs live on the
+  <a href="https://github.com/cafe-grader-team/cafe-grader-web/wiki/Users-Roles-and-Access-Control">wiki</a> and in the
+  <a href="../guide/authorization.html">visual guide</a>.</span>
+</div>
+
+<header>
+  <div class="eyebrow">cafe-grader · authorization audit · normal mode</div>
+  <h1>Who Can Submit?</h1>
+  <p class="lede">The as-is submission-authorization matrix, measured by driving every user category through every
+    entry point with a real HTTP integration probe — not read off the code. Contest mode is a later pass.</p>
+  <div class="meta">
+    <span>probe <b>test/integration/authz_submit_probe_test.rb</b></span>
+    <span>run <b>2026-08-22</b> · 2 tests green</span>
+    <span>mode <b>system.mode=standard</b>, both values of <b>use_problem_group</b></span>
+  </div>
+</header>
+
+<section id="method">
+  <h2>What was driven</h2>
+  <div class="chips-grid">
+    <div class="lbl">Actors</div>
+    <div class="chips">
+      <span class="chip"><b>admin</b> <small>pure — group membership removed</small></span>
+      <span class="chip"><b>editor</b> <small>mary, role=editor in group_a</small></span>
+      <span class="chip"><b>reporter</b> <small>reba, role=reporter in group_a</small></span>
+      <span class="chip"><b>member</b> <small>john, role=user in group_a</small></span>
+      <span class="chip"><b>no-group</b> <small>jack, in no group</small></span>
+    </div>
+    <div class="lbl">Problems</div>
+    <div class="chips">
+      <span class="chip"><b>A</b> available · in enabled group · <small>gp.enabled=true</small></span>
+      <span class="chip"><b>B</b> available · in enabled group · <small>gp.enabled=false</small></span>
+      <span class="chip"><b>C</b> draft (available=false) · in group</span>
+      <span class="chip"><b>D</b> available · in no group</span>
+    </div>
+    <div class="lbl">Entry points</div>
+    <div class="chips">
+      <span class="chip">manage page <small>GET /problems</small></span>
+      <span class="chip">new page <small>GET direct_edit_problem</small></span>
+      <span class="chip">web submit <small>POST /main/submit</small></span>
+      <span class="chip">edit page <small>GET /submissions/:id/edit</small></span>
+      <span class="chip">API submit <small>POST /api/v1/problems/:id/submissions</small></span>
+    </div>
+  </div>
+  <p class="gate-note">Success means a <code>Submission</code> row was actually created (web) or HTTP 201 (API) — not
+    just a 200 page. On top of the fixture data, every <code>contests_problems</code> row was flipped to
+    <code>enabled=false</code> before both runs; the matrices below were unchanged by it (<a href="#f4">F4</a>).</p>
+</section>
+
+<section id="gates">
+  <h2>Where the gates actually are</h2>
+  <div class="gatemap">
+    <div class="lane">
+      <div class="lane-name">Web pages<small>New / Edit buttons · manage “Submit”</small></div>
+      <div class="flow">
+        <span class="gate">login session</span><span class="arr">→</span>
+        <span class="gate hard">can_view_problem (:report ∪ :submit)</span><span class="arr">→</span>
+        <span>renders the code editor</span><span class="arr">→</span>
+        <span>form posts to <code>/main/submit</code></span>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-name">Web submit<small>POST /main/submit</small></div>
+      <div class="flow">
+        <span class="gate">login session</span><span class="arr">→</span>
+        <span class="gate hard">problem ∈ :submit ∪ :edit</span><span class="arr">→</span>
+        <span class="gate dead">model validation</span><span class="arr">→</span>
+        <span>save + judge job</span>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-name">API submit<small>POST /api/v1/problems/:id/submissions</small></div>
+      <div class="flow">
+        <span class="gate">JWT bearer</span><span class="arr">→</span>
+        <span class="gate hard">problem ∈ :submit only</span><span class="arr">→</span>
+        <span class="gate dead">model validation</span><span class="arr">→</span>
+        <span>save + judge job</span>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-name">Manage page<small>GET /problems (its Submit button → web lane)</small></div>
+      <div class="flow">
+        <span class="gate">login session</span><span class="arr">→</span>
+        <span class="gate hard">admin ∨ editor of ≥1 group</span><span class="arr">→</span>
+        <span>page only — grants no extra submit right</span>
+      </div>
+    </div>
+  </div>
+  <p class="gate-note"><span class="dead-key">Struck-through</span> = <code>Submission#must_have_valid_problem</code>,
+    which is a silent no-op on this Rails version (<a href="#f2">F2</a>). The teal controller checks are the only
+    enforcement that exists. <code>:submit</code> / <code>:edit</code> / <code>:report</code> refer to
+    <code>User#problems_for_action</code>; admins bypass every gate.</p>
+</section>
+
+<section id="matrix-on">
+  <h2>Matrix — group mode ON <span class="mono" style="font-weight:400;color:var(--muted);font-size:0.8rem">(use_problem_group=true)</span></h2>
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="actor-h">Actor</th>
+        <th class="prob-h">Problem</th>
+        <th>Manage pg<small>GET /problems</small></th>
+        <th>New pg<small>direct_edit</small></th>
+        <th>Web submit<small>POST /main/submit</small></th>
+        <th>Edit pg<small>own submission</small></th>
+        <th>API submit<small>POST …/submissions</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="actor-start">
+        <td class="actor" rowspan="4">admin<small>role: admin</small></td>
+        <td class="prob">A · available + in group</td>
+        <td rowspan="4"><span class="pill ok">✓</span></td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td>
+      </tr>
+      <tr><td class="prob">B · available, gp.enabled=false</td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td></tr>
+      <tr><td class="prob">C · draft, in group</td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td></tr>
+      <tr><td class="prob">D · available, no group</td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td></tr>
+
+      <tr class="actor-start">
+        <td class="actor" rowspan="4">editor<small>mary · group_a</small></td>
+        <td class="prob">A · available + in group</td>
+        <td rowspan="4"><span class="pill ok">✓</span></td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td>
+      </tr>
+      <tr><td class="prob">B · available, gp.enabled=false</td>
+        <td><span class="pill ok">✓</span></td>
+        <td><span class="pill anom">✓ saves</span><sup class="f"><a href="#f1">F1</a></sup></td>
+        <td><span class="pill ok">✓</span></td>
+        <td><span class="pill anom">✗ 403</span><sup class="f"><a href="#f1">F1</a></sup></td></tr>
+      <tr><td class="prob">C · draft, in group</td>
+        <td><span class="pill ok">✓</span></td>
+        <td><span class="pill anom">✓ saves</span><sup class="f"><a href="#f1">F1</a></sup></td>
+        <td><span class="pill ok">✓</span></td>
+        <td><span class="pill anom">✗ 403</span><sup class="f"><a href="#f1">F1</a></sup></td></tr>
+      <tr><td class="prob">D · available, no group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+
+      <tr class="actor-start">
+        <td class="actor" rowspan="4">reporter<small>reba · group_a</small></td>
+        <td class="prob">A · available + in group</td>
+        <td rowspan="4"><span class="pill no">✗</span></td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td>
+      </tr>
+      <tr><td class="prob">B · available, gp.enabled=false</td>
+        <td><span class="pill anom">✓ page</span><sup class="f"><a href="#f3">F3</a></sup></td>
+        <td><span class="pill anom">✗</span><sup class="f"><a href="#f3">F3</a></sup></td>
+        <td><span class="pill anom">✓ page</span><sup class="f"><a href="#f3">F3</a></sup></td>
+        <td><span class="pill no">✗ 403</span></td></tr>
+      <tr><td class="prob">C · draft, in group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+      <tr><td class="prob">D · available, no group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+
+      <tr class="actor-start">
+        <td class="actor" rowspan="4">member<small>john · group_a</small></td>
+        <td class="prob">A · available + in group</td>
+        <td rowspan="4"><span class="pill no">✗</span></td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓ 201</span></td>
+      </tr>
+      <tr><td class="prob">B · available, gp.enabled=false</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+      <tr><td class="prob">C · draft, in group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+      <tr><td class="prob">D · available, no group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+
+      <tr class="actor-start">
+        <td class="actor" rowspan="4">no-group<small>jack</small></td>
+        <td class="prob">A · available + in group</td>
+        <td rowspan="4"><span class="pill no">✗</span></td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td>
+      </tr>
+      <tr><td class="prob">B · available, gp.enabled=false</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+      <tr><td class="prob">C · draft, in group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+      <tr><td class="prob">D · available, no group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗</span></td><td><span class="pill no">✗ 403</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="legend">
+    <span><span class="pill ok">✓</span> allowed (submission created / page rendered)</span>
+    <span><span class="pill no">✗</span> denied (redirect + alert, or 403)</span>
+    <span><span class="pill anom">✓/✗</span> anomaly — see finding</span>
+  </div>
+</section>
+
+<section id="matrix-off">
+  <h2>Matrix — group mode OFF <span class="mono" style="font-weight:400;color:var(--muted);font-size:0.8rem">(use_problem_group=false)</span></h2>
+  <p class="prose">Groups, membership roles, and both join-table <code>enabled</code> flags become completely inert.
+    Problems A, B, D all behave identically as “an available problem.” Only two rules remain:</p>
+  <div class="tablewrap" style="max-width:860px">
+  <table>
+    <thead>
+      <tr>
+        <th class="actor-h">Actor</th>
+        <th>Manage pg</th>
+        <th>Any available problem<small>all web + API routes</small></th>
+        <th>Draft problem<small>available=false</small></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="actor-start"><td class="actor">admin</td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td></tr>
+      <tr class="actor-start"><td class="actor">editor<small>still an editor of group_a</small></td>
+        <td><span class="pill ok">✓</span></td><td><span class="pill ok">✓</span></td><td><span class="pill no">✗</span></td></tr>
+      <tr class="actor-start"><td class="actor">reporter / member / no-group</td>
+        <td><span class="pill no">✗</span></td><td><span class="pill ok">✓</span></td><td><span class="pill no">✗</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="gate-note">The editor keeps the manage page even here — <code>group_editor_authorization</code> checks
+    group membership rows directly and deliberately ignores <code>use_problem_group</code>. But their draft-submit
+    privilege disappears: in this mode <code>problems_for_action(:edit)</code> is <code>Problem.none</code> for
+    non-admins, so the <code>:edit</code> OR in the web submit has nothing to match.</p>
+</section>
+
+<section id="findings">
+  <h2>Findings</h2>
+
+  <div class="finding info">
+    <h3><span class="fid">STATUS</span>Resolved at rev 1996 (2026-08-22) — findings kept below as the audit record</h3>
+    <p>The intended design was confirmed: <em>the running web app is authoritative</em>, and the editor
+      test-submit (F1) is a feature. All layers now share one predicate, <code>User#can_submit_to_problem?</code>:
+      the API honors the editor test-submit (F1), the model validation is resurrected on the shared gate with
+      the binary-skip hole closed (F2), and the reporter's dead-end submit form is now a view-only page (F3).
+      Two follow-up decisions also landed in rev 1996: a <em>disabled membership row grants no role</em>
+      (previously a disabled editor kept problem-level powers and a disabled reporter kept sight — an axis this
+      report did not originally drive), and viva start uses the same gate (viva authorization matches normal
+      problems). Regression tests: <code>test/models/submission_authorization_lock_test.rb</code>,
+      <code>test/integration/submission_view_only_test.rb</code>.</p>
+  </div>
+
+  <div class="finding" id="f1">
+    <h3><span class="fid">F1</span>Editors can web-submit to hidden problems — but the API refuses the same action</h3>
+    <p><code>main#submit</code> accepts a problem in <code>:submit</code> <em>or</em> <code>:edit</code>, and the
+      editor’s <code>:edit</code> scope ignores <code>available</code>, <code>group.enabled</code>, and
+      <code>groups_problems.enabled</code>. So an editor can submit-and-save to a draft (C) or group-disabled (B)
+      problem from the browser — plausibly intended, “editor tests their own draft.” The API checks only
+      <code>:submit</code> and returns 403 for the identical request. One of the two is wrong; decide the intent,
+      then align the other side.</p>
+    <div class="where">main_controller.rb:57 (<code>:submit ∪ :edit</code>) · api/v1/submissions_controller.rb:53 (<code>:submit</code> only)</div>
+  </div>
+
+  <div class="finding" id="f2">
+    <h3><span class="fid">F2</span>The model-level authorization validation is a silent no-op</h3>
+    <p><code>Submission#must_have_valid_problem</code> guards non-admin submits with
+      <code>errors[:base] &lt;&lt; "Authorization error…"</code>. On Rails ≥ 6.1, <code>errors[:base]</code> returns a
+      throwaway array — the shovel adds nothing. Verified directly: 0 errors after <code>&lt;&lt;</code>, 1 after
+      <code>errors.add</code>. The matrix confirms it: the editor’s draft submit saved even though the problem is not
+      in their <code>:submit</code> scope. Today every route happens to be covered by controller checks, so nothing
+      exploitable surfaced — but the intended last line of defense is dead, and any future code path that saves a
+      <code>Submission</code> directly gets no protection. The same method also returns early when
+      <code>source</code> is nil, so binary submissions were always exempt. Note: fixing it naïvely to
+      <code>errors.add</code> would break the F1 web path unless the check also accepts <code>:edit</code>.</p>
+    <pre><code># app/models/submission.rb:401 — never fires
+errors[:base] &lt;&lt; "Authorization error: you have no right to submit to this problem" \
+  if (!self.user.problems_for_action(:submit).include?(self.problem)) and (self.new_record?)</code></pre>
+    <div class="where">submission.rb:392–403 · verified with ActiveModel::Errors in rails runner</div>
+  </div>
+
+  <div class="finding" id="f3">
+    <h3><span class="fid">F3</span>Reporters see a live code editor for group-disabled problems, but every submit fails</h3>
+    <p>The reporter scope deliberately ignores <code>groups_problems.enabled</code> (“a problem disabled within a
+      group is a student-only hide; staff still report”). Since page access is gated on
+      <code>:report ∪ :submit</code>, a reporter can open the New page and their own past submissions for problem B —
+      the full editor UI with a Submit button — yet the POST always bounces (“not available for you”) and the API
+      403s. Consistent with the visibility intent, but the UI presents an action that can never succeed. Drafts (C)
+      are different: the reporter scope requires <code>available=true</code>, so those are fully hidden.</p>
+    <div class="where">problem.rb:115–128 (reporter scope) · user.rb:436 (can_view_problem?)</div>
+  </div>
+
+  <div class="finding info" id="f4">
+    <h3><span class="fid">F4</span>contests_problems.enabled is inert in normal mode — proven, not assumed</h3>
+    <p>Both matrix runs executed with <em>every</em> <code>contests_problems</code> row flipped to
+      <code>enabled=false</code> (fixtures place problems A and D inside contests). Every cell was identical to the
+      earlier run with the flags on. The normal-mode branch of <code>problems_for_action</code> never consults contest
+      tables; this flag belongs on the contest-mode matrix, in the later pass.</p>
+    <div class="where">user.rb:110–129 (normal-mode branch) · probe setup: ContestProblem.update_all(enabled: false)</div>
+  </div>
+
+  <div class="finding info">
+    <h3><span class="fid">F5</span>Role never matters for submitting — only membership does</h3>
+    <p><code>group_submittable_by_user</code> has no role condition: editor, reporter, and plain member all submit
+      under exactly the same rule (enabled membership × available × group.enabled × gp.enabled). The reporter and
+      editor roles only add powers on top; they never restrict.</p>
+    <div class="where">problem.rb:92–100</div>
+  </div>
+</section>
+
+<section id="rules">
+  <h2>The rules, compressed</h2>
+  <div class="rules">
+    <div class="rule"><div class="who">admin</div>
+      <div class="expr">always, everywhere <small>— every gate short-circuits on admin?</small></div></div>
+    <div class="rule"><div class="who">any group member<br><span class="mono" style="font-weight:400;font-size:0.72rem;color:var(--muted)">(user / reporter / editor)</span></div>
+      <div class="expr">user.enabled <span class="op">∧</span> membership.enabled <span class="op">∧</span> group.enabled <span class="op">∧</span> groups_problems.enabled <span class="op">∧</span> problem.available</div></div>
+    <div class="rule"><div class="who">editor extra<br><span class="mono" style="font-weight:400;font-size:0.72rem;color:var(--muted)">(web submit only)</span></div>
+      <div class="expr"><span class="op">∨</span> role=editor in any group containing the problem <small>— no flags consulted; API does not honor this (F1)</small></div></div>
+    <div class="rule"><div class="who">group mode OFF</div>
+      <div class="expr">user.enabled <span class="op">∧</span> problem.available <small>— membership, roles, and all join flags inert</small></div></div>
+    <div class="rule"><div class="who">model layer</div>
+      <div class="expr">enforces nothing <small>— dead validation (F2); controllers are the only gates</small></div></div>
+  </div>
+</section>
+
+<section id="coverage">
+  <h2>Test coverage today</h2>
+  <div class="cover">
+    <div class="cover-col have">
+      <h3>Already covered</h3>
+      <ul>
+        <li><code>test/models/user_authorization_test.rb</code> — ~50 tests on <code>problems_for_action</code> across standard/group/contest modes, plus all the <code>can_*?</code> predicates</li>
+        <li><code>test/models/problem_scope_authorization_test.rb</code> — editor-vs-reporter scope semantics (drafts, archived groups)</li>
+        <li><code>test/integration/authorization_test.rb</code> — GET-page access: direct_edit in standard-no-group + contest modes, manage-page gating, submission viewing</li>
+        <li>API: outsider → group problem → 403 (<code>authorization_spec.rb</code>); token/lockdown sweep; one 201 happy path + 422 (<code>submissions_spec.rb</code>)</li>
+        <li>One happy-path admin web submit (<code>main_controller_test.rb:32</code>)</li>
+      </ul>
+    </div>
+    <div class="cover-col gap">
+      <h3>Gaps — nothing tests these</h3>
+      <ul>
+        <li><b>No denial test for <code>POST /main/submit</code> at all</b> — the actual mutating endpoint; all existing web tests stop at the GET pages</li>
+        <li>The editor <code>:edit</code>-OR web path (F1) — the web/API asymmetry is invisible to the suite</li>
+        <li>Reporter/editor submitting as ordinary members (F5)</li>
+        <li><code>must_have_valid_problem</code> — zero tests, which is why the dead validation (F2) went unnoticed</li>
+        <li>API group-mode-ON positives (member/reporter/editor → 201) and draft/group-disabled → 403</li>
+        <li><code>groups_problems.enabled=false</code> at the HTTP level (member hidden, reporter page-not-submit)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <h2>Open decisions</h2>
+  <ol class="decisions">
+    <li><b>Pick the intended semantics for editor submits to hidden problems</b> (F1): if “editor tests their own
+      draft” is intended, add <code>:edit</code> to the API check; if not, drop it from <code>main#submit</code>.</li>
+    <li><b>Resurrect the model validation</b> (F2) with <code>errors.add(:base, …)</code>, matching whichever
+      semantics decision (1) lands on — and decide whether binary (<code>source</code>-less) submissions should keep
+      their exemption.</li>
+    <li><b>Promote the probe into permanent tests</b> — at minimum: denial tests for <code>POST /main/submit</code>,
+      the F1 pair (web ✓ / API behavior), and the F3 reporter row. The probe file already exercises all of them.</li>
+    <li><b>Contest-mode pass</b> — same driver, third test method; that is where
+      <code>contests_problems.enabled</code>, contest windows, and per-user time offsets enter.</li>
+  </ol>
+</section>
+
+</div>
+</body>
+</html>

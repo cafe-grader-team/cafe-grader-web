@@ -46,9 +46,10 @@
                 .text-secondary.small Score
 
       -# Background-Workers Card: single landing for "is anything else
-      -# broken right now?" Surfaces Solid Queue failures and stuck viva
-      -# turns — both invisible to the judge-job machinery above, but
-      -# operators need to see them in the same glance.
+      -# broken right now?" Surfaces Solid Queue failures, stuck viva
+      -# turns, and examiner-flagged viva alerts (design D3) — all
+      -# invisible to the judge-job machinery above, but operators need
+      -# to see them in the same glance.
       .card.shadow-sm.mb-4
         .card-body
           .d-flex.align-items-start.mb-3
@@ -60,14 +61,18 @@
               .text-secondary.small Solid Queue + LLM job health
 
           .row.g-3
-            .col-6
+            .col-4
               = link_to queues_grader_processes_path(status: 'failed'), class: 'card border-0 bg-danger-subtle text-center p-3 rounded-3 text-decoration-none' do
                 .fw-bold.h3.mb-1.text-danger-emphasis= @sq_failed_count
                 .text-secondary.small Solid Queue failures
-            .col-6
+            .col-4
               = link_to stuck_viva_turns_grader_processes_path, class: 'card border-0 bg-warning-subtle text-center p-3 rounded-3 text-decoration-none' do
                 .fw-bold.h3.mb-1.text-warning-emphasis= @stuck_viva_count
-                .text-secondary.small Stuck viva turns
+                .text-secondary.small Stuck viva items
+            .col-4
+              = link_to viva_alerts_grader_processes_path, class: 'card border-0 bg-danger-subtle text-center p-3 rounded-3 text-decoration-none' do
+                .fw-bold.h3.mb-1.text-danger-emphasis= @viva_alert_count
+                .text-secondary.small Viva alerts
 
       - if @error_jobs&.any?
         .card.shadow-sm.border-start.border-4.border-danger.mb-4
@@ -174,8 +179,7 @@
                   %td= ("" unless sub.problem) || link_to(sub.try(:problem).try(:full_name), stat_problem_path(sub.problem.id), class: 'text-decoration-none')
                   %td.text-secondary.small= "#{time_ago_in_words(sub.submitted_at)} ago"
                   %td.text-secondary.small= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : ""
-                  %td
-                    %span.font-monospace.small= sub.grader_comment
+                  %td= grader_comment_strip(sub.grader_comment)
 
       -# Ungraded Submissions Card
       - if @backlog_submission.any?
@@ -208,5 +212,4 @@
                     %td= ("" unless sub.problem) || link_to(sub.try(:problem).try(:full_name), stat_problem_path(sub.problem.id), class: 'text-decoration-none')
                     %td.text-secondary.small= "#{time_ago_in_words(sub.submitted_at)} ago"
                     %td.text-secondary.small= sub.graded_at ? "#{time_ago_in_words(sub.graded_at)} ago" : ""
-                    %td
-                      %span.font-monospace.small= sub.grader_comment
+                    %td= grader_comment_strip(sub.grader_comment)

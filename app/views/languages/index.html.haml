@@ -34,7 +34,7 @@
         url: "#{index_query_languages_path}",
         type: 'POST',
         headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
         },
       },
       rowId: 'id',

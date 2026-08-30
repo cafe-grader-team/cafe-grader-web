@@ -1,0 +1,82 @@
+-# Role-aware scope help for the report filter pages (shared by max_score /
+-# submission / activity / ai). Row 1 is the always-visible role line + drawer
+-# trigger; row 2 keeps the generic "select filters, then Refresh" hint. The
+-# full course breakdown + the switch legend live in the offcanvas drawer.
+-# Locals: refresh_hint (optional) — page-specific usage-hint text.
+- drawer_id = 'report-scope-help'
+- admin = @current_user.admin?
+- editor_pairs = @help_editor_groups || []
+- editor_names = editor_pairs.map(&:first)
+- reporter_names = @help_reporter_groups || []
+- has_editor = editor_names.any?
+- has_reporter = reporter_names.any?
+
+.d-flex.flex-column.gap-1.mb-3
+  .d-flex.align-items-start.gap-2.small
+    %span.mi.md-18.text-secondary.mt-1 badge
+    .flex-grow-1.text-secondary
+      - if admin
+        %span.fw-semibold.text-body Admin
+        — every group, problem, and user; no role limits apply here.
+      - elsif has_editor && has_reporter
+        %span.fw-semibold.text-body Editor
+        of #{pluralize(editor_names.size, 'course')} ·
+        %span.fw-semibold.text-body reporter
+        of #{reporter_names.size} — your access varies by course.
+      - elsif has_editor
+        %span.fw-semibold.text-body Editor
+        — full access, including archived courses, in
+        = report_capped_names(editor_names, drawer_id: drawer_id)
+      - elsif has_reporter
+        %span.fw-semibold.text-body Reporter
+        — live courses only:
+        = report_capped_names(reporter_names, drawer_id: drawer_id)
+      - else
+        You currently have no courses to report on.
+    %button.btn.btn-sm.bg-white.shadow-sm.border-0.text-secondary.d-inline-flex.align-items-center.gap-1.flex-shrink-0{type: 'button', data: {bs_toggle: 'offcanvas', bs_target: "##{drawer_id}"}}
+      %span.mi.md-18 help_outline
+      What you can see
+  .d-flex.align-items-center.text-secondary.small
+    %span.mi.md-18.me-1 sync
+    = local_assigns[:refresh_hint] || 'Select filters above, then click Refresh to load data.'
+
+  -# ---- offcanvas: full role-aware breakdown (shared help-drawer chrome) ----
+  = render layout: 'shared/help_drawer', locals: { id: drawer_id, title: 'What you can see', subtitle: 'Your access to this report, by role.' } do
+    - if admin
+      %p.small As an admin you see every group, problem, and user — no role or availability limits apply here.
+    - else
+      - if has_editor
+        %section.mb-4
+          %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Courses you edit
+          %p.small.text-secondary.mb-2 Full access — including archived courses and unavailable/draft problems.
+          %ul.small.mb-0
+            - editor_pairs.each do |name, enabled|
+              %li
+                = name
+                - unless enabled
+                  %span.badge.bg-secondary-subtle.text-secondary.border.border-secondary-subtle.rounded-pill.ms-1 archived
+      - if has_reporter
+        %section.mb-4
+          %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 Courses you report on
+          %p.small.text-secondary.mb-2 Read-only, live courses only (available problems in active groups).
+          %ul.small.mb-0
+            - reporter_names.each do |name|
+              %li= name
+      - unless has_editor || has_reporter
+        %p.small You are not currently an editor or reporter of any course.
+
+    %section.mb-4
+      %h6.fw-bold.text-secondary.text-uppercase.small.ls-1.mb-2 What controls visibility
+      %dl.row.small.mb-0
+        %dt.col-4.fw-semibold Available
+        %dd.col-8.text-secondary A problem set unavailable is hidden from students and reporters; editors of its group still see it.
+        %dt.col-4.fw-semibold Group enabled
+        %dd.col-8.text-secondary A disabled (archived) course is hidden from students and reporters; its editors keep full access.
+        %dt.col-4.fw-semibold In-group enabled
+        %dd.col-8.text-secondary Hides one problem from students in a group; staff still see it.
+
+    - unless admin
+      %p.small.text-secondary.mb-0
+        Need a finished (archived) course's report? Ask an
+        %strong editor
+        of that course, or an admin.

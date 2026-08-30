@@ -45,7 +45,7 @@
       ajax: {
         url: "#{index_query_user_admin_index_path}",
         type: 'POST',
-        headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), },
+        headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'), },
         dataSrc: function(json) {
           return json.data
         }

@@ -35,6 +35,7 @@
 
 /config/secrets.yml
 /config/worker.yml
+/config/cms_remote.yml
 /config/credentials.yml.enc
 
 /.byebug_history

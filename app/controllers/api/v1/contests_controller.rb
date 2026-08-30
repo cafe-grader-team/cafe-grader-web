@@ -18,7 +18,7 @@ class Api::V1::ContestsController < Api::V1::BaseController
       .includes(:public_tags)
       .order("contests_problems.number")
 
-    submissions = Submission.where(user: current_user, problem: problems)
+    submissions = Submission.regular.where(user: current_user, problem: problems)
     prob_stats = build_problem_stats(submissions, problems)
 
     render json: problems.map { |p| problem_list_json(p, prob_stats[p.id]) }
@@ -36,8 +36,9 @@ class Api::V1::ContestsController < Api::V1::BaseController
     stats = Hash.new { |h, k| h[k] = {} }
 
     last_sub_ids = submissions.group(:problem_id).pluck("max(id)")
+    sub_counts = submissions.group(:problem_id).count
     Submission.where(id: last_sub_ids).each do |sub|
-      stats[sub.problem_id][:count] = sub.number
+      stats[sub.problem_id][:count] = sub_counts[sub.problem_id] || 0
       stats[sub.problem_id][:last] = sub
     end
 

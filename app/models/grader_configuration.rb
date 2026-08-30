@@ -16,6 +16,8 @@ class GraderConfiguration < ApplicationRecord
   SINGLE_USER_KEY = 'system.single_user_mode'
   SYSTEM_USE_PROBLEM_GROUP = 'system.use_problem_group'
   SYSTEM_MINIMUM_LAST_LOGIN_TIME = 'system.min_last_login_time'
+  WHITELIST_IGNORE_KEY = 'right.whitelist_ignore'
+  WHITELIST_IP_KEY = 'right.whitelist_ip'
 
   # class_attribute :config_cache
   cattr_accessor :task_grading_info_cache
@@ -127,6 +129,18 @@ class GraderConfiguration < ApplicationRecord
 
   def self.single_user_mode?
     return get(SINGLE_USER_KEY)
+  end
+
+  # Does the IP-whitelist config accept a request from this address?
+  # True when the whitelist is off (right.whitelist_ignore) or when remote_ip
+  # falls inside any comma-separated CIDR range in right.whitelist_ip.
+  # Role-based exemptions (admin, problem editors) live in
+  # User#allowed_from_ip? — gate requests through that, not this.
+  def self.whitelisted_ip?(remote_ip)
+    return true if get(WHITELIST_IGNORE_KEY)
+    user_ip = IPAddr.new(remote_ip)
+    allowed = get(WHITELIST_IP_KEY) || ''
+    allowed.delete(' ').split(',').any? { |range| IPAddr.new(range).include?(user_ip) }
   end
 
   def self.contest_time_limit

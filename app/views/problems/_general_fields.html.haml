@@ -1,0 +1,67 @@
+-# The General sections of the problem form — everything that is not viva-
+-# specific. Rendered in the General tab (regular layout) or the Detail card
+-# (viva layout) by _form; `form` is the simple_form builder.
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Identity
+  = form.input :name
+  = form.input :full_name
+
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Statement & Files
+  = form.input :statement, wrapper: :horizontal_file
+  .row
+    .col-sm-3
+    .col-sm-9
+      %p.d-inline-flex.align-items-center.gap-1
+        - if problem.statement.attached?
+          = link_to "<span class='mi md-18 me-1'>description</span> Read (#{problem.statement.filename})".html_safe, download_by_type_problem_path(problem,'statement'), target: '_blank', data: {turbo: false}, class: 'link-flex'
+          = " | "
+          = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(problem,'statement'), class: 'link-flex link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Delete the statement? This cannot be undone.'}
+        - else
+          No statement uploaded.
+  = form.input :attachment, wrapper: :horizontal_file
+  .row
+    .col-sm-3
+    .col-sm-9
+      %p.d-inline-flex.align-items-center.gap-1
+        - if problem.attachment.attached?
+          = link_to "<span class='mi md-18 me-1'>archive</span> File (#{problem.attachment.filename})".html_safe, download_by_type_problem_path(problem,'attachment'), target: '_blank', data: {turbo: false}
+          |
+          = link_to '<span class="mi md-18 me-1">delete</span> Delete'.html_safe, delete_by_type_problem_path(problem,'attachment'), class: 'link-danger', data: {turbo: true, turbo_method: 'delete', turbo_confirm: 'Delete the attachment? This cannot be undone.'}
+        - else
+          No attachment uploaded.
+
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Categorization
+  -# Exclude only viva_conduct (it has its own dedicated select below, id
+  -# problem_conduct_tag_ids). llm_prompt tags MUST stay offered here — this
+  -# is the only UI that attaches them, and tag_ids= is whole-collection
+  -# replacement, so filtering llm_prompt out would silently detach a
+  -# problem's AI-helper prompt tag on every ordinary save.
+  = form.input :tag_ids, label: 'Tags', collection: Tag.where.not(kind: :viva_conduct), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, tooltip: "Tags marked public are shown to contestants on the main page."
+  = form.input :difficulty, tooltip: 'Integer between 0 and 10.'
+
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Visibility & Listing
+  = form.input :date_added, input_html: {value: problem.date_added&.strftime("%d/%b/%Y"), class: 'tempus-dominus'}, wrapper: :horizontal_form, as: :string, tooltip: 'Used as the main sort order for problems on the main page.'
+  = form.input :available, wrapper: :horizontal_boolean, label: 'Globally Available', tooltip: 'If "Globally available" is not set, the problem will remain hidden from all contestants, even if enabled in groups or contests.' , disabled: @current_user.admin? == false
+  = form.input :group_ids, label: 'Groups', collection: Group.all, input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, hint: 'Groups control which students can see and submit this problem.'
+  .form-text.text-secondary
+    = link_to 'Manage groups', groups_path
+  = form.input :view_testcase, wrapper: :horizontal_boolean, wrapper_html: {data: {'viva-exam-toggle-target': 'hideForViva'}}, disabled: @current_user.admin? == false
+  = form.input :view_submission, wrapper: :horizontal_boolean, disabled: @current_user.admin? == false, hint: 'For viva problems: controls whether other students can see this viva transcript.'
+
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Grading & Compilation
+  = form.input :permitted_lang, label: 'Allowed Language', collection: Language.all, selected: problem.get_permitted_lang_as_ids(when_blank: nil), input_html: {class: 'select2', multiple: true}, wrapper: :horizontal_form, wrapper_html: {data: {'viva-exam-toggle-target': 'hideForViva'}}, tooltip: 'Leave blank to allow any language.'
+  - compilation_options = [['<strong>Self contained</strong> <span class="text-secondary">— the submission compiles by itself (most problems).</span>'.html_safe, 'self_contained'], ['<strong>With managers</strong> <span class="text-secondary">— the submission is compiled together with manager files attached to the dataset.</span>'.html_safe, 'with_managers'], ['<strong>Viva Exam</strong> <span class="text-secondary">— LLM-driven Socratic interview + rubric grading. No test-case dataset; fill in the Examiner briefing + optional Conduct profile and grounding materials instead.</span>'.html_safe, 'viva_exam']]
+  = form.input :compilation_type, as: :radio_buttons, collection: compilation_options, wrapper: :horizontal_collection, input_html: {data: {action: 'change->viva-exam-toggle#toggle'}}, tooltip: 'See Help drawer (top-right) for details on each mode.'
+
+  - unless problem.viva_exam?
+    -# Regular problem being turned into a viva: the viva inputs appear here
+    -# (viva-exam-toggle drops the d-none) until the first save swaps in the
+    -# two-card viva layout, where the same inputs live in the Viva Exam card.
+    .mb-4.d-none{data: {viva_exam_toggle_target: 'showForViva'}}
+      = render 'viva_fields', form: form, problem: problem
+
+  = form.input :submission_filename, wrapper_html: {data: {'viva-exam-toggle-target': 'hideForViva'}}

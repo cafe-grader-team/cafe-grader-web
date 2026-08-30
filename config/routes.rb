@@ -56,6 +56,14 @@ Rails.application.routes.draw do
     post :index_query, on: :collection
   end
 
+  # markdown-editor preview pane (see MarkdownController)
+  post 'markdown/preview', to: 'markdown#preview', as: :markdown_preview
+
+  resources :grounding_materials, except: [:show] do
+    delete 'delete_file', on: :member
+    post 'extract', on: :member
+  end
+
   get "sources/direct_edit"
 
   root to: 'main#login'
@@ -101,6 +109,13 @@ Rails.application.routes.draw do
   resources :sites
 
   resources :audit_logs, only: [:index, :show]
+
+  # Near-Miss run browser (admin-only, read-only; runs are created by
+  # rake near_miss:repair). Run identity is the run_label string, passed as
+  # ?runs=<label>[,<label>...] so multi-run comparison needs no extra route.
+  get 'near_miss/runs',        to: 'near_miss_runs#index', as: :near_miss_runs
+  get 'near_miss/run',         to: 'near_miss_runs#show',  as: :near_miss_run
+  get 'near_miss/repairs/:id', to: 'near_miss_runs#repair', as: :near_miss_repair
 
   resources :messages do
     member do
@@ -272,6 +287,8 @@ Rails.application.routes.draw do
       post 'viva/turns', to: 'viva_sessions#answer', as: 'viva_answer'
       post 'viva/turns/:turn_id/retry', to: 'viva_sessions#retry_turn', as: 'viva_retry_turn'
       get 'viva/refresh', to: 'viva_sessions#refresh', as: 'viva_refresh'
+      post 'viva/restart', to: 'viva_sessions#restart', as: 'viva_restart'
+      post 'viva/finish', to: 'viva_sessions#finish', as: 'viva_finish'
       post 'archive_viva'
     end
     collection do
@@ -315,6 +332,7 @@ Rails.application.routes.draw do
     post 'login_stat'
     post 'login_summary_query'
     post 'login_detail_query'
+    post 'login_failure_query'
     get 'multiple_login'
 
     # ai report
@@ -380,6 +398,7 @@ Rails.application.routes.draw do
       post 'retry_all_error_jobs'
       post 'clear_all_error_jobs'
       get 'stuck_viva_turns'
+      get 'viva_alerts'
     end
   end
 

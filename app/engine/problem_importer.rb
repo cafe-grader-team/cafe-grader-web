@@ -1,6 +1,8 @@
 class ProblemImporter
   attr_reader :problem, :log, :errors, :got, :dataset
 
+  RESERVED_DATASETS_DIRNAME = 'datasets'
+
   require 'open3'
   def initialize
     @got = []
@@ -12,7 +14,7 @@ class ProblemImporter
   def read_testcase(input_pattern, sol_pattern, code_name_regex, group_name_regex)
     # glob testcase filename and build hash of key: testcase codename, value: {input: input_file, output: output_file}
     @tc = Hash.new { |h, k| h[k] = Hash.new }
-    Dir["#{@base_dir}/**/#{input_pattern}"].each do |fn|
+    Dir["#{@base_dir}/**/#{input_pattern}"].select { |fn| outside_reserved_datasets?(fn) }.each do |fn|
       # input_fn = Pathname.new(@base_dir) + fn
       input_fn = Pathname.new(fn)
       regex = Regexp.new input_pattern.gsub('*', '(.+)')
@@ -28,11 +30,11 @@ class ProblemImporter
 
       # parse codename according to regex
       codename_mc = name.match code_name_regex
-      codename = mc[1] if mc
+      codename = codename_mc[1] if codename_mc
 
       @tc[codename][:input] = input_fn.cleanpath
     end
-    Dir["#{@base_dir}/**/#{sol_pattern}"].each do |fn|
+    Dir["#{@base_dir}/**/#{sol_pattern}"].select { |fn| outside_reserved_datasets?(fn) }.each do |fn|
       sol_fn = Pathname.new(fn)
       regex = Regexp.new sol_pattern.gsub('*', '(.+)')
 
@@ -46,7 +48,7 @@ class ProblemImporter
 
       # parse codename according to regex
       codename_mc = name.match code_name_regex
-      codename = mc[1] if mc
+      codename = codename_mc[1] if codename_mc
 
       @tc[codename][:sol] = sol_fn.cleanpath
     end
@@ -120,8 +122,7 @@ class ProblemImporter
 
   def read_options
     # process options for dataset
-    # MUST MATCH ONES IN problem_exporter.rb
-    p_options = %i[full_name submission_filename task_type compilation_type permitted_lang]
+    p_options = OptionConst::PROBLEM_OPTION_FIELDS
     p_options.each do |opt|
       if @options.has_key? opt
         @log << "problem.#{opt} is set to '#{@options[opt]}' by options file"
@@ -130,12 +131,14 @@ class ProblemImporter
     end
 
     # live dataset fields
-    # MUST MATCH ONES IN problem_exporter.rb
-    d_options = %i[time_limit memory_limit score_type evaluation_type main_filename initializer_filename]
+    d_options = OptionConst::DATASET_OPTION_FIELDS
     d_options.each do |opt|
       if @options.has_key? opt
         @log << "dataset.#{opt} is set to '#{@options[opt]}' by options file"
-        @dataset.write_attribute(opt, @options[opt]) if @options.has_key? opt
+        # Through the writer, not write_attribute: Dataset#evaluation_type=
+        # normalizes the pre-rev-2047 names (custom_cms, custom_cms_raw) that
+        # packages exported by older versions still carry.
+        @dataset.public_send("#{opt}=", @options[opt])
       end
     end
 
@@ -147,6 +150,69 @@ class ProblemImporter
 
       @problem.tags = Tag.where(name: @options[OptionConst::YAML_KEY[:tags]])
       @log << "set tags to [#{@options[OptionConst::YAML_KEY[:tags]].join(', ')}]"
+    end
+  end
+
+  # CMS semantics: a group has ONE weight; scorer.rb's group_min uses the
+  # minimum weight found in the group. Mixed weights are an authoring error.
+  # Shares Dataset#mixed_weight_groups with the dataset edit UI warning so the
+  # two can never disagree on what counts as "mixed".
+  def warn_mixed_group_weights
+    @dataset.mixed_weight_groups.each do |g, weights|
+      @log << "WARNING: group #{g} has mixed testcase weights (#{weights.join(', ')}); group_min uses one weight per group (the minimum, #{weights.first}). Fix the weights in the package."
+    end
+  end
+
+  # Import any datasets listed under the root config's additional_datasets key,
+  # each from datasets/<name>/, as NON-live datasets on @problem. Reuses the
+  # existing dataset-scoped read methods by pointing them at the subdir.
+  def import_additional_datasets(input_pattern = '*.in', sol_pattern = '*.sol',
+                                 code_name_regex = /(.*)/, group_name_regex = /^(\d+)-/)
+    names = @options[OptionConst::YAML_KEY[:additional_datasets]]
+    return unless names.is_a?(Array)
+
+    outer_base, outer_dataset, outer_options = @base_dir, @dataset, @options
+    problem = outer_dataset.problem
+    # Snapshot from @problem (not the local `problem`/`outer_dataset.problem`):
+    # read_cpp_extras purges+reloads @dataset for manager-file housekeeping, and
+    # a reloaded association returns a *fresh* Problem instance on the next
+    # `.problem` call — divorced from @problem's in-memory state (which may
+    # carry not-yet-saved corrections from the root import's read_options).
+    # @problem is the one consistent reference the whole import saves at the end.
+    saved_compilation_type = @problem.compilation_type
+    saved_submission_filename = @problem.submission_filename
+    begin
+      names.each do |dirname|
+        subdir = Pathname.new(outer_base) + RESERVED_DATASETS_DIRNAME + dirname.to_s
+        unless subdir.exist?
+          @log << "WARNING: additional dataset dir missing: #{subdir}"
+          next
+        end
+
+        cfg = subdir + OptionConst::YAML_FILENAME
+        @options = cfg.exist? ? YAML.safe_load(File.read(cfg), symbolize_names: true) : {}
+        @base_dir = subdir.to_s
+        display_name = @options[OptionConst::YAML_KEY[:ds_name]] || dirname
+        @dataset = problem.datasets.where(name: display_name).first ||
+                   Dataset.new(name: display_name, problem: problem)
+        @dataset.save
+
+        read_testcase(input_pattern, sol_pattern, code_name_regex, group_name_regex)
+        read_checker
+        read_cpp_extras
+        read_initializers
+        read_data_files
+        read_options   # applies this dataset's fields (fragment carries no problem-level keys)
+        @dataset.save
+        @log << "WARNING: additional dataset '#{display_name}' imported with 0 testcases" if @dataset.testcases.count.zero?
+        @log << "Imported additional dataset '#{display_name}'"
+      end
+    ensure
+      @base_dir, @dataset, @options = outer_base, outer_dataset, outer_options
+      if @problem.compilation_type != saved_compilation_type || @problem.submission_filename != saved_submission_filename
+        @problem.update_columns(compilation_type: saved_compilation_type,
+                                submission_filename: saved_submission_filename)
+      end
     end
   end
 
@@ -164,7 +230,11 @@ class ProblemImporter
     # additional description
     md, fn = get_content_of_first_match('*.md')
     if md
-      @problem.update(description: md)
+      @problem.description = md
+      # config.yml's :markdown (applied later in read_options) wins;
+      # legacy packages without the key: a .md present means markdown
+      @problem.markdown = true unless @options.has_key?(:markdown)
+      @problem.save
       @log << "Found addtional Markdown file [#{fn}]"
       @got << fn
     end
@@ -269,9 +339,40 @@ class ProblemImporter
     @dataset.save
   end
 
+  def read_data_files
+    path = @options[OptionConst::YAML_KEY[:dir][:data_files]] || OptionConst::DEFAULT[:dir][:data_files]
+    pattern = build_glob('*', path: path)
+    seen = {}
+    Dir.glob(pattern).each do |fn|
+      pn = Pathname.new(fn)
+      next if pn.directory?
+
+      @log << "Found a data file [#{fn}]"
+      @got << fn
+      basename = pn.basename
+      if seen.has_key? basename
+        @log << "  ERROR: multiple data files of the same name #{basename}"
+      else
+        seen[basename] = true
+        @dataset.data_files.each { |f| f.purge if f.filename == basename }
+        @dataset.reload
+        @dataset.data_files.attach(io: File.open(fn), filename: basename)
+      end
+    end
+    @dataset.save
+  end
+
+  # Root-level recursive reads must not descend into the reserved datasets/
+  # subtree — it holds additional datasets, imported separately by
+  # import_additional_datasets.
+  def outside_reserved_datasets?(path)
+    reserved = File.join(@base_dir.to_s, RESERVED_DATASETS_DIRNAME) + '/'
+    !path.to_s.start_with?(reserved)
+  end
+
   def get_content_of_first_match(glob_pattern, recursive: true, path: '')
     pattern = build_glob(glob_pattern, recursive: recursive, path: path)
-    files = Dir.glob(pattern).select { |path| File.file?(path) }
+    files = Dir.glob(pattern).select { |p| File.file?(p) && outside_reserved_datasets?(p) }
     if files.count > 0
       if files.count > 1
         @log << "ERROR: Found multiples of #{glob_pattern} while we expected one"
@@ -300,29 +401,48 @@ class ProblemImporter
     return result
   end
 
-  def read_solutions
+  def read_solutions(user: nil)
+    user ||= User.first
     solutions_dir = @options[OptionConst::YAML_KEY[:dir][:model_sols]] || OptionConst::DEFAULT[:dir][:model_sols]
     pattern = build_glob('*', recursive: true, path: solutions_dir)
-    managers_fn = {}
     Dir.glob(pattern).each do |fn|
       pn = Pathname.new(fn)
       next if pn.directory?
 
       @log << "Found a model solution file [#{fn}]"
-      lang_name = pn.basename.to_s.split('_')
-      source_name = pn.basename.to_s[(lang_name.length)...]
+      # filename convention: <language>_<original_filename>, e.g. cpp_fibo.cpp
+      lang_name, sep, source_name = pn.basename.to_s.partition('_')
+      if sep.empty?
+        @log << "  ERROR: solution filename '#{pn.basename}' has no <lang>_ prefix; skipped"
+        next
+      end
 
       language = Language.where(name: lang_name).first
-      sub =  Submission.new(user: User.first,
+      # explicit guard: save!(validate: false) below skips must_specify_language,
+      # so an unknown <lang>_ prefix must be rejected here, not silently saved
+      if language.nil?
+        @log << "  ERROR: unknown language prefix '#{lang_name}' in '#{pn.basename}'; skipped"
+        next
+      end
+      sub =  Submission.new(user: user,
                             problem: @problem,
                             submitted_at: Time.zone.now,
                             language: language,
-                            source_filename: source_name)
+                            source_filename: source_name,
+                            tag: :model)
       sub.source = File.open(fn, 'r:UTF-8', &:read)
       sub.source.encode!('UTF-8', 'UTF-8', invalid: :replace, replace: '')
 
-      if sub.save
+      # validate: false — trusted server-side import; the submitting user is an
+      # arbitrary stand-in (User.first) and the problem is typically still a
+      # draft, so must_have_valid_problem would wrongly reject model solutions.
+      # Same bypass as the repair/replay engines. before_save still assigns the
+      # next submission number.
+      begin
+        sub.save!(validate: false)
         sub.add_judge_job
+      rescue ActiveRecord::ActiveRecordError => e
+        @log << "  ERROR: could not save solution: #{e.message}"
       end
     end
   end
@@ -349,7 +469,10 @@ class ProblemImporter
     do_cpp_extras: true,
     do_attachment: true,
     do_solutions: true,
-    do_initializers: true
+    do_initializers: true,
+    do_data_files: true,
+    do_additional_datasets: true,
+    user: nil             # attributed owner of imported model solutions
   )
     @log = []
     @base_dir = dir
@@ -374,7 +497,7 @@ class ProblemImporter
     @log << "Found existing problem with the same name ('#{name}') !!! This import will UPDATE the existing problem." if @problem.id
     @problem.date_added = Time.zone.now unless @problem.date_added
     @problem.available = false if @problem.available.nil?
-    @problem.full_name = full_name
+    @problem.full_name = full_name.presence || name
     @problem.set_default_value unless @problem.id
     if dataset && dataset.problem == @problem
       @dataset = dataset
@@ -404,8 +527,11 @@ class ProblemImporter
     read_checker if do_checker
     read_cpp_extras if do_cpp_extras
     read_initializers if do_initializers
+    read_data_files if do_data_files
     read_options # options is put to last, it will override any defaults
-    read_solutions if do_solutions
+    warn_mixed_group_weights
+    import_additional_datasets(input_pattern, sol_pattern, code_name_regex, group_name_regex) if do_additional_datasets
+    read_solutions(user: user) if do_solutions
     @problem.save
     @dataset.save
     @log << "Done successfully"
@@ -416,23 +542,45 @@ class ProblemImporter
 
   def unzip_to_dir(file, name, dir)
     Pathname.new(dir).mkpath
-    pn  = Pathname.new(dir)+name
+    safe_name = name.to_s.parameterize
+    safe_name = 'problem' if safe_name.blank?
+    pn  = Pathname.new(dir) + safe_name
     num = 1
     while pn.exist?
-      pn  = Pathname.new(dir)+"#{name}.#{num}"
-      num+=1
+      pn  = Pathname.new(dir) + "#{safe_name}.#{num}"
+      num += 1
     end
 
     destination = pn.cleanpath
 
-    cmd = "unzip #{file} -d #{destination}"
-    out, err, status = Open3.capture3(cmd)
-    if status.exitstatus == 0
-      return destination
-    else
+    out, err, status = Open3.capture3('unzip', file.to_s, '-d', destination.to_s)
+    unless status.exitstatus == 0
       @errors << err
       return nil
     end
+    return nil unless validate_containment!(destination)
+    destination
+  end
+
+  # Zip-slip defense: every extracted entry (and every symlink target) must
+  # resolve inside the extraction dir, regardless of unzip version behavior.
+  def validate_containment!(destination)
+    base = File.realpath(destination.to_s)
+    Dir.glob("#{destination}/**/*", File::FNM_DOTMATCH).each do |entry|
+      next if ['.', '..'].include?(File.basename(entry))
+      resolved =
+        if File.symlink?(entry)
+          entry_dir = (File.realpath(File.dirname(entry)) rescue nil)
+          entry_dir && File.expand_path(File.readlink(entry), entry_dir)
+        else
+          (File.realpath(entry) rescue nil)
+        end
+      next if resolved&.start_with?("#{base}/") || resolved == base
+      @errors << "Archive entry '#{File.basename(entry)}' escapes the extraction directory; import aborted"
+      FileUtils.rm_rf(destination)
+      return false
+    end
+    true
   end
 
   def self.import_all_from_dir(base_dir, skip_existing: true)

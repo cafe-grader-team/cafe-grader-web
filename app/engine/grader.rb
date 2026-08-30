@@ -186,42 +186,111 @@ class Grader
     puts "grader main loop exit gracefully at #{Time.zone.now}"
   end
 
-  # watchdog, this function should be runs by cron every few minutes
+  # Watchdog — run by cron every minute (config/schedule.rb). Reconciles this
+  # worker's GraderProcess rows with the grader processes actually running:
+  # spawns what is missing, stops what should not run, and — since the
+  # 2026-08-27 ISE incident — stops duplicates. Two orphaned crontab blocks
+  # (whenever identified them by the schedule.rb path, and the app dir had
+  # been renamed) ran two watchdogs per minute; both saw "no grader" for a
+  # box and both spawned one, and `lines.count >= 1` then read the pair as
+  # healthy forever. Two graders on one isolate box collide ("This box is
+  # currently in use"), stored as grader_error (`!`) — silent score deflation.
+  # Defences, in order: a host-wide flock so two watchdogs cannot race the ps
+  # check; duplicates are detected and the extras TERMed; the deploy pipeline
+  # gives whenever a stable identifier (automation repo).
   def self.watchdog
-    worker_id = Rails.configuration.worker[:worker_id]
+    worker_id  = Rails.configuration.worker[:worker_id]
     server_key = Rails.configuration.worker[:server_key]
 
-    GraderProcess.where(worker_id: worker_id).each do |gp|
-      # check running status
-      escaped_key = Shellwords.escape(server_key.to_s)
-      grader_process = `ps -e -o pid,args | grep "start([[:blank:]]*#{gp.box_id}[[:blank:]]*,[[:blank:]]*:#{escaped_key})$" | grep Grader`
-      running = grader_process.lines.count >= 1
-      puts "grader process with box_id #{gp.box_id} is #{running ? 'found' : 'not found'}"
-      if gp.enabled
-        # we should have running grader of this box id
-        if !running
-          # start it
-          stdout_file = Rails.configuration.worker[:directory][:grader_stdout_base_file] + gp.box_id.to_s + '.txt'
-          cmd = "rails runner \"Grader.start(#{gp.box_id},:#{server_key})\""
-          spawn(cmd, [:out, :err] => [stdout_file, 'a'])
+    with_watchdog_lock(worker_id) do
+      ps_text = `ps -e -o pid,ppid,etimes,args`
+      GraderProcess.where(worker_id: worker_id).each do |gp|
+        procs = grader_processes(ps_text, gp.box_id, server_key)
+        pids  = procs.map { |p| p[:pid] }
+        puts "grader process with box_id #{gp.box_id}: #{procs.size} running#{pids.any? ? " (pid #{pids.join(', ')})" : ''}"
 
-          puts "spawning new grader main loop with #{cmd}, redirecting :out,:err to #{stdout_file}"
-        end
-      else
-        # the process should NOT be running, send TERM to stop gracefully
-        if running
-          pid = grader_process.split[0].to_i
-          stalled = gp.last_heartbeat.present? && gp.last_heartbeat < 300.seconds.ago
-          if stalled
+        plan_box(gp, procs).each do |action, pid|
+          case action
+          when :spawn
+            stdout_file = Rails.configuration.worker[:directory][:grader_stdout_base_file] + gp.box_id.to_s + '.txt'
+            cmd = "rails runner \"Grader.start(#{gp.box_id},:#{server_key})\""
+            spawn(cmd, [:out, :err] => [stdout_file, 'a'])
+            puts "spawning new grader main loop with #{cmd}, redirecting :out,:err to #{stdout_file}"
+          when :term
+            if gp.enabled
+              msg = "box #{gp.box_id} has #{procs.size} graders — sending TERM to duplicate #{pid}, keeping the oldest (#{pids.first})"
+              puts msg
+              Rails.logger.warn("[Grader.watchdog] #{msg}")
+            else
+              puts "sending TERM signal to #{pid} (box_id #{gp.box_id})"
+            end
+            signal_grader('TERM', pid)
+          when :kill
             puts "sending KILL signal to stalled process #{pid} (box_id #{gp.box_id})"
-            Process.kill("KILL", pid)
-          else
-            puts "sending TERM signal to #{pid} (box_id #{gp.box_id})"
-            Process.kill("TERM", pid)
+            signal_grader('KILL', pid)
           end
         end
       end
     end
+  end
+
+  # The grader processes serving one box, parsed from
+  # `ps -e -o pid,ppid,etimes,args` output: [{pid:, ppid:, elapsed:}], oldest
+  # first. On every deploy host a grader is a two-process chain —
+  # `sh -c rails runner "Grader.start(N,:key)"` and its Ruby child (dash does
+  # not exec-optimise the quoted command) — so a match whose child is also a
+  # match is a wrapper and is dropped: signals must reach the Ruby leaf, the
+  # process that traps TERM. The box id is matched whole (`1` is not `12`) and
+  # the key exactly; the watchdog's own `Grader.watchdog` line never matches.
+  def self.grader_processes(ps_text, box_id, key)
+    pattern = /Grader\.start\([[:blank:]]*#{Regexp.escape(box_id.to_s)}[[:blank:]]*,[[:blank:]]*:#{Regexp.escape(key.to_s)}[[:blank:]]*\)["']?[[:blank:]]*\z/
+    procs = ps_text.each_line.filter_map do |line|
+      pid, ppid, elapsed, args = line.strip.split(/[[:blank:]]+/, 4)
+      next unless args && pid.match?(/\A\d+\z/) && args.match?(pattern)
+      {pid: pid.to_i, ppid: ppid.to_i, elapsed: elapsed.to_i}
+    end
+    leaves = procs.reject { |p| procs.any? { |c| c[:ppid] == p[:pid] } }
+    leaves.sort_by { |p| -p[:elapsed] }
+  end
+
+  # What the watchdog should do for one GraderProcess row given the processes
+  # serving its box (oldest first). Returns [[action, pid], ...]:
+  #   [:spawn]       enabled, nothing running
+  #   [:term, pid]   enabled: a duplicate (every process but the oldest);
+  #                  disabled: graceful stop. TERM, never KILL, for a live
+  #                  grader — main_loop finishes its current job first, and a
+  #                  Job left in :process is never reclaimed (doc/backlog.md).
+  #   [:kill, pid]   disabled and the heartbeat is stale (> 300 s)
+  def self.plan_box(gp, procs)
+    if gp.enabled
+      return [[:spawn]] if procs.empty?
+      procs.drop(1).map { |p| [:term, p[:pid]] }
+    else
+      stalled = gp.last_heartbeat.present? && gp.last_heartbeat < 300.seconds.ago
+      procs.map { |p| [stalled ? :kill : :term, p[:pid]] }
+    end
+  end
+
+  # Host-wide and non-blocking: a second watchdog in the same minute (a stray
+  # crontab block, a manual `Grader.restart`) skips instead of racing the ps
+  # check. Lives in Dir.tmpdir rather than Rails.root/tmp so two checkouts of
+  # the app on one host — exactly the incident's shape — share one lock.
+  def self.with_watchdog_lock(worker_id)
+    path = File.join(Dir.tmpdir, "cafe-grader-watchdog-#{worker_id}.lock")
+    File.open(path, File::RDWR | File::CREAT, 0644) do |lock|
+      unless lock.flock(File::LOCK_EX | File::LOCK_NB)
+        puts "another watchdog holds #{path}; skipping this run"
+        return false
+      end
+      yield
+      true
+    end
+  end
+
+  def self.signal_grader(sig, pid)
+    Process.kill(sig, pid)
+  rescue Errno::ESRCH
+    puts "process #{pid} is already gone"
   end
 
   def self.make_enabled(num)

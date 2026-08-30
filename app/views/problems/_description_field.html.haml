@@ -1,0 +1,8 @@
+-# The markdown editor for Problem#description: the Scenario of a viva (right
+-# card) or the Statement source of a regular problem (Description tab).
+= form.input :description, as: :text, wrapper: :vertical_form, label: false, wrapper_html: {data: markdown_editor_data}, input_html: { rows: (problem.viva_exam? ? 16 : 20), class: 'font-monospace', data: markdown_editor_source }
+%p.small.text-secondary.mt-1.mb-0
+  - if problem.viva_exam?
+    Sent <strong>verbatim to the examiner</strong> as the interview opener — this is the exam paper (the case being discussed). Rubric and model answers belong in the Examiner briefing, never here. The statement PDF (Detail → Statement &amp; Files) is only needed when the scenario requires figures or original exam layout.
+  - else
+    Internal markdown source — not shown to students directly. The PDF below is auto-regenerated whenever you save changes to the description.

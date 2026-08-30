@@ -1,0 +1,4 @@
+#ifndef EATINGFISH_H
+#define EATINGFISH_H
+int solve(int a, int b);
+#endif

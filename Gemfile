@@ -42,6 +42,13 @@ gem "thruster", require: false
 # faraday for API call
 gem "faraday"
 
+# line-diff for the Near-Miss budget gate (was previously only a transitive
+# test dependency via rspec; the gate needs it at runtime)
+gem "diff-lcs"
+
+# csv left Ruby's default gems in 3.4; the near_miss:report CSV export needs it
+gem "csv"
+
 # JWT for API authentication
 gem "jwt"
 

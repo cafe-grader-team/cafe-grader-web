@@ -318,6 +318,20 @@ TITLEBAR
     parser.render(text.to_s).html_safe
   end
 
+  # Data attributes that mount the markdown-editor Stimulus controller (Ace +
+  # server-rendered Preview) on a simple_form textarea. Put the first hash on
+  # the wrapper and mark the textarea as the source:
+  #
+  #   = f.input :body, wrapper_html: { data: markdown_editor_data },
+  #                    input_html:   { rows: 12, data: markdown_editor_source }
+  def markdown_editor_data
+    { controller: 'markdown-editor', markdown_editor_preview_url_value: markdown_preview_path }
+  end
+
+  def markdown_editor_source
+    { markdown_editor_target: 'source' }
+  end
+
 
   BOOTSTRAP_FLASH_MSG = {
     success: 'alert-success',

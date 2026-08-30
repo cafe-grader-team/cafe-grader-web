@@ -3,7 +3,7 @@ class Api::V1::SubmissionsController < Api::V1::BaseController
 
   # GET /api/v1/problems/:problem_id/submissions
   def index
-    submissions = Submission.where(user: current_user, problem: @problem)
+    submissions = Submission.regular.where(user: current_user, problem: @problem)
       .order(submitted_at: :desc)
 
     render json: submissions.map { |s| submission_brief_json(s) }
@@ -50,7 +50,10 @@ class Api::V1::SubmissionsController < Api::V1::BaseController
 
   # POST /api/v1/problems/:problem_id/submissions
   def create
-    unless current_user.problems_for_action(:submit).where(id: @problem).any?
+    # Same gate as the web (MainController#submit / User#can_submit_to_problem?):
+    # includes the editor test-submit right on draft/hidden problems in their
+    # own groups. The API must never accept less (or more) than the web.
+    unless current_user.can_submit_to_problem?(@problem)
       render json: { error: "You are not allowed to submit to this problem" }, status: :forbidden and return
     end
 

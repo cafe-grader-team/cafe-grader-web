@@ -159,6 +159,34 @@ pre code {
   }
 }
 
+// markdown-editor Stimulus controller (Ace + server-rendered preview) — see
+// app/javascript/controllers/markdown_editor_controller.js
+.markdown-editor {
+  .markdown-editor__bar .nav-link {
+    padding: 0.1rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  .markdown-editor__ace {
+    // Ace sizes itself via minLines/maxLines; keep its background flush with the frame
+    border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius);
+  }
+  .markdown-editor__preview {
+    max-height: 70vh;
+    overflow: auto;
+    font-size: 0.9rem;
+    // page-level heading sizes are far too big inside a form pane
+    h1 { font-size: 1.4rem; } h2 { font-size: 1.25rem; } h3 { font-size: 1.1rem; }
+    h4, h5, h6 { font-size: 1rem; }
+    h1, h2, h3, h4, h5, h6 { margin-top: 1rem; margin-bottom: 0.4rem; }
+    h1:first-child, h2:first-child, h3:first-child { margin-top: 0; }
+    table { border-collapse: collapse; margin-bottom: 0.75rem; }
+    th, td { border: 1px solid var(--bs-border-color); padding: 0.2rem 0.5rem; vertical-align: top; }
+    th { background: var(--bs-tertiary-bg); }
+    pre { background: var(--bs-tertiary-bg); padding: 0.5rem 0.75rem; border-radius: var(--bs-border-radius); }
+    :last-child { margin-bottom: 0; }
+  }
+}
+
 
 
 // --------------- below here are legacy from aj.Jittat ---------------
@@ -486,6 +514,92 @@ h2.contest-title {
   word-wrap: break-word;
   //font-family: 'Cascadia Mono';
   font-family: 'Inconsolata';
+}
+// free-text grader_comment on the main list: same monospace, but capped so
+// it cannot widen the "Latest Results" column either
+.grader-comment-capped {
+  display: inline-block;
+  max-width: 15rem;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+// Verdict strip — grader_comment drawn as one tile per testcase
+// (GraderCommentHelper#grader_comment_strip). The max-width is what keeps a
+// 40–80 testcase problem from widening the column: an HTML table sizes a
+// column from its cells' *preferred* (no-wrap) width, and a plain run of
+// letters has a preferred width of the whole run; an inline-flex box with a
+// max-width caps that, and flex-wrap lays the fixed-size tiles out in rows.
+// A [...] group is ONE flex item, so it moves to the next row whole instead
+// of breaking mid-group; only a group wider than the strip wraps inside.
+.verdict-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px 8px;
+  max-width: 15rem;
+  vertical-align: top;
+  align-items: flex-start;
+  margin-left: .35rem;
+  margin-top: 3px;      // centres the first tile row on the score text's line box
+}
+.verdict-group, .verdict-run {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.verdict-group {
+  background: #fff;
+  border: 1px solid #495057;
+  padding: 2px;
+  border-radius: 4px;
+  cursor: default;
+}
+.verdict-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: .95rem;
+  height: 1.15rem;
+  flex: none;
+  font-family: 'Inconsolata', monospace;
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 2px;
+  cursor: default;
+  // one hue per verdict (Evaluation result names)
+  &.verdict-correct      { background: #d1e7dd; color: #0f5132; }
+  &.verdict-wrong        { background: #f8d7da; color: #842029; }
+  &.verdict-partial      { background: #cfe2ff; color: #084298; }
+  &.verdict-time_limit,
+  &.verdict-memory_limit { background: #fff3cd; color: #664d03; }
+  &.verdict-crash        { background: #842029; color: #fff; }
+  &.verdict-unknown_error,
+  &.verdict-grader_error { background: #000; color: #fff; }
+  &.verdict-waiting      { background: #e2e3e5; color: #41464b; }
+}
+// "legend" pill in the Latest Results column header + its popover body
+.verdict-legend-btn {
+  font-weight: 400;
+  font-size: .75rem;
+  color: #6c757d;
+  text-decoration: none;
+  border: 1px solid #dee2e6;
+  border-radius: 999px;
+  padding: 0 .5rem 0 .3rem;
+  margin-left: .4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .15rem;
+  vertical-align: middle;
+  background: #fff;
+  cursor: pointer;
+  .mi { font-size: 1rem; }
+  &:hover, &:focus { color: #212529; border-color: #adb5bd; }
+}
+.verdict-legend {
+  font-size: .85rem;
+  .mi { font-size: 1rem; vertical-align: -3px; }
 }
 
 // bring back bootstrap btn-xs

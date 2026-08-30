@@ -1,9 +1,8 @@
 - case turn.role
 - when 'system'
-  - if @current_user&.admin?
-    .alert.alert-secondary.small.py-2
-      %strong SYSTEM
-      = simple_format(turn.content.to_s)
+  .alert.alert-secondary.small.py-2
+    %strong SYSTEM
+    = simple_format(turn.content.to_s)
 - when 'assistant'
   .d-flex.justify-content-start.mb-3
     .card.shadow-sm{style: 'max-width: 75%;'}

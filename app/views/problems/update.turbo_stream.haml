@@ -1,4 +1,8 @@
-= turbo_stream.replace :problem, partial: 'form', locals: {problem: @problem}
+- if @layout_changed
+  -# to/from viva: the two-column layout itself changes (see _edit_body)
+  = turbo_stream.replace 'problem-edit', partial: 'edit_body'
+- else
+  = turbo_stream.replace :problem, partial: 'form', locals: {problem: @problem}
 - if @toast
   = turbo_stream.append 'toast-area', partial: 'toast', locals: {toast: @toast}
 = turbo_stream.append 'js-response' do

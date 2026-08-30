@@ -9,27 +9,38 @@
 #     priority: 2
 #     schedule: at 5am every day
 
-# Failsafe for stuck viva placeholder turns. Most failures are caught
-# by Llm::RequestJob (retry_on + perform's rescue) which mark the
-# placeholder :error directly. This sweeper exists for the residual
-# cases — worker killed mid-call, OOM, etc. — where neither path runs.
-# See VivaTurn.fail_stale!.
+# Failsafe for stuck viva placeholder turns AND stuck viva submissions.
+# Most failures are caught by Llm::RequestJob (retry_on + perform's
+# rescue) which mark the placeholder turn / submission :error directly.
+# This sweeper exists for the residual cases — worker killed mid-call,
+# OOM, etc. — where neither path runs. Two independent sweeps share one
+# recurring task (rather than two scheduling entries) since they're the
+# same failure mode at two different stages of the viva lifecycle:
+#   VivaTurn.fail_stale!                    — stuck mid-interview turn
+#   Submission.fail_stale_viva_evaluating!  — stuck mid-grading submission
 #
-# Registered in both envs: the cost is one indexed query every 5
+# Registered in both envs: the cost is two indexed queries every 5
 # minutes, and in development an unrecoverable LLM-job failure
 # otherwise leaves the developer staring at "Interviewer is thinking..."
-# with no path forward.
+# / "Grading in progress..." with no path forward.
 development:
   viva_turn_failsafe:
-    command: "VivaTurn.fail_stale!"
+    command: "VivaTurn.fail_stale!; Submission.fail_stale_viva_evaluating!"
     schedule: every 5 minutes
 
 production:
+  # Finalize abandoned viva sessions (>= 24h with no turn activity): grade
+  # the ones with at least one student answer, archive greeting-only peeks.
+  # Production-only on purpose — in development this would silently spend
+  # LLM tokens grading forgotten local sessions.
+  viva_session_reaper:
+    command: "Submission.reap_abandoned_vivas!"
+    schedule: every hour
   audit_log_cleanup:
     command: "AuditLog.cleanup!"
     schedule: at 3am every day
   viva_turn_failsafe:
-    command: "VivaTurn.fail_stale!"
+    command: "VivaTurn.fail_stale!; Submission.fail_stale_viva_evaluating!"
     schedule: every 5 minutes
   # Moved here from config/schedule.rb (whenever). Both run nightly
   # housekeeping that's safe to skip a day if Solid Queue is down.

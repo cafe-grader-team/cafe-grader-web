@@ -11,9 +11,8 @@
     .col-lg-4.mt-2
       = render partial: 'user_select'
 
-.text-secondary.small.mb-3.d-flex.align-items-center
-  %span.mi.md-18.me-1 sync
-  Select filters above, then click Refresh to load data.
+= render 'empty_report_notice'
+= render 'report_help'
 
 %canvas#chart{data: {controller: 'chart', chart_preset_value: 'submission_line', chart_data_value: '{}'}}
 
@@ -29,6 +28,7 @@
   problem_path = "#{stat_problem_path(-1234)}"
 
   function sub_link_renderer(data, type, row) {
+    if (type == 'export') return `\#${row['id']}`;
     if (type == 'display' || type == 'filter') {
       return `<a href="${submission_path.replace("-1234",row['id'])}">\#${row['id']}</a>`;
     }
@@ -36,6 +36,7 @@
     return row['id']
   }
   function user_link_renderer(data, type, row) {
+    if (type == 'export') return `(${row['login']}) ${row['user_full_name']}`;
     if (type == 'display' || type == 'filter') {
       return `<a href="${user_path.replace("-1234",row['user_id'])}">(${row['login']})</a> ${row['user_full_name']}`;
     }
@@ -43,10 +44,17 @@
     return row['login']
   }
   function problem_link_renderer(data, type, row) {
+    if (type == 'export') return `[${row['name']}] ${row['full_name']}`;
     return `<a href="${problem_path.replace("-1234",row['problem_id'])}">[${row['name']}]</a> ${row['full_name']}`;
   }
   function date_time_renderer( data, type, row) {
     return moment(data).format('YYYY-MM-DD HH:mm:ss')
+  }
+  // Result: verdict tiles on screen (same markup as GraderCommentHelper), the
+  // raw string for sorting, filtering and the copy/excel exports
+  const VERDICT_STRIP = #{verdict_strip_config_json}
+  function result_renderer(data, type, row) {
+    return type == 'display' ? cafe.verdictStrip(data, VERDICT_STRIP) : data
   }
 
   window.addEventListener("load", function() {
@@ -66,10 +74,16 @@
             submission_table.ajax.reload( () => { submission_table.columns.adjust().draw() } )
           }
         },
-        'copy',
+        // 'export' orthogonal data: renderers return plain text (what the
+        // stripped HTML used to give) and the raw verdict string
+        {
+          extend: 'copy',
+          exportOptions: { orthogonal: 'export' }
+        },
         {
           extend: 'excel',
-          title: 'Submission detail'
+          title: 'Submission detail',
+          exportOptions: { orthogonal: 'export' }
         }
       ],
       columns: [
@@ -78,7 +92,7 @@
         {title: 'Problem', data: 'full_name', render: problem_link_renderer},
         {title: 'Language', data: 'pretty_name'},
         {title: 'Submit at', data: 'submitted_at', render: date_time_renderer},
-        {title: 'Result', data: 'grader_comment', className: 'grader-comment'},
+        {title: 'Result', data: 'grader_comment', render: result_renderer},
         {title: 'Score', data: 'points', className: 'text-end'},
         {title: 'IP', data: 'ip_address', className: 'grader-comment'},
       ],

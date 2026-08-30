@@ -1,0 +1,36 @@
+-# Viva-specific inputs: Examiner briefing + interview setup. Rendered by the
+-# Viva Exam card (viva layout) and, for a regular problem being switched to
+-# viva, inline in the General tab (see _general_fields). `form` is the
+-# simple_form builder of the ONE problem form.
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Examiner briefing (markdown)
+  = form.input :viva_prompt, as: :text, wrapper: :vertical_form, label: false,
+      wrapper_html: {data: markdown_editor_data},
+      input_html: {rows: 16, class: 'font-monospace', data: markdown_editor_source}
+  %p.small.text-secondary.mt-1.mb-0
+    Rubric, model answers and problem-specific examiner guidance. <strong>Never shown to students.</strong> Must contain a <code># Rubric</code> section — this is the marking scheme; the Scenario is the exam paper.
+
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Interview setup
+  = form.input :grounding_material_ids, label: 'Grounding materials',
+      collection: GroundingMaterial.order(:title), value_method: :id, label_method: :title,
+      input_html: { class: 'select2', multiple: true, id: 'problem_grounding_material_ids' },
+      wrapper: :horizontal_form,
+      hint: 'Reference material the interviewer/grader treat as authoritative. Re-sent every turn.'
+  - attached = problem.grounding_materials.to_a
+  - if attached.any?
+    .form-text.text-secondary
+      Attached grounding ≈ #{number_with_delimiter(attached.sum(&:estimated_tokens))} tokens — re-sent every turn.
+      %ul.mb-0
+        - attached.each do |gm|
+          %li
+            = gm.title
+            %span.text-secondary= "· ≈ #{number_with_delimiter(gm.estimated_tokens)} tokens ·"
+            = link_to 'view', edit_grounding_material_path(gm)
+  = form.input :tag_ids, label: 'Conduct profile', collection: Tag.viva_conduct.order(:name),
+      input_html: {class: 'select2', multiple: true, id: 'problem_conduct_tag_ids'},
+      wrapper: :horizontal_form,
+      hint: 'Optional shared examiner persona/conduct layer (viva_conduct tags), prepended before the briefing. Usually one per course.'
+  = form.input :viva_soft_cap, wrapper: :horizontal_form, label: 'Soft turn cap', hint: 'The examiner is instructed to wrap up within about this many questions.'
+  = form.input :viva_hard_cap, wrapper: :horizontal_form, label: 'Hard turn cap', hint: 'The interview is force-ended and graded at this many student answers.'
+  = form.input :viva_daily_limit, wrapper: :horizontal_form, label: 'Daily start limit', hint: 'Starts per student per day outside contests. Blank = site default; 0 = can only be taken during a contest.'

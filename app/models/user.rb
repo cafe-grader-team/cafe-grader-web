@@ -390,7 +390,7 @@ class User < ApplicationRecord
   end
 
   def last_submission_by_problem(problem)
-    submissions.where(problem: problem).order(:submitted_at).last
+    submissions.regular.where(problem: problem).order(:submitted_at).last
   end
 
   #
@@ -419,10 +419,34 @@ class User < ApplicationRecord
     return problems_for_action(:report).where(id: problem.id).any?
   end
 
+  # THE submit gate: may this user create a submission for this problem?
+  # :submit covers members (and any enabled group role) on fully-live problems;
+  # :edit additionally lets a group's editor test-submit a draft/hidden problem
+  # in their own groups (intended design, 2026-08-22 — web behavior is
+  # authoritative). Use this everywhere a submission can be created or a
+  # submit UI is offered, so the button and the gate can never disagree.
+  def can_submit_to_problem?(problem)
+    return true if admin?
+    return problems_for_action(:submit).where(id: problem).any? ||
+           problems_for_action(:edit).where(id: problem).any?
+  end
+
   def can_edit_problem?(problem)
     # admin always has right
     return true if admin?
     return problems_for_action(:edit).where(id: problem).any?
+  end
+
+  # THE IP-whitelist gate: may this user use the system from this address?
+  # Admins and problem editors are exempt; everyone else must come from a
+  # whitelisted IP while the whitelist is active (right.whitelist_ignore off).
+  # Enforced per-request on both the web (check_valid_login) and the API
+  # (authenticate_api_user!), so leaving the whitelisted network cuts
+  # existing sessions and bearer tokens immediately.
+  def allowed_from_ip?(remote_ip)
+    return true if admin?
+    return true if GraderConfiguration.whitelisted_ip?(remote_ip)
+    problems_for_action(:edit).any?
   end
 
   # Whether the user can download the problem's statement PDF / external
@@ -450,6 +474,12 @@ class User < ApplicationRecord
     # For group mode, reporters can always view the submission of the problem
     return true if problems_for_action(:report).include? submission.problem
 
+    # Near-miss shadow submissions are an instructor-side research artifact.
+    # Students must never see them — not even their own (the owner
+    # short-circuit below would otherwise expose them). Admins and
+    # reporters already returned true above.
+    return false if submission.repaired_from_id.present?
+
     # At this step, we knows that the user does not have special privileges to the problem
 
     # problem available is required
@@ -457,6 +487,14 @@ class User < ApplicationRecord
 
     # a user can view their own submissions
     return true if submission.user == self
+
+    # Archived viva sessions are superseded attempts (retaken/re-archived by
+    # the student or an instructor) — peers may only ever see the canonical
+    # (non-archived) session, even when the problem's view_submission flag
+    # allows transcript sharing. Admins/reporters already returned true
+    # above; the owner already returned true above too, so this only bites
+    # the "other student" paths below.
+    return false if submission.viva_archived_at.present?
 
     # check global disable
     return false unless GraderConfiguration["right.user_view_submission"]
@@ -495,7 +533,7 @@ class User < ApplicationRecord
   def get_jschart_user_sub_history
     start = 4.month.ago.beginning_of_day
     start_date = start.to_date
-    count = Submission.where(user: self).where('submitted_at >= ?', start).group('DATE(submitted_at)').count
+    count = Submission.regular.where(user: self).where('submitted_at >= ?', start).group('DATE(submitted_at)').count
     i = 0
     label = []
     value = []

@@ -32,7 +32,10 @@ end
 #
 # Deploy propagation is handled by the CI/CD pipeline
 # (gitlab.nattee.net/nattee/cafe-grader-automation), which runs:
-#   bundle exec whenever --update-crontab     # rewrites crontab from this file
+#   bundle exec whenever --clear-crontab                # drops the legacy path-identified block (no-op once migrated)
+#   bundle exec whenever --update-crontab cafe-grader   # rewrites crontab from this file under a stable identifier
+#   (the default identifier is the schedule.rb path; renaming the app dir once
+#   orphaned a block and ran two watchdogs per minute — 2026-08-27 incident)
 #   sudo -n systemctl restart solid_queue.service  # reloads recurring.yml
 # on every server. The systemctl line relies on a NOPASSWD sudoers
 # drop-in — see provision/sudoers.d/README.md in the automation repo.

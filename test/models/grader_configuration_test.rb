@@ -68,6 +68,27 @@ class GraderConfigurationTest < ActiveSupport::TestCase
     assert_not GraderConfiguration.use_problem_group?
   end
 
+  # --- IP whitelist ---
+
+  test "whitelisted_ip? accepts any IP while whitelist_ignore is on" do
+    assert GraderConfiguration.whitelisted_ip?("203.0.113.5")
+  end
+
+  test "whitelisted_ip? matches CIDR ranges and exact IPs" do
+    set_grader_config("right.whitelist_ignore", "false")
+    set_grader_config("right.whitelist_ip", "10.0.0.0/8, 192.168.1.5")
+    assert GraderConfiguration.whitelisted_ip?("10.31.4.7")
+    assert GraderConfiguration.whitelisted_ip?("192.168.1.5")
+    assert_not GraderConfiguration.whitelisted_ip?("192.168.1.6")
+    assert_not GraderConfiguration.whitelisted_ip?("203.0.113.5")
+  end
+
+  test "whitelisted_ip? rejects everything when the active whitelist is blank" do
+    set_grader_config("right.whitelist_ignore", "false")
+    set_grader_config("right.whitelist_ip", "")
+    assert_not GraderConfiguration.whitelisted_ip?("127.0.0.1")
+  end
+
   # --- set_exam_mode ---
 
   test "set_exam_mode updates multiple configs" do

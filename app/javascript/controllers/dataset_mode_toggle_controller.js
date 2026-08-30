@@ -9,7 +9,7 @@ import { Controller } from "@hotwired/stimulus"
 //     (compiler.rb:87 / python.rb:24 gate the usage).
 //   * hideUnlessCustomEval — Checker section.
 //     Checker is only consulted when evaluation_type is one of
-//     custom_cafe / custom_cms / custom_cms_raw.
+//     custom_cafe / custom_testlib / custom_testlib_raw / cms_comparator.
 //
 // The Checker section is now ALWAYS rendered (no `if` in the partial)
 // so the upload input exists in the DOM regardless of evaluation_type.
@@ -19,7 +19,7 @@ import { Controller } from "@hotwired/stimulus"
 //
 // compilation_type lives in the left-column problem form (different
 // Turbo Frame), so we receive it via a window event dispatched by the
-// viva-mode-toggle controller. Initial value is server-rendered via
+// viva-exam-toggle controller. Initial value is server-rendered via
 // data-dataset-mode-toggle-compilation-type-value=... so first paint
 // is correct without waiting for the first click.
 //
@@ -36,7 +36,7 @@ export default class extends Controller {
     this.refresh()
   }
 
-  // Called from data-action when viva-mode-toggle dispatches its
+  // Called from data-action when viva-exam-toggle dispatches its
   // mode:compilation-type-changed event on window.
   syncCompilationType(event) {
     this.compilationTypeValue = event.detail?.value ?? ""
@@ -60,7 +60,7 @@ export default class extends Controller {
   refresh() {
     const isSelfContained = this.compilationTypeValue === "self_contained"
     const evalType = this.hasEvaluationTypeTarget ? this.evaluationTypeTarget.value : null
-    const needsChecker = ["custom_cafe", "custom_cms", "custom_cms_raw"].includes(evalType)
+    const needsChecker = ["custom_cafe", "custom_testlib", "custom_testlib_raw", "cms_comparator"].includes(evalType)
 
     this.hideForSelfContainedTargets.forEach(el =>
       el.classList.toggle("d-none", isSelfContained))

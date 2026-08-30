@@ -168,6 +168,10 @@ class ContestsController < ApplicationController
   end
 
   def show_problems_query
+    # D1's practice-viva forgotten-toggle guard (and the columns it needed)
+    # was removed along with the underlying practice/exam toggle
+    # (2026-07-21 context-policy design, Phase A) — nothing in
+    # contestManageProblem reads compilation_type here anymore either.
     render json: {data: @contest.contests_problems.joins(:problem)
       .select('contests_problems.id', :problem_id, :contest_id, :available, :enabled, :allow_llm, :name, :full_name, :number)}
   end

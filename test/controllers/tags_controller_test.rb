@@ -40,6 +40,23 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "edit form hides public checkbox and shows staff-only notice for llm_kind tags" do
+    sign_in_as("admin", "admin")
+    llm_tag = Tag.create!(name: "codey-llm", kind: :llm_prompt, params: "helper prompt")
+    get edit_tag_path(llm_tag)
+    assert_response :success
+    assert_match "Staff-only kind", response.body
+    assert_select "input#tag_public", count: 0
+  end
+
+  test "edit form shows public checkbox and no staff-only notice for normal tags" do
+    sign_in_as("admin", "admin")
+    get edit_tag_path(tags(:tag_easy))
+    assert_response :success
+    assert_no_match "Staff-only kind", response.body
+    assert_select "input#tag_public", count: 1
+  end
+
   test "admin can create tag" do
     sign_in_as("admin", "admin")
     assert_difference("Tag.count") do

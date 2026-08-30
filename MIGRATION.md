@@ -1,6 +1,6 @@
 # Migrating from v1.x to v4.x
 
-> **TL;DR.** v4.x is a ~6.5-year, multi-framework jump from `v1.0.0` (Rails 4.2 + Bootstrap 3, what's been on `master` since October 2019) to current (Rails 8 + Hotwire + Solid Queue + JSON API). Plan a maintenance window, take a full DB backup, expect to update Ruby + Rails + several config files by hand, and run two sets of migrations (primary DB + queue DB). If anything goes wrong, you can roll back to the `v1.0.0` tag without touching your database — assuming you took the backup.
+> **TL;DR.** v4.x is a ~6.5-year, multi-framework jump from `v1.0.0` (Rails 4.2 + Bootstrap 3 — what `master` pointed at from October 2019 until the v4 cutover landed upstream in June 2026) to current (Rails 8 + Hotwire + Solid Queue + JSON API). Plan a maintenance window, take a full DB backup, expect to update Ruby + Rails + several config files by hand, and run two sets of migrations (primary DB + queue DB). If anything goes wrong, you can roll back to the `v1.0.0` tag without touching your database — assuming you took the backup.
 
 ---
 
@@ -10,12 +10,12 @@ This release introduces a retroactive version scheme on a project that was previ
 
 | Tag         | Era                                                              | Roughly what's in it                                              |
 |-------------|------------------------------------------------------------------|-------------------------------------------------------------------|
-| `v1.0.0`    | What `master` has been since 2019                                | Rails 4.2 + Bootstrap 3 + Sprockets + jQuery                      |
+| `v1.0.0`    | What `master` carried 2019 → the v4 cutover                      | Rails 4.2 + Bootstrap 3 + Sprockets + jQuery                      |
 | `v2.0.0`    | Rails 5.2 era (~late 2019 – early 2022, retroactively tagged)    | Rails 5.2 + Bootstrap 3 + Sprockets                               |
 | `v3.0.0`    | Hotwire-modernization era (~2023, retroactively tagged)          | Rails 7 + importmap + Bootstrap 5 + Turbo + Stimulus + new judge  |
 | `v4.0.0+`   | Current era (2025 onwards)                                       | Rails 8 + Solid Queue + LLM features + JSON API + audit logging   |
 
-**Most users will be on `v1.0.0`** because that's what the GitHub `master` branch has pointed at for years. If your last `git pull` predates the v1.0.0 tag being announced, that's still the era you're on. The `v2` and `v3` tags exist as historical anchors — you can check them out if you want a stepping-stone upgrade, but the rest of this guide assumes a direct `v1.0.0 → v4.x` jump.
+**If you have not upgraded since 2019, you are on `v1.0.0`** — that is what the GitHub `master` branch pointed at for years, until the v4 cutover landed there in June 2026. If your last `git pull` predates the v1.0.0 tag being announced, that's still the era you're on. The `v2` and `v3` tags exist as historical anchors — you can check them out if you want a stepping-stone upgrade, but the rest of this guide assumes a direct `v1.0.0 → v4.x` jump.
 
 ---
 
@@ -198,7 +198,7 @@ The v4 migrations are additive — keeping the new columns/tables in your DB wil
 
 ## Staying on v1 long-term
 
-The `v1.0.0` tag is the frozen pre-cutover snapshot — it points at the same commit the GitHub `master` branch has had since October 2019. Expectations:
+The `v1.0.0` tag is the frozen pre-cutover snapshot — it points at the commit the GitHub `master` branch carried from October 2019 until the v4 cutover. Expectations:
 
 - **No** new features.
 - **No** guaranteed security backports. If you find a critical issue, please open one anyway — the maintainer may patch it, but cannot commit to a timeline.
@@ -225,19 +225,3 @@ Most users won't need this — it's only worth doing if you've heavily customize
 - Open an issue: <https://github.com/cafe-grader-team/cafe-grader-web/issues>
 - Tag issues with `v1-to-v4-migration` so they're easy to triage.
 - Include: Ruby version, Rails version (pre-upgrade — almost certainly 4.2), MySQL version, deployment style (Docker / bare metal / Capistrano / etc.), and the exact step where you got stuck.
-
----
-
-## Maintainer checklist (delete before shipping)
-
-- [ ] Confirm exact Ruby range typical of v1.x deployments (2.5–2.7 is a guess).
-- [ ] Confirm exact list of new/renamed config files since v1 and provide `.example` versions.
-- [ ] List `GraderConfiguration` keys that were renamed or removed since v1.
-- [ ] Add `deploy/solid_queue.service.example` (or equivalent) referenced above.
-- [ ] Verify the four retroactive tags point at the agreed hg revs and have been pushed to `cafe-grader-team/cafe-grader-web`:
-  - `v1.0.0` → rev 777
-  - `v2.0.0` → rev 814
-  - `v3.0.0` → rev 901
-  - `v4.0.0` → rev 1325
-  - `v4.3.2` → rev 1564 (existing point release)
-- [ ] After a few more commits past current HEAD, cut a fresh **`v4.4.0`** as the cutover release tag.

@@ -12,8 +12,18 @@ class Group < ApplicationRecord
     joins(:groups_users).where(groups_users: { user_id: user_id, enabled: true, role: 'editor' })
   }
 
+  # 3b: an editor curates their groups whether active or archived, so an editor
+  # can report on a disabled (archived) group; a reporter reports only on LIVE
+  # courses (enabled groups). So a disabled group is reportable only by its
+  # editors. This keeps the report gate, the report group dropdowns, and
+  # User#reportable_users consistent with Problem.group_reportable_by_user.
   scope :reportable_by_user, ->(user_id) {
-    joins(:groups_users).where(groups_users: { user_id: user_id, enabled: true, role: ['editor', 'reporter'] })
+    editor = Group.joins(:groups_users)
+      .where(groups_users: { user_id: user_id, enabled: true, role: 'editor' })
+    reporter = Group.joins(:groups_users)
+      .where(groups_users: { user_id: user_id, enabled: true, role: 'reporter' })
+      .where(groups: { enabled: true })
+    where(id: editor).or(where(id: reporter))
   }
 
   scope :submittable_by_user, ->(user_id) {

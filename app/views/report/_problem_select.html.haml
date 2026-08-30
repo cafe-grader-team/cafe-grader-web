@@ -1,3 +1,10 @@
+-# Prefill from the query string (see ReportHelper#report_filter_param) —
+-# lets other pages deep-link here with a problem/group/tag preselected.
+-# Unknown or unavailable `use` values fall back to "ids" so exactly one radio
+-# is always checked (the Stimulus controller derives the enabled select from it).
+- prob_use = report_filter_param(:probs, :use, default: 'ids')
+- prob_use = 'ids' unless %w[all ids groups tags].include?(prob_use)
+- prob_use = 'ids' if prob_use == 'all' && !local_assigns[:all]
 .card.shadow-sm.mb-2{data: {controller: 'form--filter-problem', action: 'change->form--filter-problem#filterChanged'}}
   .card-body
     %h6.fw-bold.mb-3.d-flex.align-items-center
@@ -5,28 +12,28 @@
       Problems
     - if local_assigns[:all]
       .form-check.mb-2
-        = radio_button_tag :'probs[use]', :all, false, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+        = radio_button_tag :'probs[use]', :all, prob_use == 'all', class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
         = label_tag :probs_use_all, "All problems", class: 'form-check-label'
     .form-check.mb-2
-      = radio_button_tag :'probs[use]', :ids, true, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+      = radio_button_tag :'probs[use]', :ids, prob_use == 'ids', class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
       = label_tag :probs_use_ids, "Only these problems", class: 'form-check-label'
     .ms-4.mb-3
       = select_tag 'probs[ids][]',
-          options_for_select(@problems.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, params[:'probs[ids][]']),
+          options_for_select(@problems.collect {|p| ["[#{p.name}] #{p.full_name}", p.id]}, report_filter_param(:probs, :ids)),
           { class: 'select2 form-control', multiple: "true", data: {'form--filter-problem-target': 'idSelect'} }
     .form-check.mb-2
-      = radio_button_tag :'probs[use]', :groups, false, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+      = radio_button_tag :'probs[use]', :groups, prob_use == 'groups', class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
       = label_tag :probs_use_groups, "Problems in these groups", class: 'form-check-label'
     .ms-4.mb-3
       = select_tag 'probs[group_ids][]',
-          options_for_select(@groups.collect {|g| [g.name, g.id]},params[:prob_group_id]),
+          options_for_select(@groups.collect {|g| [g.name, g.id, { 'data-archived' => (!g.enabled).to_s }]}, report_filter_param(:probs, :group_ids)),
           { class: 'select2 form-control', multiple: "true", data: {'form--filter-problem-target': 'groupSelect'} }
     .form-check.mb-2
-      = radio_button_tag :'probs[use]', :tags, false, class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
+      = radio_button_tag :'probs[use]', :tags, prob_use == 'tags', class: 'form-check-input', data: {'form--filter-problem-target': 'useOption'}
       = label_tag :probs_use_tags, "Problems with these tags", class: 'form-check-label'
     .ms-4
       = select_tag 'probs[tag_ids][]',
-          options_for_select(Tag.all.collect {|t| [t.name, t.id]},params[:prob_tag_id]),
+          options_for_select(Tag.all.collect {|t| [t.name, t.id]}, report_filter_param(:probs, :tag_ids)),
           { class: 'select2 form-control', multiple: "true", data: {'form--filter-problem-target': 'tagSelect'} }
 :javascript
   // save the problem selection input into d
