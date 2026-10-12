@@ -10,6 +10,25 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 
 ## [Unreleased]
 
+### Changed
+- **AI assist on Claude through the AI gateway costs about half as much
+  during exams.** Each request now has a fixed line, "End of the problem
+  material. The student's work follows.", between the problem material (the
+  `codey-*` prompt tags, the statement PDF, the manager files) and the
+  student's work. On gateway requests that line carries a prompt-cache
+  marker: Claude keeps the problem material for 5 minutes, and the next
+  request on the same problem pays a tenth of the input price for it.
+  Measured through the Chula AI Gateway on a Quiz 2 problem, the material is
+  82% of the input and the same request cost $0.126 without the marker and
+  $0.054 with it. The request that stores the material pays 25% extra on it,
+  so a problem nobody asks about for 5 minutes pays that again. In Quiz 2, 94%
+  of Opus requests came within 5 minutes of the previous one on the same
+  problem. Answers do not change and are about 1 second faster out of a
+  typical 22. Gemini models ignore the marker, and other providers get the
+  line without it. To turn the marker off, set `prompt_cache: false` in the
+  `ai_gateway:` block of `config/llm.yml`; no setting is needed to keep it on.
+  The manager files are now always sent sorted by file name. (rev 2264)
+
 ## [4.7.3] — 2026-10-08
 
 **Upgrade notes.** No migration; a change to `config/queue.yml` and

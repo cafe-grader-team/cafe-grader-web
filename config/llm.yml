@@ -107,6 +107,16 @@ llm_services: &services
   # the unknown key upstream. With neither source available every call records
   # $0.00 and logs a WARN naming the model.
   #
+  # `prompt_cache:` is on when absent; `prompt_cache: false` turns it off. When
+  # on, the submission assist marks the end of the problem material (the
+  # llm_prompt tags, the statement PDF, the managers) with
+  # `cache_control: {type: ephemeral}`. A Claude model then keeps that part for
+  # 5 minutes, and later requests on the same problem pay 10% of the input
+  # price for it (the request that stores it pays 125%). Measured through the
+  # Chula AI Gateway 2026-10-09: the same request cost $0.126 without the
+  # marker and $0.054 with it. Gemini ignores the key. Turn it off for a
+  # gateway that rejects unknown keys on content parts.
+  #
   # UNVERIFIED against a live OpenRouter account (no code path is OpenRouter-
   # specific, but nothing here has been exercised end to end): (a) the exact
   # `usage.cost` field name and its opt-in key, (b) whether OpenRouter accepts

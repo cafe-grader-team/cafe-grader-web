@@ -65,6 +65,32 @@ class Llm::CommentAssistTest < ActiveSupport::TestCase
     refute_includes preview_user_text, 'previous answer'
   end
 
+  # --- the problem-material boundary (prompt caching) ---
+
+  def boundary_index(parts) = parts.index { |p| p[:text] == Llm::CommentAssist::PROBLEM_MATERIAL_END }
+
+  test "the boundary sentence comes before the student's work and carries no cache marker by default" do
+    @submission.evaluations.create!(testcase: testcases(:tc_add_1), result: :correct, time: 12, memory: 3072, score: 1.0)
+    @submission.update_columns(status: Submission.statuses[:done], grader_comment: 'P', points: 100)
+    parts = Llm::CommentAssist.preview(submission: @submission, comment: Comment.new, model: 'x')[:messages].last[:content]
+    i = boundary_index(parts)
+    assert_equal 0, i, 'no statement PDF and no managers: the boundary opens the user message'
+    assert_operator i, :<, parts.index { |p| p[:text].to_s.include?('Per-testcase results') }
+    assert_operator i, :<, parts.index { |p| p[:text].to_s.include?('source code of the student') }
+    refute parts[i].key?(:cache_control), 'only a provider that supports caching adds the marker'
+  end
+
+  test "managers come before the boundary, sorted by file name whatever order they were attached in" do
+    dataset = @submission.problem.live_dataset
+    dataset.managers.attach(io: StringIO.new('// zeta'), filename: 'zeta.h')
+    dataset.managers.attach(io: StringIO.new('// alpha'), filename: 'alpha.h')
+    parts = Llm::CommentAssist.preview(submission: @submission, comment: Comment.new, model: 'x')[:messages].last[:content]
+    managers_at = parts.index { |p| p[:text].to_s.start_with?('Here are managers') }
+    assert_equal managers_at + 1, boundary_index(parts)
+    json = JSON.parse(parts[managers_at][:text][/\{.*\}/m])
+    assert_equal %w[alpha.h zeta.h], json.keys
+  end
+
   # --- accounting ---
 
   class CostedAssist < Llm::CommentAssist

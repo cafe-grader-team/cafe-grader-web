@@ -15,5 +15,17 @@ module Llm
       @model = gateway_default_model unless self.class.gateway_models.include?(@model.to_s)
       super
     end
+
+    # Prompt caching on the problem-material boundary (measured through the
+    # Chula AI Gateway 2026-10-09, doc/Assist-History.md): Claude keeps
+    # everything up to the marked part for 5 minutes, and the next request on
+    # the same problem pays a tenth of the input price for it (the request
+    # that stores it pays 1.25x). LiteLLM passes the key through; Gemini
+    # ignores it. `prompt_cache: false` in llm.yml's ai_gateway block turns it
+    # off, e.g. for a gateway that rejects unknown keys on content parts.
+    def prompt_cache_marker
+      return {} if self.class.gateway_config[:prompt_cache] == false
+      {cache_control: {type: 'ephemeral'}}
+    end
   end
 end

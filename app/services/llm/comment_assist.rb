@@ -118,8 +118,11 @@ module Llm
     def build_content_array
       result = [pdf_attachment]
 
-      managers = @submission.problem.live_dataset.managers
-      if managers.count > 0
+      # Sorted by file name: the attachment query has no order of its own, and
+      # prompt caching needs everything before the boundary part to be
+      # byte-identical from one request to the next.
+      managers = @submission.problem.live_dataset.managers.sort_by { |m| m.filename.to_s }
+      if managers.any?
         managers_json = {}
         managers.each { |m| managers_json[m.filename.to_s] = m.download }
 
@@ -146,6 +149,7 @@ module Llm
         }
       end
 
+      result << problem_material_end_part
       result << grading_context_part   # compiler output or per-testcase table; nil when neither exists
       result << previous_assist_part   # nil on the student's first request for this problem
       result << user_source_code
@@ -154,6 +158,23 @@ module Llm
       # request (400)
       result.compact
     end
+
+    # --- the boundary between the problem material and the student's work ---
+    # Everything before this part (the llm_prompt system parts, the statement
+    # PDF, the managers) is the same for every student on the problem;
+    # everything after it is this student's. A provider that supports prompt
+    # caching marks this part (#prompt_cache_marker) so that shared beginning
+    # is kept and re-read cheaply by the next request on the same problem.
+
+    PROBLEM_MATERIAL_END = "End of the problem material. The student's work follows.".freeze
+
+    def problem_material_end_part
+      {type: 'text', text: PROBLEM_MATERIAL_END}.merge(prompt_cache_marker)
+    end
+
+    # Extra keys for the boundary part. None by default; AiGatewayAssist
+    # overrides it.
+    def prompt_cache_marker = {}
 
     # --- what the grader already knows ---
     # Before these parts existed the prompt asked the model to infer subtask
