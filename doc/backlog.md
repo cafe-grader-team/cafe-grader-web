@@ -288,11 +288,13 @@ the dead `AI_viva` tag deleted. Still open:
   `~/cafe-grader/assist-eval-2026-09-03/`, copies in `course-prep`) and compare
   read scores and outcomes against the 2026-09-03 document — compile-error and
   repeat-request cells first.
-- **Gateway models unread.** claude-opus-4-5 (37 answers by 2026-09-03) and
-  gemini-3.7-flash (26) were never read for quality; with Genie off the picker
-  they are the whole roster. Read a sample once ~50 answers each exist. Ask OIT
-  whether the Gateway can serve a Gemini Pro model — gemini-3.1-pro was 0/90
-  wrong and is the model the v2.2 prompt was tested on.
+- **Gateway models: read done 2026-10-13, picker decision open.** Opus
+  misdiagnoses 8–12 of 60 answers, flash 0 of 39; Opus keeps to one issue in
+  48% vs flash's 82%; outcomes do not differ
+  (`doc/assist-gateway-read-2026-10-13.md`). Open for dae: list flash first,
+  take Opus out of the picker (keep it as a backup), or leave as is. Still
+  worth asking OIT whether the Gateway can serve a Gemini Pro model —
+  gemini-3.1-pro was 0/90 wrong and is the model the v2.2 prompt was tested on.
 
 ### Prompt
 - **TLE hand-over shape fix** (template or a second pass): the model names the

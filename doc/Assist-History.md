@@ -97,6 +97,19 @@ student nothing (since 2026-09-09).
 
 ## Entries
 
+### 2026-10-13 — First read of the Gateway models' answers: Opus misdiagnoses, flash does not
+**study** · `doc/assist-gateway-read-2026-10-13.md`; data + scripts `course-prep` rev 26 (`assist/eval-2026-10-13/`)
+- **Problem observed:** since 2026-09-10 the picker offers only claude-opus-4-5 and gemini-3.7-flash (Gateway), and nobody had read their answers (backlog "Gateway models unread"). Students pick Opus about two to one.
+- **Change:** 99 production answers from 2026-09-06 on (60 Opus, 39 flash), cell mix copied from the 2026-09-04 offline test, read blind by 6 Claude readers on Part 1's rubric. Every wrong-diagnosis call was then checked by hand.
+- **Outcome / status:**
+  - **Wrong diagnoses:** Opus 12 of 60 by the readers, 8 plainly wrong on the hand check; flash 0 of 39. On the 18 problems both models answered, 7 of 38 against 0 of 37.
+  - **One issue only:** Opus 48%, flash 82%.
+  - **The same for both:** stating the fix (about 88%), handing over the algorithm (5% each), and no code.
+  - **Flash's weak spot:** 5 of 39 diagnoses rest on header files the material lacks.
+  - **What students did next** (all 894 answers since 09-06): no difference — improved 39% vs 43%, worse 12% each.
+  - **Price:** flash costs about a ninth as much ($0.012 vs $0.103 per answer).
+  - **Open decision (dae):** (a) list flash first, (b) take Opus out of the picker and keep it as a backup, as was done with Genie on 09-09, or (c) leave as is. The study recommends (b).
+
 ### 2026-10-12 — Prompt caching on the problem material (Claude via the Gateway)
 **platform code + measurement** · master 2264; live tests 2026-10-09 and 2026-10-12 through the Chula AI Gateway (throwaway scripts, not kept)
 - **Problem observed:** claude-opus-4-5 was about 94% of the Gateway assist spend (616 requests, $55.9 from 2026-09-05 to 10-07), and exams concentrate it: Quiz 2 (`d69_q2`, 2026-10-07) cost $22.40 for 218 Opus requests. Most of each request is the same for every student on a problem: the `codey-*` tags, the statement PDF and the managers, an estimated 9.7k–15.4k tokens, about 85% of the input. None of it was reused: 0 cache reads on Opus, and 1 automatic reuse in 286 gemini-3.7-flash requests. In Quiz 2, 94% of Opus requests came within 5 minutes of the previous request on the same problem and 99% within 60 minutes; in normal weeks the figures are 52% and 65%. The 5-minute storage option is the cheaper one in both cases.
