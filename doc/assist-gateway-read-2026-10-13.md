@@ -2,7 +2,7 @@
 
 > **Data and scripts for this study are not in this repository.** They contain
 > student code and tutor answers to real students and live in the instructor's
-> local `course-prep` repo, `assist/eval-2026-10-13/` (revs 26–27; see "Where the
+> local `course-prep` repo, `assist/eval-2026-10-13/` (revs 26–28; see "Where the
 > record lives" in `doc/Assist-History.md`). This document holds the method, the
 > numbers and the conclusions only.
 
@@ -169,6 +169,65 @@ counts as improved, same or worse by its points.
 6. **Flash costs about a ninth as much,** and still about a fifth of Opus with
    prompt caching (master 2264).
 
+## Opus with thinking (2026-10-15)
+
+**Why.** The Gateway's Opus answers with no thinking: 0 reasoning tokens. Flash
+reasons before it answers (about 500–1,200 tokens). Was the gap a weakness of
+Opus, or of Opus answering without thinking?
+
+**How.** The same 60 Opus inputs were answered again, offline, by
+claude-opus-4-5 with extended thinking (budget 4,096 tokens, `max_tokens`
+8,192). Each request was rebuilt exactly as production built it: the same
+prompt tags, PDF, managers and grading table, and only the previous answers
+the student had received by then. It was sent through the committed Gateway
+code (`course-prep` rev 28, `thinking/`). Nothing was stored or shown to a
+student.
+
+The 60 new answers were mixed with 20 anchors: the 12 original Opus answers
+the first read had marked wrong, and 8 it had marked correct. All 80 were read
+blind by 5 fresh Claude readers on the same rubric. The anchors check that the
+new readers are as strict as the first ones:
+- 11 of the 12 wrong anchors were marked wrong again. The exception is R040,
+  whose named bug is real but not the cause.
+- All 8 correct anchors were marked correct again.
+
+| | Opus, no thinking (first read) | **Opus with thinking** | flash (first read) |
+|---|---|---|---|
+| wrong diagnosis | 12 of 60 (20%) | **5 of 60 (8%)** | 0 of 39 |
+| one issue only | 48% | 58% | 82% |
+| states the fix or worse | 90% | 97% | 87% |
+| hands over the algorithm | 5% | 7% | 5% |
+| ends with a concrete step | 88% | 97% | 85% |
+| English words (median) | 204 | 190 | 125 |
+| time per answer (median) | 22 s (production) | **39 s** | 12 s (production) |
+| price per answer | $0.103; $0.05–0.06 with caching | ≈$0.11 with caching | $0.012 |
+
+**Same input, without → with thinking.**
+- Of the 12 inputs the first answer got wrong, 9 are now correct and 3 still
+  wrong: a redundant lookup blamed for a time limit, a signed/unsigned story
+  for crashes, and a trailing space blamed for wrong answers.
+- 2 inputs that were right became wrong. One tells the student to delete the
+  semicolon that is their intended empty if-body; the other misreads the
+  verdict.
+- Every new reader found exactly 1 wrong answer in its 12 thinking answers.
+
+**Hard check** (`hard/hard-check.md`) on the 8 runnable inputs where plain
+Opus was wrong:
+- In 5 (R030, R048, R064, R083, R041), the thinking answer names the cause
+  that fixes the failing tests.
+- R021 is half right: its main claim fixes nothing, its aside is the real crash
+  cause.
+- R040 and R076 still blame a real bug that fixes no failing test. The readers
+  counted those two as correct, because the rubric accepts any real bug, so by
+  the stricter standard thinking Opus is at about 7 of 60.
+
+**Reading.** Thinking roughly halves Opus's wrong diagnoses (20% → 8–12%) and
+lifts its next-step rate. That supports the explanation that Opus was weak
+without thinking, not weak at the task. It does not catch up with flash:
+flash still makes no confirmed diagnosis errors, keeps to one issue far more
+often, answers in a third of the time and costs about a ninth as much.
+Thinking also makes Opus state the fix more often (97%).
+
 ## Decision (open, dae)
 
 Students pick Opus about two to one (Quiz 2: 218 vs 101). Options:
@@ -179,11 +238,18 @@ Students pick Opus about two to one (Quiz 2: 218 vs 101). Options:
   `config/llm.yml`. Flash would then be the only Gateway model until a better
   one (for example a Gemini Pro from OIT) is available.
 - **(c)** Leave the picker as it is.
+- **(e)** Keep Opus but with thinking on. This is a small code change on
+  master: per-model extra request parameters in the `ai_gateway:` config.
+  Costs: answers take about 39 s instead of 22 s, and the price per answer is
+  about double the cached no-thinking price.
 
-The measured accuracy and focus favour (b). The outcome data gives no reason
-to expect students to do worse without Opus. Prompt caching then saves nothing
-in practice, because flash ignores the marker. It stays harmless and ready if a
-Claude model returns.
+The measured accuracy and focus still favour (b). Even with thinking, Opus is
+behind flash on diagnosis and focus, and slower and dearer. The outcome data
+gives no reason to expect students to do worse without Opus. If a Claude
+option should stay in the picker, (e) is a clear improvement over today's Opus,
+and it combines with (a). Prompt caching saves nothing under (b), because
+flash ignores the marker. It stays harmless and ready if a Claude model
+returns.
 
 ## Caveats
 

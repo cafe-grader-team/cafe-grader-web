@@ -109,6 +109,12 @@ student nothing (since 2026-09-09).
   - **Flash's weak spot:** 5 of 39 diagnoses rest on header files the material lacks.
   - **What students did next** (all 894 answers since 09-06): no difference — improved 39% vs 43%, worse 12% each.
   - **Price:** flash costs about a ninth as much ($0.012 vs $0.103 per answer).
+  - **Opus with thinking (2026-10-15, `course-prep` rev 28):** the same 60 inputs were answered again offline with extended thinking (budget 4,096) and read blind with 20 anchors from the first read. The new readers agreed with the first read on 19 of the 20 anchors.
+    - **Wrong diagnoses:** 20% → 8% (5 of 60). 9 of the 12 originally wrong inputs are now right; 2 right ones became wrong.
+    - **Hard check:** on the 8 runnable inputs where plain Opus was wrong, the thinking answer names the cause that fixes the tests in 5 and half of it in 1.
+    - **Other measures:** one issue 48% → 58%; the median answer took 39 s (22 s without thinking); about $0.11 per answer with caching.
+    - **Against flash:** still behind (0 wrong, 82% one issue, 12 s).
+    - **New option (e):** keep Opus but turn thinking on, which needs a small master change. The study still recommends (b).
   - **Open decision (dae):** (a) list flash first, (b) take Opus out of the picker and keep it as a backup, as was done with Genie on 09-09, or (c) leave as is. The study recommends (b).
 
 ### 2026-10-12 — Prompt caching on the problem material (Claude via the Gateway)

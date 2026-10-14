@@ -291,8 +291,11 @@ the dead `AI_viva` tag deleted. Still open:
 - **Gateway models: read done 2026-10-13, picker decision open.** Opus
   misdiagnoses 8–12 of 60 answers, flash 0 of 39; Opus keeps to one issue in
   48% vs flash's 82%; outcomes do not differ
-  (`doc/assist-gateway-read-2026-10-13.md`). Open for dae: list flash first,
-  take Opus out of the picker (keep it as a backup), or leave as is. Still
+  (`doc/assist-gateway-read-2026-10-13.md`). With thinking on (tested
+  2026-10-15), Opus drops to 5 of 60 wrong but stays behind flash and takes
+  39 s per answer. Open for dae: list flash first, take Opus out of the
+  picker (keep it as a backup), leave as is, or keep Opus with thinking on
+  (needs per-model request parameters in the `ai_gateway:` config). Still
   worth asking OIT whether the Gateway can serve a Gemini Pro model —
   gemini-3.1-pro was 0/90 wrong and is the model the v2.2 prompt was tested on.
 
