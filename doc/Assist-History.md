@@ -102,7 +102,8 @@ student nothing (since 2026-09-09).
 - **Problem observed:** since 2026-09-10 the picker offers only claude-opus-4-5 and gemini-3.7-flash (Gateway), and nobody had read their answers (backlog "Gateway models unread"). Students pick Opus about two to one.
 - **Change:** 99 production answers from 2026-09-06 on (60 Opus, 39 flash), cell mix copied from the 2026-09-04 offline test, read blind by 6 Claude readers on Part 1's rubric. Every wrong-diagnosis call was then checked by hand.
 - **Outcome / status:**
-  - **Wrong diagnoses:** Opus 12 of 60 by the readers, 8 plainly wrong on the hand check; flash 0 of 39. On the 18 problems both models answered, 7 of 38 against 0 of 37.
+  - **Wrong diagnoses:** Opus 12 of 60 by the readers; flash 0 of 39. On the 18 problems both models answered, 7 of 38 against 0 of 37.
+  - **Hard check (2026-10-14, `course-prep` rev 27):** the students' code was run on the real tests three ways — unchanged, changed as the tutor said, and changed at the reader's named cause. For all 8 Opus calls that could run, following the tutor fixed nothing: 7 changed no test at all, and the eighth passed 2 of its 4 failing tests by side effect. Fixing the reader's cause made the failing tests pass. All 5 flash diagnoses that were run named a real cause.
   - **One issue only:** Opus 48%, flash 82%.
   - **The same for both:** stating the fix (about 88%), handing over the algorithm (5% each), and no code.
   - **Flash's weak spot:** 5 of 39 diagnoses rest on header files the material lacks.

@@ -2,7 +2,7 @@
 
 > **Data and scripts for this study are not in this repository.** They contain
 > student code and tutor answers to real students and live in the instructor's
-> local `course-prep` repo, `assist/eval-2026-10-13/` (rev 26; see "Where the
+> local `course-prep` repo, `assist/eval-2026-10-13/` (revs 26–27; see "Where the
 > record lives" in `doc/Assist-History.md`). This document holds the method, the
 > numbers and the conclusions only.
 
@@ -52,7 +52,7 @@ the assisted submission 25.9 vs 27.0, median source length 44 lines for both.
 |---|---|---|---|
 | states the fix or worse (leak ≥1) | 54 (90%) | 34 (87%) | 87 |
 | hands over the algorithm (leak 2) | 3 (5%) | 2 (5%) | 8 |
-| **wrong diagnosis** | **12 (20%)**, 8 on the hand check | **0** | 1 |
+| **wrong diagnosis** | **12 (20%)**; all 8 that could be run confirmed | **0**; 5 run, all real causes | 1 |
 | unverifiable diagnosis | 1 (2%) | 5 (13%) | — |
 | **one issue only** | **29 (48%)** | **32 (82%)** | 89 |
 | ends with a concrete step | 53 (88%) | 33 (85%) | 92 |
@@ -79,13 +79,48 @@ The hand check agreed with 8 of the 12 outright:
 - 1 blamed crashes on negative `k`, which causes long loops, not crashes, with
   wrong example arithmetic.
 
-The other 4 are partly right. Each names a real bug or the right line, together
+The other 4 looked partly right on reading (the hard check below shows they are not). Each names a real bug or the right line, together
 with a false claim: a wrong cause, a false "this part is correct", or a fix
 that would not work. The four flash spot checks were all right.
 
 Part 1 (2026-09-03, old prompt and payload, every current-model answer, no
 cell weighting) had already put Opus at 11% wrong (4 of 37) and flash at 4%
 (1 of 26). The v2.2 prompt did not fix Opus's accuracy.
+
+**Hard check (2026-10-14): run the code.** This check relies on nobody's
+judgement. For 8 of the 12 Opus calls, plus 5 flash answers the readers
+called correct, the student's own program was run on the problem's real
+tests. The test files were copied from production storage, and the program
+was compiled with production's flags. It was run three ways: as submitted,
+changed the way the tutor said, and changed at the cause the reader named.
+
+Every unchanged program reproduced its production verdict, apart from three
+explained differences (`course-prep` rev 27, `hard/hard-check.md`). The other
+4 Opus calls need class header files and were not run.
+
+- **Opus (8 answers).** In 7, doing what the tutor said changes nothing; the
+  same tests still fail. In the eighth (R048), the tutor's rewrite happens to
+  rescue 2 of 4 failing tests, but the cause is an integer overflow the tutor
+  never mentions. Fixing it alone passes all 20.
+
+  Where the reader named a cause, fixing that cause made the failing tests
+  pass every time:
+  - R030: the output was missing its count line (16 of 20 pass; all 20 with
+    `long long`).
+  - R040: resize never set the size, the part the tutor called correct.
+  - R083: the code reads past the end of a set, which is undefined behaviour.
+    The `p + sum[bad]` lookup the tutor blamed passes all 10 tests untouched.
+  - R021: moved employees keep a department that was merged away (8 crashing
+    tests pass).
+  - R041: floors with exactly `p` rooms were left out of the search (the
+    crashes stop).
+
+  R064 needs no run: the tutor quotes `<` where the student's code says `<=`.
+  The hand check's four "partly right" cases all turn out wrong in this
+  stronger sense: following the answer does not fix any failing test.
+- **Flash (5 answers).** Each named cause is real. Fixing it makes previously
+  failing tests pass: 3 more tests, the crashes stop, 3 more, all 20, and 9
+  more once a second bug is also fixed.
 
 **Shape** (English body, measured mechanically):
 
@@ -109,12 +144,14 @@ counts as improved, same or worse by its points.
 
 ## Findings
 
-1. **Opus gets the diagnosis wrong in about one answer in six (8–12 of 60);
-   flash in none of 39.** Opus's errors are confident and specific. It
-   misquotes the code, blames a line that is fine, or explains a time limit
-   with the wrong cause, so a student who follows the answer looks in the wrong
-   place. Part 1 linked wrong diagnoses to worse next submissions (39% worse vs
-   18%).
+1. **Opus gets the diagnosis wrong in 12 of 60 answers; flash in none of
+   39.** Running the code confirmed every one of the 8 Opus calls that could
+   run: doing what the tutor said does not fix the failing tests. Every flash
+   diagnosis tested this way named a real cause. Opus's errors are confident
+   and specific. It misquotes the code, blames a line that is fine, or
+   explains a failure with the wrong cause, so a student who follows the
+   answer looks in the wrong place. Part 1 linked wrong diagnoses to worse
+   next submissions (39% worse vs 18%).
 2. **Opus does not keep to one issue** (48% vs flash's 82%, and the 89% the
    prompt reached on gemini-3.1-pro). It writes two-thirds more words. The v2.2
    shape rules work on the Gemini models and only half work on Opus.
@@ -161,4 +198,10 @@ Claude model returns.
 - Compiler messages were cut at 1,500 characters in the reading material (one
   flash answer became unverifiable because of it). Class header files were
   never included.
-- The hand check was not blind.
+- The hand check was not blind. The hard check does not depend on anyone's
+  judgement, but "doing what the tutor said" still had to be written as code
+  by the session. Each variant is kept beside the original, so it can be
+  checked (`course-prep` rev 27, `hard/`).
+- The hard check ran only answers the readers had flagged (Opus) or passed
+  (flash). It shows the readers' calls are right; the rate itself still
+  rests on the readers covering all 99 answers.
