@@ -115,6 +115,11 @@ student nothing (since 2026-09-09).
     - **Other measures:** one issue 48% → 58%; the median answer took 39 s (22 s without thinking); about $0.11 per answer with caching.
     - **Against flash:** still behind (0 wrong, 82% one issue, 12 s).
     - **New option (e):** keep Opus but turn thinking on, which needs a small master change. The study still recommends (b).
+  - **Quiz 2 head-to-head (2026-10-15, `course-prep` revs 29–31):** asked for by dae — this year's exam content only, every model on the same inputs. 60 real requests from the three non-viva `d69_q2` problems were answered offline by flash, Opus as in production and Opus with thinking, then read blind by 9 readers.
+    - **Wrong diagnoses:** flash 3%, Opus 37%, Opus with thinking 12%. Comparing the same inputs, Opus was wrong where flash was right 21 times and the reverse happened once; thinking Opus against flash was 6 to 1, which this sample cannot settle.
+    - **Hard check:** most of plain Opus's errors are on the stack time-limit problem. It blamed the per-element copy, where counting the grader's expensive copies shows the cost is growing the stack one element at a time (12.7 million copies against 4.5 million). Its suggested fixes crash, save nothing, or are impossible within the problem.
+    - **Time and price per answer:** flash 16 s and $0.011; Opus 21 s and $0.049; thinking Opus 51 s and $0.10. One thinking request returned an empty reply.
+    - **Recommendation now:** (b) flash only; (a) + (e) if a Claude choice must stay; (c) is ruled out.
   - **Open decision (dae):** (a) list flash first, (b) take Opus out of the picker and keep it as a backup, as was done with Genie on 09-09, or (c) leave as is. The study recommends (b).
 
 ### 2026-10-12 — Prompt caching on the problem material (Claude via the Gateway)

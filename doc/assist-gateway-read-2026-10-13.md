@@ -2,7 +2,7 @@
 
 > **Data and scripts for this study are not in this repository.** They contain
 > student code and tutor answers to real students and live in the instructor's
-> local `course-prep` repo, `assist/eval-2026-10-13/` (revs 26–28; see "Where the
+> local `course-prep` repo, `assist/eval-2026-10-13/` (revs 26–31; see "Where the
 > record lives" in `doc/Assist-History.md`). This document holds the method, the
 > numbers and the conclusions only.
 
@@ -223,10 +223,85 @@ Opus was wrong:
 
 **Reading.** Thinking roughly halves Opus's wrong diagnoses (20% → 8–12%) and
 lifts its next-step rate. That supports the explanation that Opus was weak
-without thinking, not weak at the task. It does not catch up with flash:
-flash still makes no confirmed diagnosis errors, keeps to one issue far more
-often, answers in a third of the time and costs about a ninth as much.
-Thinking also makes Opus state the fix more often (97%).
+without thinking, not weak at the task. Against flash, this round alone
+cannot rank them: 5 of 60 against 0 of 39 could be chance, about 1 time in 13.
+The head-to-head below settles what can be settled. Flash answers in a third of
+the time and costs about a ninth as much. Thinking also makes Opus state the
+fix more often (97%).
+
+## Quiz 2 head-to-head (2026-10-15)
+
+**Why.** The rounds above compare different students on mostly different
+problems. dae asked for the comparison on this year's exam content only.
+
+**How.** The inputs are 60 real requests from the Quiz 2 contest `d69_q2`,
+from its three non-viva problems (20 each):
+- spread over failure types and first/repeat requests (30/30), in proportion
+  to each problem's own requests;
+- from 44 students, at most 2 per student.
+
+Flash, Opus as production runs it, and Opus with thinking each answered **the
+same 60 inputs** offline, through the committed code. Each request was rebuilt
+exactly as production built it.
+- One thinking request returned an empty reply after spending its token
+  allowance. It is counted as a failure here (in production the student would
+  see an error) and was retried once for reading.
+- All 180 answers were read blind by 9 readers on the same rubric: 20 each,
+  about 6–7 of each version per reader, and never two answers to the same
+  input in one chunk.
+- Data and scripts: `course-prep` revs 29–31, `q2/`.
+
+| | flash | Opus (as in production) | Opus with thinking |
+|---|---|---|---|
+| **wrong diagnosis** | **2 of 60 (3%)** | **22 of 60 (37%)** | **7 of 60 (12%)** |
+| one issue only | 73% | 47% | 62% |
+| ends with a concrete step | 88% | 90% | 87% |
+| states the fix or worse | 87% | 92% | 95% |
+| hands over the algorithm | 8% | 12% | 3% |
+| time per answer (median) | 16 s | 21 s | 51 s |
+| price per answer (with caching) | $0.011 | $0.049 | $0.10 |
+| wrong diagnoses, stack_super_push / vector_find / slime_tower | 0 / 1 / 1 | 13 / 6 / 3 | 4 / 0 / 3 |
+
+**Same input, two versions** (only the inputs where they disagree count):
+- **Opus vs flash, wrong diagnosis:** Opus wrong and flash right on 21 inputs,
+  the reverse on 1. A split that lopsided would happen by chance less than 1
+  time in 1,000.
+- **Opus vs flash, not one issue:** 20 against 4 (chance about 1 in 500).
+- **Opus vs Opus with thinking, wrong diagnosis:** 15 against 0.
+- **Opus with thinking vs flash:** 6 against 1 on diagnosis (chance about 1
+  in 8) and 14 against 7 on focus. These favour flash, but are not established
+  at this size.
+- **Handing over the algorithm and next steps:** no difference that holds up.
+
+Every one of the 9 readers found at least one wrong plain-Opus diagnosis.
+
+**Hard check** (`course-prep` rev 31, `q2/hard/hard-check.md`). Run unchanged,
+the students' submissions reproduce production's per-test results on 52 of 60
+inputs; the other 8 are time limits that pass on the faster local machine.
+
+- **stack_super_push time limits (13 of plain Opus's 22).** The grader's
+  element type makes every copy expensive, so the copies can be counted.
+  - The four submissions checked push one element at a time: 12.7 million
+    copies. Making room once per call, then assigning: 4.5 million.
+  - Flash and thinking Opus told those students to make room once.
+  - Plain Opus blamed the per-element copy, which every solution needs. Its
+    advice to copy from `mData` crashes when followed literally, and copies as
+    much or more when made safe (12.8–17.0 million).
+  - Its other advice, storing (value, count) runs, is impossible in this
+    problem: `student.h` may only define the two `push` functions.
+- **vector_find.** Plain Opus's worked example for two inputs is answered
+  correctly by the students' own code. The example meant to show the bug does
+  not fail.
+- **Flash's wrong call on slime_tower is real.** Doing what flash said fixes
+  the 3 wrong-answer tests, but 17 time limits come from an infinite loop that
+  no version named.
+
+**Reading.** On this year's own exam problems, with every model on the same
+inputs, Opus as production runs it misdiagnoses about one answer in three.
+That is ten times flash's rate. Most errors are on the time-limit problem,
+where Opus blames the wrong cost and recommends changes that cannot work.
+Thinking cuts Opus to 12%, close enough to flash's 3% that 60 inputs cannot
+separate them, but each answer takes 51 s and costs nine times flash's price.
 
 ## Decision (open, dae)
 
@@ -243,13 +318,19 @@ Students pick Opus about two to one (Quiz 2: 218 vs 101). Options:
   Costs: answers take about 39 s instead of 22 s, and the price per answer is
   about double the cached no-thinking price.
 
-The measured accuracy and focus still favour (b). Even with thinking, Opus is
-behind flash on diagnosis and focus, and slower and dearer. The outcome data
-gives no reason to expect students to do worse without Opus. If a Claude
-option should stay in the picker, (e) is a clear improvement over today's Opus,
-and it combines with (a). Prompt caching saves nothing under (b), because
-flash ignores the marker. It stays harmless and ready if a Claude model
-returns.
+Today's Opus should not stay as it is: on the Quiz 2 head-to-head it
+misdiagnoses ten times as often as flash. So (c) is out. That leaves:
+
+- **(b)**, flash only. It is the most accurate version measured, and the
+  fastest and cheapest.
+- **(a) + (e)**, a thinking Opus beside flash. Its accuracy is not separable
+  from flash's at this size, but students would wait about 51 s per answer
+  (flash 16 s) at nine times the price.
+
+The study recommends (b). (a) + (e) is the option if keeping a Claude choice
+in the picker matters. The outcome data gives no reason to expect students to
+do worse without Opus. Prompt caching saves nothing under (b), because flash
+ignores the marker. It stays harmless and ready if a Claude model returns.
 
 ## Caveats
 

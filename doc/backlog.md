@@ -292,10 +292,12 @@ the dead `AI_viva` tag deleted. Still open:
   misdiagnoses 8–12 of 60 answers, flash 0 of 39; Opus keeps to one issue in
   48% vs flash's 82%; outcomes do not differ
   (`doc/assist-gateway-read-2026-10-13.md`). With thinking on (tested
-  2026-10-15), Opus drops to 5 of 60 wrong but stays behind flash and takes
-  39 s per answer. Open for dae: list flash first, take Opus out of the
-  picker (keep it as a backup), leave as is, or keep Opus with thinking on
-  (needs per-model request parameters in the `ai_gateway:` config). Still
+  2026-10-15), Opus drops to 5 of 60 wrong. On the Quiz 2 head-to-head (same
+  60 inputs) the wrong-diagnosis rates are flash 3%, Opus 37% and thinking
+  Opus 12%; thinking Opus takes 51 s per answer. Open for dae: take Opus out
+  of the picker and keep it as a backup (recommended), or keep a thinking
+  Opus beside flash (needs per-model request parameters in the `ai_gateway:`
+  config). Leaving today's Opus as it is is ruled out by the data. Still
   worth asking OIT whether the Gateway can serve a Gemini Pro model —
   gemini-3.1-pro was 0/90 wrong and is the model the v2.2 prompt was tested on.
 
