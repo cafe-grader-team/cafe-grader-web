@@ -78,11 +78,37 @@ circulation.
   trace by hand and the examiner can verify by hand.
 - Gradable from the transcript alone: you can name 4–6 rubric criteria now.
 
+**Then check what the text gives away or invites** (all from our first
+exam audit, §10):
+
+- **Nothing in the text is an answer.** No topic line, deck number or
+  technique name that a rubric item asks the student to produce. An exam
+  scenario whose subtitle named the rule its last question asked for turned
+  that criterion into a reading test. Topic and source notes belong in the
+  briefing or the kit README, never in the scenario.
+- **Every example is one you would accept.** Students copy example types
+  and values word for word. A scenario that offered a wrong design as an
+  "e.g." made it the most common opening answer.
+- **Every task word has one reading.** Read each item as a student who has
+  just studied the course's own classes: words like "safe" or "blocks", or
+  anything that sounds like a course class, pull answers toward the course
+  material instead of the artifact. Name the thing you are asking for
+  ("which special member function", "how many heap-allocated arrays").
+- **The artifact exercises everything you ask about.** If an item asks
+  what a function does or why it is needed, the code must call it;
+  otherwise only students who already know the answer can trace it.
+- **No mode words.** The scenario never says "practice" or "exam". The
+  conduct overlay says which it is (§5), so one scenario serves both.
+- **For an exam, a source nobody can have seen.** A scenario adapted from a
+  published past paper is not unseen, however well reskinned.
+
 **Write the "Come prepared to" list.** The scenario ends with a numbered
 list of what the student will be asked. It is the *public face of your
 rubric*: each item should map to a criterion. Students who prepare against
 it are doing exactly what you want; the interview's job is to check the
-preparation is theirs (§7).
+preparation is theirs (§7). Expect some students to arrive with a written
+answer to the whole list and paste it as their first message; the plan
+must still verify it one rung at a time (§4b).
 
 Keep it compact. The student cannot see the scenario anywhere else — the
 examiner reproduces it verbatim in the opening message, and a long scenario
@@ -179,6 +205,30 @@ Rules that came from real sessions:
 - **Aim for a turn count** and write it into the plan ("aim for 6–9 student
   turns"). The platform's soft cap is advisory; the plan is what the
   examiner actually paces by.
+- **One question per rung, one criterion per question.** A bundled rung
+  ("which function is missing, what is the rule called, when does a class
+  need none?") gets one answer; the examiner then moves on or closes, and
+  the other parts score 0. In our exam audit a bundled last rung was the
+  main reason a criterion scored 0 for a quarter of the cohort.
+- **Nothing that must be asked goes last.** The last rung is the one lost
+  to slow replies, late starts, early endings and the clock. Put a rung
+  that carries its own criterion before the open discussion rung, or give
+  the last rung a small weight.
+- **Write the re-ask for the rung most likely to miss.** "One neutral hint
+  per rung" in the conduct was not enough: the examiner closed after the
+  first wrong answer instead of using it. Write the exact second question
+  into the plan.
+- **Plan for the prepared answer.** If the first message answers the whole
+  task list, treat it as a set of claims: still take the rungs in order
+  and ask for the working at each before moving on. Left alone, the
+  examiner accepted such essays, skipped the middle rungs and closed after
+  four answers.
+- **Size the plan to the time students actually give it.** In a contest
+  with coding problems, students first answered the viva 15–20 minutes
+  after opening it (median) and left 15–45-minute gaps between answers.
+- **If students can compile, ask what a compiler cannot tell them.** "What
+  happens at line 3?" is answered by running the code (students pasted the
+  runtime error); "why is that worse than the leak?" is not.
 
 ### 4c. Rubric
 
@@ -212,6 +262,15 @@ Weights sum to 100. Apply the course grading conventions.
 - **Caps for critical failures** are the most reliable lever you have
   ("caps this criterion at 8"). Graders apply them consistently; they apply
   vague instructions ("penalize heavily") inconsistently.
+- **Repeat the grading conventions inside each criterion, as caps.** The
+  conduct's conventions (§5: hinted answer = partial, examiner-supplied
+  content is not evidence, unreached = 0) were in force for both of our
+  exams, and the grader ignored them in roughly half the sessions — its
+  grades came out 14–18 points above an independent grading. Write them
+  where the grader cannot miss them: *"If the student reached this only
+  after a hint, cap at 12. If the examiner stated the consequence first,
+  cap at 8. Code the student did not explain caps this at 10. Not asked =
+  0."*
 - **Say what earns the last few points** — otherwise the grader gives full
   marks for a partial answer.
 - Every criterion should be reachable by the interview plan; a criterion
@@ -404,6 +463,48 @@ Exam card of the edit page. Check:
 If the grader returned prose instead of JSON, or the keys don't match, the
 briefing's `# Rubric` block is the first thing to inspect.
 
+**Then a cold read — by someone who does not know the answer.** You and
+your TAs cannot see what the text invites, because you read it with the
+model answer in your head: one exam viva had six staff test-drives, and
+students still hit three wording problems on the day (an answer printed
+in the subtitle, a task word read two ways, a question about code that
+never ran). Give the scenario alone — no briefing — to a reader who has
+not seen it: a student from a past cohort, or a fresh AI chat told to
+answer as a typical student of the course who has the course slides but
+not the briefing. Note every copied example, misread word and answer
+found in the text, and fix the scenario before anyone sits it.
+
+**Check the rules, not just the answers.** Count, in your two test-drives,
+how often the examiner asked two things in one message, put the answer in
+its question, or explained after you failed; and whether the grader cut
+your hinted answers and gave 0 for rungs never asked. What the models do
+in two test-drives they do in most exam sessions — if a rule breaks here,
+change the rung, the cap or the model; another sentence in the conduct
+will not hold (§9).
+
+---
+
+## 8b. Before an exam — the gate
+
+Run this the day before, for every viva in the exam, even one that has
+run as practice for weeks. Each line is something that went wrong in a
+real exam.
+
+- [ ] Scenario: no "practice"/"exam" wording, no topic line or term that
+      answers a criterion, no example you would not accept (§3).
+- [ ] Conduct: base + the **exam** overlay attached (the import dry run
+      prints both CONDUCT lines); no practice overlay.
+- [ ] Start limit `1` (or `0`); problem hidden until the exam; no sessions
+      today (§7).
+- [ ] Source: not a published paper.
+- [ ] Materials: decided whether slides and a compiler are allowed, and the
+      plan asks what they cannot answer (§4b).
+- [ ] Grader: the exam grading model chosen, and run on your weak-student
+      test-drive; the hinted rungs came out discounted.
+- [ ] Cold read done since the last scenario edit (§8).
+- [ ] Every open item from the last audit fixed, or accepted in writing.
+- [ ] Post-exam audit planned (§9).
+
 ---
 
 ## 9. Step 7 — After launch: the audit loop
@@ -422,6 +523,20 @@ after every ~50 sessions, read:
 - **Grader calibration**: pick five transcripts and re-grade them yourself
   against the rubric; disagreements of more than ~10 points point at a
   rubric line, a missing cap, or a grader model to change.
+- **After every exam, an independent-grade sample.** Grade about 30
+  sessions yourself (or with a careful reader) *before* looking at the AI
+  grade, then compare: the mean gap, how many differ by more than 10, and
+  why. In our first exam audit (286 sessions, two problems) the AI grade was
+  14–18 points higher in every score band and never lower — yet it ranked
+  students almost the same way (rank agreement 0.90–0.94). A generous but
+  well-ordered grader is fixable; you only learn which kind you have by
+  looking.
+
+**Close the loop.** Every finding becomes a rule in this guide, a line in
+the gate (§8b), or a backlog item — and the next audit checks whether it
+held. Eight of the failures in our first exam audit were already rules
+here, written a week before the first exam; writing them down had not
+stopped them, because the models ignored them and nothing checked.
 
 Split every statistic by **examiner model**: in our first audit the
 proportion of sessions hitting the hard cap went from 42% to 3% across a
@@ -461,7 +576,8 @@ merely different.
 ## 10. Pitfalls catalogue
 
 Every row is something we observed on real student sessions
-(2110211 Data Structures, practice vivas, Aug–Sep 2026, 182 sessions).
+(2110211 Data Structures: practice vivas, Aug–Sep 2026, 182 sessions; two
+exam vivas, Sep–Oct 2026, 286 sessions).
 
 | Symptom in the transcript | Cause | Fix (layer) |
 |---|---|---|
@@ -484,6 +600,16 @@ Every row is something we observed on real student sessions
 | Rubric wording or a probe only turns out to be confusing once real students hit it | Viva published without anyone sitting it | Take two test-drives first — strong and weak student — via the edit page's Test-drive button; read both narratives (authoring) |
 | Grades need redoing after a briefing fix, but a plain re-run would lower some students | Re-run replaces; rerun noise is about ±10 per grade | Batch `viva:regrade` (never-lower by default, stale sessions only); read `viva:regrade_status` before announcing (operation) |
 | Students retake the exam viva and the better score counts (Quiz 2, 2026-10-07: 80 → 94, 74 → 83); the examiner greets everyone with "practice viva" | A practice viva reused for an exam kept its practice start limit (5) and its scenario's "practice viva" line | Before the exam: start limit `1` (or `0`), scenario and conduct overlay switched to exam wording; during it, the contest's **Viva check** page flags *Retook* live (operation) |
+| Many students open with exactly the wrong design the scenario gave as an "e.g." (exam, 2026-09-09) | An example in the task text that is itself a wrong answer | Only examples you would accept, or neutral ones; cold read (scenario) |
+| The name a criterion asks for is printed in the scenario's subtitle (exam, 2026-10-07) | Topic/deck metadata left in the student-facing text | Topic and source lines go in the briefing or README (scenario) |
+| Asked what else a class needs "to be safe", students list features of the course's own container class | A task word with two readings, one pointing at course material | Name the thing asked for; cold read by someone without the briefing (scenario) |
+| The last criterion scores 0 for a quarter of the cohort | Bundled last rung; examiner closes after the first reply and never re-asks | One question per rung; not last; the re-ask written into the plan (briefing) |
+| First message answers the whole task list; the examiner closes after four answers | The "Come prepared to" list invites an essay; the examiner treats it as verified | Plan: a prepared answer is a set of claims — rungs still in order, working at each (briefing) |
+| Students paste the runtime error ("double free detected") as their answer | A compiler is open during the exam for the coding problems | Ask what the compiler cannot answer, or decide compiler access before the exam (briefing + operation) |
+| Pasted course-slide code, unexplained, gets 22–25 of 25 on the fix criterion | Grader credits code as understanding | "Code the student did not explain caps this at N" in the criterion (rubric) |
+| AI grade 14–18 points above an independent grading in every score band, never below, on two exams | Grader ignores the conduct's conventions (hint discount, examiner content, unreached = 0) | Repeat the conventions as caps in each criterion; test the grader on a weak test-drive; independent-grade sample after every exam (rubric + operation) |
+| Six staff test-drives passed, yet students hit three wording problems on the day | Every test-driver already knew the answer | Cold read by someone who has not seen the briefing (authoring) |
+| Rules written a week before the exam broken in most sessions (leading questions, explaining after a failure, two questions per message) | Prompt rules are requests; the models ignore some, and nothing checked | Count rule breaks in the test-drives; change the rung, cap or model; the gate (§8b) and the post-exam audit check that the rule held (operation) |
 
 ---
 
@@ -513,10 +639,15 @@ skips the block silently.
 ## 12. Checklist
 
 - [ ] Scenario: one artifact, a trap, hand-traceable witnesses, a "Come
-      prepared to" list that maps to the rubric.
+      prepared to" list that maps to the rubric; nothing in it answers a
+      criterion, every example acceptable, every task word one reading, no
+      mode words.
 - [ ] Briefing: verified model answer with the precise rule; numbered rungs
-      with gates, pre-written trap probes and single hints; `# Rubric` with
-      snake_case keys, weights summing to 100, caps, "last few points".
+      with gates, one question each, nothing essential last, pre-written
+      trap probes, single hints and the re-ask; a plan for the prepared
+      answer; `# Rubric` with snake_case keys, weights summing to 100, caps
+      (the grading conventions repeated as caps), "last few points".
+- [ ] Cold read by someone who has not seen the briefing.
 - [ ] Per-problem carve-outs where the conduct's mode overlay is too
       generous for this problem.
 - [ ] Conduct: base + one mode overlay attached; overlays additive; a
@@ -527,7 +658,11 @@ skips the block silently.
       grounding only if needed.
 - [ ] Reusing a practice viva for an exam: start limit, scenario wording
       ("practice viva") and conduct overlay all switched to the exam versions.
-- [ ] Piloted twice (strong, weak); transcript and rubric JSON read.
-- [ ] First audit scheduled after ~50 sessions; statistics split by model.
+- [ ] Piloted twice (strong, weak); transcript and rubric JSON read; rule
+      breaks counted (examiner and grader).
+- [ ] For an exam: the gate (§8b) run the day before.
+- [ ] First audit scheduled after ~50 sessions; statistics split by model;
+      after an exam, an independent-grade sample; every finding closed into
+      this guide, the gate or the backlog.
 - [ ] After any briefing change on a live problem: `viva:regrade` dry run,
       then `APPLY=1`, then read the status report.

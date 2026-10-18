@@ -101,11 +101,48 @@ under limit 1 locked the student out ungraded (Restart is now offered only
 when a new start is possible). What the checklist still has to warn about is
 a start limit other than 1 or 0 on a contest's viva.
 
+**Items added by the 2026-10-18 exam-viva audit** (dae 2026-10-18: keep in the backlog; course-prep
+`data-structures/viva/exam-audit-2026-10-18/report.html`; the human half of
+the same list is the authoring guide's §8b gate):
+- Viva problems with no **exam** overlay attached (neither quiz had one), or
+  with the `-practice` overlay still attached.
+- Scenario text containing a term the briefing says must not appear — needs
+  a small convention, e.g. a `# Not in the scenario` list in the briefing
+  (the Rule of Three subtitle named the answer to its last criterion).
+- Interview-plan rungs with more than one question mark (bundled rungs were
+  the main cause of a zero criterion); a criterion whose only rung is last.
+- The grading model configured for the exam differs from the one chosen in
+  "Exam viva grading" below.
+
 **Reuse:** `Viva::Rubric.parse` (rubric readable, weights sum to 100) and the
 contest's Viva check page (`VivaCheckReport`) already exist; the checklist's
 viva rows can call the same code.
 
 **Size:** small to medium — a PORO of checks plus a card on `contests/show`.
+
+---
+
+## Exam viva grading — the AI grade runs 14–18 points high (direction not chosen)
+
+**Found 2026-10-18** (full audit of both DS exam vivas, 286 sessions;
+`doc/Viva-History.md` 2026-10-18). gemini-3.7-flash grades above an
+independent reading in every score band and never below, while ranking
+students correctly. It ignores the conduct's grading conventions (hint
+discount, examiner-supplied content, unreached = 0). Already suspected in the
+2026-09-01 Buggy Counter audit (a third over-graded; "grading default to
+3.1-pro or Sonnet" left open) and in the 2026-09-12 Opus pilot (11 points
+stricter on 30 sessions). Not fixed before either exam.
+
+**Candidate directions:** (1) conventions repeated as caps inside each
+criterion (authoring guide §4c — prompt-only, try first); (2) a stronger
+grading model for exams; (3) two grading passes, keep the mean. Test any of
+them against the audit's own independent grades: the 286 transcripts and
+per-criterion scores are in `findings/batch-NN.jsonl`, so a candidate grader
+can be scored offline before an exam (university quota only).
+
+**Size:** small for (1); (2)/(3) are config plus one offline evaluation run.
+
+**State:** dae 2026-10-18 — backlog, not scheduled.
 
 ---
 
