@@ -155,6 +155,34 @@ lower, ranked almost the same (0.95), and larger for higher grades (+5 in
 the bottom third, +14 in the top) — mostly credit for examples that are not
 valid heaps and for untraced claims (`regrade-sample/` in the same folder).
 
+**2026-10-29 — direction (2) taken: grading moved to gemini-4-argon** (chula_cp
+2273; `doc/gateway-model-test-2026-10-29.md`). Scored offline on the 316
+sessions with reader grades: +5.6 points above the readers against +14.5 for
+3.7-flash (Q1 +2.7, Q2 +9.0, Q3 +3.0); on Quiz 3 its narratives name `mLess`
+in 4 of 30 sessions against 22. Still open: Quiz 2 (Rule of Three) is 9
+points high; check the first exam graded by argon against a blind sample
+(authoring guide §9) before closing this item. Direction (1) is still worth
+doing for any model.
+
+---
+
+## Viva replies on gemini-4-argon — two checks before switching
+
+The 2026-10-29 model test (`doc/gateway-model-test-2026-10-29.md`) kept
+`viva_turn` on gemini-3.7-flash although argon did better on the audit faults.
+Before moving the examiner replies to argon:
+1. **Simultaneous load at exam hours.** 30 replies sent at once, run twice at
+   night, gave argon a slowest reply of 37 s, then 9 s. Repeat during exam-hour
+   traffic (around 10:00) with
+   `course-prep/gateway-argon-2026-10-29/step3_turns.rb burst`.
+2. **Altered scenario code.** One argon opening in 13 with code inserted a
+   made-up line into the scenario's class (problem 701). Either accept it and
+   watch, or show the scenario from the platform so the model never has to
+   copy it (code change: render `problem.description` above the first turn and
+   tell the examiner not to repeat it).
+Also known: argon narrows the search more often (13 of 40 replies against
+5–7) and bundles questions; its opening takes about 20 s.
+
 ---
 
 ## Viva rule-break notice says "practice mode" during exams
@@ -349,7 +377,8 @@ the dead `AI_viva` tag deleted. Still open:
   `~/cafe-grader/assist-eval-2026-09-03/`, copies in `course-prep`) and compare
   read scores and outcomes against the 2026-09-03 document — compile-error and
   repeat-request cells first.
-- **Gateway models: read done 2026-10-13, picker decision open.** Opus
+- **Gateway models: read done 2026-10-13; picker decided 2026-10-29 (Opus out,
+  gemini-4-argon in, chula_cp 2273 — `doc/Assist-History.md` 2026-10-29).** Opus
   misdiagnoses 8–12 of 60 answers, flash 0 of 39; Opus keeps to one issue in
   48% vs flash's 82%; outcomes do not differ
   (`doc/assist-gateway-read-2026-10-13.md`). With thinking on (tested
@@ -359,9 +388,13 @@ the dead `AI_viva` tag deleted. Still open:
   Opus out of the picker and keeping it as a backup. **DECIDED 2026-10-28
   (dae, after DS Quiz 3): keep both in the picker as they are.** In Quiz 3
   Opus took 299 of 362 requests (83%) and USD 35.41 of 36.23
-  (`doc/Assist-History.md` 2026-10-28). Still worth asking OIT whether the
-  Gateway can serve a Gemini Pro model — gemini-3.1-pro was 0/90 wrong and is
-  the model the v2.2 prompt was tested on.
+  (`doc/Assist-History.md` 2026-10-28). *SUPERSEDED 2026-10-29:* on the same
+  60 inputs gemini-4-argon was 3% wrong at USD 0.025 per answer; dae replaced
+  Opus with it in the picker, Opus kept as a backup. Open: argon keeps to one
+  issue in 62% (flash 73%) — check in the next read; measure its wait in the
+  next quiz from `comments.llm_latency_ms`. The Gateway now also serves
+  gemini-3.1-pro-preview (seen 2026-10-29), the 0/90 model the v2.2 prompt was
+  tested on — a candidate if argon disappoints.
 
 ### Scoring
 - **Requests made after the contest count against the contest score.**
