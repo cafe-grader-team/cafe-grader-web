@@ -144,6 +144,30 @@ can be scored offline before an exam (university quota only).
 
 **State:** dae 2026-10-18 — backlog, not scheduled.
 
+**Quiz 3 (2026-10-21, problem 721, contest 47) — the narratives too.** The
+exam overlay says a narrative names only the topic, yet 65 of 109 Quiz 3
+narratives name `mLess`, 51 describe the re-check bug the student was
+supposed to find, and 11 name a fix (course-prep
+`data-structures/viva/quiz-2569-3-postexam-2026-10-28/report.html` §3). A
+candidate grader should be scored on narrative leaks as well as points. The
+gap on Quiz 3, from a blind 30-session sample: AI +9.8 on average, never
+lower, ranked almost the same (0.95), and larger for higher grades (+5 in
+the bottom third, +14 in the top) — mostly credit for examples that are not
+valid heaps and for untraced claims (`regrade-sample/` in the same folder).
+
+---
+
+## Viva rule-break notice says "practice mode" during exams
+
+`Llm::VivaTurnAssist#apply_alert_policy` always takes the practice branch
+(`exam_policy?` is `false` until Phase B), so a flagged turn in an exam shows
+the student "In practice mode the interview continues; flags are logged for
+instructor review." Seen twice in DS Quiz 3 (contest 47, 2026-10-21). The
+behaviour (log, continue) is intended until Phase B; only the wording is
+wrong. Fix: a mode-neutral sentence ("The interview continues; flags are
+logged for instructor review."), or choose the wording from the problem's
+conduct overlay. Small.
+
 ---
 
 ## Memory accounting for C/C++ — address space vs cgroup (POLICY + a real bug)
@@ -331,12 +355,24 @@ the dead `AI_viva` tag deleted. Still open:
   (`doc/assist-gateway-read-2026-10-13.md`). With thinking on (tested
   2026-10-15), Opus drops to 5 of 60 wrong. On the Quiz 2 head-to-head (same
   60 inputs) the wrong-diagnosis rates are flash 3%, Opus 37% and thinking
-  Opus 12%; thinking Opus takes 51 s per answer. Open for dae: take Opus out
-  of the picker and keep it as a backup (recommended), or keep a thinking
-  Opus beside flash (needs per-model request parameters in the `ai_gateway:`
-  config). Leaving today's Opus as it is is ruled out by the data. Still
-  worth asking OIT whether the Gateway can serve a Gemini Pro model —
-  gemini-3.1-pro was 0/90 wrong and is the model the v2.2 prompt was tested on.
+  Opus 12%; thinking Opus takes 51 s per answer. The study recommended taking
+  Opus out of the picker and keeping it as a backup. **DECIDED 2026-10-28
+  (dae, after DS Quiz 3): keep both in the picker as they are.** In Quiz 3
+  Opus took 299 of 362 requests (83%) and USD 35.41 of 36.23
+  (`doc/Assist-History.md` 2026-10-28). Still worth asking OIT whether the
+  Gateway can serve a Gemini Pro model — gemini-3.1-pro was 0/90 wrong and is
+  the model the v2.2 prompt was tested on.
+
+### Scoring
+- **Requests made after the contest count against the contest score.**
+  `Contest#score_report` joins every assist comment on the contest's
+  submissions, whatever its `created_at`, into `final_score = LEAST(max,
+  100 − llm − hints)`. In DS Quiz 3 (contest 47) two students asked for help
+  on their quiz submissions after the quiz (2026-10-21 13:48, 2026-10-26
+  03:30) and were charged 10 quiz points each; no score changed only because
+  both were below the cap. Fix: count only comments created inside the
+  student's contest window (the same start offset / extra time as
+  `Contest#submissions`), with a regression test. Small.
 
 ### Prompt
 - **TLE hand-over shape fix** (template or a second pass): the model names the

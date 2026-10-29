@@ -503,6 +503,11 @@ real exam.
       test-drive; the hinted rungs came out discounted.
 - [ ] Cold read done since the last scenario edit (§8).
 - [ ] Every open item from the last audit fixed, or accepted in writing.
+- [ ] Pairing with coding problems decided on purpose: if the exam also has
+      a coding problem on the task the viva is about, write down how the
+      two scores combine, and assume students will use the viva's scenario
+      on the coding problem — it is on their screen. This is a decision,
+      not a ban; §9 checks what happened.
 - [ ] Post-exam audit planned (§9).
 
 ---
@@ -531,6 +536,16 @@ after every ~50 sessions, read:
   students almost the same way (rank agreement 0.90–0.94). A generous but
   well-ordered grader is fixable; you only learn which kind you have by
   looking.
+- **After an exam that paired the viva with a coding problem on the same
+  task, the overlap.** Compare the distinctive lines of the scenario's code
+  with that problem's submissions, split by whether each was made before or
+  after the student opened the viva; also compare who took the viva with
+  their coding scores. In our first such exam (a "fix this code" viva next to
+  the coding problem it was built on, scored as the higher of the two), 49
+  of 116 students submitted the scenario's buggy code to the coding problem
+  — none before opening the viva, 23 before answering any question — and
+  most students who already had full marks on the coding problem never
+  answered the viva.
 
 **Close the loop.** Every finding becomes a rule in this guide, a line in
 the gate (§8b), or a backlog item — and the next audit checks whether it
@@ -576,8 +591,8 @@ merely different.
 ## 10. Pitfalls catalogue
 
 Every row is something we observed on real student sessions
-(2110211 Data Structures: practice vivas, Aug–Sep 2026, 182 sessions; two
-exam vivas, Sep–Oct 2026, 286 sessions).
+(2110211 Data Structures: practice vivas, Aug–Sep 2026, 182 sessions; three
+exam vivas, Sep–Oct 2026, 395 sessions).
 
 | Symptom in the transcript | Cause | Fix (layer) |
 |---|---|---|
@@ -610,6 +625,7 @@ exam vivas, Sep–Oct 2026, 286 sessions).
 | AI grade 14–18 points above an independent grading in every score band, never below, on two exams | Grader ignores the conduct's conventions (hint discount, examiner content, unreached = 0) | Repeat the conventions as caps in each criterion; test the grader on a weak test-drive; independent-grade sample after every exam (rubric + operation) |
 | Six staff test-drives passed, yet students hit three wording problems on the day | Every test-driver already knew the answer | Cold read by someone who has not seen the briefing (authoring) |
 | Rules written a week before the exam broken in most sessions (leading questions, explaining after a failure, two questions per message) | Prompt rules are requests; the models ignore some, and nothing checked | Count rule breaks in the test-drives; change the rung, cap or model; the gate (§8b) and the post-exam audit check that the rule held (operation) |
+| Students submit the viva scenario's code to a coding problem of the same exam (exam, 2026-10-21: 49 of 116) | The scenario shows most of the coding problem's answer, and both are open at once | Decide the pairing and how the scores combine before the exam; check the overlap afterwards (§8b, §9) (operation) |
 
 ---
 
