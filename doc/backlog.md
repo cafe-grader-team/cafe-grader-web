@@ -198,6 +198,54 @@ conduct overlay. Small.
 
 ---
 
+## Viva misreadings — three cases the conduct and grading rules do not yet separate (policy decided 2026-11-06)
+
+dae's policy (2026-11-06, while preparing the AI Gateway showcase talk), for a
+student answer that is not an answer to the question asked:
+
+1. **Honest misreading** — the examiner's words can honestly be read the way the
+   student read them. The examiner explains and rephrases; **no penalty**.
+2. **Part left unanswered** — the examiner's message held two or more questions
+   and the student answered some. The examiner restates the rest **word for
+   word**; **no penalty** (students answer a chat in pieces).
+3. **Careless misreading** — the words were clear (e.g. "A *and* B") and the
+   student answered another question. Costs credit **only on a reading /
+   understanding criterion** if the rubric has one; otherwise nothing.
+
+Test for 1 vs 3: would a careful reader of the examiner's exact words reach the
+student's reading? The grader can apply it from the transcript, so the examiner
+need not judge in the moment; it rephrases or restates in every case.
+
+Today: the exam overlay allows one restatement and folds "narrow to a smaller
+instance" into it; the base conduct's "off-topic answer: redirect once, then
+move on" likely makes a misread question look off-topic; the grading convention
+discounts an answer that came "after the examiner's hint" and may count a
+clarification as a hint. Nothing restates the unanswered half of a bundled
+question.
+
+Also: every clarification costs a **turn** even when it costs no points. The
+guide's soft cap (rungs + 2) leaves two spare turns for all hints,
+clarifications and re-asks together; Buggy Counter (693, Sept audit) had 25%
+of completed sessions at the 12-turn hard cap, and of 16 students who scored 0
+on "state the bug" only 2 earned anything on the next, independent rung.
+
+Evidence from the exam transcripts (course-prep `viva-talk-2026-11-06/viva-learning-analysis-2026-11-06.md`,
+H3): honest misreadings are rare (7 in 394 exam vivas); the big loss is case 2
+— in 191 of 394 the examiner moved on without the unanswered part (restated it
+only 166 of 524 times). Exams hardly reach the turn cap (3 of 394), so there the
+cost is lost evidence, not turns; the turn-budget point matters for practice.
+
+Direction: (a) base conduct — the three cases and the examiner's move for each;
+(b) grading conventions — no discount for a clarification or a restatement;
+(c) authoring guide — size the turn budget with slack, list expected
+misreadings per rung with the clarifying sentence, one question per message;
+(d) parked: clarification turns not counting toward the cap needs the examiner
+to mark them, which cannot be relied on today. Size: (a)–(c) small prompt +
+doc work, then a regrade check on one problem; touches `doc/Viva-History.md`
+and the guide in the same commit.
+
+---
+
 ## Memory accounting for C/C++ — address space vs cgroup (POLICY + a real bug)
 
 **Raised 2026-08-03 from the CMS migration validation.** Three separate things
