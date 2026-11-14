@@ -55,6 +55,40 @@ class Compiler
     end
   end
 
+  # language name => the `compiler:` keys of worker.yml its Compiler subclass
+  # needs a path under. Languages that need no program (archive, text) are
+  # absent. test/engine/compiler_configured_test.rb checks each subclass
+  # against this list.
+  COMPILER_PATH_KEYS = {
+    'cpp' => %i[cpp], 'c' => %i[c], 'python' => %i[python], 'ruby' => %i[ruby],
+    'java' => %i[javac], 'digital' => %i[digital], 'haskell' => %i[haskell],
+    'php' => %i[php], 'pas' => %i[pas], 'rust' => %i[rust], 'go' => %i[go],
+    'postgres' => %i[ruby]
+  }.freeze
+
+  # Stops a compile on a host that has no compiler for the language, with a
+  # message that says so. Without this the compile command was built with an
+  # empty program name and ran anyway: PHP (no `compiler: php:` line on any
+  # host) came back as a compilation error with an empty message, Pascal (the
+  # class read a key the file does not have) as `execve("-O1")` — both blamed
+  # on the student, for years. A grader error is the honest verdict.
+  def ensure_compiler_configured
+    COMPILER_PATH_KEYS.fetch(@sub.language.name, []).each do |key|
+      path = Rails.configuration.worker.dig(:compiler, key).to_s.strip
+      problem = if path.empty?
+        "worker.yml has no `compiler: #{key}:` path"
+      elsif !File.exist?(path)
+        "the `compiler: #{key}:` path #{path} does not exist"
+      end
+      next unless problem
+      raise GraderError.new("No compiler for #{@sub.language.name} on this judge host: #{problem} " \
+                            "(run `bin/rails engine:detect`, then `bin/rails engine:langcheck`)",
+                            submission_id: @sub.id,
+                            message_for_user: "The grader is not set up for #{@sub.language.pretty_name.presence || @sub.language.name} " \
+                                              '(this is not an error in your code; please tell the staff)')
+    end
+  end
+
   # The sandboxed part of a compile: pre_compile, the compiler run, and the
   # chmod of what it produced. Needs isolate set up, the directories of
   # prepare_submission_directory, and @source_file / @isolate_source_file /
@@ -113,6 +147,7 @@ class Compiler
     @working_dataset = dataset
     # validate the pre-condition
     validate
+    ensure_compiler_configured
 
     # init isolate
     need_cg = isolate_need_cg_by_lang(@sub.language.name)

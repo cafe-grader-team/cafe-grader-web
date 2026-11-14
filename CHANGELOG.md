@@ -61,6 +61,13 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   the 10 allowed CPU seconds for a trivial program; under load it crossed the
   limit. Go compiles now get 30 CPU seconds; every other language keeps 10.
   (rev 2281)
+- **A language with no compiler on the judge host is now a grader error that
+  says so**, not a compilation error blamed on the student. When
+  `worker.yml` has no path for the language's compiler, or the path does not
+  exist, the student sees "The grader is not set up for <language> (this is
+  not an error in your code; please tell the staff)" and the judge log names
+  the missing `compiler:` key. Before, the compile ran with an empty program
+  name. (rev 2284)
 - **PHP submissions were always a compilation error with an empty message.**
   No `worker.yml` had a `compiler: php:` line (the sample file lacked it), so
   the compile command had no program in it. The sample now has the line (rev
