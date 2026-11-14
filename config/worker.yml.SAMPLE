@@ -50,6 +50,13 @@ shared:
   # isolate_options:
   #   java: "-d /etc/java-21-openjdk"
 
+  # extra compiler command-line options THIS host needs, per language. Same
+  # rule: written by `bin/rails engine:detect WRITE=1`, not by hand. Today only
+  # Pascal reads it: fpc cannot see /etc/fpc.cfg inside the sandbox, so its
+  # unit directory is given as a flag; rerun detect after an fpc upgrade.
+  # compiler_options:
+  #   pas: "-Fu/usr/lib/x86_64-linux-gnu/fpc/3.2.2/units/x86_64-linux/*"
+
 development:
   server_key: c2f7966dee
   worker_id: 1

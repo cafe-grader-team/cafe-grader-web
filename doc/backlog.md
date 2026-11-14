@@ -34,12 +34,12 @@ cp-grader database copy of 2026-10-28.
   that failed with `Error loading java.security file` (2025-08-20 →
   2026-10-05) are not regraded; decide whether to rejudge them
   (`Submission#add_judge_job(live_dataset, -10)`).
-- **Pascal (75 submissions, never passed).** With the config key fixed (rev
-  2278) `fpc` now starts and fails with `Can't find unit system`: it reads
-  `/etc/fpc.cfg` for its unit path and the sandbox has no `/etc`. Same class
-  of problem as Java, but the thing to mount is a single file, not a
-  directory; an `-Fu<unit dir>` flag in `Compiler::Pascal` may be simpler.
-  Then add `pas` to `SandboxDetect::LANGUAGES` if the path is host-dependent.
+- **Pascal — fixed in code (revs 2278 + 2279), not yet on the hosts.** Two
+  faults: the wrong config key, then fpc not finding its units without
+  `/etc/fpc.cfg`. The same `bin/rails engine:detect WRITE=1` writes the
+  `compiler_options: pas:` line. Of its 75 submissions only 40 look like
+  Pascal (24 contain `#include`), so hiding it from the picker is still worth
+  considering where no course uses it.
 - **PHP (170, never passed).** Only the missing `compiler: php:` line; the
   built-in program passes once the path is set. Per-host `worker.yml` edit.
 - **Octave (4,209, never passed).** `Compiler.get_compiler` has no branch for
@@ -52,8 +52,8 @@ cp-grader database copy of 2026-10-28.
   before changing anything.
 
 **Proposed direction:** fix or hide each one; a language that cannot grade on
-a host should not be selectable there. **Size:** Pascal and PHP an hour each;
-Octave is a product decision first.
+a host should not be selectable there. **Size:** PHP is a config line per
+host; Octave is a product decision first.
 
 ---
 

@@ -3,6 +3,7 @@ class Compiler::Pascal < Compiler
     cmd = [
       "#{Rails.configuration.worker[:compiler][:pas]}",
       "-O1 -XS -dCONTEST",
+      host_compiler_options('pas'),
       "-o#{bin}",
       source
     ]

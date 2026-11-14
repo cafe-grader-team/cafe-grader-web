@@ -40,11 +40,17 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   step after this deploy:** `bin/rails engine:detect WRITE=1`, restart the
   graders, then `bin/rails engine:langcheck ONLY=java`. Submissions that
   failed this way are not regraded automatically. (rev 2278)
-- **Pascal never reached the compiler**: the compiler class read
+- **Pascal submissions never compiled.** Two faults. The compiler class read
   `compiler: pascal:` while `worker.yml` defines `compiler: pas:`, so the
-  command started with `-O1` (`execve("-O1"): No such file or directory`).
-  Pascal still does not compile inside the sandbox (see `doc/backlog.md`).
-  (rev 2278)
+  command started with `-O1` (`execve("-O1"): No such file or directory`; rev
+  2278). Behind that, `fpc` could not find its standard units inside the
+  sandbox (`Can't find unit system used by Program`), because it learns the
+  unit directory from `/etc/fpc.cfg`, which the sandbox does not show and,
+  being a single file, cannot be mounted. The directory is now passed as an
+  `-Fu` flag from a new per-host `compiler_options: pas:` line in
+  `worker.yml`, which `bin/rails engine:detect WRITE=1` writes next to the
+  Java line; `engine:langcheck` reports it when it goes stale after an fpc
+  upgrade. Same manual step per judge host as for Java. (rev 2279)
 - **`worker.yml.SAMPLE` had no `compiler: php:` line**, so on a host built
   from it every PHP submission was a compilation error with an empty message.
   Existing hosts: add `php: <%= `which php`.strip %>` under `compiler:` in

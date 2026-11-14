@@ -65,6 +65,7 @@ class WorkerConfigPatchTest < ActiveSupport::TestCase
     out = WorkerConfigPatch.apply(once, 'java', nil)
     assert_nil parse(out)['shared']['isolate_options']
     assert_not_includes out, "  isolate_options:\n"
+    assert_equal BASE, out, 'write then remove leaves the file as it was'
 
     two = WorkerConfigPatch.apply(once, 'python', '-d /opt/venv')
     kept = WorkerConfigPatch.apply(two, 'java', nil)
@@ -84,5 +85,19 @@ class WorkerConfigPatchTest < ActiveSupport::TestCase
 
   test 'a file with no shared: section is refused' do
     assert_raises(ArgumentError) { WorkerConfigPatch.apply("production:\n  worker_id: 1\n", 'java', '-d /x') }
+  end
+
+  test 'compiler_options is a section of its own next to isolate_options' do
+    one = WorkerConfigPatch.apply(BASE, 'java', '-d /etc/java-21-openjdk')
+    two = WorkerConfigPatch.apply(one, 'pas', '-Fu/usr/lib/fpc/3.2.2/units/x86_64-linux/*', section: 'compiler_options')
+    shared = parse(two)['shared']
+    assert_equal({ 'java' => '-d /etc/java-21-openjdk' }, shared['isolate_options'])
+    assert_equal({ 'pas' => '-Fu/usr/lib/fpc/3.2.2/units/x86_64-linux/*' }, shared['compiler_options'])
+    assert_equal parse(BASE)['production'], parse(two)['production']
+    assert_equal one, WorkerConfigPatch.apply(two, 'pas', nil, section: 'compiler_options')
+  end
+
+  test 'an unknown section is refused' do
+    assert_raises(ArgumentError) { WorkerConfigPatch.apply(BASE, 'java', '-d /x', section: 'compiler') }
   end
 end

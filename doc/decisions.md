@@ -28,6 +28,12 @@ grader prints at start say exactly what is in effect. Mounting all of `/etc`
 (as the `digital` language does) would work everywhere but shows student
 programs the judge host's configuration.
 
+**Second case, same rule (rev 2279).** Pascal's `fpc` reads its unit path
+from `/etc/fpc.cfg`. That is one file, and isolate mounts directories only,
+so the fix is a compiler flag (`-Fu<unit dir>/*`), kept in a sibling section,
+`compiler_options: pas:`, also written by `engine:detect`. The two sections
+are the only places a host-dependent value may live.
+
 **Cost accepted.** A written value goes stale: after a JDK upgrade the old
 directory is gone, isolate refuses to start the sandbox, and Java fails again
 until someone reruns `engine:detect WRITE=1`. That is why `engine:langcheck`

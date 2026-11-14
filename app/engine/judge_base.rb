@@ -80,6 +80,16 @@ module JudgeBase
     Rails.configuration.worker.dig(:isolate_options, language_name.to_sym).to_s.strip
   end
 
+  # Extra compiler command-line options this host needs for a language, from
+  # worker.yml `compiler_options: <language>:` — the compiler-flag counterpart
+  # of host_isolate_options, for what cannot be solved by a mount. Written by
+  # `bin/rails engine:detect` too. Only Compiler::Pascal reads it today: fpc
+  # learns its unit path from /etc/fpc.cfg, a single file the sandbox cannot
+  # mount (isolate binds directories only).
+  def host_compiler_options(language_name)
+    Rails.configuration.worker.dig(:compiler_options, language_name.to_sym).to_s.strip
+  end
+
   def builtin_isolate_options(language_name)
     case language_name
     when 'pas', 'php'

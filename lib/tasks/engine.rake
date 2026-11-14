@@ -47,43 +47,59 @@ namespace :engine do
     exit 2 unless identical
   end
 
-  desc 'Show the isolate options this host needs per language (worker.yml `isolate_options:`). WRITE=1 writes them to config/worker.yml'
+  desc 'Show the per-language options this host needs (worker.yml `isolate_options:` / `compiler_options:`). WRITE=1 writes them to config/worker.yml'
   task detect: :environment do
-    detected = SandboxDetect.new.options
-    current = (Rails.configuration.worker[:isolate_options] || {}).to_h.transform_keys(&:to_s)
+    detected = SandboxDetect.new.all
     file = Rails.root.join('config', 'worker.yml')
+    read = ->(conf) { SandboxDetect::OWNED.keys.index_with { |section| (conf[section.to_sym] || {}).to_h.transform_keys(&:to_s) } }
+    current = read.call(Rails.configuration.worker)
+    show = ->(sections) do
+      sections.each do |section, langs|
+        next if langs.empty?
+        puts "  #{section}:"
+        langs.each { |lang, opts| puts %(    #{lang}: "#{opts}") }
+      end
+    end
 
     if detected.empty?
-      puts 'detected: this host needs no extra isolate options'
+      puts 'detected: this host needs no extra options'
     else
       puts 'detected — this host needs, under `shared:` in config/worker.yml:'
-      puts "  #{WorkerConfigPatch::SECTION}:"
-      detected.each { |lang, opts| puts %(    #{lang}: "#{opts}") }
+      show.call(detected)
     end
-    puts "config/worker.yml has: #{current.empty? ? '(no isolate_options)' : current.map { |l, o| %(#{l}: "#{o}") }.join(', ')}"
+    if current.values.all?(&:empty?)
+      puts 'config/worker.yml has neither section'
+    else
+      puts 'config/worker.yml has:'
+      show.call(current)
+    end
 
-    # Only the languages detection knows about are touched; a line a person
+    # Only the lines detection owns are compared and written; a line a person
     # added for another language stays.
-    changes = SandboxDetect::LANGUAGES.filter_map do |lang|
-      [lang, detected[lang]] unless current[lang].to_s == detected[lang].to_s
+    changes = SandboxDetect::OWNED.flat_map do |section, langs|
+      langs.filter_map do |lang|
+        want = detected.dig(section, lang)
+        [section, lang, want] unless current[section][lang].to_s == want.to_s
+      end
     end
     if changes.empty?
       puts 'worker.yml is up to date'
       next
     end
-    changes.each { |lang, opts| puts "  #{lang}: #{current[lang].inspect} -> #{opts.inspect}" }
+    puts 'to change:'
+    changes.each { |section, lang, want| puts "  #{section} #{lang}: #{current[section][lang].inspect} -> #{want.inspect}" }
     unless ENV['WRITE'] == '1'
       puts 'not written — run `bin/rails engine:detect WRITE=1` to update config/worker.yml, then restart the graders'
       exit 1
     end
 
     original = File.read(file)
-    patched = changes.reduce(original) { |text, (lang, opts)| WorkerConfigPatch.apply(text, lang, opts) }
+    patched = changes.reduce(original) { |text, (section, lang, want)| WorkerConfigPatch.apply(text, lang, want, section: section) }
     File.write(file, patched)
     # Read the file back the way Rails does; put the old text back if the
     # edit did not produce exactly the detected values.
-    reread = (Rails.application.config_for(:worker)[:isolate_options] || {}).to_h.transform_keys(&:to_s)
-    unless SandboxDetect::LANGUAGES.all? { |lang| reread[lang].to_s == detected[lang].to_s }
+    reread = read.call(Rails.application.config_for(:worker))
+    unless changes.all? { |section, lang, want| reread[section][lang].to_s == want.to_s }
       File.write(file, original)
       abort "the edit of #{file} did not read back as expected (#{reread.inspect}); file restored, nothing changed"
     end

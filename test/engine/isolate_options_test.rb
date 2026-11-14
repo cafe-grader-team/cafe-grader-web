@@ -8,12 +8,15 @@ class IsolateOptionsTest < ActiveSupport::TestCase
   setup do
     @judge = Checker.new('test-worker', 'test-box')
     @worker_conf = Rails.configuration.worker
-    @saved = @worker_conf[:isolate_options]
+    @saved = @worker_conf.to_h.slice(:isolate_options, :compiler_options)
     @worker_conf.delete(:isolate_options)
+    @worker_conf.delete(:compiler_options)
   end
 
   teardown do
-    @saved.nil? ? @worker_conf.delete(:isolate_options) : @worker_conf[:isolate_options] = @saved
+    %i[isolate_options compiler_options].each do |key|
+      @saved.key?(key) ? @worker_conf[key] = @saved[key] : @worker_conf.delete(key)
+    end
   end
 
   test "go raises the open-file limit above isolate's default of 64 (issue #40)" do
@@ -46,5 +49,24 @@ class IsolateOptionsTest < ActiveSupport::TestCase
     @worker_conf[:isolate_options] = { java: '-d /etc/java-21-openjdk' }
     evaluator = Evaluator.new('test-worker', 'test-box')
     assert_includes evaluator.run_isolate_args('java').join(' '), '-d /etc/java-21-openjdk'
+  end
+
+  # worker.yml `compiler_options:` — host-dependent compiler flags
+  def pascal_command
+    compiler = Compiler::Pascal.new('test-worker', 'test-box')
+    compiler.build_compile_command('/source/submission.pas', '/mybin/submission')
+  end
+
+  test 'the Pascal compile command starts with the compiler path from worker.yml `compiler: pas:`' do
+    saved = @worker_conf[:compiler][:pas]
+    @worker_conf[:compiler][:pas] = '/usr/bin/fpc'
+    assert_equal '/usr/bin/fpc -O1 -XS -dCONTEST  -o/mybin/submission /source/submission.pas', pascal_command
+  ensure
+    @worker_conf[:compiler][:pas] = saved
+  end
+
+  test "the host's compiler_options for Pascal are passed to fpc" do
+    @worker_conf[:compiler_options] = { pas: '-Fu/usr/lib/fpc/3.2.2/units/x86_64-linux/*' }
+    assert_includes pascal_command, ' -O1 -XS -dCONTEST -Fu/usr/lib/fpc/3.2.2/units/x86_64-linux/* -o/mybin/submission '
   end
 end
