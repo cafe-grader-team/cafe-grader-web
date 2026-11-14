@@ -98,6 +98,15 @@ class WorkerConfigPatchTest < ActiveSupport::TestCase
   end
 
   test 'an unknown section is refused' do
-    assert_raises(ArgumentError) { WorkerConfigPatch.apply(BASE, 'java', '-d /x', section: 'compiler') }
+    assert_raises(ArgumentError) { WorkerConfigPatch.apply(BASE, 'java', '-d /x', section: 'hosts') }
+  end
+
+  test 'a missing compiler path is added to the existing compiler section, the other paths untouched' do
+    out = WorkerConfigPatch.apply(BASE, 'php', '/usr/bin/php', section: 'compiler')
+    compiler = parse(out)['shared']['compiler']
+    assert_equal '/usr/bin/php', compiler['php']
+    assert_equal parse(BASE)['shared']['compiler'], compiler.except('php')
+    assert_equal BASE.lines.size + 1, out.lines.size
+    assert_includes out, "    javac: <%= `which javac`.strip %>\n"
   end
 end

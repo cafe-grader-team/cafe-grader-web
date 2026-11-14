@@ -27,15 +27,23 @@ class SandboxDetect
 
   # worker.yml section => the languages engine:detect owns a line for in it.
   # A line for any other language is a person's and is never touched.
-  OWNED = { 'isolate_options' => %w[java], 'compiler_options' => %w[pas] }.freeze
+  OWNED = { 'isolate_options' => %w[java], 'compiler_options' => %w[pas], 'compiler' => %w[php] }.freeze
+
+  # `compiler:` key => the program it names. A key listed here is added to
+  # worker.yml when the file has no line for it and the program is installed;
+  # a line that is already there is never changed. PHP is the case: no
+  # worker.yml written before 2026-11 has `php:`, so every PHP submission was
+  # a compilation error with an empty message.
+  COMPILER_PROGRAMS = { 'php' => 'php' }.freeze
 
   FPC_CONFIG = '/etc/fpc.cfg'
 
   # fpc_query runs the configured fpc with one info switch (-iV, -iTP, -iTO,
   # -PB) and returns its output; tests pass a lambda.
   def initialize(compilers: Rails.configuration.worker[:compiler] || {}, visible: VISIBLE,
-                 fpc_config: FPC_CONFIG, fpc_query: nil)
+                 fpc_config: FPC_CONFIG, fpc_query: nil, which: nil)
     @compilers = compilers
+    @which = which || ->(program) { ENV.fetch('PATH', '').split(':').map { |dir| File.join(dir, program) }.find { |f| File.file?(f) && File.executable?(f) } }
     @visible = visible
     @fpc_config = fpc_config
     @fpc_query = fpc_query || ->(switch) { IO.popen([@compilers[:pas].to_s, switch], err: File::NULL, &:read).to_s.strip }
@@ -44,7 +52,7 @@ class SandboxDetect
   # { section => { language => option string } } — everything engine:detect
   # would write; a section or language that needs nothing is absent.
   def all
-    { 'isolate_options' => options, 'compiler_options' => compiler_options }.reject { |_, langs| langs.empty? }
+    { 'isolate_options' => options, 'compiler_options' => compiler_options, 'compiler' => compiler_paths }.reject { |_, langs| langs.empty? }
   end
 
   # { language name => option string }, only for languages that need one.
@@ -62,6 +70,17 @@ class SandboxDetect
     home = Pathname.new(File.realpath(javac)).parent.parent
     links = Pathname.glob(home + 'conf/**/*') + Pathname.glob(home + 'lib/*')
     links.select(&:symlink?).filter_map { |link| mount_for(link) }.uniq.sort
+  end
+
+  # { compiler key => path } for the keys of COMPILER_PROGRAMS: the path
+  # worker.yml already has, else where the program is installed. A key with
+  # neither is absent (the language stays "not configured").
+  def compiler_paths
+    COMPILER_PROGRAMS.each_with_object({}) do |(key, program), paths|
+      path = @compilers[key.to_sym].to_s.strip
+      path = @which.call(program).to_s if path.empty?
+      paths[key] = path unless path.empty?
+    end
   end
 
   # { language name => compiler flags }, only for languages that need some.

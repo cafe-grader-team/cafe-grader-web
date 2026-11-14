@@ -12,7 +12,8 @@ class WorkerConfigPatch
   # section name => the comment written above a newly created section
   SECTIONS = {
     'isolate_options' => 'extra isolate options this host needs, per language',
-    'compiler_options' => 'extra compiler command-line options this host needs, per language'
+    'compiler_options' => 'extra compiler command-line options this host needs, per language',
+    'compiler' => 'compiler paths'
   }.freeze
 
   # Returns the new file text; `value` nil removes the language's line (and

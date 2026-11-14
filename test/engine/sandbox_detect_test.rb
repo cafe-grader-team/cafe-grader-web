@@ -133,7 +133,8 @@ class SandboxDetectTest < ActiveSupport::TestCase
     answers = { '-PB' => (@root + 'bin/ppcx64').to_s, '-iTP' => 'x86_64', '-iTO' => 'linux' }
     SandboxDetect.new(compilers: { pas: (@root + 'bin/fpc').to_s },
                       visible: config_visible ? [@root.to_s] : [(@root + 'fpc').to_s],
-                      fpc_config: (@root + 'fpc.cfg').to_s, fpc_query: ->(switch) { answers.fetch(switch) })
+                      fpc_config: (@root + 'fpc.cfg').to_s, fpc_query: ->(switch) { answers.fetch(switch) },
+                      which: ->(_) { }) # no other compiler installed, whatever this machine has
   end
 
   test 'fpc whose config file is outside the sandbox gets its unit directory as an -Fu flag' do
@@ -171,5 +172,28 @@ class SandboxDetectTest < ActiveSupport::TestCase
     found = detect.problems(effective: ->(_) { '' }, host: {}, compiler: { pas: '-Fu/usr/lib/fpc/9.9.9/units/x86_64-linux/*' })
     assert_equal 1, found.size
     assert_match(%r{pas: worker.yml compiler_options names /usr/lib/fpc/9.9.9/units/x86_64-linux, which does not exist}, found.first)
+  end
+
+  # --- a compiler path worker.yml lacks ---
+
+  test 'an installed compiler with no line in worker.yml gets its path' do
+    d = SandboxDetect.new(compilers: { cpp: '/usr/bin/g++' }, which: ->(program) { "/usr/bin/#{program}" })
+    assert_equal({ 'php' => '/usr/bin/php' }, d.compiler_paths)
+    assert_equal({ 'php' => '/usr/bin/php' }, d.all['compiler'])
+  end
+
+  test 'a path worker.yml already has is kept as it is, wherever the program is installed' do
+    d = SandboxDetect.new(compilers: { php: '/opt/php/bin/php' }, which: ->(_) { '/usr/bin/php' })
+    assert_equal({ 'php' => '/opt/php/bin/php' }, d.compiler_paths)
+  end
+
+  test 'a compiler that is not installed is left out' do
+    d = SandboxDetect.new(compilers: {}, which: ->(_) { nil })
+    assert_equal({}, d.compiler_paths)
+    assert_nil d.all['compiler']
+  end
+
+  test 'the default lookup finds a program on PATH' do
+    assert_equal '/bin/sh', SandboxDetect.new(compilers: {}).instance_variable_get(:@which).call('sh').sub(%r{\A/usr}, '')
   end
 end

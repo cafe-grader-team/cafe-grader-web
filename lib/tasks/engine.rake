@@ -47,11 +47,14 @@ namespace :engine do
     exit 2 unless identical
   end
 
-  desc 'Show the per-language options this host needs (worker.yml `isolate_options:` / `compiler_options:`). WRITE=1 writes them to config/worker.yml'
+  desc 'Show the per-language settings this host needs (worker.yml `isolate_options:`, `compiler_options:`, missing `compiler:` paths). WRITE=1 writes them to config/worker.yml'
   task detect: :environment do
     detected = SandboxDetect.new.all
     file = Rails.root.join('config', 'worker.yml')
-    read = ->(conf) { SandboxDetect::OWNED.keys.index_with { |section| (conf[section.to_sym] || {}).to_h.transform_keys(&:to_s) } }
+    # per section, only the lines detection owns (the compiler section has many others)
+    read = ->(conf) do
+      SandboxDetect::OWNED.to_h { |section, langs| [section, (conf[section.to_sym] || {}).to_h.transform_keys(&:to_s).slice(*langs)] }
+    end
     current = read.call(Rails.configuration.worker)
     show = ->(sections) do
       sections.each do |section, langs|
@@ -68,7 +71,7 @@ namespace :engine do
       show.call(detected)
     end
     if current.values.all?(&:empty?)
-      puts 'config/worker.yml has neither section'
+      puts 'config/worker.yml has none of these lines'
     else
       puts 'config/worker.yml has:'
       show.call(current)

@@ -40,8 +40,9 @@ cp-grader database copy of 2026-10-28.
   `compiler_options: pas:` line. Of its 75 submissions only 40 look like
   Pascal (24 contain `#include`), so hiding it from the picker is still worth
   considering where no course uses it.
-- **PHP (170, never passed).** Only the missing `compiler: php:` line; the
-  built-in program passes once the path is set. Per-host `worker.yml` edit.
+- **PHP — fixed in code (rev 2283), not yet on the hosts.** The only fault
+  was the missing `compiler: php:` line; `engine:detect WRITE=1` now adds it.
+  122 of its 170 submissions contain `<?php`.
 - **Octave (4,209, never passed).** `Compiler.get_compiler` has no branch for
   it: "Unsupported language (octave)". Either write the compiler class or
   remove the `Language` row.
@@ -53,8 +54,8 @@ cp-grader database copy of 2026-10-28.
   student compiles needs a security look first — not done.
 
 **Proposed direction:** fix or hide each one; a language that cannot grade on
-a host should not be selectable there. **Size:** PHP is a config line per
-host; Octave is a product decision first.
+a host should not be selectable there. **Size:** Octave is a product
+decision first.
 
 ---
 

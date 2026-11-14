@@ -61,10 +61,12 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   the 10 allowed CPU seconds for a trivial program; under load it crossed the
   limit. Go compiles now get 30 CPU seconds; every other language keeps 10.
   (rev 2281)
-- **`worker.yml.SAMPLE` had no `compiler: php:` line**, so on a host built
-  from it every PHP submission was a compilation error with an empty message.
-  Existing hosts: add `php: <%= `which php`.strip %>` under `compiler:` in
-  `config/worker.yml` if PHP should work there. (rev 2278)
+- **PHP submissions were always a compilation error with an empty message.**
+  No `worker.yml` had a `compiler: php:` line (the sample file lacked it), so
+  the compile command had no program in it. The sample now has the line (rev
+  2278), and on an existing host `bin/rails engine:detect WRITE=1` adds
+  `php: "<path>"` under `compiler:` when PHP is installed and the line is
+  missing; a compiler line that is already there is never changed. (rev 2283)
 
 ### Changed
 - **AI assist on Claude through the AI gateway costs about half as much

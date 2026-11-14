@@ -175,7 +175,7 @@ class LangCheck
   def check(name)
     key, source = PROGRAMS.fetch(name) { return Result.new(language: name, verdict: :fail, phase: :config, detail: "langcheck has no program for '#{name}' (it knows #{PROGRAMS.keys.join(', ')})") }
     path = @compilers[key].to_s
-    return not_configured(name, "no compiler path: worker.yml has no `compiler: #{key}:` (or it is empty — is the compiler installed?)") if path.empty?
+    return not_configured(name, "no compiler path: worker.yml has no `compiler: #{key}:`, or the compiler is not installed (`bin/rails engine:detect` shows what can be added)") if path.empty?
     return not_configured(name, "compiler path #{path} (worker.yml `compiler: #{key}:`) does not exist") unless File.exist?(path)
 
     language = Language.find_by(name: name) || Lang.new(name, name)
