@@ -45,11 +45,12 @@ cp-grader database copy of 2026-10-28.
 - **Octave (4,209, never passed).** `Compiler.get_compiler` has no branch for
   it: "Unsupported language (octave)". Either write the compiler class or
   remove the `Language` row.
-- **Haskell on this dev machine only:** compiles, then the run dies with
-  `Ticker: Failed to spawn thread` — the built-in Haskell options have no
-  `-p`, and the GHC here needs a second thread. cp-grader graded Haskell on
-  2026-10-10, so check with `engine:langcheck ONLY=haskell` on a real host
-  before changing anything.
+- **Haskell and Go — fixed in code (rev 2281).** Found by the first
+  `engine:langcheck` on cp-worker, 2026-11-14. Haskell: every run crashed
+  (GHC 9 needs a second thread; the sandbox now passes `-p`). Go: compiles
+  hit the 10 s CPU limit at random (now 30 s). A persistent Go build cache
+  would make Go compiles about as fast as C++, but a cache shared between
+  student compiles needs a security look first — not done.
 
 **Proposed direction:** fix or hide each one; a language that cannot grade on
 a host should not be selectable there. **Size:** PHP is a config line per

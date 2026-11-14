@@ -99,7 +99,11 @@ module JudgeBase
     when 'java'
       '-p -d /etc/alternatives'
     when 'haskell'
-      '-d /var/lib/ghc -d /tmp:rw'
+      # -p: the runtime of GHC 9.x starts a timer thread at program start, and
+      # isolate allows a single process/thread without it — every run died
+      # with "Ticker: Failed to spawn thread" (signal 6) from the judge hosts'
+      # move to Ubuntu 24.04 in 2025-07 until 2026-11.
+      '-p -d /var/lib/ghc -d /tmp:rw'
     when 'digital'
       "-p -d /etc -d /tmp:rw -d /my_lib=#{Pathname.new(Rails.configuration.worker[:compiler][:digital]).dirname}"
     when 'rust'
@@ -114,6 +118,21 @@ module JudgeBase
     else
       ''
     end
+  end
+
+  # CPU seconds a compile may use (isolate -t counts every thread of every
+  # process). Go gets more: its build cache is a fresh tmpfs per compile
+  # (GOCACHE=/gocache, see the options above), so each `go build` first
+  # compiles the standard library — 6.8 CPU seconds for a five-line program on
+  # a 32-core dev machine with the judge host's Go 1.22 (2 s of wall clock);
+  # on the judge host, under load, compiles crossed the
+  # common 10 and came back as "Time limit exceeded" (4 of the last 6 Go
+  # submissions on cp-grader, 2026-10).
+  COMPILE_TIME_LIMIT = 10
+  GO_COMPILE_TIME_LIMIT = 30
+
+  def compile_time_limit_by_lang(language_name)
+    language_name == 'go' ? GO_COMPILE_TIME_LIMIT : COMPILE_TIME_LIMIT
   end
 
   # return true when we must redirect the input into stdin

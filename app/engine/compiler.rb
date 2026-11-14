@@ -87,7 +87,7 @@ class Compiler
     output = { "#{@isolate_bin_path}": @compile_path.cleanpath}
     input = {"#{@isolate_source_path}": @source_path.cleanpath, "/source_manager": @manager_path.cleanpath}
     out, err, status, meta = run_isolate(cmd_string,
-                       time_limit: 10,
+                       time_limit: compile_time_limit_by_lang(@sub.language.name),
                        input: input,
                        output: output,
                        isolate_args: isolate_args,

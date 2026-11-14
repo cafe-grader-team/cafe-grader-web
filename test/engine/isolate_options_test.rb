@@ -26,6 +26,15 @@ class IsolateOptionsTest < ActiveSupport::TestCase
     assert_includes opts, '--env=GOCACHE=/gocache'
   end
 
+  test 'haskell may start threads: the GHC 9 runtime spawns a timer thread at start' do
+    assert_includes @judge.isolate_options_by_lang('haskell').split, '-p'
+  end
+
+  test 'a Go compile gets more CPU time than the others, which keep 10 seconds' do
+    assert_equal 30, @judge.compile_time_limit_by_lang('go')
+    %w[cpp c java python pas haskell rust].each { |lang| assert_equal 10, @judge.compile_time_limit_by_lang(lang) }
+  end
+
   test 'an unknown language gets no extra options' do
     assert_equal '', @judge.isolate_options_by_lang('brainfuck')
   end

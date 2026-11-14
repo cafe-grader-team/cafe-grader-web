@@ -51,6 +51,16 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   `worker.yml`, which `bin/rails engine:detect WRITE=1` writes next to the
   Java line; `engine:langcheck` reports it when it goes stale after an fpc
   upgrade. Same manual step per judge host as for Java. (rev 2279)
+- **Every Haskell run crashed with signal 6** (`Ticker: Failed to spawn
+  thread`) on hosts with GHC 9: its runtime starts a timer thread and the
+  sandbox allowed a single one. The Haskell sandbox now allows threads, as
+  Java, Python, Rust and Go already did. On cp-grader no Haskell submission
+  had scored since 2025-07-18. (rev 2281)
+- **Go compiles failing at random with "Time limit exceeded".** Each Go
+  compile rebuilds the standard library in a fresh cache and used about 7 of
+  the 10 allowed CPU seconds for a trivial program; under load it crossed the
+  limit. Go compiles now get 30 CPU seconds; every other language keeps 10.
+  (rev 2281)
 - **`worker.yml.SAMPLE` had no `compiler: php:` line**, so on a host built
   from it every PHP submission was a compilation error with an empty message.
   Existing hosts: add `php: <%= `which php`.strip %>` under `compiler:` in
