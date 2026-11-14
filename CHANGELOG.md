@@ -10,6 +10,46 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 
 ## [Unreleased]
 
+### Added
+- **`bin/rails engine:langcheck` — does each language grade on this host?**
+  It compiles and runs a small built-in program (read two numbers, print the
+  sum) for C++, C, Python, Ruby, Java, Haskell, Rust, Go, Pascal and PHP in the
+  real sandbox, with the same compiler classes and isolate options as real
+  grading, and prints one line per language: `PASS`, `FAIL` with the phase and
+  the compiler's first lines, or `not configured` when `worker.yml` has no
+  compiler path for it. It needs no problem and no submission and touches no
+  student data. `ONLY=java,cpp` limits it, `BOX=` picks the isolate box
+  (default 99), `SKIP_WEB_ONLY=1` skips a host with no grader boxes. Exit 1 on
+  any `FAIL`. (rev 2278)
+- **Per-host isolate options in `config/worker.yml`, written by
+  `bin/rails engine:detect`.** A new optional section, `isolate_options:`
+  with one line per language, is added after the built-in options for both the
+  compile and the run sandbox. `engine:detect` works out what the host needs
+  and prints it; `engine:detect WRITE=1` writes it into `worker.yml` (only that
+  line changes) and the graders use it after a restart. Graders never detect
+  anything themselves: what a box uses is the line in the file, and each
+  grader logs it once at start. `engine:langcheck` also reports when the line
+  no longer matches the host, for example after a JDK upgrade. (rev 2278)
+
+### Fixed
+- **Java submissions fail to compile with `InternalError: Error loading
+  java.security file` on Debian/Ubuntu judge hosts.** The OS package keeps the
+  JDK's configuration in `/etc/java-<N>-openjdk`, which the sandbox did not
+  mount, so `javac` died before reading the source; on cp-grader no Java
+  submission was graded from 2025-08-20 on. **Each judge host needs one manual
+  step after this deploy:** `bin/rails engine:detect WRITE=1`, restart the
+  graders, then `bin/rails engine:langcheck ONLY=java`. Submissions that
+  failed this way are not regraded automatically. (rev 2278)
+- **Pascal never reached the compiler**: the compiler class read
+  `compiler: pascal:` while `worker.yml` defines `compiler: pas:`, so the
+  command started with `-O1` (`execve("-O1"): No such file or directory`).
+  Pascal still does not compile inside the sandbox (see `doc/backlog.md`).
+  (rev 2278)
+- **`worker.yml.SAMPLE` had no `compiler: php:` line**, so on a host built
+  from it every PHP submission was a compilation error with an empty message.
+  Existing hosts: add `php: <%= `which php`.strip %>` under `compiler:` in
+  `config/worker.yml` if PHP should work there. (rev 2278)
+
 ### Changed
 - **AI assist on Claude through the AI gateway costs about half as much
   during exams.** Each request now has a fixed line, "End of the problem

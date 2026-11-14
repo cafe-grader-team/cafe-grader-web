@@ -31,6 +31,11 @@ class Grader
     @last_job_time = Time.zone.now
     Rainbow.enabled = true
     judge_log "Grader created with key #{key}"
+    # One line that shows which per-host isolate options this process loaded
+    # from worker.yml — they are read at boot, so a box started before an
+    # `engine:detect WRITE=1` still runs without them until it restarts.
+    host_options = (Rails.configuration.worker[:isolate_options] || {}).to_h
+    judge_log "Host isolate options (worker.yml isolate_options): #{host_options.empty? ? 'none' : host_options.map { |lang, opts| "#{lang}: #{opts}" }.join('; ')}"
   end
 
   #

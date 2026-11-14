@@ -26,6 +26,7 @@ shared:
     rust: <%= `which rustc`.strip %>
     go: <%= `which go`.strip %>
     pas: <%= `which fpc`.strip %>
+    php: <%= `which php`.strip %>
   isolate_path: <%= `which isolate`.strip %>
 
   #hosts
@@ -38,6 +39,16 @@ shared:
   # limits:
   #   checker_timeout: 30
   #   initializer_timeout: 120
+
+  # extra isolate options THIS host needs, per language, added after the
+  # built-in ones (JudgeBase#builtin_isolate_options) for both compiling and
+  # running. Do not write it by hand: `bin/rails engine:detect` shows what the
+  # host needs and `bin/rails engine:detect WRITE=1` writes it here; then
+  # restart the graders and run `bin/rails engine:langcheck`. Today only Java
+  # needs one, where the OS package keeps the JDK's conf files in /etc
+  # (Debian/Ubuntu: /etc/java-<N>-openjdk); rerun detect after a JDK upgrade.
+  # isolate_options:
+  #   java: "-d /etc/java-21-openjdk"
 
 development:
   server_key: c2f7966dee

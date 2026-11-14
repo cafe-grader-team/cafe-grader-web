@@ -46,4 +46,79 @@ namespace :engine do
     puts '  submission restored to its stored grade'
     exit 2 unless identical
   end
+
+  desc 'Show the isolate options this host needs per language (worker.yml `isolate_options:`). WRITE=1 writes them to config/worker.yml'
+  task detect: :environment do
+    detected = SandboxDetect.new.options
+    current = (Rails.configuration.worker[:isolate_options] || {}).to_h.transform_keys(&:to_s)
+    file = Rails.root.join('config', 'worker.yml')
+
+    if detected.empty?
+      puts 'detected: this host needs no extra isolate options'
+    else
+      puts 'detected — this host needs, under `shared:` in config/worker.yml:'
+      puts "  #{WorkerConfigPatch::SECTION}:"
+      detected.each { |lang, opts| puts %(    #{lang}: "#{opts}") }
+    end
+    puts "config/worker.yml has: #{current.empty? ? '(no isolate_options)' : current.map { |l, o| %(#{l}: "#{o}") }.join(', ')}"
+
+    # Only the languages detection knows about are touched; a line a person
+    # added for another language stays.
+    changes = SandboxDetect::LANGUAGES.filter_map do |lang|
+      [lang, detected[lang]] unless current[lang].to_s == detected[lang].to_s
+    end
+    if changes.empty?
+      puts 'worker.yml is up to date'
+      next
+    end
+    changes.each { |lang, opts| puts "  #{lang}: #{current[lang].inspect} -> #{opts.inspect}" }
+    unless ENV['WRITE'] == '1'
+      puts 'not written — run `bin/rails engine:detect WRITE=1` to update config/worker.yml, then restart the graders'
+      exit 1
+    end
+
+    original = File.read(file)
+    patched = changes.reduce(original) { |text, (lang, opts)| WorkerConfigPatch.apply(text, lang, opts) }
+    File.write(file, patched)
+    # Read the file back the way Rails does; put the old text back if the
+    # edit did not produce exactly the detected values.
+    reread = (Rails.application.config_for(:worker)[:isolate_options] || {}).to_h.transform_keys(&:to_s)
+    unless SandboxDetect::LANGUAGES.all? { |lang| reread[lang].to_s == detected[lang].to_s }
+      File.write(file, original)
+      abort "the edit of #{file} did not read back as expected (#{reread.inspect}); file restored, nothing changed"
+    end
+    puts "written to #{file} — restart the graders to use it, then `bin/rails engine:langcheck`"
+  end
+
+  desc 'Compile and run a built-in program per language in the real sandbox. [ONLY=java,cpp] [BOX=99] [SKIP_WEB_ONLY=1]'
+  task langcheck: :environment do
+    box = Integer(ENV.fetch('BOX', '99'))
+    worker_id = Rails.configuration.worker[:worker_id]
+    # The deploy pipeline's mode, as in engine:smoke: a web-only host grades nothing.
+    if ENV['SKIP_WEB_ONLY'] == '1' && GraderProcess.where(worker_id: worker_id, enabled: true).none?
+      puts "SKIPPED: no enabled grader boxes for worker #{worker_id} on this host — nothing grades here"
+      exit 0
+    end
+    languages = ENV['ONLY'] ? ENV['ONLY'].split(',').map(&:strip) : LangCheck.languages
+
+    results = LangCheck.new(box_id: box).run(languages)
+    label = { pass: 'PASS', fail: 'FAIL', not_configured: 'not configured' }
+    results.each do |r|
+      line = "  #{r.language.ljust(8)} #{label[r.verdict]}"
+      line += " (#{r.phase})" if r.verdict == :fail
+      line += " — #{r.detail}" if r.detail
+      puts line
+      puts "           isolate options: #{r.options}" if r.verdict == :fail && r.options.present?
+    end
+
+    judge = Compiler.new(worker_id, box)
+    config_problems = SandboxDetect.new.problems(effective: ->(lang) { judge.isolate_options_by_lang(lang) })
+    config_problems.each { |msg| puts "  CONFIG #{msg}" }
+
+    failed = results.count { |r| r.verdict == :fail }
+    puts "#{results.count { |r| r.verdict == :pass }} pass, #{failed} fail, " \
+         "#{results.count { |r| r.verdict == :not_configured }} not configured (box #{box}); " \
+         'not covered: digital, postgres, archive, text'
+    exit 1 if failed.positive? || config_problems.any?
+  end
 end

@@ -44,12 +44,7 @@ class Evaluator
     cmd_string = cmd.join ' '
 
     # run the evaluation in the isolated environment
-    isolate_args = %w[-E PATH]
-    isolate_args << isolate_options_by_lang(@sub.language.name)
-    isolate_args += ["-o", "#{@isolate_stdout_file}"] # redirect program stdout to @isolate_stdout_file
-    isolate_args += ['--stderr-to-stdout'] if input_redirect_by_lang(@sub.language.name)  # also redirect stderr, if needed
-    isolate_args += ["-i", "#{@isolate_input_file}"] if input_redirect_by_lang(@sub.language.name) # redirect input, if needed
-    isolate_args += ['-f 50000'] # allow max 50MB output
+    isolate_args = run_isolate_args(@sub.language.name)
     input = {"#{@isolate_input_path}": @input_file.dirname,
              "#{@isolate_data_path}": @prob_data_path.cleanpath,
              "#{@isolate_bin_path}": @mybin_path.cleanpath}
@@ -75,6 +70,19 @@ class Evaluator
     # call evaluate to check the result
     result = evaluate(out, meta, err)
     return result
+  end
+
+  # isolate options for running a compiled submission of this language.
+  # Shared with LangCheck (bin/rails engine:langcheck), which runs a built-in
+  # program in the same sandbox without a testcase.
+  def run_isolate_args(language_name)
+    isolate_args = %w[-E PATH]
+    isolate_args << isolate_options_by_lang(language_name)
+    isolate_args += ["-o", "#{@isolate_stdout_file}"] # redirect program stdout to @isolate_stdout_file
+    isolate_args += ['--stderr-to-stdout'] if input_redirect_by_lang(language_name)  # also redirect stderr, if needed
+    isolate_args += ["-i", "#{@isolate_input_file}"] if input_redirect_by_lang(language_name) # redirect input, if needed
+    isolate_args += ['-f 50000'] # allow max 50MB output
+    isolate_args
   end
 
   # A run that died mid-way (box collision, killed grader) leaves stdout.txt

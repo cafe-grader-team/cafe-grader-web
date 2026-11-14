@@ -22,6 +22,41 @@ Conventions:
 
 ---
 
+## Languages that still do not grade (found by `engine:langcheck`, 2026-11-14)
+
+**Why it matters:** each of these is offered in the language picker wherever
+a problem permits all languages, and a student who picks one gets a
+compilation or grader error that is not their fault. Counts are from the
+cp-grader database copy of 2026-10-28.
+
+- **Java — fixed in code (rev 2278), not yet on the hosts.** Each judge host
+  needs `bin/rails engine:detect WRITE=1` + grader restart. The 53 submissions
+  that failed with `Error loading java.security file` (2025-08-20 →
+  2026-10-05) are not regraded; decide whether to rejudge them
+  (`Submission#add_judge_job(live_dataset, -10)`).
+- **Pascal (75 submissions, never passed).** With the config key fixed (rev
+  2278) `fpc` now starts and fails with `Can't find unit system`: it reads
+  `/etc/fpc.cfg` for its unit path and the sandbox has no `/etc`. Same class
+  of problem as Java, but the thing to mount is a single file, not a
+  directory; an `-Fu<unit dir>` flag in `Compiler::Pascal` may be simpler.
+  Then add `pas` to `SandboxDetect::LANGUAGES` if the path is host-dependent.
+- **PHP (170, never passed).** Only the missing `compiler: php:` line; the
+  built-in program passes once the path is set. Per-host `worker.yml` edit.
+- **Octave (4,209, never passed).** `Compiler.get_compiler` has no branch for
+  it: "Unsupported language (octave)". Either write the compiler class or
+  remove the `Language` row.
+- **Haskell on this dev machine only:** compiles, then the run dies with
+  `Ticker: Failed to spawn thread` — the built-in Haskell options have no
+  `-p`, and the GHC here needs a second thread. cp-grader graded Haskell on
+  2026-10-10, so check with `engine:langcheck ONLY=haskell` on a real host
+  before changing anything.
+
+**Proposed direction:** fix or hide each one; a language that cannot grade on
+a host should not be selectable there. **Size:** Pascal and PHP an hour each;
+Octave is a product decision first.
+
+---
+
 ## Contest reports — what a contest should report after the exam (direction not chosen)
 
 **Raised 2026-09-12 and 2026-09-22, never designed** — each time a nearby

@@ -3,6 +3,42 @@
 Major, hard-to-reverse decisions and their reasoning. Newest first.
 (Deferred work goes in `backlog.md`; this file is for decisions already made.)
 
+## 2026-11-14 — Host-dependent sandbox options are written config, never detected while grading
+
+**Decision.** What a language needs from isolate is split in two. The part
+that depends on the language stays in code (`JudgeBase#builtin_isolate_options`).
+The part that depends on the machine — today one case, the `/etc/java-<N>-openjdk`
+mount Debian/Ubuntu's OpenJDK needs — lives in the per-host `config/worker.yml`
+under `isolate_options: <language>:` and is appended to the built-in options.
+The grader only reads that file. `bin/rails engine:detect` works the value
+out and, with `WRITE=1`, writes the line; `bin/rails engine:langcheck`
+compiles and runs a built-in program per language in the real sandbox and
+also reports a line that no longer matches the host. In the deploy pipeline
+`engine:langcheck` warns and never blocks.
+
+**Why.** Java failed every compile on cp-grader from 2025-08-20 until it was
+looked at on 2026-11-14 (submission 972301): the sandbox mounts `/usr` but
+not `/etc`, and the JDK's `conf/security/java.security` is a symlink into
+`/etc`. Two simpler fixes were rejected. Hard-coding `-d /etc/java-21-openjdk`
+breaks at the next JDK major version and on every other distribution.
+Detecting the directory inside the grader at grading time was rejected by dae:
+a worker is already hard to debug, and a value computed in the process is not
+visible anywhere — with a written line, `worker.yml` and the one log line each
+grader prints at start say exactly what is in effect. Mounting all of `/etc`
+(as the `digital` language does) would work everywhere but shows student
+programs the judge host's configuration.
+
+**Cost accepted.** A written value goes stale: after a JDK upgrade the old
+directory is gone, isolate refuses to start the sandbox, and Java fails again
+until someone reruns `engine:detect WRITE=1`. That is why `engine:langcheck`
+runs in every deploy and names the stale line. It warns only, because a
+broken minor language must not stop a C++ exam host from deploying.
+
+**Why it went unnoticed for 15 months.** `engine:smoke`, the deploy gate,
+regrades an existing passing submission and picks only C++, C or Python.
+`engine:langcheck` needs no submission, so it also covers a language nobody
+has ever passed in.
+
 ## 2026-10-08 — Solid Queue: the viva worker serves only `viva`, the other worker serves `"*"`
 
 **Decision.** `config/queue.yml` keeps two workers. The viva worker serves the

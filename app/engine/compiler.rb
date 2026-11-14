@@ -55,26 +55,13 @@ class Compiler
     end
   end
 
-  # main compile function
-  # return EngineResponse::Result
-  # chain_id: the compile job's chain, checked before the binary and status
-  # are written (see JudgeBase#superseded?)
-  def compile(submission, dataset, chain_id: nil)
-    @sub = submission
-    @working_dataset = dataset
-    # validate the pre-condition
-    validate
-
-    # init isolate
-    need_cg = isolate_need_cg_by_lang(@sub.language.name)
-    setup_isolate(@box_id, need_cg)
-
-    begin
-
-    # prepare source file
-    prepare_submission_directory(@sub)
-    prepare_files_for_compile
-
+  # The sandboxed part of a compile: pre_compile, the compiler run, and the
+  # chmod of what it produced. Needs isolate set up, the directories of
+  # prepare_submission_directory, and @source_file / @isolate_source_file /
+  # @isolate_main_file. Returns isolate's [out, err, status, meta]. Kept apart
+  # from #compile so that LangCheck (bin/rails engine:langcheck) runs the very
+  # same sandbox call on a built-in program, with no dataset and no upload.
+  def compile_in_sandbox(need_cg)
     # running any precompile script
     @exec_file = @compile_path + @sub.problem.exec_filename(@sub.language)
     pre_compile
@@ -113,6 +100,31 @@ class Compiler
 
     # chmod the compile result
     run_isolate("/usr/bin/chmod -R 0777 #{@isolate_bin_path}", output: output)
+
+    return out, err, status, meta
+  end
+
+  # main compile function
+  # return EngineResponse::Result
+  # chain_id: the compile job's chain, checked before the binary and status
+  # are written (see JudgeBase#superseded?)
+  def compile(submission, dataset, chain_id: nil)
+    @sub = submission
+    @working_dataset = dataset
+    # validate the pre-condition
+    validate
+
+    # init isolate
+    need_cg = isolate_need_cg_by_lang(@sub.language.name)
+    setup_isolate(@box_id, need_cg)
+
+    begin
+
+    # prepare source file
+    prepare_submission_directory(@sub)
+    prepare_files_for_compile
+
+    out, err, status, meta = compile_in_sandbox(need_cg)
 
     ensure
       cleanup_isolate(need_cg)
