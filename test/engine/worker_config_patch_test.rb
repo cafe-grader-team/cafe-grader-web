@@ -109,4 +109,38 @@ class WorkerConfigPatchTest < ActiveSupport::TestCase
     assert_equal BASE.lines.size + 1, out.lines.size
     assert_includes out, "    javac: <%= `which javac`.strip %>\n"
   end
+
+  # the layout of a worker.yml written before Rails had `shared:` (toi host)
+  ANCHORED = <<~YML
+    default: &default
+      compiler:
+        cpp: /usr/bin/g++
+        javac: <%= `which javac`.strip %>
+
+      hosts:
+        web: http://localhost
+
+    development:
+      <<: *default
+      worker_id: 1
+
+    production:
+      <<: *default
+      worker_id: 1
+  YML
+
+  test 'a file with `default: &default` instead of shared: gets the section there, and production sees it' do
+    out = WorkerConfigPatch.apply(ANCHORED, 'java', '-d /etc/java-21-openjdk')
+    out = WorkerConfigPatch.apply(out, 'php', '/usr/bin/php', section: 'compiler')
+    assert_operator out.index('isolate_options:'), :<, out.index('development:')
+    production = parse(out)['production']
+    assert_equal({ 'java' => '-d /etc/java-21-openjdk' }, production['isolate_options'])
+    assert_equal '/usr/bin/php', production['compiler']['php']
+    assert_equal 1, production['worker_id']
+    assert_equal ANCHORED, WorkerConfigPatch.apply(WorkerConfigPatch.apply(out, 'java', nil), 'php', nil, section: 'compiler')
+  end
+
+  test 'a file with neither layout is refused' do
+    assert_raises(ArgumentError) { WorkerConfigPatch.apply("production:\n  worker_id: 1\n", 'java', '-d /x') }
+  end
 end

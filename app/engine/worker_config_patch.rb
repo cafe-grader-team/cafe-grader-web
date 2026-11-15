@@ -56,8 +56,13 @@ class WorkerConfigPatch
   end
 
   # A new section goes at the end of `shared:`, before the next top-level key.
+  # A worker.yml from before Rails had `shared:` keeps the common settings
+  # under an anchored key instead (`default: &default`, merged into each
+  # environment with `<<: *default`; the toi host still has one), so without
+  # `shared:` the first anchored top-level key is used.
   def self.insert_section(lines, section, entry)
-    shared = lines.index { |l| l =~ /\Ashared:/ } or raise ArgumentError, 'worker.yml has no `shared:` section'
+    shared = lines.index { |l| l =~ /\Ashared:/ } || lines.index { |l| l =~ /\A[\w-]+:\s*&\w+\s*(#.*)?\z/ } or
+      raise ArgumentError, 'worker.yml has neither a `shared:` section nor an anchored one (`default: &default`)'
     nxt = (shared + 1...lines.size).find { |i| lines[i] =~ /\A[^\s#]/ } || lines.size
     nxt -= 1 while nxt > shared + 1 && lines[nxt - 1].strip.empty?
     lines[nxt - 1] = "#{lines[nxt - 1]}\n" unless lines[nxt - 1].end_with?("\n")

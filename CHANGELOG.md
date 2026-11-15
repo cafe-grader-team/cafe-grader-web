@@ -74,6 +74,11 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   2278), and on an existing host `bin/rails engine:detect WRITE=1` adds
   `php: "<path>"` under `compiler:` when PHP is installed and the line is
   missing; a compiler line that is already there is never changed. (rev 2283)
+- **`engine:detect WRITE=1` works on a `worker.yml` in the older layout.**
+  A file that keeps its common settings under `default: &default` (merged
+  into each environment with `<<: *default`) instead of `shared:` made the
+  task stop without writing anything; the toi host has such a file. New
+  sections now go into that anchored block. (rev 2286)
 
 ### Changed
 - **AI assist on Claude through the AI gateway costs about half as much

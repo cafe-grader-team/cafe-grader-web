@@ -67,7 +67,7 @@ namespace :engine do
     if detected.empty?
       puts 'detected: this host needs no extra options'
     else
-      puts 'detected — this host needs, under `shared:` in config/worker.yml:'
+      puts 'detected — this host needs, in the common section (`shared:`, or `default: &default` in an old file) of config/worker.yml:'
       show.call(detected)
     end
     if current.values.all?(&:empty?)
