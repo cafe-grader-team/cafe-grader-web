@@ -306,8 +306,14 @@ TITLEBAR
   # student saw text they never typed. Use this for viva turns, AI-comment
   # bodies, and anything else whose markdown source isn't authored by a
   # trusted user.
+  #
+  # safe_links_only: markdown reads `<scheme:...>` and `[x](url)` as links of
+  # any scheme, so `std::vector<std::set<int>>` became a link to
+  # "std::set<int" and `[x](javascript:...)` a clickable script link (no CSP
+  # here to stop it). Now only http(s)/ftp/mailto/relative URLs link; any
+  # other `<...>` falls back to escaped text.
   def safe_markdown(text)
-    renderer = Redcarpet::Render::HTML.new(prettify: true, escape_html: true)
+    renderer = Redcarpet::Render::HTML.new(prettify: true, escape_html: true, safe_links_only: true)
     parser   = Redcarpet::Markdown.new(
       renderer,
       fenced_code_blocks: true,

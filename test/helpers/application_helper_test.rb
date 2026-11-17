@@ -37,6 +37,23 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes html, '<a href="http://example.com">http://example.com</a>'
   end
 
+  # Markdown reads `<scheme:...>` as a link, and Redcarpet accepted any scheme:
+  # `std::vector<std::set<int>>` showed as `std::vectorstd::set<int>` (a link
+  # to "std::set<int"), and `<javascript:...>` or `[x](javascript:...)` became
+  # a clickable script link in model-written text. Only web, mail and
+  # relative links may become links; anything else stays literal text.
+  test "safe_markdown links only safe schemes, so std:: templates stay text" do
+    assert_includes safe_markdown("pick std::vector<std::set<int>> here"), "std::vector&lt;std::set&lt;int&gt;&gt; here"
+    html = safe_markdown("[a](javascript:alert(1)) <javascript:alert(2)> <data:text/html,x>")
+    assert_no_match %r{href="(javascript|data):}i, html
+    assert_includes html, "&lt;javascript:alert(2)&gt;"
+    html = safe_markdown("<https://example.com> [rel](/main/list) <mailto:a@b.c> www.x.com")
+    assert_includes html, '<a href="https://example.com">https://example.com</a>'
+    assert_includes html, '<a href="/main/list">rel</a>'
+    assert_includes html, '<a href="mailto:a@b.c">a@b.c</a>'
+    assert_includes html, '<a href="http://www.x.com">www.x.com</a>'
+  end
+
   # GitHub #50 vector 2. Staff-authored markdown — announcements, hints,
   # submission comments — may carry the HTML those authors really use (links
   # that open a new tab, font size/colour, tables, images; every one of these

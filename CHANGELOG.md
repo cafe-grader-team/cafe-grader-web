@@ -79,6 +79,14 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   into each environment with `<<: *default`) instead of `shared:` made the
   task stop without writing anything; the toi host has such a file. New
   sections now go into that anchored block. (rev 2286)
+- **Viva grade feedback dropped C++ template brackets.** The Feedback line on
+  a graded viva went through Rails `simple_format`, whose sanitizer read
+  `` `map<int, set<int>>` `` as tags and showed `` `map>` `` (113 of 843 grades
+  in the local database). The rev 2078 fix covered the transcript only. The
+  feedback is now rendered as markdown like the interviewer's turns: `<` and
+  `>` show as written, and the quoted code shows as code. In the same helper,
+  `<std::set<int>>` was read as a link with the "scheme" `std:` and showed
+  as `std::set<int`; it now stays text. (rev 2287)
 
 ### Changed
 - **AI assist on Claude through the AI gateway costs about half as much
@@ -98,6 +106,17 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   line without it. To turn the marker off, set `prompt_cache: false` in the
   `ai_gateway:` block of `config/llm.yml`; no setting is needed to keep it on.
   The manager files are now always sent sorted by file name. (rev 2264)
+
+### Security
+- **Model-written markdown could carry a clickable `javascript:` link.** The
+  markdown renderer used for viva interviewer turns, viva grade feedback and
+  the markdown editor preview escaped raw HTML but turned `[x](javascript:…)`,
+  `<javascript:…>` and `<data:…>` into real links, and the site sets no
+  Content-Security-Policy to stop them. A student who talked the interviewer
+  into repeating such a link could have it run in the browser of a staff
+  member who clicked it. Only `http`, `https`, `ftp`, `mailto` and relative
+  links become links now; anything else shows as plain text. No stored turn or
+  grade used any other kind of link. (rev 2287)
 
 ## [4.7.3] — 2026-10-08
 

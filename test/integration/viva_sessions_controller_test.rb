@@ -64,6 +64,21 @@ class VivaSessionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "&lt;img src=x onerror=alert(3)&gt;&lt;script&gt;alert(4)&lt;/script&gt;"
   end
 
+  # The grade card's Feedback is model-written and quotes the student's C++
+  # in code spans. It went through plain simple_format, whose sanitizer read
+  # `map<int, set<int>>` as tags and showed `map>` (113 of 843 local grades).
+  test "grade feedback renders template brackets literally and never executes HTML" do
+    @owner_sub.update_columns(status: Submission.statuses[:done])
+    @owner_sub.viva_grades.create!(total_points: 70,
+      narrative: "You chose `map<int, set<int>>` well, but vector<Item> needs a < check. <img src=x onerror=alert(5)>")
+    sign_in_as("john", "hello")
+    get viva_submission_path(@owner_sub)
+    assert_response :success
+    assert_includes response.body, "<code class=\"prettyprint\">map&lt;int, set&lt;int&gt;&gt;</code>"
+    assert_includes response.body, "vector&lt;Item&gt; needs a &lt; check. &lt;img src=x onerror=alert(5)&gt;"
+    assert_select "#viva-session img", count: 0
+  end
+
   # --- Authorization on show / refresh (view-authorization gate) ---
   #
   # Before this gate existed, #show/#refresh had no authorization beyond
