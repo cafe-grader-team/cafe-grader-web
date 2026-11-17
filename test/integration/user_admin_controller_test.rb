@@ -49,6 +49,16 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to action: "import"
   end
 
+  # The log echoes names from the uploaded file; it must show them as text.
+  test "do_import log shows names from the file as text" do
+    sign_in_as("admin", "admin")
+    yaml = {countries: {1 => {name: "vector<int> <b>bold</b>"}}, sites: {}, users: {}}.to_yaml
+    file = Rack::Test::UploadedFile.new(StringIO.new(yaml), "text/yaml", original_filename: "import.yml")
+    post do_import_user_admin_index_path, params: {file: file}
+    assert_response :success
+    assert_includes response.body, "Created vector&lt;int&gt; &lt;b&gt;bold&lt;/b&gt;"
+  end
+
   test "admin can access mass mailing form" do
     sign_in_as("admin", "admin")
     get mass_mailing_user_admin_index_path

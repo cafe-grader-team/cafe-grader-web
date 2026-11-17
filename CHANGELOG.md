@@ -87,6 +87,16 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   `>` show as written, and the quoted code shows as code. In the same helper,
   `<std::set<int>>` was read as a link with the "scheme" `std:` and showed
   as `std::set<int`; it now stays text. (rev 2287)
+- **Messages dropped C++ template brackets.** A message body went through the
+  same sanitizing `simple_format`, so a student who wrote `vector<int> v;`
+  saw `vector v;` in their own message list, and so did the admin reading it
+  (`a<b` even turned the rest of the line bold). Message bodies now show as
+  typed on both pages. (rev 2288)
+- **User import from a YAML file failed on every upload** with
+  `NoMethodError: undefined method 'external_encoding'` (the file was handed
+  to the YAML parser as an upload object instead of its contents). It reads
+  the file now, and the import log shows names from the file as text.
+  (rev 2288)
 
 ### Changed
 - **AI assist on Claude through the AI gateway costs about half as much

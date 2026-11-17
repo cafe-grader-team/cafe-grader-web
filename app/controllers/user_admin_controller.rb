@@ -418,7 +418,7 @@ class UserAdminController < ApplicationController
   end
 
   def import_from_file(f)
-    data_hash = YAML.load(f)
+    data_hash = YAML.load(f.read)   # an UploadedFile is not an IO to Psych (NoMethodError external_encoding)
     @import_log = ""
 
     country_data = data_hash[:countries]

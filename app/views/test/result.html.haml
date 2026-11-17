@@ -21,7 +21,7 @@
 - if @test_request.compiler_message!=nil and @test_request.compiler_message!=''
   %b Compiler Message
   %div{:style => "border: 1px solid black; background: lightgrey"}
-    = simple_format((@test_request.compiler_message or ''))
+    %pre.mb-0= @test_request.compiler_message
 
 %b Input (first 2kb)
 %div{:style => "border: 1px solid black; background: lightgrey"}
