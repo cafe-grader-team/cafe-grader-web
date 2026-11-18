@@ -154,6 +154,17 @@ class GraderConfiguration < ApplicationRecord
     allowed.delete(' ').split(',').any? { |range| IPAddr.new(range).include?(user_ip) }
   end
 
+  # Is the IP whitelist being enforced (right.whitelist_ignore off)?
+  def self.whitelist_active?
+    !get(WHITELIST_IGNORE_KEY)
+  end
+
+  # The entries of right.whitelist_ip, for display. Empty while the whitelist
+  # is active means nobody but admins and problem editors gets in.
+  def self.whitelist_ranges
+    (get(WHITELIST_IP_KEY) || '').delete(' ').split(',').reject(&:empty?)
+  end
+
   # Is this address listed in right.login_throttle_exempt_ips (comma- or
   # space-separated addresses or CIDR ranges)? Runs on every login, so a
   # malformed entry is skipped rather than raised — a typo in the setting
@@ -231,6 +242,9 @@ class GraderConfiguration < ApplicationRecord
     GraderConfiguration.where(key: "right.user_hall_of_fame").update(value: value)
     GraderConfiguration.where(key: "right.user_view_submission").update(value: value)
     GraderConfiguration.where(key: "right.view_testcase").update(value: value)
+    # An exam blocks addresses outside right.whitelist_ip by default; the list
+    # itself is never touched here (design 2026-11-18).
+    GraderConfiguration.where(key: WHITELIST_IGNORE_KEY).update(value: value)
 
     User.update_all(last_ip: false)
   end

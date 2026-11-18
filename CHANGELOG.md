@@ -11,6 +11,9 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 ## [Unreleased]
 
 ### Added
+- **The Contests page shows the IP whitelist beside the mode buttons** — on or
+  off, and the allowed ranges, in red when the list is empty. The message
+  after a mode switch repeats it. (rev 2291)
 - **`bin/rails engine:langcheck` — does each language grade on this host?**
   It compiles and runs a small built-in program (read two numbers, print the
   sum) for C++, C, Python, Ruby, Java, Haskell, Rust, Go, Pascal and PHP in the
@@ -103,6 +106,12 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
+- **Contest mode turns the IP whitelist on.** Pressing Contest now also sets
+  `right.whitelist_ignore` to false, so addresses outside `right.whitelist_ip`
+  are blocked by default during an exam; Normal and Analysis set it back to
+  true. The allowed list itself is never changed — **check it before pressing
+  Contest** (an empty list lets in only admins and problem editors). The
+  mode-change audit row records the whitelist switch. (rev 2291)
 - **AI assist on Claude through the AI gateway costs about half as much
   during exams.** Each request now has a fixed line, "End of the problem
   material. The student's work follows.", between the problem material (the

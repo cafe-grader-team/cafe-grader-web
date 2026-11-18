@@ -533,6 +533,7 @@ class ContestsController < ApplicationController
 
     mode_row = GraderConfiguration.find_by(key: 'system.mode')
     old_mode = mode_row.value
+    old_whitelist_ignore = GraderConfiguration.find_by(key: GraderConfiguration::WHITELIST_IGNORE_KEY)&.value
 
     AuditLog.paused do
       mode_row.update(value: params[:mode])
@@ -542,14 +543,20 @@ class ContestsController < ApplicationController
         GraderConfiguration.set_exam_mode(false)
       end
     end
+    new_whitelist_ignore = GraderConfiguration.find_by(key: GraderConfiguration::WHITELIST_IGNORE_KEY)&.value
 
     AuditLog.record!(
       auditable:      mode_row,
       action:         'mode_change',
-      object_changes: { 'system.mode' => [old_mode, params[:mode]] }
+      object_changes: {
+        'system.mode' => [old_mode, params[:mode]],
+        # the IP whitelist follows the mode (set_exam_mode); dropped from the
+        # row when the switch did not change it
+        GraderConfiguration::WHITELIST_IGNORE_KEY => [old_whitelist_ignore, new_whitelist_ignore]
+      }.reject { |_key, (old, new)| old == new }
     )
 
-    redirect_to contests_path, notice: 'Mode changed succesfully'
+    redirect_to contests_path, notice: mode_changed_notice(params[:mode])
   end
 
   # ---- user action ----
@@ -580,6 +587,20 @@ class ContestsController < ApplicationController
 
 
   private
+
+    # The notice after a mode switch says what happened to the IP whitelist,
+    # which follows the mode — a stale or empty allowed list is seen at once.
+    def mode_changed_notice(mode)
+      GraderConfiguration.read_config
+      msg = "Mode changed to #{helpers.mode_to_text(mode)}."
+      return "#{msg} IP whitelist is now off." unless GraderConfiguration.whitelist_active?
+      ranges = GraderConfiguration.whitelist_ranges
+      if ranges.empty?
+        "#{msg} IP whitelist is now ON and the allowed list is EMPTY — no student can get in, only admins and problem editors."
+      else
+        "#{msg} IP whitelist is now ON — allowed: #{ranges.join(', ')}"
+      end
+    end
 
     def set_contest
       @contest = Contest.find(params[:id])

@@ -115,6 +115,47 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
+  # The IP whitelist follows the mode (design 2026-11-18): contest turns it on,
+  # normal turns it off, the allowed list is never touched.
+  test "contest mode turns the IP whitelist on and normal mode turns it off" do
+    set_grader_config("right.whitelist_ip", "10.0.5.0/24, 192.0.2.7/32")
+    sign_in_as("admin", "admin")
+
+    assert_difference -> { AuditLog.where(action: "mode_change").count }, 1 do
+      post set_system_mode_contests_path, params: { mode: "contest" }
+    end
+    reset_grader_config_cache
+    assert GraderConfiguration.whitelist_active?
+    assert_equal "10.0.5.0/24, 192.0.2.7/32", GraderConfiguration["right.whitelist_ip"]
+    assert_match "IP whitelist is now ON — allowed: 10.0.5.0/24, 192.0.2.7/32", flash[:notice]
+    changes = AuditLog.where(action: "mode_change").last.object_changes
+    assert_equal %w[true false], changes["right.whitelist_ignore"]
+
+    get contests_path
+    assert_select "#whitelist-state", /ON.*Allowed:\s*10\.0\.5\.0\/24, 192\.0\.2\.7\/32/m
+
+    post set_system_mode_contests_path, params: { mode: "standard" }
+    reset_grader_config_cache
+    assert_not GraderConfiguration.whitelist_active?
+    assert_match "IP whitelist is now off", flash[:notice]
+    get contests_path
+    assert_select "#whitelist-state", /off.*Allowed when on:/m
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "an empty allowed list is flagged on the mode card and in the notice" do
+    set_grader_config("right.whitelist_ip", "")
+    sign_in_as("admin", "admin")
+    get contests_path
+    assert_select "#whitelist-state.bg-danger-subtle", /allowed list is empty/
+
+    post set_system_mode_contests_path, params: { mode: "contest" }
+    assert_match "allowed list is EMPTY", flash[:notice]
+  ensure
+    reset_grader_config_cache
+  end
+
   test "non-admin cannot change system mode" do
     set_grader_config("system.mode", "standard")
     sign_in_as("mary", "mary")   # a group editor — could flip the site's mode before B4

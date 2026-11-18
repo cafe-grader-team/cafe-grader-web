@@ -200,7 +200,7 @@ CONFIGURATIONS =
      key: 'right.whitelist_ignore',
      value_type: 'boolean',
      default_value: 'true',
-     description: "If true, no IP check against whitelist_ip is perform. However, when false, non-admin user must have their ip in 'whitelist_ip' to be able to login."
+     description: "If true, no IP check against whitelist_ip is perform. However, when false, non-admin user must have their ip in 'whitelist_ip' to be able to login. Switching the system mode sets this: false in contest mode, true otherwise."
    },
 
    {

@@ -128,4 +128,19 @@ class GraderConfigurationTest < ActiveSupport::TestCase
     assert_not GraderConfiguration["right.bypass_agreement"]
     assert_not GraderConfiguration["right.multiple_ip_login"]
   end
+
+  test "set_exam_mode switches the IP whitelist and leaves the allowed list alone" do
+    set_grader_config("right.whitelist_ip", "10.0.5.0/24")
+    GraderConfiguration.set_exam_mode(true)
+    reset_grader_config_cache
+    assert GraderConfiguration.whitelist_active?
+    assert_equal ["10.0.5.0/24"], GraderConfiguration.whitelist_ranges
+
+    GraderConfiguration.set_exam_mode(false)
+    reset_grader_config_cache
+    assert_not GraderConfiguration.whitelist_active?
+    assert_equal ["10.0.5.0/24"], GraderConfiguration.whitelist_ranges
+  ensure
+    reset_grader_config_cache
+  end
 end

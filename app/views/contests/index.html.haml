@@ -43,6 +43,41 @@
                 %span.mi.fill check_circle
               Analysis
 
+        -# IP whitelist state — the mode switch turns it on/off (set_exam_mode),
+        -# so the allowed list is shown where the switch is pressed.
+        - wl_active = GraderConfiguration.whitelist_active?
+        - wl_ranges = GraderConfiguration.whitelist_ranges
+        - wl_empty  = wl_ranges.empty?
+        #whitelist-state.rounded-3.p-2.px-3.mt-3.small.d-flex.align-items-start.gap-2{class: wl_empty ? 'bg-danger-subtle' : 'bg-light'}
+          - if wl_empty
+            %span.mi.md-18.fill.text-danger.mt-1 warning
+          - else
+            %span.mi.md-18.mt-1{class: wl_active ? 'fill text-success' : 'text-secondary'} lan
+          .flex-grow-1
+            %div
+              %span.fw-semibold IP whitelist:
+              - if wl_active
+                %span.badge{class: wl_empty ? 'text-bg-danger' : 'text-bg-success'} ON
+              - else
+                %span.badge.text-bg-secondary off
+              - if wl_empty
+                %span.text-danger.fw-semibold — the allowed list is empty
+              - elsif wl_active
+                %span.text-secondary — students outside the list are blocked
+              - else
+                %span.text-secondary — Contest turns it on
+            - if wl_empty
+              .text-danger-emphasis
+                - if wl_active
+                  No student can get in. Only admins and problem editors are let through.
+                - else
+                  Pressing Contest would block every student. Only admins and problem editors are let through.
+            - else
+              .text-secondary
+                = wl_active ? 'Allowed:' : 'Allowed when on:'
+                %span.font-monospace.text-dark= wl_ranges.join(', ')
+          = link_to 'Edit', grader_configuration_index_path, class: 'text-nowrap'
+
     .card.card-shadow.mb-3
       .card-body
         .d-flex.flex-wrap
