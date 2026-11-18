@@ -7,38 +7,29 @@
     .card.shadow-sm.mb-3
       .card-body
         %h4 Viva Info
+        = render partial: 'submissions/who_and_what_rows', locals: {submission: @submission}
         .row.mb-2
-          .col-5.text-end.text-secondary Problem
+          .col-4.text-end.text-secondary Started
           .col
-            = @submission.problem.full_name
-            -# PDF is the interviewer's brief on viva problems — hide
-            -# it from the student. Single-page lookup so the predicate
-            -# is fine here (unlike /main/list, which would N+1).
-            - if @submission.problem.statement.attached? && @current_user.can_view_problem_pdf?(@submission.problem)
-              = link_to mdi(:description, 'md-18 text-muted ms-1'), download_by_type_problem_path(@submission.problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', data: {bs_toggle: 'tooltip', bs_title: 'Download problem statement (PDF)'}
+            #{time_ago_in_words(@submission.submitted_at)} ago
+            %span.text-secondary (at #{@submission.submitted_at.to_formatted_s(:long)})
         .row.mb-2
-          .col-5.text-end.text-secondary User
-          .col= @submission.user.login
-        .row.mb-2
-          .col-5.text-end.text-secondary Started
-          .col= "#{time_ago_in_words(@submission.submitted_at)} ago"
-        .row.mb-2
-          .col-5.text-end.text-secondary Status
+          .col-4.text-end.text-secondary Status
           .col
             = @submission.status
             - if @submission.viva_archived?
               %span.badge.text-bg-warning.ms-1 archived
             = submission_test_drive_badge(@submission)
         .row.mb-2
-          .col-5.text-end.text-secondary Turns
+          .col-4.text-end.text-secondary Turns
           .col= @submission.viva_turns.where(role: :student).count
         - if @submission.points
           .row.mb-2
-            .col-5.text-end.text-secondary Points
+            .col-4.text-end.text-secondary Points
             .col= "#{@submission.points}/100"
         - if @submission.viva_archived?
           .row.mb-2
-            .col-5.text-end.text-secondary Archived
+            .col-4.text-end.text-secondary Archived
             .col
               = "#{time_ago_in_words(@submission.viva_archived_at)} ago"
               %div.small.text-secondary.fst-italic
@@ -51,7 +42,7 @@
                 A fresh session can be started from the problem list when a start is left.
 
         .row.mb-2
-          .col-5.text-end.text-secondary Starts
+          .col-4.text-end.text-secondary Starts
           .col
             - if @submission.test_drive?
               Test-drive — unlimited restarts; excluded from reports, cost figures and start limits
@@ -66,7 +57,7 @@
               = "#{@starts_left} of #{@daily_start_limit} starts left today"
         - if @submission.viva_retake_granted_at
           .row.mb-2
-            .col-5.text-end.text-secondary Retake
+            .col-4.text-end.text-secondary Retake
             .col
               = "Another attempt allowed by #{@submission.viva_retake_granted_by&.login || 'staff'}, #{time_ago_in_words(@submission.viva_retake_granted_at)} ago"
               %div.small.text-secondary.fst-italic This session does not count toward the start limit.

@@ -6,17 +6,16 @@
 .text-muted.font-monospace
   = "#{problem.name}".gsub("_","_&ZeroWidthSpace;").html_safe
 -# link for download statement, attachment, testcases
-%div.d-inline-flex.align-items-center.align-middle.gap-1
-  = link_to_description_if_any "<span class='mi md-18'>description</span> Read".html_safe, problem, class: 'link-flex'
-  - if problem.attachment.attached?
-    .d-md-none
-    %span.d-none.d-md-inline
-      |
-    = link_to "<span class='mi md-18'>archive</span> File".html_safe, download_by_type_problem_path(problem,'attachment'), class: 'link-flex'
-  - if problem.can_view_testcase
-    %span
-      |
-    = link_to "<span class='mi md-18'>bug_report</span> Testcases".html_safe, show_problem_testcases_path(problem), class: 'link-flex'
+- links = []
+- links << link_to_description_if_any("<span class='mi md-18'>description</span> Read".html_safe, problem, class: 'link-flex')
+- links << link_to("<span class='mi md-18'>archive</span> File".html_safe, download_by_type_problem_path(problem,'attachment'), class: 'link-flex') if problem.attachment.attached?
+- links << link_to("<span class='mi md-18'>bug_report</span> Testcases".html_safe, show_problem_testcases_path(problem), class: 'link-flex') if problem.can_view_testcase
+- links = links.reject(&:blank?)
+-# joined here so a missing first link (no statement, or a viva problem whose
+-# PDF students must not get) leaves no stray separator
+- if links.any?
+  %div.d-inline-flex.align-items-center.align-middle.gap-1.flex-wrap
+    = safe_join(links, content_tag(:span, '|'))
 -# public tags
 %div
   - problem.public_tags.each do |tag|

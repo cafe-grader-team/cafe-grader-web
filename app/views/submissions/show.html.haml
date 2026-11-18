@@ -17,30 +17,10 @@
           %div#editor{ style: "font-size: 14px; height: 400px; border-radius:5px;", data: {editor_mode: :view, editor_target: :editor, language: @submission.language.pretty_name} }
     .col-lg-5
       -# Submission detail card
-      .card.mb-3.shadow-sm{data: {controller: 'problem-name'}}
+      .card.mb-3.shadow-sm{data: {controller: 'init-ui-component'}}
         .card-body
           %h4 Submission Detail
-          .row.mb-2
-            .col-4.text-end.text-secondary
-              User
-            .col
-              - if @current_user.admin? ||@current_user == @submission.user
-                - if @submission.user
-                  = link_to "#{@submission.user.login}", stat_user_admin_path(@submission.user)
-                  = @submission.user.full_name
-                - else
-                  = "(n/a)"
-              - else
-                = '-- REDACTED --'
-          .row.mb-2
-            .col-4.text-end.text-secondary
-              Problem
-            .col
-              = render partial: 'problems/problem_name', locals: {problem: @submission.problem} if @submission.problem
-              - if @current_user.admin?
-                = link_to 'Edit', edit_problem_path(@submission.problem)
-                |
-                = link_to 'Stat', stat_problem_path(@submission.problem)
+          = render partial: 'submissions/who_and_what_rows', locals: {submission: @submission}
           .row.mb-2
             .col-4.text-end.text-secondary
               Tries

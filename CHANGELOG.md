@@ -112,6 +112,13 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   true. The allowed list itself is never changed — **check it before pressing
   Contest** (an empty list lets in only admins and problem editors). The
   mode-change audit row records the whitelist switch. (rev 2291)
+- **Submission Detail and Viva Info name the author and the problem the same
+  way.** The author is shown to the owner and to the problem's staff (admins,
+  editors, reporters — TAs with report rights no longer see "REDACTED");
+  another student allowed to open the page sees "hidden" on both (the viva
+  page used to show the login). Only admins get the link to the user stat
+  page. The viva page now shows the full problem block and the exact start
+  time. (rev 2292)
 - **AI assist on Claude through the AI gateway costs about half as much
   during exams.** Each request now has a fixed line, "End of the problem
   material. The student's work follows.", between the problem material (the
