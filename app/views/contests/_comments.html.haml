@@ -1,0 +1,47 @@
+-# Staff notes on a contest — issues to resolve, the after-action report
+-# (design 2026-11-18). Shown only on the manage page, so only admins and the
+-# contest's editors ever see it. Redrawn whole by ContestsController
+-# #add_comment / #update_comment / #delete_comment.
+-# locals: contest
+- comments = contest.comments.where(kind: :comment).includes(:user).order(created_at: :desc, id: :desc)
+#contest-comments.card.shadow-sm
+  .card-body
+    %h5.fw-bold.text-dark.d-flex.align-items-center.gap-2.mb-1
+      %span.mi.text-secondary forum
+      Comments
+      - if comments.any?
+        %span.badge.rounded-pill.text-bg-secondary= comments.size
+    .text-secondary.small.mb-3
+      Notes for staff: issues to resolve, what happened during the contest, the after-action report.
+      Students never see these. Markdown is supported.
+
+    = form_with url: add_comment_contest_path(contest), method: :post, data: {turbo: true}, class: 'mb-3' do |f|
+      = f.text_area :body, rows: 3, class: 'form-control mb-2', placeholder: 'Write a comment…', required: true, id: 'contest-comment-new-body'
+      = f.button class: 'btn btn-sm btn-primary btn-flex' do
+        %span.mi.md-18 add_comment
+        Add comment
+
+    - if comments.empty?
+      %em.text-secondary -- No comment yet --
+    - comments.each do |comment|
+      .border-top.pt-2.mt-2{id: "contest-comment-#{comment.id}"}
+        .d-flex.align-items-center.gap-2.small.text-secondary
+          %span.mi.md-18 person
+          %span.fw-semibold.text-dark= comment.user&.login || '(deleted user)'
+          = comment.user&.full_name
+          %span ·
+          %span{title: "#{time_ago_in_words(comment.created_at)} ago"}= comment.created_at.to_formatted_s(:long)
+          - if comment.updated_at - comment.created_at > 1
+            %span.fst-italic (edited #{comment.updated_at.to_formatted_s(:long)})
+          .ms-auto
+            = button_to delete_comment_contest_path(contest, comment_id: comment.id),
+                class: 'btn btn-outline-danger border-0 py-1 px-2', title: 'Delete comment',
+                form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Delete this comment?'}} do
+              %span.mi delete
+        .mt-1.contest-comment-body
+          = sanitized_markdown(comment.body)
+        %details.small
+          %summary.text-primary Edit
+          = form_with url: update_comment_contest_path(contest, comment_id: comment.id), method: :post, data: {turbo: true}, class: 'mt-2' do |f|
+            = f.text_area :body, value: comment.body, rows: 4, class: 'form-control mb-2', required: true, id: "contest-comment-body-#{comment.id}"
+            = f.submit 'Save', class: 'btn btn-sm btn-primary'

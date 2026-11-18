@@ -102,6 +102,11 @@ Rails.application.routes.draw do
       post 'add_problem_by_group'
       post 'do_all_problems'
       post 'do_problem'
+
+      # contest comments (staff notes)
+      post 'add_comment'
+      post 'update_comment'
+      post 'delete_comment'
     end
     collection do
       post 'index_query'

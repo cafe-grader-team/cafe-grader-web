@@ -11,6 +11,11 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 ## [Unreleased]
 
 ### Added
+- **Comments on a contest.** The contest's manage page has a Comments card for
+  staff notes — issues to resolve, what happened during the contest, the
+  after-action report. Each comment shows its author and time and is written
+  in Markdown. Admins and the contest's editors read, add, edit and delete;
+  students never see them. It stays open on a finalized contest. (rev 2293)
 - **The Contests page shows the IP whitelist beside the mode buttons** — on or
   off, and the allowed ranges, in red when the list is empty. The message
   after a mode switch repeats it. (rev 2291)

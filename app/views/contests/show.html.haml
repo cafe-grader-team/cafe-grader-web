@@ -356,3 +356,7 @@
                             %code.small user1,,late entry
                             adds user1 with a blank seat and "late entry" remark.
 
+  -# staff notes on the contest
+  .row.mb-4
+    .col-12
+      = render partial: 'contests/comments', locals: {contest: @contest}

@@ -7,6 +7,9 @@ class Contest < ApplicationRecord
   has_many :contests_users, class_name: 'ContestUser', dependent: :destroy
   has_many :problems, through: :contests_problems
   has_many :users, through: :contests_users
+  # Staff notes on the contest (issues to resolve, after-action report): kind
+  # `comment` rows, seen only on the manage page.
+  has_many :comments, as: :commentable, dependent: :destroy
 
   scope :enabled, -> { where(enabled: true) }
   # scope :active, -> (time = Time.zone.now) { where(enabled: true).where('start <= ? and stop >= ?',time,time)}

@@ -46,7 +46,10 @@ class Comment < ApplicationRecord
     where(kind: 'llm_assist', commentable_type: 'Submission', commentable_id: submissions.select(:id))
   }
 
-  validates :title, presence: true
+  # A contest comment (staff notes on a contest, design 2026-11-18) is body
+  # only: author + time + text.
+  validates :title, presence: true, unless: -> { commentable_type == 'Contest' }
+  validates :body, presence: true, if: -> { commentable_type == 'Contest' }
 
   # One row of `usage_by_model`.
   UsageRow = Struct.new(:model, :requests, :answered, :points, :dollars, :priced, :prompt_tokens, :completion_tokens,

@@ -5,6 +5,7 @@ class ContestsController < ApplicationController
                                      :show_users_query, :show_problems_query,
                                      :add_user, :add_user_by_group, :add_problem, :add_problem_by_group,
                                      :do_all_users, :do_user, :extra_time_user, :do_all_problems, :do_problem,
+                                     :add_comment, :update_comment, :delete_comment,
                                     ]
   before_action :set_user, only: [:do_user]
   before_action :set_problem, only: [:do_problem]
@@ -15,6 +16,7 @@ class ContestsController < ApplicationController
                      add_users_from_csv add_user add_user_by_group
                      add_problem add_problem_by_group
                      do_all_users do_user do_all_problems do_problem
+                     add_comment update_comment delete_comment
                     ]
   before_action :check_valid_login
   before_action :group_editor_authorization, except: USER_ACTION
@@ -521,6 +523,34 @@ class ContestsController < ApplicationController
       locals: {event_name: 'datatable:reload', event_detail: { "h": 1}})
   end
 
+  # ---- contest comments ----
+  # Staff notes on the contest (design 2026-11-18). Anyone who can manage the
+  # contest reads, adds, edits and deletes. Deliberately NOT behind
+  # check_finalized: the after-action report is written once the contest is
+  # over and finalized. No audit row — each comment carries author and time.
+  def add_comment
+    comment = @contest.comments.new(kind: :comment, user: @current_user, body: params[:body].to_s.strip)
+    if comment.save
+      render_comments(title: 'Comment added')
+    else
+      render_comments(title: 'Comment not added', body: comment.errors.full_messages.to_sentence, type: :alert)
+    end
+  end
+
+  def update_comment
+    comment = @contest.comments.find(params[:comment_id])
+    if comment.update(body: params[:body].to_s.strip)
+      render_comments(title: 'Comment updated')
+    else
+      render_comments(title: 'Comment not updated', body: comment.errors.full_messages.to_sentence, type: :alert)
+    end
+  end
+
+  def delete_comment
+    @contest.comments.find(params[:comment_id]).destroy
+    render_comments(title: 'Comment deleted')
+  end
+
   def set_system_mode
     # Switching the whole site's mode is an admin-only act. It was reachable by
     # any group editor (this controller is only editor-gated) — a TA flipped the
@@ -587,6 +617,15 @@ class ContestsController < ApplicationController
 
 
   private
+
+    # Redraw the Comments card and show a toast.
+    def render_comments(title:, body: nil, type: :notice)
+      @toast = {title: title, body: body.to_s, type: type}
+      render turbo_stream: [
+        turbo_stream.replace('contest-comments', partial: 'contests/comments', locals: {contest: @contest}),
+        turbo_stream.append('toast-area', partial: 'toast', locals: {toast: @toast})
+      ]
+    end
 
     # The notice after a mode switch says what happened to the IP whitelist,
     # which follows the mode — a stale or empty allowed list is seen at once.
