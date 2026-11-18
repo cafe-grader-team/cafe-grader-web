@@ -101,6 +101,33 @@ class ReportControllerAccessTest < ActionDispatch::IntegrationTest
     assert(body["data"].any? { |row| row["attempted_login"] == "ghost" })
   end
 
+  # An empty date range means today, as the boxes' placeholders say. Until
+  # 2026-11-18 an empty From meant "now", so the report opened empty.
+  test "login report with no date range shows today's logins only" do
+    travel_to Time.zone.now.change(hour: 12) do
+      sign_in_as("admin", "admin")
+      john = users(:john)
+      Login.create!(user: john, ip_address: '203.0.113.1', success: true, created_at: 3.hours.ago)
+      Login.create!(user: john, ip_address: '203.0.113.2', success: true, created_at: 1.day.ago)
+      Login.create!(attempted_login: 'ghost-today', ip_address: '203.0.113.3', success: false, created_at: 3.hours.ago)
+      Login.create!(attempted_login: 'ghost-yesterday', ip_address: '203.0.113.4', success: false, created_at: 1.day.ago)
+
+      post "/report/login_detail_query", as: :json
+      ips = JSON.parse(response.body)["data"].map { |row| row["ip_address"] }
+      assert_includes ips, '203.0.113.1'
+      assert_not_includes ips, '203.0.113.2'
+
+      post "/report/login_summary_query", as: :json
+      row = JSON.parse(response.body)["data"].find { |r| r["login_text"].include?("john") }
+      assert row, "john's login today is missing from the summary"
+
+      post "/report/login_failure_query", as: :json
+      attempted = JSON.parse(response.body)["data"].map { |r| r["attempted_login"] }
+      assert_includes attempted, 'ghost-today'
+      assert_not_includes attempted, 'ghost-yesterday'
+    end
+  end
+
   test "max_score report survives contest mode for a contest editor" do
     set_grader_config("system.mode", "contest")
     sign_in_as("mary", "mary")   # editor of contest_a

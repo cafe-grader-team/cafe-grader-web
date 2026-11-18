@@ -32,6 +32,10 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **The Logins report opened empty.** With the date boxes left blank, From was
+  read as "now" and Until as the year 3000, so no login matched. A blank box
+  now means what its hint says — start of today / end of today — on all three
+  tabs (Detail, Summary, Failed attempts). (rev 2290)
 - **Java submissions fail to compile with `InternalError: Error loading
   java.security file` on Debian/Ubuntu judge hosts.** The OS package keeps the
   JDK's configuration in `/etc/java-<N>-openjdk`, which the sandbox did not

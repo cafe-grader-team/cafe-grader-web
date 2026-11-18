@@ -112,8 +112,7 @@ class ReportController < ApplicationController
 
   def login_summary_query
     @users = Array.new
-    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
-    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+    login_report_range
     record = User
       .left_outer_joins(:logins).group('users.id')
       .where(logins: { success: true })
@@ -145,8 +144,7 @@ class ReportController < ApplicationController
 
   def login_detail_query
     @logins = Array.new
-    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
-    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+    login_report_range
 
     @logins = Login.successful.includes(:user).where("logins.created_at >= ? AND logins.created_at <= ?", @since_time, @until_time)
     case params[:users]
@@ -158,8 +156,7 @@ class ReportController < ApplicationController
   end
 
   def login_failure_query
-    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
-    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+    login_report_range
 
     # The user/group filter deliberately does not apply: the interesting
     # failures (attacks, typo'd logins) mostly match no user at all.
@@ -679,6 +676,15 @@ ORDER BY submitted_at
     # receive an ActiveRecord::AAssociation *query* of submissions
     # and add more where clause limiting the submission to be in the
     # rnage specified only
+    # The Logins report's date range. An empty or unreadable box means what
+    # its placeholder says: start of today / end of today. (Until 2026-11-18
+    # an empty From meant "now" and an empty Until the year 3000, so the
+    # report opened empty.)
+    def login_report_range
+      @since_time = (Time.zone.parse(params[:since_datetime].to_s) rescue nil) || Time.zone.now.beginning_of_day
+      @until_time = (Time.zone.parse(params[:until_datetime].to_s) rescue nil) || Time.zone.now.end_of_day
+    end
+
     def submission_in_range(range_params)
       # a contest scope replaces the range: each student's own window, start
       # offset and extra time included (Contest#submissions)
