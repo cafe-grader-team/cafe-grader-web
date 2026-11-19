@@ -89,6 +89,20 @@ class GraderConfigurationTest < ActiveSupport::TestCase
     assert_not GraderConfiguration.whitelisted_ip?("127.0.0.1")
   end
 
+  # The seed default is "0.0.0.0/0, ::/0" for this reason: IPv4 0.0.0.0/0
+  # never matches an IPv6 address, and about a quarter of cp-grader's logins
+  # (2026) arrive over IPv6.
+  test "whitelisted_ip? needs ::/0 beside 0.0.0.0/0 to let every address in" do
+    set_grader_config("right.whitelist_ignore", "false")
+    set_grader_config("right.whitelist_ip", "0.0.0.0/0")
+    assert GraderConfiguration.whitelisted_ip?("203.0.113.5")
+    assert_not GraderConfiguration.whitelisted_ip?("2001:db8::5")
+
+    set_grader_config("right.whitelist_ip", "0.0.0.0/0, ::/0")
+    assert GraderConfiguration.whitelisted_ip?("203.0.113.5")
+    assert GraderConfiguration.whitelisted_ip?("2001:db8::5")
+  end
+
   # --- Login throttle exempt list ---
 
   test "login_throttle_exempt_ips_warnings is empty for a blank or well-formed list" do
@@ -129,14 +143,20 @@ class GraderConfigurationTest < ActiveSupport::TestCase
     assert_not GraderConfiguration["right.multiple_ip_login"]
   end
 
-  test "set_exam_mode switches the IP whitelist and leaves the allowed list alone" do
+  # The Contest button asks ON or OFF (design 2026-11-18, revised
+  # 2026-11-19), so an exam mode no longer turns the whitelist on by itself.
+  test "set_exam_mode leaves the IP whitelist alone; set_whitelist switches it and keeps the allowed list" do
     set_grader_config("right.whitelist_ip", "10.0.5.0/24")
     GraderConfiguration.set_exam_mode(true)
+    reset_grader_config_cache
+    assert_not GraderConfiguration.whitelist_active?
+
+    GraderConfiguration.set_whitelist(true)
     reset_grader_config_cache
     assert GraderConfiguration.whitelist_active?
     assert_equal ["10.0.5.0/24"], GraderConfiguration.whitelist_ranges
 
-    GraderConfiguration.set_exam_mode(false)
+    GraderConfiguration.set_whitelist(false)
     reset_grader_config_cache
     assert_not GraderConfiguration.whitelist_active?
     assert_equal ["10.0.5.0/24"], GraderConfiguration.whitelist_ranges

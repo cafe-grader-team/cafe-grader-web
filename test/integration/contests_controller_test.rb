@@ -180,14 +180,14 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
-  # The IP whitelist follows the mode (design 2026-11-18): contest turns it on,
-  # normal turns it off, the allowed list is never touched.
-  test "contest mode turns the IP whitelist on and normal mode turns it off" do
+  # Contest asks IP whitelist ON or OFF with no default; Normal turns it off;
+  # the allowed list is never touched (design 2026-11-18, revised 2026-11-19).
+  test "contest with the whitelist ON turns it on and normal mode turns it off" do
     set_grader_config("right.whitelist_ip", "10.0.5.0/24, 192.0.2.7/32")
     sign_in_as("admin", "admin")
 
     assert_difference -> { AuditLog.where(action: "mode_change").count }, 1 do
-      post set_system_mode_contests_path, params: { mode: "contest" }
+      post set_system_mode_contests_path, params: { mode: "contest", whitelist: "on" }
     end
     reset_grader_config_cache
     assert GraderConfiguration.whitelist_active?
@@ -209,13 +209,61 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     reset_grader_config_cache
   end
 
-  test "an empty allowed list is flagged on the mode card and in the notice" do
+  test "contest with the whitelist OFF switches the mode and leaves the whitelist off" do
+    set_grader_config("right.whitelist_ip", "10.0.5.0/24")
+    sign_in_as("admin", "admin")
+
+    post set_system_mode_contests_path, params: { mode: "contest", whitelist: "off" }
+    reset_grader_config_cache
+    assert_equal "contest", GraderConfiguration[GraderConfiguration::SYSTEM_MODE_CONF_KEY]
+    assert_not GraderConfiguration.whitelist_active?
+    assert_match "Mode changed to", flash[:notice]
+    assert_match "IP whitelist is now off", flash[:notice]
+    assert_not AuditLog.where(action: "mode_change").last.object_changes.key?("right.whitelist_ignore")
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "contest without a whitelist choice changes nothing" do
+    sign_in_as("admin", "admin")
+    mode_before = GraderConfiguration[GraderConfiguration::SYSTEM_MODE_CONF_KEY]
+
+    assert_no_difference -> { AuditLog.where(action: "mode_change").count } do
+      post set_system_mode_contests_path, params: { mode: "contest" }
+      post set_system_mode_contests_path, params: { mode: "indv-contest", whitelist: "maybe" }
+    end
+    reset_grader_config_cache
+    assert_equal mode_before, GraderConfiguration[GraderConfiguration::SYSTEM_MODE_CONF_KEY]
+    assert_not GraderConfiguration.whitelist_active?
+    assert_match "choose whether the IP whitelist is ON or OFF", flash[:notice]
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "the Contest button opens a dialog with ON and OFF instead of switching at once" do
+    set_grader_config("right.whitelist_ip", "10.0.5.0/24")
+    sign_in_as("admin", "admin")
+    get contests_path
+
+    assert_select "#contest-mode-button[type=button][data-bs-toggle=modal][data-bs-target='#contest-mode-dialog']"
+    assert_select "button[type=submit][name=mode][value=contest]", 0
+    assert_select "#contest-mode-dialog form input[type=hidden][name=mode][value=contest]"
+    assert_select "#contest-mode-dialog button[type=submit][name=whitelist][value=on]", /IP whitelist ON/
+    assert_select "#contest-mode-dialog button[type=submit][name=whitelist][value=off]", /IP whitelist OFF/
+    assert_select "#contest-mode-dialog", /Allowed list:\s*10\.0\.5\.0\/24/
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "an empty allowed list is flagged on the mode card, in the dialog and in the notice" do
     set_grader_config("right.whitelist_ip", "")
     sign_in_as("admin", "admin")
     get contests_path
     assert_select "#whitelist-state.bg-danger-subtle", /allowed list is empty/
+    assert_select "#contest-mode-dialog .bg-danger-subtle", /allowed list is empty/
+    assert_select "#contest-mode-dialog button.btn-outline-danger[value=on]", /blocks every student/
 
-    post set_system_mode_contests_path, params: { mode: "contest" }
+    post set_system_mode_contests_path, params: { mode: "contest", whitelist: "on" }
     assert_match "allowed list is EMPTY", flash[:notice]
   ensure
     reset_grader_config_cache
@@ -224,7 +272,7 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
   test "non-admin cannot change system mode" do
     set_grader_config("system.mode", "standard")
     sign_in_as("mary", "mary")   # a group editor — could flip the site's mode before B4
-    post set_system_mode_contests_path, params: { mode: "contest" }
+    post set_system_mode_contests_path, params: { mode: "contest", whitelist: "off" }
     assert_response :redirect
     assert_equal "standard", GraderConfiguration[GraderConfiguration::SYSTEM_MODE_CONF_KEY]
   ensure

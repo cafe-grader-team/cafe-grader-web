@@ -242,11 +242,17 @@ class GraderConfiguration < ApplicationRecord
     GraderConfiguration.where(key: "right.user_hall_of_fame").update(value: value)
     GraderConfiguration.where(key: "right.user_view_submission").update(value: value)
     GraderConfiguration.where(key: "right.view_testcase").update(value: value)
-    # An exam blocks addresses outside right.whitelist_ip by default; the list
-    # itself is never touched here (design 2026-11-18).
-    GraderConfiguration.where(key: WHITELIST_IGNORE_KEY).update(value: value)
 
     User.update_all(last_ip: false)
+  end
+
+  # Turn the IP whitelist on or off (right.whitelist_ignore is its inverse).
+  # right.whitelist_ip, the allowed list, is never changed here. Not part of
+  # set_exam_mode: the Contest button makes the admin choose on or off every
+  # time, because one site-wide list cannot fit every course's exam room
+  # (design 2026-11-18, revised 2026-11-19); Normal and Analysis turn it off.
+  def self.set_whitelist(on)
+    GraderConfiguration.where(key: WHITELIST_IGNORE_KEY).update(value: on ? 'false' : 'true')
   end
 
   protected

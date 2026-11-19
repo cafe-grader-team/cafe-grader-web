@@ -561,17 +561,24 @@ class ContestsController < ApplicationController
       redirect_to contests_path, notice: 'Unrecognized mode' and return
     end
 
+    # An exam mode needs an explicit IP-whitelist choice, ON or OFF, with no
+    # default: the Contest button's dialog sends `whitelist`. One site-wide
+    # allowed list cannot fit every course — one exam sits in a lab on the
+    # list, another on the campus network, a makeup at home (design
+    # 2026-11-18, revised 2026-11-19).
+    exam = ['contest', 'indv-contest'].include?(params[:mode])
+    if exam && !['on', 'off'].include?(params[:whitelist])
+      redirect_to contests_path, notice: 'Mode not changed: choose whether the IP whitelist is ON or OFF.' and return
+    end
+
     mode_row = GraderConfiguration.find_by(key: 'system.mode')
     old_mode = mode_row.value
     old_whitelist_ignore = GraderConfiguration.find_by(key: GraderConfiguration::WHITELIST_IGNORE_KEY)&.value
 
     AuditLog.paused do
       mode_row.update(value: params[:mode])
-      if ['contest', 'indv-contest'].include? params[:mode]
-        GraderConfiguration.set_exam_mode(true)
-      else
-        GraderConfiguration.set_exam_mode(false)
-      end
+      GraderConfiguration.set_exam_mode(exam)
+      GraderConfiguration.set_whitelist(exam && params[:whitelist] == 'on')
     end
     new_whitelist_ignore = GraderConfiguration.find_by(key: GraderConfiguration::WHITELIST_IGNORE_KEY)&.value
 
@@ -580,8 +587,8 @@ class ContestsController < ApplicationController
       action:         'mode_change',
       object_changes: {
         'system.mode' => [old_mode, params[:mode]],
-        # the IP whitelist follows the mode (set_exam_mode); dropped from the
-        # row when the switch did not change it
+        # the IP whitelist as chosen (Contest) or turned off (Normal,
+        # Analysis); dropped from the row when the switch did not change it
         GraderConfiguration::WHITELIST_IGNORE_KEY => [old_whitelist_ignore, new_whitelist_ignore]
       }.reject { |_key, (old, new)| old == new }
     )
@@ -627,8 +634,8 @@ class ContestsController < ApplicationController
       ]
     end
 
-    # The notice after a mode switch says what happened to the IP whitelist,
-    # which follows the mode — a stale or empty allowed list is seen at once.
+    # The notice after a mode switch says what happened to the IP whitelist —
+    # a stale or empty allowed list is seen at once.
     def mode_changed_notice(mode)
       GraderConfiguration.read_config
       msg = "Mode changed to #{helpers.mode_to_text(mode)}."

@@ -36,6 +36,29 @@ change to who is exempt (admins, problem editors).
 buttons — more clicks, and the request was "by default". (c) Per-contest
 whitelist — a different, much larger feature.
 
+**Revised 2026-11-19 (dae): the Contest button asks ON or OFF.** Before the
+release, a check on a copy of cp-grader's database (logins up to
+2026-11-18) showed that one site-wide list does not fit every course that
+uses contest mode there. The DS quizzes sit in the exam room, which the list
+covers (a private range, unchanged since 2025-12-02; dae had been turning
+the whitelist on by hand for each quiz). A Progmeth midterm (2026-09-22) had all
+45 of its logins from the campus network (`161.200.0.0/16`), and a digital
+logic makeup (2026-11-17) had 29 of 40 from outside the list, 21 of them over
+home IPv6. Both ran with the whitelist off; under approach (a) pressing
+Contest would have locked those students out. So:
+- **Contest opens a dialog** with the allowed list (red when empty) and two
+  equal buttons, "Contest, IP whitelist ON" and "Contest, IP whitelist OFF".
+  There is no default: `set_system_mode` refuses a contest or indv-contest
+  switch without `whitelist=on|off` and changes nothing.
+- `set_exam_mode` no longer touches the whitelist; the new
+  `GraderConfiguration.set_whitelist(on)` does, called by `set_system_mode`
+  (the choice for an exam mode, off for Normal and Analysis).
+- Rejected: a blank list meaning "everyone" (it would make "whitelist ON"
+  silently admit everybody), and `0.0.0.0/0` as "everyone" — it never matches
+  an IPv6 address, and 28 % of cp-grader's logins in the 90 days before
+  2026-11-18 came over IPv6. The seed default for new installs becomes
+  `0.0.0.0/0, ::/0`; existing servers keep their value.
+
 ## 2. Contest comments
 
 **Why.** After a contest there are issues to resolve and an after-action

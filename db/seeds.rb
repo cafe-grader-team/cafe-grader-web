@@ -200,14 +200,14 @@ CONFIGURATIONS =
      key: 'right.whitelist_ignore',
      value_type: 'boolean',
      default_value: 'true',
-     description: "If true, no IP check against whitelist_ip is perform. However, when false, non-admin user must have their ip in 'whitelist_ip' to be able to login. Switching the system mode sets this: false in contest mode, true otherwise."
+     description: "If true, no IP check against whitelist_ip is perform. However, when false, non-admin user must have their ip in 'whitelist_ip' to be able to login. Pressing Contest asks whether to turn the whitelist on (false) or leave it off (true); Normal and Analysis set it to true."
    },
 
    {
      key: 'right.whitelist_ip',
      value_type: 'string',
-     default_value: '0.0.0.0/0',
-     description: "list of whitelist ip, given in comma separated CIDR notation. For example '192.168.90.0/23, 192.168.1.23/32'"
+     default_value: '0.0.0.0/0, ::/0',
+     description: "list of whitelist ip, given in comma separated CIDR notation. For example '192.168.90.0/23, 192.168.1.23/32'. Write IPv6 ranges too: '0.0.0.0/0' alone does not match an IPv6 address, so '0.0.0.0/0, ::/0' is every address."
    },
 
    {

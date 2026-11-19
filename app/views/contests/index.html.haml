@@ -34,7 +34,8 @@
               - if mode == 'standard'
                 %span.mi.fill check_circle
               Normal
-            %button.btn.btn-flex.w-100{type: 'submit', name: 'mode', value: 'contest',class: mode == 'contest' ? 'btn-warning' : 'btn-outline-secondary'}
+            -# Contest does not submit: its dialog (below) asks IP whitelist ON or OFF.
+            %button#contest-mode-button.btn.btn-flex.w-100{type: 'button', data: {bs_toggle: 'modal', bs_target: '#contest-mode-dialog'}, class: mode == 'contest' ? 'btn-warning' : 'btn-outline-secondary'}
               - if mode == 'contest'
                 %span.mi.fill check_circle
               Contest
@@ -43,8 +44,8 @@
                 %span.mi.fill check_circle
               Analysis
 
-        -# IP whitelist state — the mode switch turns it on/off (set_exam_mode),
-        -# so the allowed list is shown where the switch is pressed.
+        -# IP whitelist state — Contest asks ON or OFF, Normal and Analysis turn
+        -# it off — so the allowed list is shown where the switch is pressed.
         - wl_active = GraderConfiguration.whitelist_active?
         - wl_ranges = GraderConfiguration.whitelist_ranges
         - wl_empty  = wl_ranges.empty?
@@ -65,18 +66,19 @@
               - elsif wl_active
                 %span.text-secondary — students outside the list are blocked
               - else
-                %span.text-secondary — Contest turns it on
+                %span.text-secondary — Contest asks whether to turn it on
             - if wl_empty
               .text-danger-emphasis
                 - if wl_active
                   No student can get in. Only admins and problem editors are let through.
                 - else
-                  Pressing Contest would block every student. Only admins and problem editors are let through.
+                  Turning it on would block every student. Only admins and problem editors are let through.
             - else
               .text-secondary
                 = wl_active ? 'Allowed:' : 'Allowed when on:'
                 %span.font-monospace.text-dark= wl_ranges.join(', ')
           = link_to 'Edit', grader_configuration_index_path, class: 'text-nowrap'
+
 
     .card.card-shadow.mb-3
       .card-body
@@ -203,6 +205,9 @@
                 .d-flex.align-items-center
                   %span.mi.md-18.text-danger.me-2.lh-1 visibility_off
                   %small.fw-bold.text-dark Disabled History & Test Cases
+                .d-flex.align-items-center
+                  %span.mi.md-18.text-danger.me-2.lh-1 lan
+                  %small.fw-bold.text-dark IP whitelist, if you choose ON
 
 
 .card.card-shadow{data: {controller: 'contest'}}
@@ -233,3 +238,41 @@
     = f.hidden_field :contest_id, 'data-contest-target': 'contestFormContestID'
     = f.hidden_field :command, 'data-contest-target': 'contestFormCommand'
 
+
+-# The Contest button's dialog: IP whitelist ON or OFF, two equal
+-# buttons and no default — one site-wide allowed list cannot fit every
+-# course's exam room (design 2026-11-18, revised 2026-11-19).
+#contest-mode-dialog.modal.fade{tabindex: '-1', aria: {labelledby: 'contest-mode-dialog-title', hidden: 'true'}}
+  .modal-dialog.modal-dialog-centered
+    .modal-content
+      .modal-header
+        %h5#contest-mode-dialog-title.modal-title.fw-bold Switch to Contest mode
+        %button.btn-close{type: 'button', data: {bs_dismiss: 'modal'}, aria: {label: 'Cancel'}}
+      .modal-body
+        %p.mb-2
+          Should students be limited to the IP whitelist during this contest?
+        - if wl_empty
+          .rounded-3.p-2.px-3.small.bg-danger-subtle.text-danger-emphasis
+            %span.fw-semibold The allowed list is empty.
+            ON would block every student; only admins and problem editors get in.
+        - else
+          .rounded-3.p-2.px-3.small.bg-light
+            Allowed list:
+            %span.font-monospace.text-dark= wl_ranges.join(', ')
+        .small.mt-2
+          = link_to 'Edit the allowed list', grader_configuration_index_path
+        = form_with url: set_system_mode_contests_path, class: 'mt-3' do |form|
+          = hidden_field_tag :mode, 'contest', id: 'contest-mode-dialog-mode'
+          .d-grid.gap-2
+            %button.btn.text-start{type: 'submit', name: 'whitelist', value: 'on', class: wl_empty ? 'btn-outline-danger' : 'btn-outline-dark'}
+              .fw-semibold Contest, IP whitelist ON
+              .small
+                - if wl_empty
+                  blocks every student — the list is empty
+                - else
+                  only addresses in the allowed list
+            %button.btn.btn-outline-dark.text-start{type: 'submit', name: 'whitelist', value: 'off'}
+              .fw-semibold Contest, IP whitelist OFF
+              .small students can come from any address
+      .modal-footer
+        %button.btn.btn-link{type: 'button', data: {bs_dismiss: 'modal'}} Cancel

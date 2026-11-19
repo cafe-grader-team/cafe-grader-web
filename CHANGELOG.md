@@ -111,12 +111,22 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
-- **Contest mode turns the IP whitelist on.** Pressing Contest now also sets
-  `right.whitelist_ignore` to false, so addresses outside `right.whitelist_ip`
-  are blocked by default during an exam; Normal and Analysis set it back to
-  true. The allowed list itself is never changed — **check it before pressing
-  Contest** (an empty list lets in only admins and problem editors). The
-  mode-change audit row records the whitelist switch. (rev 2291)
+- **Pressing Contest asks whether to turn the IP whitelist on.** A dialog
+  shows the allowed list (`right.whitelist_ip`) and offers two buttons,
+  "Contest, IP whitelist ON" and "Contest, IP whitelist OFF", with no
+  default; a switch to a contest mode without that choice is refused and
+  changes nothing. Normal and Analysis turn the whitelist off. The allowed
+  list itself is never changed; when it is empty the ON button is red,
+  because it would let in only admins and problem editors. There is no
+  default because one site-wide list rarely fits every course: on one
+  server, one course's exams ran in a lab on the list while another's sat
+  on the campus network and a makeup ran from home. The mode-change audit
+  row records the whitelist switch. (revs 2291, 2298)
+- **New installs start with `0.0.0.0/0, ::/0` as the IP whitelist's allowed
+  list**, not `0.0.0.0/0`, which never matches an IPv6 address (about a
+  quarter of logins on one production server arrive over IPv6). Existing
+  servers keep their list: one that reads only `0.0.0.0/0` blocks IPv6
+  students whenever the whitelist is on. (rev 2298)
 - **Submission Detail and Viva Info name the author and the problem the same
   way.** The author is shown to the owner and to the problem's staff (admins,
   editors, reporters — TAs with report rights no longer see "REDACTED");
