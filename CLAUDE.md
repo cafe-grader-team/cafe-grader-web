@@ -8,6 +8,10 @@ Cafe-Grader is an online programming contest and assignment grading platform (us
 
 **Backlog of deferred work** lives in `doc/backlog.md` — design refactors, "someday" follow-ups, and decisions parked for a longer session. Check it when starting work in an area that might already have a planned change; add to it (don't bury in comments) when you defer something non-trivial. Inline `# TODO(scope): …` is fine for one-liners anchored to code; GitHub Issues are for scheduled/assigned work.
 
+## User data stays out of this repo (standing rule, dae 2026-11-19)
+
+This repo is public on GitHub (`github.com/nattee/cafe-grader-web`) and feeds the upstream project. **Never put personal data of any user into it** — not in code, comments, `doc/`, `docs/` specs and plans, test fixtures, commit messages, or GitHub issue/PR text. Personal data means logins (here = Chula student IDs), names, e-mail addresses, IP addresses tied to a person, a named or numbered individual's scores, waits or grades, submission source, viva transcripts and grade text. Write "a TA", "student A–G" or an aggregate count instead; when the list itself is needed, it goes in the private `~/cafe-grader/course-prep` repo and the doc points there. GitHub history cannot practically be scrubbed — the DS Quiz 1 postmortem showed seven students' logins in `doc/` for two months until 2026-11-19 — so the check comes before the commit: `test/no_user_pii_in_repo_test.rb` fails on any student-ID-shaped number (10 digits starting 4–7) or `@student.chula.ac.th` address in the project's own text files. It cannot see names, IPs or commit messages; those stay a review duty.
+
 ## Version Control
 
 Local VCS is **Mercurial (hg)**, mirrored to **GitHub** via the **hg-git** extension. Use `hg` for all local operations (`hg status`, `hg commit`, `hg diff`, `hg push`). Issues and PRs live on GitHub — use the `gh` CLI for those (e.g., `gh issue close 51`).

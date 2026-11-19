@@ -58,18 +58,22 @@ placeholder row (equal to Solid Queue `finished_at − created_at`, verified).
 ### F2. Seven active students never got to answer the viva
 
 They opened it, waited 92–454 s for the greeting, and never answered → viva 0. All were submitting code at the time.
-Seven *other* students opened before 10:15, got the greeting within 6–10 s and never answered either (users 2250, 2190,
-2138, 2158, 2155, 2125, 2088) — not queue victims; they are listed in the prototype page's "never answered" table.
+Seven *other* students opened before 10:15, got the greeting within 6–10 s and never answered either — not queue
+victims; they are listed in the prototype page's "never answered" table.
 
-| user | login | opened | greeting wait |
-|---|---|---|---|
-| 2163 | 6831348521 | 10:26:58 | 125 s |
-| 2160 | 6831345621 | 10:37:18, 11:15:58 | 131 s, 422 s |
-| 2219 | 6832239021 | 10:40:34 | 146 s |
-| 2206 | 6832090721 | 10:44:24 | 93 s |
-| 2168 | 6831353621 | 10:45:41 | 120 s |
-| 2210 | 6832147921 | 11:13:01 | 298 s |
-| 2197 | 6832018621 | 11:19:56 | 454 s |
+| student | opened | greeting wait |
+|---|---|---|
+| A | 10:26:58 | 125 s |
+| B | 10:37:18, 11:15:58 | 131 s, 422 s |
+| C | 10:40:34 | 146 s |
+| D | 10:44:24 | 93 s |
+| E | 10:45:41 | 120 s |
+| F | 11:13:01 | 298 s |
+| G | 11:19:56 | 454 s |
+
+Who A–G are (and the seven others) is kept in the private course-prep repo,
+`data-structures/viva/quiz-2569-1-postmortem-2026-09-12/students.md` — this repo is public (CLAUDE.md, "User data stays
+out of this repo").
 
 ### F3. Failed turns: none in the exam
 
