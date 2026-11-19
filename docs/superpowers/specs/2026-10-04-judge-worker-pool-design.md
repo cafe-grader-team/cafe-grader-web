@@ -1093,6 +1093,23 @@ re-queues them).
 - **2026-10-04** — All work on `master` in releasable slices, no feature
   bookmark; freeze windows around exams; phases ordered so each has
   standalone value if the project pauses.
+  *Reason* (added 2026-11-19: the entry had none, and dae asked why the
+  rule exists while weighing a `judge-pool` bookmark; the rule was kept):
+  1. A branch adds no protection. Each slice is safe on `master` without
+     one: inert while `judge.pool_share` is 0 % (phase 1; the phase-2
+     agent in `judge_agent/` is never loaded by the web app), or proven by
+     the replay diff before it lands (phase 0). The same code reaches the
+     fleet when it merges either way.
+  2. A long-lived pushed bookmark drifts. During the pause from 2026-10-10
+     to 2026-11-19 `master` changed `app/engine/` in six commits (revs
+     2278–2286); a bookmark would have had to merge through the very files
+     phase 0 rewrites. On `master` a finished phase keeps its value when
+     the project pauses.
+  3. The repository rule that every commit lands on `master` (CLAUDE.md)
+     exists because commits made off `master` had to be grafted back and
+     stripped, in 2026-05 and again 2026-07-21.
+  Unfinished work lives in a local bookmark or the clone workspace, one
+  slice at a time, never pushed.
 - **2026-10-04** — **Interim trust: accept the exposure** (dae). Custom
   checkers and dataset initializers keep running unsandboxed on today's
   per-server judge hosts until phase 0 ships sandboxed checkers; no upload

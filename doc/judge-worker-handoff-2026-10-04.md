@@ -16,7 +16,16 @@ cold: one for the pre-phase-0 hardening fixes (§3), one for the spec revision
 - **Fleet facts** behind the design (host sizing, traffic share, peak load,
   the 2024–25 polling root cause) are in the spec §3 and in Claude's memory
   note `cafe-grader-worker-overhaul`.
-- **Nothing is implemented yet.** No phase-0 code, no hardening fix.
+- **No pool code yet.** The three hardening fixes of §3 shipped in 4.7.2;
+  phase 0 has not started.
+- **Resumed 2026-11-19** after the exam pause (parked 2026-10-10). dae
+  weighed a feature bookmark for the pool work and kept the rule that it
+  lands on `master` in releasable slices; the spec's decision log (§15,
+  2026-10-04 entry) now gives the reason. Since revision 2, `master`
+  changed the grading engine in revs 2278–2286 (per-host isolate and
+  compiler options in `worker.yml` written by `engine:detect`,
+  `engine:langcheck`, a grader error for a language with no compiler on
+  the host); review round 2 checks the spec against them (§7).
 
 ## 2. Review round 1 — verified outcomes
 
@@ -229,17 +238,25 @@ diff it names, or let it read the file):
 > (master rev 2262; `hg diff -r 2229 -r 2262` on that file shows what changed
 > since revision 1). Round 1's points and how revision 2 answers them are in
 > `doc/judge-worker-handoff-2026-10-04.md` §2 and §5; §5 also lists the
-> choices revision 2 made beyond round 1 — check those first. Report only
-> defects that would change the envelope, the result-sink interface, the
-> state table (§7.8) or the phase-0 slice list, since those are what the
-> phase-0 plan is built from.
+> choices revision 2 made beyond round 1 — check those first. Then check
+> the spec against the grading-engine changes `master` made after revision
+> 2, revs 2278–2286 (`hg log -r 2278:2286`; `hg diff -r 2262 -r 2286
+> app/engine config/worker.yml.SAMPLE lib/tasks/engine.rake`): per-host
+> isolate options and compiler options in `worker.yml` written by
+> `engine:detect`, the `engine:langcheck` task, and a grader error for a
+> language with no compiler on the host. They bear on §9.4 (languages),
+> §9.6 (capabilities), §9.7 (config file) and slice 0.4 (`LanguageProfile`).
+> Report only defects that would change the envelope, the result-sink
+> interface, the state table (§7.8) or the phase-0 slice list, since those
+> are what the phase-0 plan is built from.
 
 Round-2 verification thread (this repo, new session), first message:
 > Read `doc/judge-worker-handoff-2026-10-04.md` §1, §2 and §5, then the spec
 > at rev 2262. Here is review round 2: [paste]. Verify every point against
 > the code and the local prod copy as round 1 was verified, tell me which are
-> real, fold the real ones into the spec as revision 3, commit on master,
-> and append the round-2 table to this handoff §2.
+> real, fold the real ones into the spec as revision 3 together with what
+> revs 2278–2286 change for the agent, commit on master, and append the
+> round-2 table to this handoff §2.
 
 Phase-0 planning thread, first message (only after the spec is approved):
 > Read `doc/judge-worker-handoff-2026-10-04.md`, then the approved spec. Use
