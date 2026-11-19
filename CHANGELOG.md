@@ -137,10 +137,11 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   so a problem nobody asks about for 5 minutes pays that again. In Quiz 2, 94%
   of Opus requests came within 5 minutes of the previous one on the same
   problem. Answers do not change and are about 1 second faster out of a
-  typical 22. Gemini models ignore the marker, and other providers get the
-  line without it. To turn the marker off, set `prompt_cache: false` in the
-  `ai_gateway:` block of `config/llm.yml`; no setting is needed to keep it on.
-  The manager files are now always sent sorted by file name. (rev 2264)
+  typical 22. Only Claude models (a model name containing "claude") get the
+  marker; Gemini models and other providers get the line without it. To turn
+  the marker off, set `prompt_cache: false` in the `ai_gateway:` block of
+  `config/llm.yml`; no setting is needed to keep it on. The manager files are
+  now always sent sorted by file name. (revs 2264, 2297)
 
 ### Security
 - **Model-written markdown could carry a clickable `javascript:` link.** The

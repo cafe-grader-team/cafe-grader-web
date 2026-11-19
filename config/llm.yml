@@ -114,8 +114,11 @@ llm_services: &services
   # 5 minutes, and later requests on the same problem pay 10% of the input
   # price for it (the request that stores it pays 125%). Measured through the
   # Chula AI Gateway 2026-10-09: the same request cost $0.126 without the
-  # marker and $0.054 with it. Gemini ignores the key. Turn it off for a
-  # gateway that rejects unknown keys on content parts.
+  # marker and $0.054 with it. Only Claude models (a model name containing
+  # "claude") get the key: through LiteLLM a Gemini model turns it into a
+  # request for Gemini's explicit cache, which refuses material under 4,096
+  # tokens with HTTP 400. Turn it off for a gateway that rejects unknown keys
+  # on content parts.
   #
   # UNVERIFIED against a live OpenRouter account (no code path is OpenRouter-
   # specific, but nothing here has been exercised end to end): (a) the exact
