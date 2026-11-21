@@ -51,6 +51,11 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **Left-clicking a student or a session on Viva check, or a setting's Change
+  history icon on the System configuration page, showed "Content missing".**
+  Those links sit in a part of the page that reloads by itself, and a click
+  loaded the target into that part instead of opening it (opening in a new
+  tab worked). They open normally now. (rev 2326)
 - **Extra time for one student hid all the contest's problems, or gave less
   time than set.** The contest's problem list added a student's extra time
   (and start offset) with a MySQL function that reads the number as
@@ -138,6 +143,10 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
+- **The contest page always links to Viva check.** When nothing needs action, a
+  grey "Viva check" badge sits beside the grading status; the red "N to check"
+  badge takes its place when something does. Before, without a red badge the
+  only way in was Reports ▸ Viva check. (rev 2326)
 - **Import Users page restyled** to match the contest Import tab: the instructions are a side card instead of a yellow wall of text, and the page says what to do for an exam import. (rev 2321)
 - **Pressing Contest asks whether to turn the IP whitelist on.** A dialog
   shows the allowed list (`right.whitelist_ip`) and offers two buttons,

@@ -54,6 +54,15 @@ class ConfigurationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "a setting's Change history link leaves its turbo frame" do
+    # Inside a turbo frame Turbo takes a left-click even with Drive off and
+    # loads the audit log into the frame ("Content missing").
+    sign_in_as("admin", "admin")
+    get grader_configuration_index_path
+    assert_select "turbo-frame a[href*='audit_logs'][data-turbo='false']", minimum: 1
+    assert_select "turbo-frame a[href*='audit_logs']:not([data-turbo='false'])", 0
+  end
+
   test "admin can update configuration" do
     sign_in_as("admin", "admin")
     config = GraderConfiguration.find_by(key: "ui.front.title")

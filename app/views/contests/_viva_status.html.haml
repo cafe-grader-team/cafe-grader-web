@@ -13,9 +13,13 @@
         %span.badge.text-bg-info{title: 'Interviews ended, grade not landed yet; refreshes every 10 seconds'}= "Grading: #{counts[:grading]} in progress"
       - if counts[:errors].positive?
         %span.badge.text-bg-danger{title: 'First grading failed: use Re-run grading on the session, or bin/rails viva:regrade'}= pluralize(counts[:errors], 'grader error')
-    -# Viva check's needs-action count (VivaCheckReport#needs_action_count).
+    -# Always a way into Viva check: red with the needs-action count
+    -# (VivaCheckReport#needs_action_count), plain when nothing needs action.
     - to_check = VivaCheckReport.new(contest).needs_action_count
     - if to_check.positive?
       = link_to "#{to_check} to check", viva_check_contest_path(contest), class: 'badge text-bg-danger text-decoration-none',
           title: 'Viva check: students or rubrics that need staff action', data: {turbo: 'false'}
+    - else
+      = link_to 'Viva check', viva_check_contest_path(contest), class: 'badge text-bg-light border text-secondary text-decoration-none',
+          title: 'Viva check: nothing needs staff action', data: {turbo: 'false'}
     = link_to 'Refresh', viva_status_contest_path(contest), class: 'd-none', data: {turbo: 'true', turbo_prefetch: false, refresh_target: 'refreshLink'}

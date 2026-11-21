@@ -502,6 +502,17 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", allow_viva_retake_submission_path(latest, contest_id: contests(:contest_a).id)
   end
 
+  test "viva check's student and session links leave the frame on a left-click" do
+    latest = retook_in_contest_a
+    sign_in_as("admin", "admin")
+    get viva_check_contest_path(contests(:contest_a))
+    assert_select "turbo-frame#viva-check-report a[href=?][data-turbo='false']", viva_submission_path(latest.id)
+    assert_select "turbo-frame#viva-check-report a[href=?][data-turbo='false']",
+                  stat_contest_user_admin_path(users(:james).id, contests(:contest_a))
+    # only the hidden Refresh link may navigate the frame itself
+    assert_select "turbo-frame#viva-check-report a[href]:not([data-turbo='false']):not([data-refresh-target])", 0
+  end
+
   test "the Reports dropdown links to Viva check only when the contest has a viva problem" do
     sign_in_as("admin", "admin")
     get contest_path(contests(:contest_a))
@@ -517,6 +528,14 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as("admin", "admin")
     get contest_path(contests(:contest_a))
     assert_select "turbo-frame#viva-status a[href=?]", viva_check_contest_path(contests(:contest_a)), text: '1 to check'
+  end
+
+  test "the contest page links to Viva check even when nothing needs action" do
+    add_viva_to_contest_a
+    problems(:prob_viva).update!(viva_prompt: "# Rubric\n- a (20): x\n- b (80): y\n")   # an unreadable rubric needs action
+    sign_in_as("admin", "admin")
+    get contest_path(contests(:contest_a))
+    assert_select "turbo-frame#viva-status a[href=?][data-turbo='false']", viva_check_contest_path(contests(:contest_a)), text: 'Viva check'
   end
 
   test "viva check on a contest with no viva problem says so" do

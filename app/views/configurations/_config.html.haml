@@ -7,5 +7,7 @@
     %span.config-value-text= conf.value.presence || '-'
     = link_to edit_grader_configuration_path(conf), class: 'edit-link', data: {turbo: "true"} do
       %span.mi.md-18 edit
-    = link_to audit_logs_path(auditable_type: 'GraderConfiguration', auditable_id: conf.id), class: 'edit-link', title: 'Change history' do
+    -# leaves the page: without data-turbo=false a left-click loads the audit
+    -# log into this turbo frame ("Content missing")
+    = link_to audit_logs_path(auditable_type: 'GraderConfiguration', auditable_id: conf.id), class: 'edit-link', title: 'Change history', data: {turbo: 'false'} do
       %span.mi.md-18 history

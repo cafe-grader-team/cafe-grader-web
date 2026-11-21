@@ -3,6 +3,9 @@
 -# clicks the hidden link; Turbo swaps this frame out of the full page) and
 -# that SubmissionsController#allow_viva_retake replaces after a grant made
 -# here. Locals: contest, report (VivaCheckReport).
+-# Every link that leaves the page carries data-turbo=false: inside a turbo
+-# frame Turbo takes a left-click even with Drive off and loads the target
+-# into this frame, which shows "Content missing" (2026-11-21).
 - running = contest.contest_status == :during
 - s = report.summary
 - flag_names = ->(level) { VivaCheckReport::FLAGS.select { |_, m| m[:level] == level }.map { |_, m| m[:label] }.join(' · ') }
@@ -68,11 +71,11 @@
                     - latest = row.latest
                     %tr{class: ('table-warning' if row.needs_action?)}
                       %td
-                        = link_to row.login.to_s, stat_contest_user_admin_path(row.user_id, contest)
+                        = link_to row.login.to_s, stat_contest_user_admin_path(row.user_id, contest), data: {turbo: 'false'}
                         .small.text-secondary= row.full_name
                       %td.text-end= "#{row.sessions.size} (#{row.answered} answered)"
                       %td
-                        = link_to "##{latest.id}", viva_submission_path(latest.id)
+                        = link_to "##{latest.id}", viva_submission_path(latest.id), data: {turbo: 'false'}
                         %span.small.text-secondary
                           = "#{latest.status} · #{pluralize(latest.answers, 'answer')}"
                           = "· #{latest.points.round(1)} points" if latest.points
