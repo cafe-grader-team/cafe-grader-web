@@ -61,4 +61,26 @@ class OutsideLoginRefusalTest < ActionDispatch::IntegrationTest
     assert_uncounted
     assert_equal before + 1, failed_rows
   end
+
+  test "web: a throttled account never reaches the outside service" do
+    Rails.cache.write(LoginThrottling.account_key('james'), LoginThrottling::FAILURE_LIMIT, expires_in: 5.minutes)
+    User.stub(:outside_login_name, 'CU-net') do
+      User.stub(:outside_login_on?, true) do
+        User.stub(:outside_password?, ->(*) { flunk 'must not call the outside service' }) do
+          post login_login_path, params: { login: 'james', password: 'cunet-pass' }
+          assert_redirected_to login_main_path
+        end
+      end
+    end
+    assert_nil session[:user_id]
+  end
+
+  test "api: blocked with a wrong password is a plain 401 and is counted" do
+    with_outside_login do
+      post "/api/v1/auth/login", params: { login: 'james', password: 'nope' }, as: :json
+      assert_response :unauthorized
+      assert_equal 'Invalid login or password', response.parsed_body['error']
+    end
+    assert_equal 1, Rails.cache.read(LoginThrottling.account_key('james')).to_i
+  end
 end

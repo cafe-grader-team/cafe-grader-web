@@ -74,7 +74,7 @@ module LoginThrottling
     create_failed_login_row
   end
 
-  # A refused login (right outside password, wrong door) is logged but does
+  # A refused login (right outside password, but blocked for an exam) is logged but does
   # not draw down the failure budget: the student typed a real password.
   def record_refused_login!
     create_failed_login_row

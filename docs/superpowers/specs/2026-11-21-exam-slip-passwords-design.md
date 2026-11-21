@@ -1,6 +1,6 @@
 # Exam slip passwords: CU-net off per contest, and a Check step for user import
 
-Date: 2026-11-21. Status: draft, waiting for dae's approval.
+Date: 2026-11-21. Status: approved by dae 2026-11-21 (rev 2305).
 
 ## Why
 

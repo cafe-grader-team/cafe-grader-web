@@ -233,17 +233,19 @@ class User < ApplicationRecord
 
   # refusal is nil or :slip_password_required.
   LoginResult = Data.define(:user, :refusal)
+  LOGIN_FAILED = LoginResult.new(user: nil, refusal: nil)
 
   # The one login decision for the web and API doors. Order matters: see
-  # doc/ spec "Login behaviour". The local password always works; the outside
+  # docs/superpowers/specs/2026-11-21-exam-slip-passwords-design.md (Part 1,
+  # "Login behaviour"). The local password always works; the outside
   # password is only consulted when the site switch is on, and for a student
   # of a contest that turned outside login off it is refused (never cached
   # over the slip password).
   def self.login_result(login, password)
     user = find_by_login(login)
-    return LoginResult.new(user: nil, refusal: nil) unless user
+    return LOGIN_FAILED unless user
     return LoginResult.new(user: user, refusal: nil) if user.authenticated?(password)
-    return LoginResult.new(user: nil, refusal: nil) unless outside_login_on?
+    return LOGIN_FAILED unless outside_login_on?
 
     if user.outside_login_blocked?
       refusal = outside_password?(user, password) ? :slip_password_required : nil
@@ -255,7 +257,7 @@ class User < ApplicationRecord
       user.save
       return LoginResult.new(user: user, refusal: nil)
     end
-    LoginResult.new(user: nil, refusal: nil)
+    LOGIN_FAILED
   end
 
   def self.authenticate(login, password)

@@ -1,6 +1,8 @@
 # Seam for a login that works outside the grader's own passwords (e.g. a
 # university single sign-on). Master has none; a deployment branch overrides
-# these three methods (and only this file).
+# these three methods (and only this file): outside_login_name,
+# outside_login_on? and outside_password?. outside_login_available? is
+# derived from the name.
 module OutsideLogin
   extend ActiveSupport::Concern
 

@@ -2,8 +2,8 @@ ENV['RAILS_ENV'] ||= 'test'
 require_relative '../config/environment'
 require 'rails/test_help'
 
-#reporter for beautiful result
 require "minitest/mock"
+#reporter for beautiful result
 require "minitest/reporters"
 Minitest::Reporters.use!
 
@@ -26,6 +26,8 @@ module GraderConfigHelper
 end
 
 module OutsideLoginHelper
+  # Never nest with_outside_login / without_outside_login, and never stub the
+  # same User methods again inside them (minitest stub aliasing breaks).
   # Pretend this deployment has an outside login that is switched on and
   # accepts +accepts+ as every user's outside password.
   def with_outside_login(accepts: 'cunet-pass', name: 'CU-net', &block)
