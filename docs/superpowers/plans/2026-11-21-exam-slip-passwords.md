@@ -334,6 +334,8 @@ Parsing is today's code, moved:
   - `UserImportList#check(now: Time.zone.now) -> UserImportList::Check`
   - `POST /user_admin/check_list` (`check_list_user_admin_index_path`): params `user_list`, `add_to_group`, `group_id`; responds with `turbo_stream.update('import-check', partial: 'user_admin/import_check', locals: {check:, group_name:})`. `group_name` is the group's name when `add_to_group == '1'`, else nil. Admin-only through the controller's existing `before_action`.
 
+Passwords: `User` validates passwords at 4–50 characters, so any test text that reaches Create uses passwords of 4+ characters (Ruling R3).
+
 Check rules:
 - Key logins by `login.downcase` (MySQL compares logins case-insensitively); the last row per key wins. `duplicates` = keys with more than one row.
 - Load existing users in one query.
@@ -395,7 +397,7 @@ test "check saves nothing" do
 end
 
 test "check and create agree on new accounts" do
-  text = "john,john,pw\nnewbie4,N,pw\nNEWBIE5,M,\nnewbie4,N2,pw2"
+  text = "john,john,pass\nnewbie4,N,pass\nNEWBIE5,M,\nnewbie4,N2,pass2"
   check = UserImportList.new(text).check
   created = User.create_from_list(text)[:created_users].pluck(:login)
   assert_equal check.new_accounts.map(&:downcase).sort, created.map(&:downcase).sort
@@ -407,7 +409,7 @@ end
   - `check_list names the group when asked`: params add `add_to_group: '1', group_id: groups(:group_a).id` → body includes `added to group`.
   - `non-admin cannot check`: `sign_in_as('john','hello')`, same post → `assert_redirected_to list_main_path`.
 - [ ] **Step 3: Write the failing system test** `test/system/user_import_check_test.rb` (with the local `login` helper copied from `test/system/users_test.rb`):
-  - `Check shows the result without saving; editing marks it stale; Create still works`: login admin; `visit new_list_user_admin_index_path`; fill the textarea (`find('textarea[name="user_list"]').set("john,john,newpw\nnewbie7,New Bie,pw")`); `click_on 'Check'`; `assert_text '1 new account', wait: 10`; `assert users(:john).reload.authenticated?('hello')`; `find('textarea[name="user_list"]').set("john,john,newpw\nnewbie7,New Bie,pw\nnewbie8,X,pw")` (typing fires `input`); `assert_text 'The list changed. Press Check again.'`; `click_on 'Create following users'`; `assert_text 'were created successfully', wait: 10`; `assert User.find_by_login('newbie8')`.
+  - `Check shows the result without saving; editing marks it stale; Create still works`: login admin; `visit new_list_user_admin_index_path`; fill the textarea (`find('textarea[name="user_list"]').set("john,john,newpw\nnewbie7,New Bie,pass")`); `click_on 'Check'`; `assert_text '1 new account', wait: 10`; `assert users(:john).reload.authenticated?('hello')`; `find('textarea[name="user_list"]').set("john,john,newpw\nnewbie7,New Bie,pass\nnewbie8,X,pass")` (typing fires `input`); `assert_text 'The list changed. Press Check again.'`; `click_on 'Create following users'`; `assert_text 'were created successfully', wait: 10`; `assert User.find_by_login('newbie8')`.
 - [ ] **Step 4: Run, expect failure** — `bin/rails test test/models/user_import_list_test.rb test/integration/user_admin_controller_test.rb` and `HEADLESS=1 bin/rails test test/system/user_import_check_test.rb`.
 - [ ] **Step 5: Implement** the rules, the route, the action, the partial, the Stimulus controller and the page hooks.
 - [ ] **Step 6: Run, expect pass** (same commands, plus `HEADLESS=1 bin/rails test test/system/users_test.rb`).
