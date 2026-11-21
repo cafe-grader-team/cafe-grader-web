@@ -1,12 +1,19 @@
 class Contest < ApplicationRecord
   include Auditable
   audited only: %i[name enabled description start stop finalized
-                   pre_contest_seconds post_contest_seconds allow_hint]
+                   pre_contest_seconds post_contest_seconds allow_hint outside_login_off]
 
   has_many :contests_problems, class_name: 'ContestProblem', dependent: :destroy
   has_many :contests_users, class_name: 'ContestUser', dependent: :destroy
   has_many :problems, through: :contests_problems
   has_many :users, through: :contests_users
+
+  # When the outside-login block of this contest ends for the last student:
+  # stop plus the longest student extra time. nil without a stop.
+  def outside_login_block_ends_at
+    return nil if stop.nil?
+    stop + (contests_users.user.maximum(:extra_time_second) || 0).seconds
+  end
   # Staff notes on the contest (issues to resolve, after-action report): kind
   # `comment` rows, seen only on the manage page.
   has_many :comments, as: :commentable, dependent: :destroy

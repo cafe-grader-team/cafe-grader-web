@@ -5,7 +5,15 @@ require 'net/http'
 require 'json'
 
 class User < ApplicationRecord
+  include OutsideLogin
+
   has_and_belongs_to_many :roles
+
+  # True while this user is a student of a contest that turned the outside
+  # login off, up to the contest stop plus the user's own extra time.
+  def outside_login_blocked?(now = Time.zone.now)
+    ContestUser.blocking_outside_login(now).where(user_id: id).exists?
+  end
 
   # has_and_belongs_to_many :groups
   has_many :groups_users, class_name: 'GroupUser'
