@@ -293,4 +293,12 @@ class ContestTest < ActiveSupport::TestCase
     assert_equal [cc.id, a.id, b.id], order.map(&:problem_id)
     assert_equal [1, 2, 3], order.map(&:number)
   end
+
+  test "ticking without a Stop time is refused" do
+    c = contests(:contest_a)
+    c.stop = nil
+    c.outside_login_off = true
+    assert_not c.valid?
+    assert_includes c.errors[:outside_login_off], 'needs a Stop time'
+  end
 end

@@ -143,7 +143,8 @@ class ContestsController < ApplicationController
   end
 
   def clone
-    new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour)
+    new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour,
+                            outside_login_off: @contest.outside_login_off)
     new_contest.name = new_contest.get_next_name(@contest.name + '_copy')
     @contest.contests_users.each { |cu| new_contest.contests_users.build(user_id: cu.user_id, role: cu.role) }
     @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id, number: cp.number) }
@@ -688,7 +689,9 @@ class ContestsController < ApplicationController
       if @contest && @contest.finalized?
         params.require(:contest).permit(:finalized)
       else
-        params.require(:contest).permit(:name, :description, :enabled, :lock, :start, :stop, :finalized)
+        permitted = %i[name description enabled lock start stop finalized]
+        permitted << :outside_login_off if @current_user.admin? && User.outside_login_available?
+        params.require(:contest).permit(*permitted)
       end
     end
 

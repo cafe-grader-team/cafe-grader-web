@@ -21,6 +21,12 @@
           %span.mi event
   = f.input :post_contest_seconds, disabled: @contest.finalized?
   = f.input :enabled, disabled: @contest.finalized?
+  - if User.outside_login_available?
+    - outside_name = User.outside_login_name
+    = f.input :outside_login_off, as: :boolean, label: "Turn off #{outside_name} login for this contest's students until the contest ends",
+      disabled: @contest.finalized? || !@current_user.admin?,
+      hint: safe_join(["#{outside_name} login is currently #{User.outside_login_on? ? 'ON' : 'OFF'} for the rest of the site.",
+                       (@contest.outside_login_block_ends_at ? tag.br + "Ticked now, it covers this contest's students until #{@contest.outside_login_block_ends_at.strftime('%d/%b/%Y %H:%M')}." : nil)].compact)
   = f.input :finalized
 :javascript
   window.addEventListener("load", function() {

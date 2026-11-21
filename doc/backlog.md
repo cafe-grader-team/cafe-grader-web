@@ -22,6 +22,14 @@ Conventions:
 
 ---
 
+## Contest edit form drops Pre/Post contest seconds (found 2026-11-21)
+
+The contest edit form shows Pre/Post contest seconds but
+`ContestsController#contests_params` doesn't permit them, so edits to them are
+silently dropped.
+
+---
+
 ## Languages that still do not grade (found by `engine:langcheck`, 2026-11-14)
 
 **Why it matters:** each of these is offered in the language picker wherever

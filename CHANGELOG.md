@@ -11,6 +11,14 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 ## [Unreleased]
 
 ### Added
+- **Turn off an outside login (CU-net) for one contest's students.** An admin
+  ticks the box on the contest's edit page. Until the contest ends (plus each
+  student's extra time), those students can log in only with the password the
+  admin imported. A CU-net login can't replace that password, and a correct
+  CU-net password typed by mistake shows a 'use the password on your seat slip'
+  message and doesn't count toward the login lockout. Everyone else keeps
+  CU-net; the site-wide switch is unchanged. Hidden on deployments without an
+  outside login. (revs 2308–2310)
 - **Drag-and-drop ordering on a contest's Problems tab.** Drag the handle at
   the left of each row to set the order students see. (rev 2303)
 - **Comments on a contest.** The contest's manage page has a Comments card for

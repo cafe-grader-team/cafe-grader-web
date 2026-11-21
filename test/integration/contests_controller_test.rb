@@ -584,4 +584,62 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal c.contests_problems.order(:id).pluck(:id), data.map { |r| r['id'] }
     assert_equal [1, 2], data.map { |r| r['position'] }
   end
+
+  # --- Outside login (turn off for this contest's students) ---
+
+  test "admin can tick the outside-login box where an outside login exists" do
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      patch contest_path(contests(:contest_a)), params: {contest: {outside_login_off: '1'}}
+    end
+    assert contests(:contest_a).reload.outside_login_off
+  end
+
+  test "a group editor cannot tick it" do
+    sign_in_as("mary", "mary")
+    with_outside_login do
+      patch contest_path(contests(:contest_a)), params: {contest: {outside_login_off: '1'}}
+    end
+    assert_not contests(:contest_a).reload.outside_login_off
+  end
+
+  test "without an outside login the box is ignored and hidden" do
+    sign_in_as("admin", "admin")
+    without_outside_login do
+      patch contest_path(contests(:contest_a)), params: {contest: {outside_login_off: '1'}}
+      assert_not contests(:contest_a).reload.outside_login_off
+      get edit_contest_path(contests(:contest_a))
+      assert_no_match(/login for this contest&#39;s students/, response.body)
+      assert_no_match(/login for this contest's students/, response.body)
+    end
+  end
+
+  test "edit page shows the box and the site switch state" do
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      get edit_contest_path(contests(:contest_a))
+    end
+    assert_includes response.body, "Turn off CU-net login for this contest&#39;s students until the contest ends"
+    assert_includes response.body, "CU-net login is currently ON for the rest of the site."
+  end
+
+  test "clone keeps the setting" do
+    contests(:contest_a).update!(outside_login_off: true)
+    sign_in_as("admin", "admin")
+    get clone_contest_path(contests(:contest_a))
+    assert Contest.order(:id).last.outside_login_off
+  end
+
+  test "show page badge" do
+    contests(:contest_a).update!(outside_login_off: true)
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      get contest_path(contests(:contest_a))
+    end
+    assert_includes response.body, "CU-net off for students"
+    without_outside_login do
+      get contest_path(contests(:contest_a))
+    end
+    assert_not_includes response.body, "CU-net off for students"
+  end
 end

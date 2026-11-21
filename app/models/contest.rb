@@ -38,6 +38,7 @@ class Contest < ApplicationRecord
 
   # validates the name, (also using custom validator)
   validates :name, presence: true, uniqueness: true, name_format: true
+  validate :outside_login_off_needs_stop
 
   AddResult = Struct.new(:added, :skipped, :status, :model)
 
@@ -308,5 +309,9 @@ class Contest < ApplicationRecord
   # window differs per student (Contest#submissions applies it per row).
   def per_user_windows?
     contests_users.where('start_offset_second > 0 OR extra_time_second > 0').exists?
+  end
+
+  def outside_login_off_needs_stop
+    errors.add(:outside_login_off, 'needs a Stop time') if outside_login_off? && stop.nil?
   end
 end
