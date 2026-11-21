@@ -171,8 +171,22 @@ export const configs = {
       topStart: 'info',
       topEnd: 'search',
     },
+    rowReorder: { dataSrc: 'position', selector: 'td.reorder-handle', update: false },
+    on: {
+      'row-reorder': function (e, diff) {
+        if (!diff || diff.length === 0) return
+        const api = $(e.target).DataTable()
+        const moved = new Map(diff.map(d => [api.row(d.node).data().problem_id, d.newData]))
+        const order = api.rows().data().toArray()
+          .map(r => ({ id: r.problem_id, pos: moved.has(r.problem_id) ? moved.get(r.problem_id) : r.position }))
+          .sort((a, b) => a.pos - b.pos)
+          .map(r => r.id)
+        e.target.dispatchEvent(new CustomEvent('problems-reordered', { bubbles: true, detail: { order } }))
+      },
+    },
     columns: [
-      { data: 'number' },
+      { data: 'position' },
+      { data: null, className: 'reorder-handle text-muted', orderable: false, defaultContent: '<span class="mi" title="Drag to reorder" style="cursor: grab">drag_indicator</span>' },
       { data: 'name' },
       {
         data: 'full_name',
@@ -206,7 +220,7 @@ export const configs = {
       { data: null, render: renderers.problemActionRenderer, className: 'py-1' }
     ],
     columnDefs: [{ visible: false, targets: [0] },
-    { orderable: false, targets: [1, 2, 3, 4, 5, 6] }],
+    { orderable: false, targets: [1, 2, 3, 4, 5, 6, 7] }],
     drawCallback: function (settings) {
       var api = this.api();
       api.columns.adjust()

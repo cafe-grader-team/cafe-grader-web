@@ -4,6 +4,7 @@ export default class extends Controller {
 
   static targets = ["usersCommand", "userForm", "userFormUserID", "userFormCommand",
     "problemsCommand", "problemForm", "problemFormProblemID", "problemFormCommand",
+    "problemOrderForm", "problemOrderFormIds",
     "contestForm", "contestFormContestID", "contestFormCommand",
     "userExtraTimeForm", "userExtraTimeFormStart", "userExtraTimeFormEnd", "userExtraTimeFormRowID"
   ]
@@ -52,6 +53,12 @@ export default class extends Controller {
     command.value = event.currentTarget.dataset.command
     problem_id.value = event.currentTarget.dataset.rowId
     form.requestSubmit()
+  }
+
+  // fired by the problem table's row-reorder handler (datatables/configs.js)
+  postProblemOrder(event) {
+    this.problemOrderFormIdsTarget.value = event.detail.order.join(',')
+    this.problemOrderFormTarget.requestSubmit()
   }
 
   afterProblemsAdd(event) {

@@ -1,6 +1,6 @@
 = render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'Management' } ]
 
-.contest-management-wrapper{data: {controller: 'contest init-ui-component'}}
+.contest-management-wrapper{data: {controller: 'contest init-ui-component', action: 'problems-reordered->contest#postProblemOrder'}}
   -# hidden action forms (required by Stimulus contest controller)
   .d-none
     = form_with url: do_user_contest_path, html: {'data-contest-target': 'userForm', id: 'do-user-form',
@@ -18,6 +18,10 @@
       data: {turbo: true}} do |f|
       = f.hidden_field :problem_id, 'data-contest-target': 'problemFormProblemID'
       = f.hidden_field :command, 'data-contest-target': 'problemFormCommand'
+
+    = form_with url: reorder_problems_contest_path, html: {'data-contest-target': 'problemOrderForm',
+      data: {turbo: true}} do |f|
+      = f.hidden_field :problem_order, 'data-contest-target': 'problemOrderFormIds'
 
   .d-flex.justify-content-between.align-items-center.mb-3
     .d-flex.align-items-center.gap-2
@@ -286,6 +290,8 @@
                             %strong.text-dark LLM Assistant 
                             can be enabled individually for each problem.
                           %li.mt-1
+                            Drag a problem by its handle, or use the up/down arrows, to set the order students see.
+                          %li.mt-1
                             Use the 
                             %strong.text-dark 
                               %span.mi.md-18.align-text-bottom arrow_upward
@@ -297,6 +303,7 @@
                     %thead
                       %tr
                         %th Number
+                        %th{'aria-label': 'Drag to reorder'}
                         %th Name
                         %th Full name
                         %th.text-center Global Available
