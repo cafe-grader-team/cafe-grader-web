@@ -143,6 +143,10 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
+- **The AI usage page shows token counts.** The viva turns, assist requests
+  and total AI cost tiles each add a line such as "1.23M in · 98.8k out
+  tokens" (in = sent to the model, out = written by it); the grades tile says
+  "tokens not recorded", because grading runs don't record them. (rev 2328)
 - **The contest page always links to Viva check.** When nothing needs action, a
   grey "Viva check" badge sits beside the grading status; the red "N to check"
   badge takes its place when something does. Before, without a red badge the

@@ -25,6 +25,17 @@ class ContestsAiUsageTest < ActionDispatch::IntegrationTest
     assert_match "total AI cost", response.body
   end
 
+  test "the summary tiles show tokens in and out, and say grading records none" do
+    sub = submissions(:add1_by_james)
+    sub.update_columns(submitted_at: 30.minutes.ago)
+    sub.viva_turns.create!(role: :assistant, status: :ok, sequence: 1, content: "Q1?",
+                           created_at: 30.minutes.ago, token_count_in: 412_345, token_count_out: 1_500)
+    sign_in_as("admin", "admin")
+    get ai_usage_contest_path(@contest)
+    assert_select ".card-body div", text: "412k in · 1.5k out tokens", count: 2   # viva turns + total
+    assert_select ".card-body div", text: "tokens not recorded"
+  end
+
   test "editor of the contest sees the page" do
     sign_in_as("mary", "mary")     # mary is editor of group_a and contest_a
     get ai_usage_contest_path(@contest)

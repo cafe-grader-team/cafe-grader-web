@@ -72,6 +72,13 @@ class AiUsageReport
       grades_after_window: grades.count { |c| c.at && c.at > window.end },
       grade_cost:       grades.sum { |c| c.cost.to_f },
       grade_wait_p95:   Stats.percentile(grades.map { |c| total_s(c) }, 0.95),
+      # Tokens sent to (in) and written by (out) the model. Viva turns and
+      # assists record them; viva grades do not, so the totals leave grading
+      # out. A call without a count adds 0.
+      turn_tokens_in:   turns.sum { |c| c.tokens_in.to_i },
+      turn_tokens_out:  turns.sum { |c| c.tokens_out.to_i },
+      assist_tokens_in:  assists.sum { |c| c.tokens_in.to_i },
+      assist_tokens_out: assists.sum { |c| c.tokens_out.to_i },
       # Every dollar the contest's AI calls cost: viva turns + viva grading +
       # the assists that carry a provider price (unpriced ones add nothing).
       total_cost:       turns.sum { |c| c.cost.to_f } + grades.sum { |c| c.cost.to_f } + priced.sum { |c| c.cost.to_f }

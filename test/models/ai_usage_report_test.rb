@@ -29,6 +29,15 @@ class AiUsageReportTest < ActiveSupport::TestCase
     assert_equal 10.0, s[:assist_points]
   end
 
+  test "summary sums tokens in and out for viva turns and assists" do
+    @answered.viva_turns.find_by(sequence: 1).update_columns(token_count_in: 1200, token_count_out: 80)
+    s = AiUsageReport.new(@contest).summary
+    assert_equal 1200, s[:turn_tokens_in]
+    assert_equal 80,   s[:turn_tokens_out]
+    assert_equal 100,  s[:assist_tokens_in]
+    assert_equal 50,   s[:assist_tokens_out]
+  end
+
   test "total cost adds viva turns, viva grading and priced assists" do
     VivaGrade.create!(submission: @answered, total_points: 70, cost: 0.05, llm_model: "m",
                       graded_at: 10.minutes.ago, created_at: 10.minutes.ago)

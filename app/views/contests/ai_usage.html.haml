@@ -17,15 +17,31 @@
   %div
     = "Grades count every grading run of a viva session that started inside the contest window, however late it ran (#{s[:grades_after_window]} ran after the window closed)."
 
+-# Token counts as 412k / 1.23M; "in" = sent to the model, "out" = written by it.
+-# Grades record no tokens, so the total tile counts turns + assists and the
+-# grades tile says so.
+- tok = ->(n) { number_to_human(n, units: {unit: '', thousand: 'k', million: 'M', billion: 'B'}, format: '%n%u', precision: 3) }
+- tokens = ->(i, o) { "#{tok.(i)} in · #{tok.(o)} out tokens" }
 .row.g-3.mb-4{data: {controller: 'init-ui-component'}}
-  - tiles = [["#{s[:sessions_opened]}", 'viva sessions opened', "#{s[:students]} of #{s[:enrolled]} enrolled"], ["#{s[:answered]}", 'answered at least once', "#{s[:never_answered]} never answered"], ["#{s[:turns]}", 'viva turns', "$#{'%.2f' % s[:turn_cost]} · p95 #{s[:turn_wait_p95] || '–'} s"], ["#{s[:assists]}", 'assist requests', "#{s[:assist_students]} students · #{s[:assist_points].to_i} points"], ["$#{'%.2f' % s[:total_cost]}", 'total AI cost', "viva $#{'%.2f' % s[:turn_cost]} · grading $#{'%.2f' % s[:grade_cost]} · assist $#{'%.2f' % s[:assist_dollars]}" + (s[:assist_priced] < s[:assists_total] ? " (#{s[:assists_total] - s[:assist_priced]} assists unpriced)" : '')], ["#{s[:grades]}", 'grades', "$#{'%.2f' % s[:grade_cost]} · p95 #{s[:grade_wait_p95] || '–'} s"]]
-  - tiles.each do |num, label, sub|
+  - tiles = [["#{s[:sessions_opened]}", 'viva sessions opened', "#{s[:students]} of #{s[:enrolled]} enrolled"],
+             ["#{s[:answered]}", 'answered at least once', "#{s[:never_answered]} never answered"],
+             ["#{s[:turns]}", 'viva turns', "$#{'%.2f' % s[:turn_cost]} · p95 #{s[:turn_wait_p95] || '–'} s",
+              tokens.(s[:turn_tokens_in], s[:turn_tokens_out])],
+             ["#{s[:assists]}", 'assist requests', "#{s[:assist_students]} students · #{s[:assist_points].to_i} points",
+              tokens.(s[:assist_tokens_in], s[:assist_tokens_out])],
+             ["$#{'%.2f' % s[:total_cost]}", 'total AI cost', "viva $#{'%.2f' % s[:turn_cost]} · grading $#{'%.2f' % s[:grade_cost]} · assist $#{'%.2f' % s[:assist_dollars]}" + (s[:assist_priced] < s[:assists_total] ? " (#{s[:assists_total] - s[:assist_priced]} assists unpriced)" : ''),
+              tokens.(s[:turn_tokens_in] + s[:assist_tokens_in], s[:turn_tokens_out] + s[:assist_tokens_out])],
+             ["#{s[:grades]}", 'grades', "$#{'%.2f' % s[:grade_cost]} · p95 #{s[:grade_wait_p95] || '–'} s",
+              'tokens not recorded']]
+  - tiles.each do |num, label, sub, sub2|
     .col-6.col-lg-2
       .card.card-shadow.h-100
         .card-body.py-2
           .fs-3.fw-bold= num
           .small.text-secondary= label
           .text-secondary{style: 'font-size:.75rem'}= sub
+          - if sub2
+            .text-secondary{style: 'font-size:.75rem'}= sub2
 
 .row.gx-3.mb-4
   .col-lg-6
