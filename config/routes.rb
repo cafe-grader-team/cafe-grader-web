@@ -102,6 +102,7 @@ Rails.application.routes.draw do
       post 'add_problem_by_group'
       post 'do_all_problems'
       post 'do_problem'
+      post 'reorder_problems'
 
       # contest comments (staff notes)
       post 'add_comment'

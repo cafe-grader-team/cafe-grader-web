@@ -4,7 +4,7 @@ class ContestsController < ApplicationController
                                      :add_users_from_csv, :clone, :set_active,
                                      :show_users_query, :show_problems_query,
                                      :add_user, :add_user_by_group, :add_problem, :add_problem_by_group,
-                                     :do_all_users, :do_user, :extra_time_user, :do_all_problems, :do_problem,
+                                     :do_all_users, :do_user, :extra_time_user, :do_all_problems, :do_problem, :reorder_problems,
                                      :add_comment, :update_comment, :delete_comment,
                                     ]
   before_action :set_user, only: [:do_user]
@@ -15,7 +15,7 @@ class ContestsController < ApplicationController
                      show_users_query show_problems_query
                      add_users_from_csv add_user add_user_by_group
                      add_problem add_problem_by_group
-                     do_all_users do_user do_all_problems do_problem
+                     do_all_users do_user do_all_problems do_problem reorder_problems
                      add_comment update_comment delete_comment
                     ]
   before_action :check_valid_login
@@ -24,7 +24,7 @@ class ContestsController < ApplicationController
 
   before_action :check_finalized, only: %i[add_user_by_group add_user add_users_from_csv
                                            add_problem add_problem_by_group do_all_problems
-                                           do_all_users do_user do_all_problems do_problem
+                                           do_all_users do_user do_all_problems do_problem reorder_problems
                                           ]
   delegate :pluralize, to: 'ActionController::Base.helpers'
 
@@ -236,8 +236,11 @@ class ContestsController < ApplicationController
     # was removed along with the underlying practice/exam toggle
     # (2026-07-21 context-policy design, Phase A) — nothing in
     # contestManageProblem reads compilation_type here anymore either.
-    render json: {data: @contest.contests_problems.joins(:problem)
-      .select('contests_problems.id', :problem_id, :contest_id, :available, :enabled, :allow_llm, :name, :full_name, :number)}
+    rows = @contest.contests_problems.joins(:problem)
+      .select('contests_problems.id', :problem_id, :contest_id, :available, :enabled, :allow_llm, :name, :full_name, :number)
+      .reorder('contests_problems.number', 'contests_problems.id')
+    data = rows.each_with_index.map { |r, i| r.as_json.merge('position' => i + 1) }
+    render json: {data: data}
   end
 
   def do_all_users
@@ -384,6 +387,24 @@ class ContestsController < ApplicationController
       @toast[:body] = "Unknown command"
       @toast[:type] = 'alert'
     end
+    @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'problem_table'}}
+    render 'turbo_toast'
+  end
+
+  # POST: save the problem order sent by drag-and-drop (problem_order = comma-separated problem ids)
+  def reorder_problems
+    before = @contest.problems_in_display_order.map(&:problem)
+    AuditLog.paused { @contest.reorder_problems!(params[:problem_order].to_s.split(',')) }
+    after_ids = @contest.problems_in_display_order.map(&:problem_id)
+    if after_ids != before.map(&:id)
+      names = before.index_by(&:id).transform_values(&:name)
+      AuditLog.record!(
+        auditable:      @contest,
+        action:         'reorder_problems',
+        object_changes: { 'order' => [before.map(&:name), after_ids.map { |i| names[i] }] }
+      )
+    end
+    @toast = {title: "Contest #{@contest.name}", body: "The problem order was saved."}
     @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'problem_table'}}
     render 'turbo_toast'
   end

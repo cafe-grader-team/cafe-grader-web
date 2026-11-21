@@ -54,6 +54,8 @@ module AuditLogsHelper
       bulk_badge 'library_books', 'remove problem'
     when 'move_up'
       bulk_badge 'arrow_upward', 'move up'
+    when 'reorder_problems'
+      bulk_badge 'swap_vert', 'reorder problems'
     when 'move_down'
       bulk_badge 'arrow_downward', 'move down'
     when 'bulk_enable_users'

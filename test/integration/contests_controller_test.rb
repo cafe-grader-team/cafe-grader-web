@@ -523,4 +523,65 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/viva-check-report/, response.body)
     assert latest.reload.viva_retake_granted_at.present?
   end
+
+  # --- Problem order ---
+
+  test "moveup moves the bottom problem one row" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    assert_difference -> { AuditLog.where(action: 'move_up').count }, 1 do
+      post do_problem_contest_path(c), params: {problem_id: problems(:easy).id, command: 'moveup'}, as: :turbo_stream
+    end
+    assert_equal 1, c.contests_problems.find_by(problem: problems(:easy)).number
+    assert_equal 2, c.contests_problems.find_by(problem: problems(:prob_add)).number
+  end
+
+  test "reorder_problems saves the posted order" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    assert_difference -> { AuditLog.where(action: 'reorder_problems').count }, 1 do
+      post reorder_problems_contest_path(c), params: {problem_order: "#{problems(:easy).id},#{problems(:prob_add).id}"}, as: :turbo_stream
+    end
+    assert_response :success
+    assert_includes response.body, "The problem order was saved."
+    assert_equal 1, c.contests_problems.find_by(problem: problems(:easy)).number
+    assert_equal 2, c.contests_problems.find_by(problem: problems(:prob_add)).number
+  end
+
+  test "reorder_problems with the same order writes no audit row" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    assert_no_difference -> { AuditLog.where(action: 'reorder_problems').count } do
+      post reorder_problems_contest_path(c), params: {problem_order: "#{problems(:prob_add).id},#{problems(:easy).id}"}, as: :turbo_stream
+    end
+    assert_response :success
+  end
+
+  test "reorder_problems ignores ids outside the contest" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    post reorder_problems_contest_path(c), params: {problem_order: "#{problems(:hard).id},#{problems(:easy).id}"}, as: :turbo_stream
+    assert_response :success
+    assert_not c.reload.problems.include?(problems(:hard))
+    assert_equal 1, c.contests_problems.find_by(problem: problems(:easy)).number
+  end
+
+  test "normal user cannot reorder problems" do
+    sign_in_as("john", "hello")
+    c = contests(:contest_a)
+    post reorder_problems_contest_path(c), params: {problem_order: "#{problems(:easy).id},#{problems(:prob_add).id}"}, as: :turbo_stream
+    assert_redirected_to list_main_path
+    assert_equal 2, c.contests_problems.find_by(problem: problems(:easy)).number
+  end
+
+  test "show_problems_query returns rows in display order with position" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    c.contests_problems.update_all(number: 1)
+    post show_problems_query_contest_path(c), as: :json
+    assert_response :success
+    data = JSON.parse(response.body)['data']
+    assert_equal c.contests_problems.order(:id).pluck(:id), data.map { |r| r['id'] }
+    assert_equal [1, 2], data.map { |r| r['position'] }
+  end
 end
