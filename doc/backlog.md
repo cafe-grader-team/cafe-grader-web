@@ -22,6 +22,39 @@ Conventions:
 
 ---
 
+## Import Users Check — follow-ups (found 2026-11-21)
+
+Found in the final review of the exam slip password work
+(`app/models/user_import_list.rb`, `app/views/user_admin/_import_check.html.haml`).
+
+- **Exact login matching.** Check downcases logins, but MySQL
+  `utf8mb4_0900_ai_ci` also ignores accents, so a login that differs only by an
+  accent shows a false "new account". Match the way MySQL does, or look the
+  logins up and compare what comes back.
+- **Rows Create will reject.** Add a line for rows Create will refuse: a
+  password under 4 characters, a login with a bad format.
+- **Truncated paste.** Add a line "N students of a contest with CU-net off are
+  not in this list" (catches a paste cut short).
+
+---
+
+## Outside-login seam: chula_cp edits master's file (found 2026-11-21)
+
+`app/models/concerns/outside_login.rb` is overridden on chula_cp by editing
+master's file, which will conflict on merges. A provider class name in config
+(the `config/llm.yml` style, with the class in a chula_cp-only file) would avoid
+that.
+
+---
+
+## chula_cp CUCAS client hardening (found 2026-11-21)
+
+The CUCAS client on chula_cp (`User#authenticated_by_cucas?`) uses
+`VERIFY_NONE`, `puts result` writes CUCAS responses to the production log, and
+the login is not escaped in the POST body.
+
+---
+
 ## Contest edit form drops Pre/Post contest seconds (found 2026-11-21)
 
 The contest edit form shows Pre/Post contest seconds but
