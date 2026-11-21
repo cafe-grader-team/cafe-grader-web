@@ -146,7 +146,7 @@ class ContestsController < ApplicationController
     new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour)
     new_contest.name = new_contest.get_next_name(@contest.name + '_copy')
     @contest.contests_users.each { |cu| new_contest.contests_users.build(user_id: cu.user_id, role: cu.role) }
-    @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id) }
+    @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id, number: cp.number) }
 
     saved = nil
     AuditLog.paused do
@@ -370,10 +370,8 @@ class ContestsController < ApplicationController
       gp.update(allow_llm: !gp.allow_llm?)
     when 'moveup', 'movedown'
       old_number = gp.number
-      delta = params[:command] == 'moveup' ? -1.2 : 1.2
-      anchor = params[:command] == 'moveup' ? (gp.number || 2) : (gp.number || 0)
       AuditLog.paused do
-        @contest.set_problem_number(@problem, anchor + delta)
+        @contest.move_problem(@problem, params[:command] == 'moveup' ? :up : :down)
       end
       new_number = @contest.contests_problems.where(problem: @problem).first&.number
       AuditLog.record!(

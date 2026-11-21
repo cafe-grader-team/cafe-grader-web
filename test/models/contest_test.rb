@@ -218,4 +218,79 @@ class ContestTest < ActiveSupport::TestCase
   test "viva_grading_counts is zero when nothing is waiting" do
     assert_equal({grading: 0, errors: 0}, contest_with_viva.viva_grading_counts)
   end
+
+  # --- Problem order ---
+
+  def numbers_of(contest)
+    contest.problems_in_display_order.map { |cp| [cp.problem.name, cp.number] }
+  end
+
+  def contest_c_with(problems, numbers)
+    c = contests(:contest_c)
+    problems.each_with_index { |p, i| c.contests_problems.create!(problem: p, number: numbers[i]) }
+    c.reload
+  end
+
+  def five_problems
+    %i[prob_add prob_sub easy hard prob_viva].map { |n| problems(n) }
+  end
+
+  test "add_problems_and_assign_number continues after the highest number" do
+    c = contests(:contest_a)
+    c.add_problems_and_assign_number([problems(:hard)])
+    c.save!
+    assert_equal 3, c.contests_problems.find_by(problem: problems(:hard)).number
+  end
+
+  test "move_problem heals duplicates and moves one row" do
+    ps = five_problems
+    c = contest_c_with(ps, [1, 1, 2, 3, 4])
+    assert_equal 4, c.move_problem(ps[4], :up)
+    order = c.problems_in_display_order
+    assert_equal ps[4].id, order[3].problem_id
+    assert_equal [1, 2, 3, 4, 5], order.map(&:number)
+  end
+
+  test "move_problem with blank numbers moves one row" do
+    ps = five_problems.first(4)
+    c = contest_c_with(ps, [nil, nil, nil, nil])
+    assert_equal 3, c.move_problem(ps[3], :up)
+    order = c.problems_in_display_order
+    assert_equal [1, 2, 3, 4], order.map(&:number)
+    assert_equal ps[2].id, order.last.problem_id
+  end
+
+  test "move_problem down from the top does not duplicate" do
+    ps = five_problems.first(4)
+    c = contest_c_with(ps, [1, 2, 3, 4])
+    c.move_problem(ps[0], :down)
+    order = c.problems_in_display_order
+    assert_equal [ps[1], ps[0], ps[2], ps[3]].map(&:id), order.map(&:problem_id)
+    assert_equal [1, 2, 3, 4], order.map(&:number)
+  end
+
+  test "move_problem at the edge is a no-op" do
+    ps = five_problems.first(4)
+    c = contest_c_with(ps, [1, 2, 3, 4])
+    assert_equal 1, c.move_problem(ps[0], :up)
+    assert_equal ps.map(&:id), c.problems_in_display_order.map(&:problem_id)
+    assert_equal 4, c.move_problem(ps[3], :down)
+    assert_equal ps.map(&:id), c.problems_in_display_order.map(&:problem_id)
+    assert_equal [1, 2, 3, 4], c.problems_in_display_order.map(&:number)
+  end
+
+  test "move_problem returns nil for a problem not in the contest" do
+    c = contests(:contest_a)
+    assert_nil c.move_problem(problems(:hard), :up)
+  end
+
+  test "reorder_problems! tolerates foreign, duplicate and missing ids" do
+    a, b, cc, other = problems(:prob_add), problems(:prob_sub), problems(:easy), problems(:hard)
+    c = contest_c_with([a, b, cc], [1, 2, 3])
+    result = c.reorder_problems!([cc.id.to_s, other.id, cc.id, a.id])
+    assert_equal [cc.id, a.id, b.id], result
+    order = c.problems_in_display_order
+    assert_equal [cc.id, a.id, b.id], order.map(&:problem_id)
+    assert_equal [1, 2, 3], order.map(&:number)
+  end
 end

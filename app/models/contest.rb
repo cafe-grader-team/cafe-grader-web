@@ -104,7 +104,7 @@ class Contest < ApplicationRecord
     num_skipped = requested_problem_ids.count - num_added
 
 
-    latest_num = self.contests_problems.maximum(:number) || 1
+    latest_num = (self.contests_problems.maximum(:number) || 0) + 1
     problem_ids_to_add.each do |new_prob_id|
       self.contests_problems.build(problem_id: new_prob_id, number: latest_num)
       latest_num += 1
@@ -113,15 +113,40 @@ class Contest < ApplicationRecord
     return AddResult.new(added: num_added, skipped: num_skipped)
   end
 
-  # set the number of the problem to *number* and rearrage other
-  def set_problem_number(problem, number)
-    num = 1
-    self.contests_problems.where.not(problem_id: problem.id).order(:number).each do |cp, idx|
-      offset = (num) >= number ? 1 : 0
-      cp.update(number: num+offset)
-      num += 1
+  # contest problems as students and editors see them: by number, ties/blanks by id
+  def problems_in_display_order
+    contests_problems.includes(:problem).reorder('contests_problems.number', 'contests_problems.id').to_a
+  end
+
+  # Write numbers 1..n following problem_ids. Ids outside the contest and
+  # repeated ids are ignored; contest problems not mentioned are appended in
+  # their current display order. Returns the final problem-id order.
+  def reorder_problems!(problem_ids)
+    current = problems_in_display_order
+    by_pid = current.index_by(&:problem_id)
+    wanted = Array(problem_ids).map { |i| i.to_s =~ /\A\d+\z/ ? i.to_i : nil }.compact
+    ordered = wanted.select { |i| by_pid.key?(i) }.uniq
+    ordered += current.map(&:problem_id) - ordered
+    transaction do
+      ordered.each_with_index do |pid, idx|
+        cp = by_pid[pid]
+        cp.update!(number: idx + 1) if cp.number != idx + 1
+      end
     end
-    self.contests_problems.where(problem_id: problem.id).first.update(number: [self.contests_problems.count, [1, number.round].max].min)
+    ordered
+  end
+
+  # swap the problem with its neighbour in display order (:up / :down), then renumber 1..n
+  # returns the new 1-based position, nil if the problem is not in this contest
+  def move_problem(problem, direction)
+    ids = problems_in_display_order.map(&:problem_id)
+    idx = ids.index(problem.id)
+    return nil if idx.nil?
+    other = direction == :up ? idx - 1 : idx + 1
+    if other >= 0 && other < ids.size
+      ids[idx], ids[other] = ids[other], ids[idx]
+    end
+    reorder_problems!(ids).index(problem.id) + 1
   end
 
   # return :later, :pre, :during, :post, :ended
