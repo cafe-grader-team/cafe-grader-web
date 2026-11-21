@@ -279,4 +279,31 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal before, user.reload.roles.pluck(:name).sort
   end
+
+  # --- Check list (no-save preview) ---
+
+  TURBO = { 'Accept' => 'text/vnd.turbo-stream.html' }.freeze
+
+  test "check_list renders the result panel and saves nothing" do
+    sign_in_as("admin", "admin")
+    assert_no_difference -> { User.count } do
+      post check_list_user_admin_index_path, params: { user_list: "newbie6,N,pw" }, headers: TURBO
+    end
+    assert_equal 'text/vnd.turbo-stream.html', response.media_type
+    assert_includes response.body, 'import-check'
+    assert_includes response.body, '1 new account'
+  end
+
+  test "check_list names the group when asked" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path,
+         params: { user_list: "newbie6,N,pw", add_to_group: '1', group_id: groups(:group_a).id }, headers: TURBO
+    assert_includes response.body, 'added to group'
+  end
+
+  test "non-admin cannot check" do
+    sign_in_as("john", "hello")
+    post check_list_user_admin_index_path, params: { user_list: "newbie6,N,pw" }, headers: TURBO
+    assert_redirected_to list_main_path
+  end
 end

@@ -11,6 +11,7 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 ## [Unreleased]
 
 ### Added
+- **Check before importing users.** The Import Users page has a Check button beside Create following users. It shows, without saving anything, what the import would do: who gets a new or random password, which logins would become new accounts (usually a typo on an exam import), duplicates, name and remark changes, ignored lines, and, where an outside login exists, who isn't yet covered by a contest that turns it off. Create works as before. (rev 2313)
 - **Turn off an outside login (CU-net) for one contest's students.** An admin
   ticks the box on the contest's edit page. Until the contest ends (plus each
   student's extra time), those students can log in only with the password the

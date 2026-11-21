@@ -1,0 +1,42 @@
+-# Check result panel for the Import Users page (no-save preview). Locals: check, group_name
+- name = User.outside_login_name
+- lines = []
+- if check.row_count > 0
+  - n = check.new_password.size
+  - lines << [:info, "#{pluralize(n, 'existing user')} #{n == 1 ? 'gets' : 'get'} a new password", check.new_password] if n > 0
+  - n = check.random_password.size
+  - lines << [:warning, "#{pluralize(n, 'existing user')} #{n == 1 ? 'gets' : 'get'} a random password (row has only login and name)", check.random_password] if n > 0
+  - n = check.keep_password.size
+  - lines << [:info, "#{pluralize(n, 'existing user')} #{n == 1 ? 'keeps' : 'keep'} their password (empty password field)", check.keep_password] if n > 0
+  - n = check.new_accounts.size
+  - lines << [:warning, "#{pluralize(n, 'new account')} will be created; on an exam import this usually means a mistyped login", check.new_accounts] if n > 0
+  - n = check.duplicates.size
+  - lines << [:warning, "#{pluralize(n, 'login')} #{n == 1 ? 'is' : 'are'} listed more than once (the last row wins)", check.duplicates] if n > 0
+  - n = check.name_changes.size
+  - lines << [:info, "#{pluralize(n, 'existing user')}' names will change", check.name_changes] if n > 0
+  - n = check.remark_changes.size
+  - lines << [:info, "#{pluralize(n, 'existing user')}' remarks will change", check.remark_changes] if n > 0
+  - n = check.ignored_line_nos.size
+  - lines << [:warning, "#{pluralize(n, 'line')} will be ignored (fewer than two fields): line#{'s' if n != 1} #{check.ignored_line_nos.join(', ')}", []] if n > 0
+  - n = check.not_covered&.size.to_i
+  - lines << [:warning, "#{pluralize(n, 'user')} #{n == 1 ? 'gets' : 'get'} a new password but #{n == 1 ? 'is' : 'are'} not yet covered by a contest with #{name} login turned off; a #{name} login before they are covered replaces the new password", check.not_covered] if n > 0
+  - lines << [:info, "These users will also be added to group #{group_name}", []] if group_name.present?
+.card.border-0.shadow-sm.mb-4
+  .card-body
+    %h5.card-title
+      Check result
+      %small.text-secondary.fw-normal.ms-2= "Checked at #{Time.zone.now.strftime('%H:%M')}"
+    - if check.row_count == 0
+      %p.mb-0 No user lines found.
+    - lines.each do |kind, text, logins|
+      .d-flex.align-items-start.gap-2.mb-2
+        %span.mi{class: (kind == :warning ? 'text-warning' : 'text-info')}= kind == :warning ? 'warning' : 'info'
+        %div
+          = text
+          - if logins.present?
+            %div.font-monospace.small
+              = safe_join(logins.first(10), ', ')
+              - if logins.size > 10
+                %details
+                  %summary= "show all #{logins.size}"
+                  = safe_join(logins, ', ')

@@ -31,4 +31,55 @@ class UserImportListTest < ActiveSupport::TestCase
     assert_equal 'a', UserImportList.new("a,A,pw,").rows.first.user_alias
     assert_equal 'a', UserImportList.new("a,A").rows.first.user_alias
   end
+
+  test "check sorts rows into categories" do
+    users(:john).update!(remark: 'r0')
+    c = without_outside_login { UserImportList.new("john,john,newpw,,r1\njames,James Renamed\njack,Jack,\nnewbie1,New Bie,pw\nlonely").check }
+    assert_equal ['john'], c.new_password
+    assert_equal ['james'], c.random_password
+    assert_equal ['jack'], c.keep_password
+    assert_equal ['newbie1'], c.new_accounts
+    assert_equal ['james'], c.name_changes
+    assert_equal ['john'], c.remark_changes
+    assert_equal [5], c.ignored_line_nos
+    assert_nil c.not_covered            # no outside login
+    assert_equal 4, c.row_count
+  end
+
+  test "check matches logins case-insensitively and reports duplicates" do
+    c = UserImportList.new("JOHN,john,pw\njohn,john,pw2").check
+    assert_equal [], c.new_accounts
+    assert_equal ['john'], c.duplicates
+    assert_equal ['john'], c.new_password
+  end
+
+  test "blank lines and CRLF are not reported as ignored" do
+    c = UserImportList.new("john,john,pw\r\n\r\n   \r\n").check
+    assert_equal [], c.ignored_line_nos
+    assert_equal ['john'], c.new_password
+  end
+
+  test "not covered lists new passwords outside a ticked contest" do
+    contests(:contest_a).update!(outside_login_off: true)
+    with_outside_login do
+      c = UserImportList.new("james,james,pw\njohn,john,pw\nnewbie2,N,pw\njack,jack,").check
+      assert_equal ['john', 'newbie2'], c.not_covered.sort   # james blocked; jack keeps his password
+    end
+  end
+
+  test "check saves nothing" do
+    assert_no_difference -> { User.count } do
+      assert_no_difference -> { AuditLog.count } do
+        UserImportList.new("newbie3,N,pw\njohn,Renamed,pw").check
+      end
+    end
+    assert users(:john).reload.authenticated?('hello')
+  end
+
+  test "check and create agree on new accounts" do
+    text = "john,john,pass\nnewbie4,N,pass\nNEWBIE5,M,\nnewbie4,N2,pass2"
+    check = UserImportList.new(text).check
+    created = User.create_from_list(text)[:created_users].pluck(:login)
+    assert_equal check.new_accounts.map(&:downcase).sort, created.map(&:downcase).sort
+  end
 end

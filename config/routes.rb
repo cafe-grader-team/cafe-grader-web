@@ -279,6 +279,7 @@ Rails.application.routes.draw do
       get 'mass_mailing'
       match 'modify_role', via: [:get, :post]
       match 'create_from_list', via: [:get, :post]
+      post 'check_list'
       match 'random_all_passwords', via: [:get, :post]
     end
     member do

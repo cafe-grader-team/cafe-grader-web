@@ -124,6 +124,14 @@ class UserAdminController < ApplicationController
     redirect_to action: 'index'
   end
 
+  # No-save preview of create_from_list, rendered into #import-check.
+  def check_list
+    check = UserImportList.new(params[:user_list]).check
+    group_name = params[:add_to_group] == '1' ? Group.find_by(id: params[:group_id])&.name : nil
+    render turbo_stream: turbo_stream.update('import-check', partial: 'user_admin/import_check',
+                                                             locals: { check: check, group_name: group_name })
+  end
+
   def edit
   end
 

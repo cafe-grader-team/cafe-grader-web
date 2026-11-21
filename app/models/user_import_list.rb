@@ -10,6 +10,12 @@ class UserImportList
   # remark is nil when there is no fifth field ("don't touch").
   Row = Data.define(:line_no, :login, :full_name, :password, :password_mode, :user_alias, :remark)
 
+  # What an import would do, without doing it. Every list holds logins as typed
+  # in that login's last row; not_covered is nil without an outside login.
+  Check = Data.define(:row_count, :new_password, :random_password, :keep_password,
+                      :new_accounts, :duplicates, :name_changes, :remark_changes,
+                      :ignored_line_nos, :not_covered)
+
   attr_reader :rows, :ignored_line_nos
 
   def initialize(text)
@@ -27,7 +33,46 @@ class UserImportList
     end
   end
 
+  # No-save preview. Logins are keyed case-insensitively (MySQL compares them
+  # that way); the last row per key wins.
+  def check(now: Time.zone.now)
+    by_key = rows.group_by { |r| r.login.downcase }
+    last = by_key.transform_values(&:last)
+    duplicates = by_key.select { |_, rs| rs.size > 1 }.values.map { |rs| rs.last.login }
+    existing = User.where(login: last.values.map(&:login)).index_by { |u| u.login.downcase }
+
+    new_password, random_password, keep_password = [], [], []
+    new_accounts, name_changes, remark_changes = [], [], []
+    last.each do |key, row|
+      user = existing[key]
+      if user.nil?
+        new_accounts << row.login
+        next
+      end
+      case row.password_mode
+      when :given then new_password << row.login
+      when :random then random_password << row.login
+      else keep_password << row.login
+      end
+      name_changes << row.login if row.full_name != user.full_name
+      remark_changes << row.login if !row.remark.nil? && row.remark != user.remark.to_s
+    end
+
+    Check.new(row_count: rows.size, new_password:, random_password:, keep_password:,
+              new_accounts:, duplicates:, name_changes:, remark_changes:,
+              ignored_line_nos: ignored_line_nos.dup,
+              not_covered: not_covered_logins(last, existing, now))
+  end
+
   private
+
+  def not_covered_logins(last, existing, now)
+    return nil unless User.outside_login_available?
+    getting_new = last.select { |key, row| existing[key].nil? || row.password_mode != :keep }
+    ids = getting_new.keys.filter_map { |k| existing[k]&.id }
+    covered = ContestUser.blocking_outside_login(now).where(user_id: ids).distinct.pluck(:user_id)
+    getting_new.reject { |key, _| existing[key] && covered.include?(existing[key].id) }.values.map(&:login)
+  end
 
   def build_row(line_no, items)
     password = nil

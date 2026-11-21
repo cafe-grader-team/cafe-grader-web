@@ -1,4 +1,4 @@
-.container-fluid
+.container-fluid{data: {controller: 'user-admin--import'}}
   .row
     .col-md-6
       %h1 Adding list of users
@@ -8,16 +8,23 @@
         .row.align-items-center.my-3
           .col-auto
             = f.submit 'Create following users',class: 'btn btn-success my-3'
+            %button.btn.btn-outline-primary.my-3.ms-2{type: 'button', data: {action: 'user-admin--import#check'}} Check
           .col-auto
             .form-check
-              = f.check_box :add_to_group, class: 'form-check-input'
+              = f.check_box :add_to_group, class: 'form-check-input', data: {user_admin__import_target: 'addToGroup'}
               = f.label :add_to_group, 'Also add these users to the following group', class: 'form-check-label'
           .col-4
-            = f.select "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), {}, class: 'select2 form-control'
+            = f.select "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), {}, class: 'select2 form-control', data: {user_admin__import_target: 'groupId'}
         .row.mb-3
           .col-12
-            = f.text_area :user_list, value: nil, class: 'form-control', style: 'height: 30rem'
+            = f.text_area :user_list, value: nil, class: 'form-control', style: 'height: 30rem', data: {user_admin__import_target: 'list', action: 'input->user-admin--import#markStale'}
     .col-md-6
+      = form_with url: check_list_user_admin_index_path, data: {turbo: true, user_admin__import_target: 'checkForm'}, html: {class: 'd-none'} do |cf|
+        = hidden_field_tag :user_list, nil, id: 'check_user_list', data: {user_admin__import_target: 'checkList'}
+        = hidden_field_tag :add_to_group, '0', id: 'check_add_to_group', data: {user_admin__import_target: 'checkAddToGroup'}
+        = hidden_field_tag :group_id, nil, id: 'check_group_id', data: {user_admin__import_target: 'checkGroupId'}
+      .alert.alert-warning.d-none{data: {user_admin__import_target: 'stale'}} The list changed. Press Check again.
+      #import-check{data: {user_admin__import_target: 'panel'}}
       .card.bg-warning-subtle
         .card-body
           .card-title
