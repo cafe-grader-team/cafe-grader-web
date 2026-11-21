@@ -153,8 +153,10 @@ class Problem < ApplicationRecord
       .where('contests_users.user_id': user_id) # user is in the contest
       .where('contests_users.enabled': true)    # user in the contest is enabled
       .where('contests_problems.enabled': true) # problem is enabled
-      .where('ADDTIME(contests.start,-contests_users.start_offset_second) <= ?', now)
-      .where('ADDTIME(contests.stop,contests_users.extra_time_second) >= ?', now)
+      # Never ADDTIME(datetime, n): MySQL reads n as a HHMMSS time, not seconds
+      # (600 adds 6 minutes; 660 and 7200 give NULL and hide the contest).
+      .where('DATE_SUB(contests.start, INTERVAL IFNULL(contests_users.start_offset_second, 0) SECOND) <= ?', now)
+      .where('DATE_ADD(contests.stop, INTERVAL IFNULL(contests_users.extra_time_second, 0) SECOND) >= ?', now)
       .group('problems.id')
   }
 

@@ -15,7 +15,7 @@ class ContestsController < ApplicationController
                      show_users_query show_problems_query
                      add_users_from_csv add_user add_user_by_group
                      add_problem add_problem_by_group
-                     do_all_users do_user do_all_problems do_problem reorder_problems
+                     do_all_users do_user extra_time_user do_all_problems do_problem reorder_problems
                      add_comment update_comment delete_comment
                     ]
   before_action :check_valid_login
@@ -24,7 +24,7 @@ class ContestsController < ApplicationController
 
   before_action :check_finalized, only: %i[add_user_by_group add_user add_users_from_csv
                                            add_problem add_problem_by_group do_all_problems
-                                           do_all_users do_user do_all_problems do_problem reorder_problems
+                                           do_all_users do_user extra_time_user do_all_problems do_problem reorder_problems
                                           ]
   delegate :pluralize, to: 'ActionController::Base.helpers'
 
@@ -319,12 +319,16 @@ class ContestsController < ApplicationController
   end
 
   def extra_time_user
-    cu = ContestUser.find(params[:row_id])
-    end_offset = params[:end_offset]
-    start_offset = params[:start_offset]
-    cu.update(extra_time_second: params[:end_offset], start_offset_second: params[:start_offset])
-    @toast = {title: "Contest #{@contest.name}", body: "Set extra times of #{cu.user.login} to #{start_offset} : #{end_offset}"}
-    @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'user_table'}}
+    cu = @contest.contests_users.find(params[:row_id])
+    # A cleared field means "no extra time", not NULL.
+    start_offset = params[:start_offset].presence || 0
+    end_offset = params[:end_offset].presence || 0
+    if cu.update(start_offset_second: start_offset, extra_time_second: end_offset)
+      @toast = {title: "Contest #{@contest.name}", body: "Set extra times of #{cu.user.login} to #{cu.start_offset_second} : #{cu.extra_time_second} seconds"}
+      @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'user_table'}}
+    else
+      @toast = {title: "Extra time not saved", body: cu.errors.full_messages.to_sentence, type: :alert}
+    end
     render 'turbo_toast'
   end
 

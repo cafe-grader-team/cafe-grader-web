@@ -51,6 +51,17 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **Extra time for one student hid all the contest's problems, or gave less
+  time than set.** The contest's problem list added a student's extra time
+  (and start offset) with a MySQL function that reads the number as
+  hours-minutes-seconds, not seconds: 600 gave 6 minutes, 3600 gave 36, and
+  values such as 660 or 7200 gave no valid time at all, so the student saw no
+  problems while the navbar clock showed the longer time. It now counts
+  seconds. During a student's extra time the main list also showed none of
+  their submissions or scores, because it used the contest's own start and
+  stop; it now uses the student's own window. A cleared extra-time box is
+  saved as 0 instead of empty, and a negative or fractional value is refused
+  with a message. (rev 2324)
 - **Moving a contest problem up or down moves it exactly one row.** Adding
   problems to a contest that already had some gave the first new one a repeated
   number, moving down created a repeat, and cloning dropped the order, so one
@@ -171,6 +182,12 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   now always sent sorted by file name. (revs 2264, 2297)
 
 ### Security
+- **Any group editor could change any contest's extra time.** The extra-time
+  action skipped the check that the editor manages the contest, and it took
+  the student's row by id without checking which contest the row belonged to.
+  It now needs an editor of that contest (or an admin), changes only that
+  contest's rows, and is closed on a finalized contest like the other student
+  actions. (rev 2324)
 - **Model-written markdown could carry a clickable `javascript:` link.** The
   markdown renderer used for viva interviewer turns, viva grade feedback and
   the markdown editor preview escaped raw HTML but turned `[x](javascript:…)`,

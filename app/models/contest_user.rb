@@ -9,6 +9,12 @@ class ContestUser < ApplicationRecord
 
   enum :role, {user: 0, editor: 2}
 
+  # Whole seconds, never negative. allow_nil only so a legacy NULL row can still
+  # be enabled/disabled; the extra-time dialog saves a blank as 0, and every
+  # window query reads NULL as 0.
+  validates :start_offset_second, :extra_time_second,
+            numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+
   # Student rows of contests with the outside login turned off, still inside
   # stop + that row's extra time. Ignores both `enabled` flags on purpose.
   scope :blocking_outside_login, ->(now = Time.zone.now) {

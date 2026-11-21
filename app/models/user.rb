@@ -211,22 +211,30 @@ class User < ApplicationRecord
   end
 
   # return contests of this user that is both enabled and the current time
-  # is during the contest
+  # is inside this user's own window: start minus their start offset to stop
+  # plus their extra time (the same window Problem.contests_problems_for_user
+  # uses). Each contest carries the user's offsets as cu_start_offset_second /
+  # cu_extra_time_second.
   def active_contests
-    if GraderConfiguration.contest_mode?
-      return contests.where(enabled: true).where('start <= ? and stop >= ?', Time.zone.now, Time.zone.now)
-    else
-      return Contest.none
-    end
+    return Contest.none unless GraderConfiguration.contest_mode?
+
+    now = Time.zone.now
+    contests.where(enabled: true)
+      .where('DATE_SUB(contests.start, INTERVAL IFNULL(contests_users.start_offset_second, 0) SECOND) <= ?', now)
+      .where('DATE_ADD(contests.stop, INTERVAL IFNULL(contests_users.extra_time_second, 0) SECOND) >= ?', now)
+      .select('contests.*',
+              'IFNULL(contests_users.start_offset_second, 0) AS cu_start_offset_second',
+              'IFNULL(contests_users.extra_time_second, 0) AS cu_extra_time_second')
   end
 
-  # return datetime range of active contests
+  # return datetime range of active contests, each widened by this user's
+  # start offset and extra time
   def active_contests_range
     start = Date.new(9999, 1, 1).to_time
     stop = Date.new(1, 1, 1).to_time
     active_contests.each do |contest|
-      start = [start, contest.start].min
-      stop = [stop, contest.stop].max
+      start = [start, contest.start - contest.cu_start_offset_second.seconds].min
+      stop = [stop, contest.stop + contest.cu_extra_time_second.seconds].max
     end
     return start..stop
   end

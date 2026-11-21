@@ -172,6 +172,65 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "other contest", comment.reload.body
   end
 
+  # --- Extra time ---
+
+  test "a contest editor sets a student's extra time in seconds" do
+    sign_in_as("mary", "mary")   # editor of contest_a
+    cu = contests_users(:james_in_contest_a)
+    post extra_time_user_contest_path(contests(:contest_a)),
+         params: { row_id: cu.id, start_offset: "0", end_offset: "660" }, as: :turbo_stream
+    assert_response :success
+    assert_equal 660, cu.reload.extra_time_second
+    assert_match "0 : 660 seconds", response.body
+  end
+
+  test "a cleared extra-time field saves 0, not NULL" do
+    sign_in_as("admin", "admin")
+    cu = contests_users(:james_in_contest_a)
+    cu.update!(extra_time_second: 300)
+    post extra_time_user_contest_path(contests(:contest_a)),
+         params: { row_id: cu.id, start_offset: "", end_offset: "" }, as: :turbo_stream
+    cu.reload
+    assert_equal 0, cu.extra_time_second
+    assert_equal 0, cu.start_offset_second
+  end
+
+  test "a negative extra time is refused with an alert" do
+    sign_in_as("admin", "admin")
+    cu = contests_users(:james_in_contest_a)
+    post extra_time_user_contest_path(contests(:contest_a)),
+         params: { row_id: cu.id, start_offset: "0", end_offset: "-60" }, as: :turbo_stream
+    assert_equal 0, cu.reload.extra_time_second
+    assert_match "Extra time not saved", response.body
+  end
+
+  test "an editor cannot set extra time in a contest they don't manage" do
+    sign_in_as("mary", "mary")   # editor of contest_a only
+    cu = contests_users(:jack_in_contest_b)
+    post extra_time_user_contest_path(contests(:contest_b)),
+         params: { row_id: cu.id, start_offset: "0", end_offset: "600" }, as: :turbo_stream
+    assert_equal 0, cu.reload.extra_time_second
+  end
+
+  test "a row of another contest cannot be changed through this contest" do
+    sign_in_as("mary", "mary")
+    cu = contests_users(:jack_in_contest_b)
+    post extra_time_user_contest_path(contests(:contest_a)),
+         params: { row_id: cu.id, start_offset: "0", end_offset: "600" }, as: :turbo_stream
+    assert_response :not_found
+    assert_equal 0, cu.reload.extra_time_second
+  end
+
+  test "extra time cannot be changed on a finalized contest" do
+    contest = contests(:contest_a)
+    contest.update_columns(finalized: true)
+    sign_in_as("admin", "admin")
+    cu = contests_users(:james_in_contest_a)
+    post extra_time_user_contest_path(contest),
+         params: { row_id: cu.id, start_offset: "0", end_offset: "600" }, as: :turbo_stream
+    assert_equal 0, cu.reload.extra_time_second
+  end
+
   # --- Collection actions ---
 
   test "admin can change system mode" do

@@ -45,13 +45,6 @@ class Contest < ApplicationRecord
 
   AddResult = Struct.new(:added, :skipped, :status, :model)
 
-  # return an ActiveRecord relation of users that is submittable for this con
-  def submittable_users(current_time = Time.zone.now)
-    return User.none unless enabled?
-    user_ids = contests_users.where(enabled: true).where('IFNULL(extra_time_second) >= ?', current_time - self.stop).pluck :user_id
-    Users.where(id: user_ids, enabled: true)
-  end
-
   def add_users(new_users, role: 'user')
     return AddResult.new(added: 0, skipped: 0) if new_users.blank?
 

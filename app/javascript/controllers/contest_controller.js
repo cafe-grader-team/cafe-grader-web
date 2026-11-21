@@ -113,11 +113,11 @@ export default class extends Controller {
       message: `
         <div class="form-group">
           <label for="start-offset">Extra Time before Start (second)</label>
-          <input type="number" class="form-control" id="start-offset" value="${currentStartOffset}">
+          <input type="number" min="0" step="1" class="form-control" id="start-offset" value="${currentStartOffset}">
         </div>
         <div class="form-group">
           <label for="end-offset">Extra Time After Finish (second)</label>
-          <input type="number" class="form-control" id="end-offset" value="${currentExtraTime}" >
+          <input type="number" min="0" step="1" class="form-control" id="end-offset" value="${currentExtraTime}">
         </div> `,
       buttons: {
         cancel: {
