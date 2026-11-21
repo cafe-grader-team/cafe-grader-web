@@ -650,72 +650,37 @@ class User < ApplicationRecord
     created_user_ids = []
     updated_user_ids = []
 
-    lines.split("\n").each do |line|
-      # split with large limit, this will cause consecutive ',' to be result in a blank
-      items = line.chomp.split(',', 1000)
-      if items.length>=2
-        login = items[0]
-        full_name = items[1]
-        remark =''
-        user_alias = ''
+    UserImportList.new(lines).rows.each do |row|
+      user = User.find_by_login(row.login)
+      created = false
+      if user
+        user.full_name = row.full_name
+        user.remark = row.remark unless row.remark.nil?
+        case row.password_mode
+        when :given then user.password = row.password
+        when :random then user.password = random_password
+        end
+      else
+        password = row.password || random_password
+        user = User.new({login: row.login,
+                         full_name: row.full_name,
+                         password: password,
+                         password_confirmation: password,
+                         alias: row.user_alias,
+                         remark: row.remark || ''})
+        created = true
+      end
+      user.activated = true
 
-        added_random_password = false
-        added_password = false
-
-        # given password?
-        if items.length >= 3
-          if items[2].chomp(" ").length > 0
-            password = items[2].chomp(" ")
-            added_password = true
-          end
+      if user.save
+        if created
+          created_user_ids << user.id
         else
-          password = random_password
-          added_random_password=true
+          updated_user_ids << user.id
         end
-
-        # given alias?
-        if items.length>= 4 and items[3].chomp(" ").length > 0
-          user_alias = items[3].chomp(" ")
-        else
-          user_alias = login
-        end
-
-        # given remark?
-        has_remark = false
-        if items.length>=5
-          remark = items[4].strip
-          has_remark = true
-        end
-
-        user = User.find_by_login(login)
-        created = false
-        if user
-          user.full_name = full_name
-          user.remark = remark if has_remark
-          user.password = password if added_password || added_random_password
-        else
-          # create a random password if none are given
-          password = random_password unless password
-          user = User.new({login: login,
-                           full_name: full_name,
-                           password: password,
-                           password_confirmation: password,
-                           alias: user_alias,
-                           remark: remark})
-          created = true
-        end
-        user.activated = true
-
-        if user.save
-          if created
-            created_user_ids << user.id
-          else
-            updated_user_ids << user.id
-          end
-        else
-          error_logins << "'#{login}'"
-          first_error = user.errors.full_messages.to_sentence unless first_error
-        end
+      else
+        error_logins << "'#{row.login}'"
+        first_error = user.errors.full_messages.to_sentence unless first_error
       end
     end
 

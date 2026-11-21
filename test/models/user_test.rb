@@ -286,4 +286,56 @@ class UserTest < ActiveSupport::TestCase
     contests = users(:james).active_contests
     assert_includes contests, contests(:contest_a)
   end
+
+  # --- create_from_list behaviour pins (guard the UserImportList refactor) ---
+
+  test "two fields give an existing user a random password" do
+    User.create_from_list("john,John")
+    assert_not users(:john).reload.authenticated?('hello')
+  end
+
+  test "an empty password field keeps the password" do
+    User.create_from_list("john,John Kept,")
+    john = users(:john).reload
+    assert john.authenticated?('hello')
+    assert_equal 'John Kept', john.full_name
+  end
+
+  test "alias only applies to new accounts" do
+    old_alias = users(:john).alias
+    User.create_from_list("newalias1,New A,pass,ali\nnewalias2,New B,pass,\njohn,John,pass,other")
+    assert_equal 'ali', User.find_by_login('newalias1').alias
+    assert_equal 'newalias2', User.find_by_login('newalias2').alias
+    assert_equal old_alias, users(:john).reload.alias
+  end
+
+  test "a fifth field sets the remark, even blank; four fields leave it" do
+    users(:john).update!(remark: 'r0')
+    User.create_from_list("john,John,pass,,")
+    assert_equal '', users(:john).reload.remark
+    users(:john).update!(remark: 'r0')
+    User.create_from_list("john,John,pass,")
+    assert_equal 'r0', users(:john).reload.remark
+  end
+
+  test "short and blank lines are skipped without error" do
+    result = User.create_from_list("justlogin\n\n   \njohn,John,pass")
+    assert_empty result[:error_logins]
+    assert_nil User.find_by_login('justlogin')
+    assert_equal 1, result[:updated_users].count
+  end
+
+  test "CRLF line endings" do
+    User.create_from_list("john,John CR,pass\r\n")
+    john = users(:john).reload
+    assert_equal 'John CR', john.full_name
+    assert john.authenticated?('pass')
+  end
+
+  test "the last of duplicate rows wins" do
+    User.create_from_list("john,A,pass1\njohn,B,pass2")
+    john = users(:john).reload
+    assert_equal 'B', john.full_name
+    assert john.authenticated?('pass2')
+  end
 end
