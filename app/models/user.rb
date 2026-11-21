@@ -231,11 +231,40 @@ class User < ApplicationRecord
     return start..stop
   end
 
-  def self.authenticate(login, password)
+  # refusal is nil or :slip_password_required.
+  LoginResult = Data.define(:user, :refusal)
+
+  # The one login decision for the web and API doors. Order matters: see
+  # doc/ spec "Login behaviour". The local password always works; the outside
+  # password is only consulted when the site switch is on, and for a student
+  # of a contest that turned outside login off it is refused (never cached
+  # over the slip password).
+  def self.login_result(login, password)
     user = find_by_login(login)
-    if user
-      return user if user.authenticated?(password)
+    return LoginResult.new(user: nil, refusal: nil) unless user
+    return LoginResult.new(user: user, refusal: nil) if user.authenticated?(password)
+    return LoginResult.new(user: nil, refusal: nil) unless outside_login_on?
+
+    if user.outside_login_blocked?
+      refusal = outside_password?(user, password) ? :slip_password_required : nil
+      return LoginResult.new(user: nil, refusal: refusal)
     end
+
+    if outside_password?(user, password)
+      user.password = password
+      user.save
+      return LoginResult.new(user: user, refusal: nil)
+    end
+    LoginResult.new(user: nil, refusal: nil)
+  end
+
+  def self.authenticate(login, password)
+    login_result(login, password).user
+  end
+
+  def self.outside_login_refused_message
+    "This exam uses the password on your seat slip. " \
+      "Your #{outside_login_name} password will work again after the exam ends."
   end
 
   def authenticated?(password)

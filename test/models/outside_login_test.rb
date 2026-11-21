@@ -58,4 +58,55 @@ class OutsideLoginTest < ActiveSupport::TestCase
     end
     assert AuditLog.where(auditable: contests(:contest_a)).last.object_changes.key?('outside_login_off')
   end
+
+  test "the slip password always works, even when blocked" do
+    contests(:contest_a).update!(outside_login_off: true)
+    with_outside_login { assert_equal users(:james), User.login_result('james', 'morning').user }
+  end
+
+  test "site switch off never asks the outside service" do
+    without_outside_login do
+      User.stub(:outside_password?, ->(*) { flunk 'must not call the outside service' }) do
+        r = User.login_result('john', 'wrong')
+        assert_nil r.user; assert_nil r.refusal
+      end
+    end
+  end
+
+  test "switch on, not blocked: outside password logs in and becomes the local one" do
+    with_outside_login do
+      assert_equal users(:john), User.login_result('john', 'cunet-pass').user
+    end
+    assert users(:john).reload.authenticated?('cunet-pass')
+  end
+
+  test "switch on, blocked, right outside password: refused and the slip password survives" do
+    contests(:contest_a).update!(outside_login_off: true)
+    with_outside_login do
+      r = User.login_result('james', 'cunet-pass')
+      assert_nil r.user
+      assert_equal :slip_password_required, r.refusal
+    end
+    assert users(:james).reload.authenticated?('morning')
+  end
+
+  test "switch on, blocked, wrong outside password: plain failure" do
+    contests(:contest_a).update!(outside_login_off: true)
+    with_outside_login do
+      r = User.login_result('james', 'nope')
+      assert_nil r.user; assert_nil r.refusal
+    end
+  end
+
+  test "unknown login and the authenticate wrapper" do
+    assert_nil User.login_result('no_such_login', 'x').user
+    assert_equal users(:john), User.authenticate('john', 'hello')
+  end
+
+  test "refusal message names the outside login" do
+    with_outside_login do
+      assert_equal "This exam uses the password on your seat slip. Your CU-net password will work again after the exam ends.",
+                   User.outside_login_refused_message
+    end
+  end
 end

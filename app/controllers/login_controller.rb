@@ -15,7 +15,14 @@ class LoginController < ApplicationController
       return
     end
 
-    user = get_authenticated_user(params[:login], params[:password])
+    result = User.login_result(params[:login], params[:password])
+    if result.refusal
+      record_refused_login!
+      redirect_to login_main_path, alert: User.outside_login_refused_message
+      return
+    end
+
+    user = result.user || get_authenticated_user_via_authenticators(params[:login], params[:password])
     unless user
       record_login_failure!
       redirect_to login_main_path, alert: 'Wrong password'
@@ -72,17 +79,12 @@ class LoginController < ApplicationController
 
   protected
 
-  def get_authenticated_user(login, password)
-    if @@authenticators.empty?
-      return User.authenticate(login, password)
-    else
-      user = User.authenticate(login, password)
-      @@authenticators.each do |authenticator|
-        if not user
-          user = authenticator.authenticate(login, password)
-        end
-      end
-      return user
+  # Only reached when User.login_result found no user and no refusal.
+  def get_authenticated_user_via_authenticators(login, password)
+    user = nil
+    @@authenticators.each do |authenticator|
+      user ||= authenticator.authenticate(login, password)
     end
+    user
   end
 end

@@ -71,6 +71,16 @@ module LoginThrottling
   def record_login_failure!
     Rails.cache.increment(throttle_ip_key, 1, expires_in: WINDOW) unless ip_throttle_exempt?
     Rails.cache.increment(throttle_account_key, 1, expires_in: WINDOW)
+    create_failed_login_row
+  end
+
+  # A refused login (right outside password, wrong door) is logged but does
+  # not draw down the failure budget: the student typed a real password.
+  def record_refused_login!
+    create_failed_login_row
+  end
+
+  def create_failed_login_row
     Login.create(user_id: User.where(login: params[:login].to_s).pick(:id),
                  attempted_login: params[:login].to_s,
                  ip_address: request.remote_ip,

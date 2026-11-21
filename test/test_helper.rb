@@ -3,6 +3,7 @@ require_relative '../config/environment'
 require 'rails/test_help'
 
 #reporter for beautiful result
+require "minitest/mock"
 require "minitest/reporters"
 Minitest::Reporters.use!
 
@@ -24,7 +25,27 @@ module GraderConfigHelper
   end
 end
 
+module OutsideLoginHelper
+  # Pretend this deployment has an outside login that is switched on and
+  # accepts +accepts+ as every user's outside password.
+  def with_outside_login(accepts: 'cunet-pass', name: 'CU-net', &block)
+    User.stub(:outside_login_name, name) do
+      User.stub(:outside_login_on?, true) do
+        User.stub(:outside_password?, ->(_user, pw) { pw == accepts }, &block)
+      end
+    end
+  end
+
+  # No outside login at all, whatever the deployment branch says.
+  def without_outside_login(&block)
+    User.stub(:outside_login_name, nil) do
+      User.stub(:outside_login_on?, false, &block)
+    end
+  end
+end
+
 class ActiveSupport::TestCase
+  include OutsideLoginHelper
   include SignInHelper
   include GraderConfigHelper
 
