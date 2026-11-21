@@ -144,7 +144,7 @@ class ContestsController < ApplicationController
 
   def clone
     new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour,
-                            outside_login_off: @contest.outside_login_off)
+                            outside_login_off: @current_user.admin? && @contest.outside_login_off)
     new_contest.name = new_contest.get_next_name(@contest.name + '_copy')
     @contest.contests_users.each { |cu| new_contest.contests_users.build(user_id: cu.user_id, role: cu.role) }
     @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id, number: cp.number) }
@@ -162,7 +162,7 @@ class ContestsController < ApplicationController
           'source_contest'  => [nil, @contest.name],
           'users_copied'    => [nil, new_contest.contests_users.size],
           'problems_copied' => [nil, new_contest.contests_problems.size]
-        }
+        }.merge(new_contest.outside_login_off? ? {'outside_login_off' => [nil, true]} : {})
       )
       redirect_to contest_path(new_contest), notice: "Contest \"#{@contest.name}\" is cloned to this contest"
     else

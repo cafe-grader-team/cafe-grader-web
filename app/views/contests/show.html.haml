@@ -29,8 +29,8 @@
         = @contest.name
       %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
         %small Manage
-      - if User.outside_login_available? && @contest.outside_login_off?
-        %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.fw-medium{data: {bs_toggle: 'tooltip'}, title: "Until #{@contest.stop&.strftime('%d/%b/%Y %H:%M')}"}
+      - if User.outside_login_available? && @contest.outside_login_off? && @contest.outside_login_block_ends_at&.future?
+        %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.fw-medium{data: {bs_toggle: 'tooltip'}, title: "Until #{@contest.outside_login_block_ends_at.strftime('%d/%b/%Y %H:%M')}"}
           %small= "#{User.outside_login_name} off for students"
 
     .d-flex.gap-2

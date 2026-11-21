@@ -52,6 +52,13 @@ class OutsideLoginTest < ActiveSupport::TestCase
     assert_nil Contest.new(name: 'nostop').outside_login_block_ends_at
   end
 
+  test "a ticked contest with no stop never blocks" do
+    c = contests(:contest_a)
+    c.update!(outside_login_off: true)
+    c.update_column(:stop, nil)
+    assert_not users(:james).outside_login_blocked?
+  end
+
   test "ticking is audited" do
     assert_difference -> { AuditLog.where(auditable: contests(:contest_a)).count }, 1 do
       contests(:contest_a).update!(outside_login_off: true)

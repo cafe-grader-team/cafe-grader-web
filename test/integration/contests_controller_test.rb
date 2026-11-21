@@ -598,9 +598,37 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
   test "a group editor cannot tick it" do
     sign_in_as("mary", "mary")
     with_outside_login do
-      patch contest_path(contests(:contest_a)), params: {contest: {outside_login_off: '1'}}
+      patch contest_path(contests(:contest_a)), params: {contest: {outside_login_off: '1', description: 'edited by mary'}}
+    end
+    # the description is saved, so the request went through and only the param was dropped
+    assert_equal 'edited by mary', contests(:contest_a).reload.description
+    assert_not contests(:contest_a).outside_login_off
+  end
+
+  test "admin can untick it" do
+    contests(:contest_a).update!(outside_login_off: true)
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      patch contest_path(contests(:contest_a)), params: {contest: {outside_login_off: '0'}}
     end
     assert_not contests(:contest_a).reload.outside_login_off
+  end
+
+  test "a finalized contest shows the box disabled" do
+    contests(:contest_a).update_columns(finalized: true, outside_login_off: true)
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      get edit_contest_path(contests(:contest_a))
+    end
+    assert_select 'input[type=checkbox][name="contest[outside_login_off]"][disabled]'
+  end
+
+  test "a group editor sees the box disabled" do
+    sign_in_as("mary", "mary")
+    with_outside_login do
+      get edit_contest_path(contests(:contest_a))
+    end
+    assert_select 'input[type=checkbox][name="contest[outside_login_off]"][disabled]'
   end
 
   test "without an outside login the box is ignored and hidden" do
@@ -623,11 +651,25 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "CU-net login is currently ON for the rest of the site."
   end
 
-  test "clone keeps the setting" do
+  test "an admin's clone keeps the setting and audits it" do
     contests(:contest_a).update!(outside_login_off: true)
     sign_in_as("admin", "admin")
     get clone_contest_path(contests(:contest_a))
-    assert Contest.order(:id).last.outside_login_off
+    clone = Contest.order(:id).last
+    assert clone.outside_login_off
+    row = AuditLog.where(auditable: clone, action: 'clone').last
+    assert_equal [nil, true], row.object_changes['outside_login_off']
+  end
+
+  test "an editor's clone of a ticked contest is unticked" do
+    contests(:contest_a).update!(outside_login_off: true)
+    sign_in_as("mary", "mary")
+    get clone_contest_path(contests(:contest_a))
+    clone = Contest.order(:id).last
+    assert_not_equal contests(:contest_a).id, clone.id
+    assert_not clone.outside_login_off
+    row = AuditLog.where(auditable: clone, action: 'clone').last
+    assert_not row.object_changes.key?('outside_login_off')
   end
 
   test "show page badge" do
@@ -639,6 +681,18 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "CU-net off for students"
     without_outside_login do
       get contest_path(contests(:contest_a))
+    end
+    assert_not_includes response.body, "CU-net off for students"
+  end
+
+  test "show page badge is gone once the block has ended" do
+    c = contests(:contest_a)
+    c.update!(outside_login_off: true)
+    sign_in_as("admin", "admin")
+    travel_to(c.outside_login_block_ends_at + 1.minute) do
+      with_outside_login do
+        get contest_path(c)
+      end
     end
     assert_not_includes response.body, "CU-net off for students"
   end

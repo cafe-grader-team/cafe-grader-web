@@ -8,12 +8,6 @@ class Contest < ApplicationRecord
   has_many :problems, through: :contests_problems
   has_many :users, through: :contests_users
 
-  # When the outside-login block of this contest ends for the last student:
-  # stop plus the longest student extra time. nil without a stop.
-  def outside_login_block_ends_at
-    return nil if stop.nil?
-    stop + (contests_users.user.maximum(:extra_time_second) || 0).seconds
-  end
   # Staff notes on the contest (issues to resolve, after-action report): kind
   # `comment` rows, seen only on the manage page.
   has_many :comments, as: :commentable, dependent: :destroy
@@ -29,6 +23,15 @@ class Contest < ApplicationRecord
   scope :submittable_by_user, ->(user_id) {
     joins(:contests_users).where(contests_users: { user_id: user_id, enabled: true })
   }
+
+  # When the outside-login block of this contest ends for the last student:
+  # stop plus the longest student extra time. nil without a stop.
+  # Disabled rows count toward the longest extra time on purpose (enabled flags
+  # are ignored here, spec Part 1).
+  def outside_login_block_ends_at
+    return nil if stop.nil?
+    stop + (contests_users.user.maximum(:extra_time_second) || 0).seconds
+  end
 
   # new_users are active record relation
   # return a toast reaponse hash
@@ -310,6 +313,8 @@ class Contest < ApplicationRecord
   def per_user_windows?
     contests_users.where('start_offset_second > 0 OR extra_time_second > 0').exists?
   end
+
+  private
 
   def outside_login_off_needs_stop
     errors.add(:outside_login_off, 'needs a Stop time') if outside_login_off? && stop.nil?
