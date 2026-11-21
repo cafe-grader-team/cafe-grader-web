@@ -12,7 +12,7 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 
 ### Added
 - **Drag-and-drop ordering on a contest's Problems tab.** Drag the handle at
-  the left of each row to set the order students see. (rev 2302)
+  the left of each row to set the order students see. (rev 2303)
 - **Comments on a contest.** The contest's manage page has a Comments card for
   staff notes — issues to resolve, what happened during the contest, the
   after-action report. Each comment shows its author and time and is written
@@ -46,7 +46,7 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   problems to a contest that already had some gave the first new one a repeated
   number, moving down created a repeat, and cloning dropped the order, so one
   press could jump two rows or to the top. Every move now renumbers the list
-  1..n, which also repairs older contests on their first move. (rev 2302)
+  1..n, which also repairs older contests on their first move. (revs 2301–2302)
 - **The Logins report opened empty.** With the date boxes left blank, From was
   read as "now" and Until as the year 3000, so no login matched. A blank box
   now means what its hint says — start of today / end of today — on all three
