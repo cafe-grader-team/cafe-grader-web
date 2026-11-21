@@ -127,6 +127,7 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
+- **Import Users page restyled** to match the contest Import tab: the instructions are a side card instead of a yellow wall of text, and the page says what to do for an exam import. (rev 2321)
 - **Pressing Contest asks whether to turn the IP whitelist on.** A dialog
   shows the allowed list (`right.whitelist_ip`) and offers two buttons,
   "Contest, IP whitelist ON" and "Contest, IP whitelist OFF", with no

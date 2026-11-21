@@ -1,23 +1,27 @@
 .container-fluid{data: {controller: 'user-admin--import'}}
-  .row
-    .col-md-6
-      %h1 Adding list of users
-  .row
+  .row.my-2
+    .col-12.mb-3
+      .d-flex.flex-column.gap-1
+        %small.text-secondary.text-uppercase.fw-bold.ls-1 Management
+        %h2.fw-bold.text-dark.mb-0 Import Users
+  .row.gx-4
     .col-md-6
       = form_with url: create_from_list_user_admin_index_path do |f|
-        .row.align-items-center.my-3
-          .col-auto
-            = f.submit 'Create following users',class: 'btn btn-success my-3'
-            %button.btn.btn-outline-primary.my-3.ms-2{type: 'button', data: {action: 'user-admin--import#check'}} Check
-          .col-auto
-            .form-check
-              = f.check_box :add_to_group, class: 'form-check-input', data: {user_admin__import_target: 'addToGroup'}
-              = f.label :add_to_group, 'Also add these users to the following group', class: 'form-check-label'
-          .col-4
-            = f.select "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), {}, class: 'select2 form-control', data: {user_admin__import_target: 'groupId'}
-        .row.mb-3
-          .col-12
-            = f.text_area :user_list, value: nil, class: 'form-control', style: 'height: 30rem', data: {user_admin__import_target: 'list', action: 'input->user-admin--import#markStale'}
+        .mb-3
+          = f.text_area :user_list, value: nil, class: 'form-control', style: 'height: 30rem', aria: {label: 'User list'}, data: {user_admin__import_target: 'list', action: 'input->user-admin--import#markStale'}
+        .d-flex.gap-2.mb-3
+          %button.btn.btn-outline-primary{type: 'button', data: {action: 'user-admin--import#check'}}
+            %span.mi.me-1{aria: {hidden: 'true'}} fact_check
+            Check
+          = button_tag type: 'submit', class: 'btn btn-success' do
+            %span.mi.me-1{aria: {hidden: 'true'}} group_add
+            Create following users
+        .d-flex.flex-wrap.align-items-center.gap-3
+          .form-check.mb-0
+            = f.check_box :add_to_group, class: 'form-check-input', data: {user_admin__import_target: 'addToGroup', action: 'change->user-admin--import#markStale'}
+            = f.label :add_to_group, 'Also add these users to the following group', class: 'form-check-label'
+          .flex-grow-1
+            = f.select "group_id", options_from_collection_for_select( Group.all, 'id','name',params[:group_name]), {}, class: 'select2 form-control', style: 'width: 100%', aria: {label: 'Group'}, data: {user_admin__import_target: 'groupId'}
     .col-md-6
       = form_with url: check_list_user_admin_index_path, data: {turbo: true, user_admin__import_target: 'checkForm'}, html: {class: 'd-none'} do |cf|
         = hidden_field_tag :user_list, nil, id: 'check_user_list', data: {user_admin__import_target: 'checkList'}
@@ -25,38 +29,38 @@
         = hidden_field_tag :group_id, nil, id: 'check_group_id', data: {user_admin__import_target: 'checkGroupId'}
       .alert.alert-warning.d-none{data: {user_admin__import_target: 'stale'}} The list changed. Press Check again.
       #import-check{data: {user_admin__import_target: 'panel'}}
-      .card.bg-warning-subtle
+      .card.border-0.shadow-sm.border-start.border-4.border-info.mb-4
         .card-body
-          .card-title
-            %h4
-              .mi.fill help
-              Usage
-          A user will be created/updated for each line in the text box.
-          %ul
-            %li
-              Each line must be in the following format. A square bracket indicates that the parameter is optional.
-              %span.rounded.bg-light.p-1.font-monospace user_id,name[,passwd[,alias[,remark]]]
-            %li
-              Note that
-              %span.rounded.bg-light.p-1.font-monospace passwd, alias
-              and
-              %span.rounded.bg-light.p-1.font-monospace remark
-              is optional.
-            %li
-              If the users with the same user_id already exists, existing information will be overwritten.
-            %li
-              When
-              %span.rounded.bg-light.p-1.font-monospace  passwd
-              or
-              %span.rounded.bg-light.p-1.font-monospace alias
-              is empty (but not missing), the original value will be used.
-          .card-title
-            %h5 Example
-          %ul
-            %li.mb-2
-              .rounded.bg-light.p-1.font-monospace user1,Somchai Jaidee
-              will create (or update) a user with login "user1" and setting the fullname to "Somchai Jaidee", also setting a random password.
-            %li.mb-2
-              .rounded.bg-light.p-1.font-monospace user1,Somchai Jaidee,
-              will create (or update) a user with login "user1" and and setting the fullname "Somchai Jaidee". No change is made to the password unless this is a new user. If this is a new user, a random password will be generated.
-
+          .d-flex.align-items-center.mb-2
+            %span.mi.text-info.me-2 lightbulb
+            %h6.fw-bold.text-dark.mb-0 Import Instructions
+          .text-secondary.small
+            %p.mb-2
+              Add or update users by providing one user per line, in this comma-separated format (square brackets are optional parts):
+            .bg-light.p-2.rounded.my-2.font-monospace.small user_id,name[,passwd[,alias[,remark]]]
+            %ul.mb-3.ps-3
+              %li One user per line. A login that already exists is updated; a new login creates an account.
+              %li
+                %strong.text-dark passwd, alias
+                and
+                %strong.text-dark remark
+                are optional.
+              %li A missing passwd sets a random password. An empty passwd (a trailing comma) keeps the current one; a new account still gets a random one.
+              %li
+                %strong.text-dark alias
+                is used only when an account is created.
+            %p.fw-bold.text-dark.mb-1 Examples
+            %ul.mb-3.ps-3
+              %li.mb-2
+                .bg-light.p-1.rounded.font-monospace.d-inline-block.mb-1 user1,Somchai Jaidee
+                %div will create (or update) a user with login "user1" and sets the full name to "Somchai Jaidee", also setting a random password.
+              %li.mb-2
+                .bg-light.p-1.rounded.font-monospace.d-inline-block.mb-1 user1,Somchai Jaidee,
+                %div will create (or update) a user with login "user1" and sets the full name to "Somchai Jaidee". No change is made to the password unless this is a new user. If this is a new user, a random password will be generated.
+            %p.fw-bold.text-dark.mb-1 For an exam import
+            %ul.mb-0.ps-3
+              %li Press Check first.
+              - if User.outside_login_available?
+                - outside_name = User.outside_login_name
+                %li
+                  = "If the students already have accounts, add them to the contest (with #{outside_name} login turned off) before importing passwords: a #{outside_name} login in between replaces the new password. New accounts can't be added to a contest yet, so import them first and add them straight after."
