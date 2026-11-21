@@ -301,6 +301,53 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'added to group'
   end
 
+  test "check_list uses the singular possessive for one name or remark change" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john,John Renamed,pw,,new remark" }, headers: TURBO
+    assert_includes response.body, "1 existing user&#39;s names will change"
+    assert_includes response.body, "1 existing user&#39;s remarks will change"
+  end
+
+  test "check_list uses the plural possessive for several name changes" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john,John X,pw,,r1\njames,James X,pw,,r2" }, headers: TURBO
+    assert_includes response.body, "2 existing users&#39; names will change"
+    assert_includes response.body, "2 existing users&#39; remarks will change"
+  end
+
+  test "check_list shows ten logins and the rest inside details" do
+    sign_in_as("admin", "admin")
+    text = (1..12).map { |i| "bulk#{format('%02d', i)},B,pw" }.join("\n")
+    post check_list_user_admin_index_path, params: { user_list: text }, headers: TURBO
+    assert_includes response.body, "show 2 more"
+    assert_includes response.body, "bulk01"
+    assert_includes response.body, "bulk12"
+    assert_not_includes response.body, "show all"
+  end
+
+  test "check_list renders the not-covered line with an outside login" do
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      post check_list_user_admin_index_path, params: { user_list: "john,John,pw" }, headers: TURBO
+    end
+    assert_includes response.body, "not yet covered by a contest with CU-net login turned off"
+  end
+
+  test "check_list with add_to_group and an invalid group id shows no group line" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john,John,pw", add_to_group: '1', group_id: '0' }, headers: TURBO
+    assert_response :success
+    assert_not_includes response.body, 'added to group'
+  end
+
+  test "check_list warns about tabs and lists ignored lines even with no rows" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john\tJohn\tpw" }, headers: TURBO
+    assert_includes response.body, "No user lines found."
+    assert_includes response.body, "This text has tabs; the format uses commas"
+    assert_includes response.body, "1 line will be ignored"
+  end
+
   test "non-admin cannot check" do
     sign_in_as("john", "hello")
     post check_list_user_admin_index_path, params: { user_list: "newbie6,N,pw" }, headers: TURBO

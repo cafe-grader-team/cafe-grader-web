@@ -82,4 +82,32 @@ class UserImportListTest < ActiveSupport::TestCase
     created = User.create_from_list(text)[:created_users].pluck(:login)
     assert_equal check.new_accounts.map(&:downcase).sort, created.map(&:downcase).sort
   end
+
+  test "duplicate rows combine the way Create applies them" do
+    c = without_outside_login { UserImportList.new("john,John,newpw1\njohn,John,").check }
+    assert_equal ['john'], c.new_password
+    assert_equal [], c.keep_password
+    assert_equal ['john'], c.duplicates
+  end
+
+  test "a given row then a random row combines to random; remark is the last non-nil; name is the last row's" do
+    users(:john).update!(remark: 'r0')
+    c = without_outside_login { UserImportList.new("john,Old,pw,,rem\njohn,John Final").check }
+    assert_equal ['john'], c.random_password
+    assert_equal [], c.new_password
+    assert_equal ['john'], c.name_changes
+    assert_equal ['john'], c.remark_changes
+  end
+
+  test "a combined password change makes a duplicate keep row count as not covered" do
+    with_outside_login do
+      c = UserImportList.new("john,John,newpw1\njohn,John,").check
+      assert_equal ['john'], c.not_covered
+    end
+  end
+
+  test "has_tabs is set when the text has a tab" do
+    assert UserImportList.new("john\tJohn\tpw").check.has_tabs
+    assert_not UserImportList.new("john,John,pw").check.has_tabs
+  end
 end

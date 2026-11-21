@@ -325,6 +325,22 @@ class UserTest < ActiveSupport::TestCase
     assert_equal 1, result[:updated_users].count
   end
 
+  test "a too-short password row fills error_logins and first_error" do
+    result = User.create_from_list("newshort,New,ab")
+    assert_equal ["'newshort'"], result[:error_logins]
+    assert result[:first_error].present?
+    assert_nil User.find_by_login('newshort')
+  end
+
+  test "a new account from a keep row gets a working random password" do
+    result = User.create_from_list("newkeep1,New,")
+    assert_empty result[:error_logins]
+    user = User.find_by_login('newkeep1')
+    assert user
+    assert user.hashed_password.present?
+    assert_equal 1, result[:created_users].count
+  end
+
   test "CRLF line endings" do
     User.create_from_list("john,John CR,pass\r\n")
     john = users(:john).reload

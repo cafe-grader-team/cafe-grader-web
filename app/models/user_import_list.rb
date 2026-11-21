@@ -11,14 +11,16 @@ class UserImportList
   Row = Data.define(:line_no, :login, :full_name, :password, :password_mode, :user_alias, :remark)
 
   # What an import would do, without doing it. Every list holds logins as typed
-  # in that login's last row; not_covered is nil without an outside login.
+  # in that login's last row; not_covered is nil without an outside login;
+  # has_tabs is true when the text has a tab character (a paste from Excel).
   Check = Data.define(:row_count, :new_password, :random_password, :keep_password,
                       :new_accounts, :duplicates, :name_changes, :remark_changes,
-                      :ignored_line_nos, :not_covered)
+                      :ignored_line_nos, :not_covered, :has_tabs)
 
   attr_reader :rows, :ignored_line_nos
 
   def initialize(text)
+    @has_tabs = text.to_s.include?("\t")
     @rows = []
     @ignored_line_nos = []
     text.to_s.split("\n").each_with_index do |line, i|
@@ -34,10 +36,12 @@ class UserImportList
   end
 
   # No-save preview. Logins are keyed case-insensitively (MySQL compares them
-  # that way); the last row per key wins.
+  # that way). Rows of one login combine the way Create applies them in order:
+  # the password changes if any row gives or randomizes it (the last such row
+  # decides which), the remark is the last non-nil one, the name the last row's.
   def check(now: Time.zone.now)
     by_key = rows.group_by { |r| r.login.downcase }
-    last = by_key.transform_values(&:last)
+    last = by_key.transform_values { |rs| combine(rs) }
     duplicates = by_key.select { |_, rs| rs.size > 1 }.values.map { |rs| rs.last.login }
     existing = User.where(login: last.values.map(&:login)).index_by { |u| u.login.downcase }
 
@@ -58,13 +62,21 @@ class UserImportList
       remark_changes << row.login if !row.remark.nil? && row.remark != user.remark.to_s
     end
 
-    Check.new(row_count: rows.size, new_password:, random_password:, keep_password:,
+    Check.new(has_tabs: @has_tabs, row_count: rows.size, new_password:, random_password:, keep_password:,
               new_accounts:, duplicates:, name_changes:, remark_changes:,
               ignored_line_nos: ignored_line_nos.dup,
               not_covered: not_covered_logins(last, existing, now))
   end
 
   private
+
+  # One row standing for all rows of a login: the last row, with the password
+  # mode and the remark Create would end up with.
+  def combine(rs)
+    changing = rs.reverse.find { |r| r.password_mode != :keep }
+    remark = rs.reverse.find { |r| !r.remark.nil? }&.remark
+    rs.last.with(password_mode: changing ? changing.password_mode : :keep, remark: remark)
+  end
 
   def not_covered_logins(last, existing, now)
     return nil unless User.outside_login_available?
