@@ -352,7 +352,7 @@ Page hooks (Flavor B): wrap the page in `data-controller="user-admin--import"`. 
 ```ruby
 test "check sorts rows into categories" do
   users(:john).update!(remark: 'r0')
-  c = without_outside_login { UserImportList.new("john,john,newpw,,r1\njames,James Renamed\njack,jack,\nnewbie1,New Bie,pw\nlonely").check }
+  c = without_outside_login { UserImportList.new("john,john,newpw,,r1\njames,James Renamed\njack,Jack,\nnewbie1,New Bie,pw\nlonely").check }
   assert_equal ['john'], c.new_password
   assert_equal ['james'], c.random_password
   assert_equal ['jack'], c.keep_password
@@ -456,14 +456,14 @@ Layout (spec Part 3):
 - Consumes: Task 1's `OutsideLogin` (three class methods) and Task 2's `User.login_result`.
 - Produces (chula_cp only): `User.outside_login_name == 'CU-net'`; `User.outside_login_on? == (GraderConfiguration.get('chula.allow_cu_net_password') == true)`; `User.outside_password?(user, password) == user.authenticated_by_cucas?(password)`.
 
-Run this only after Task 6 is committed (dae approved the restyle).
+Run this right after Task 5. Task 6 runs after it: the restyle is committed only once dae approves its screenshots (spec Part 3), and it reaches chula_cp in the next batch merge.
 
 - [ ] **Step 1: Merge** — `hg update chula_cp && hg merge master`. Expect a conflict in `app/models/user.rb`'s `self.authenticate`. Resolve by hand:
   - keep master's `self.authenticate` (the one-line wrapper) and `login_result`;
   - drop chula_cp's CU-net branch from `authenticate`;
   - **keep** chula_cp's `authenticated_by_cucas?` method.
 
-  Never resolve the whole file with `:other` or `:local`. Resolve any other conflict by taking master's side, unless the file is a chula_cp-only one listed in `CLAUDE.md` (e.g. `config/llm.yml`); there, keep chula_cp's. `hg resolve -m <file>`, then `hg commit -m "merge master: CU-net off per contest (seam), user import Check step and restyle; contest reorder fixes (2300–<last master rev>)"`. The merge alone leaves CU-net login off on chula_cp until Step 3. Never push or deploy between the two commits.
+  Never resolve the whole file with `:other` or `:local`. Resolve any other conflict by taking master's side, unless the file is a chula_cp-only one listed in `CLAUDE.md` (e.g. `config/llm.yml`); there, keep chula_cp's. `hg resolve -m <file>`, then `hg commit -m "merge master: CU-net off per contest (seam), user import Check step; contest reorder fixes (2300–<last master rev>)"`. The merge alone leaves CU-net login off on chula_cp until Step 3. Never push or deploy between the two commits.
 - [ ] **Step 2: Write the failing test** `test/models/outside_login_chula_test.rb`:
 
 ```ruby
@@ -494,4 +494,4 @@ end
 - [ ] **Step 3: Implement** the three overrides in `app/models/concerns/outside_login.rb`. Run `bin/rails test test/models/outside_login_chula_test.rb test/models/outside_login_test.rb test/integration/outside_login_refusal_test.rb test/integration/contests_controller_test.rb test/models/user_import_list_test.rb`. Expect pass, with "master has no outside login" skipped by its own guard. Master's tests use `with_outside_login` / `without_outside_login`, so they need no chula_cp edits. If one does fail only on chula_cp, fix it on master and merge again; don't patch it on chula_cp.
 - [ ] **Step 4: Full suite on chula_cp** — `bin/rails check` → 0 failures.
 - [ ] **Step 5: Commit** (gate on `chula_cp`): `[ "$(hg log -r . -T '{activebookmark}')" = "chula_cp" ] && hg commit app/models/concerns/outside_login.rb test/models/outside_login_chula_test.rb -m "chula_cp: CU-net is the outside login (CUCAS behind the master seam)"`.
-- [ ] **Step 6: Back to master, push to the local main repo only** — `hg update master && bin/rails check` (0 failures), then `hg push -B master -B chula_cp ../web`. Report the master and chula_cp revs. No GitHub push, no deploy.
+- [ ] **Step 6: Back to master** — `hg update master && bin/rails check` (0 failures). Report the master and chula_cp revs. The push to the local main repo (`hg push -B master -B chula_cp ../web`) happens after Task 6 and the final review. No GitHub push, no deploy.
