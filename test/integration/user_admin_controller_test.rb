@@ -304,8 +304,22 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
   test "check_list uses the singular possessive for one name or remark change" do
     sign_in_as("admin", "admin")
     post check_list_user_admin_index_path, params: { user_list: "john,John Renamed,pw,,new remark" }, headers: TURBO
-    assert_includes response.body, "1 existing user&#39;s names will change"
-    assert_includes response.body, "1 existing user&#39;s remarks will change"
+    assert_includes response.body, "1 existing user&#39;s name will change"
+    assert_includes response.body, "1 existing user&#39;s remark will change"
+  end
+
+  test "check_list lines come in the spec order" do
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      post check_list_user_admin_index_path,
+           params: { user_list: "john,John X,pw,,r1\nlonely\njohn,John X,pw", add_to_group: '1', group_id: groups(:group_a).id }, headers: TURBO
+    end
+    b = response.body
+    order = ["existing user gets a new password", "listed more than once (Create applies their rows in order)",
+             "name will change", "remark will change", "will be ignored", "not yet covered", "added to group"]
+    idx = order.map { |t| b.index(t) }
+    assert idx.none?(&:nil?), "missing: #{order.zip(idx).select { |_, i| i.nil? }.map(&:first)}"
+    assert_equal idx.sort, idx
   end
 
   test "check_list uses the plural possessive for several name changes" do
