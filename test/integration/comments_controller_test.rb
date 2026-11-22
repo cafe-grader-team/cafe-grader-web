@@ -212,6 +212,23 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/turbo-stream action="replace" target="llm_assist_picker"/, response.body)
   end
 
+  test "the AI confirm dialog shows what was lost so far and the spending limit" do
+    enable_llm_assist!
+    sign_in_as("john", "hello")
+    get submission_path(@sub)
+    assert_response :success
+    assert_match(/Lost on this problem so far: 0 \(hints 0, AI help 0\)\./, response.body)
+    assert_match(/AI help on this problem stops once you have spent 100 points; you have spent 0\./, response.body)
+  end
+
+  test "the hint confirm dialog shows what was lost so far" do
+    sign_in_as("john", "hello")
+    get direct_edit_problem_submissions_path(problem_id: problems(:prob_add).id)
+    assert_response :success
+    assert_match(/Confirm getting a hint/, response.body)
+    assert_match(/Lost on this problem so far: 0 \(hints 0, AI help 0\)\./, response.body)
+  end
+
   test "the confirm dialog quotes the configured price" do
     enable_llm_assist!
     set_grader_config('system.llm_assist_cost', 7)

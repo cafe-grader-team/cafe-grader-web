@@ -28,7 +28,7 @@ module Llm
     # for help, so the penalty is not theirs to pay (decision 2026-09-09; the
     # 11 historical staff requests had charged the owner). The provider's
     # dollar cost is still recorded on the row either way, and the picker's
-    # 100-point spend cap ignores a 0 charge by itself.
+    # spending limit (HelpDeduction) ignores a 0 charge by itself.
     def self.assist_cost_for(requester:, submission:)
       return 0 if requester && submission && requester.id != submission.user_id
       assist_cost

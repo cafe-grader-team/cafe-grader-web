@@ -11,6 +11,21 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 ## [Unreleased]
 
 ### Added
+- **Deduction cap and AI-help spending limit per contest.** The contest edit
+  page has two new fields. *Deduction cap*: the most hints and AI help together
+  can take off one problem's full score (blank = no cap). Watch, Best Score
+  for the contest and the students' problem list during the contest use it;
+  the Deduct column shows "30 (cap)" where it applied, and the student sees
+  "Full score reduced by 30 (capped; 45 before the cap)". *AI help spending
+  limit*: the most points of AI help a student can spend on one problem
+  before more requests are refused (blank = the new site setting
+  `system.llm_assist_spending_limit`, 100, which replaces the fixed 100 and
+  can be set higher or lower). The hint and AI-help confirm boxes now show
+  the cap, what the student has lost on the problem so far, how much of this
+  one counts, and the spending limit. The global Best Score page has a
+  Deduction cap box for what-ifs (it charges only the AI help on each
+  student's best submission, so it can differ from a contest's report).
+  (rev 2332)
 - **Check before importing users.** The Import Users page has a Check button beside Create following users. It shows, without saving anything, what the import would do: who gets a new or random password, which logins would become new accounts (usually a typo on an exam import), duplicates, name and remark changes, ignored lines, and, where an outside login exists, who isn't yet covered by a contest that turns it off. Create works as before. (rev 2313)
 - **Turn off an outside login (CU-net) for one contest's students.** An admin
   ticks the box on the contest's edit page. Until the contest ends (plus each
@@ -51,6 +66,13 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **Contest scores counted hints by the contest's own times.** Watch and
+  Best Score for a contest ignored a hint revealed during a student's extra
+  time or start offset; they now use each student's own window, as they
+  already did for submissions. In contest mode the student's problem list
+  also stops counting a hint revealed before the contest. Watch could show a
+  negative score for a student who bought more AI help than a problem is
+  worth; it now stops at 0, like the global Best Score. (rev 2332)
 - **Left-clicking a student or a session on Viva check, or a setting's Change
   history icon on the System configuration page, showed "Content missing".**
   Those links sit in a part of the page that reloads by itself, and a click

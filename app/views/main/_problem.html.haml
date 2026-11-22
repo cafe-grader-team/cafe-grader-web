@@ -21,15 +21,15 @@
         = number_with_precision score, precision: 2, strip_insignificant_zeros: true
     - else
       - text = []
-      - sum_cost = 0
       - hint_count = @prob_submissions[problem.id][:hint_count]
       - hint_cost = @prob_submissions[problem.id][:hint_cost] || 0
       - text << "Hint: #{hint_count}" if hint_count
-      - sum_cost += hint_cost
       - ai_count = @prob_submissions[problem.id][:ai_assist_count]
       - ai_cost = @prob_submissions[problem.id][:ai_assist_cost] || 0
-      - sum_cost += ai_cost
-      - sum_cost = [100, sum_cost].min
+      -# the deduction cap of the running contest, if one applies (HelpDeduction)
+      - cap = @deduction_caps[problem.id]
+      - raw_cost = hint_cost.to_f + ai_cost.to_f
+      - sum_cost = [HelpDeduction::FULL_SCORE, HelpDeduction.deduction(hint_cost, ai_cost, cap)].min
       - text << "AI Assist: #{ai_count}" if ai_count
       -# display progress bar
       - adjusted_score = [100 - sum_cost, score].min
@@ -41,7 +41,7 @@
       %div
         %small= text.join(', ')
       %div
-        %small= "Full score reduced by #{sum_cost}" if sum_cost > 0
+        %small= help_reduction_text(sum_cost, raw_cost, cap, @cap_notice_ids.include?(problem.id))
   -# last submission column
   %td
     = render partial: 'submission_short',

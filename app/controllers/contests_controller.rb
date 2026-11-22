@@ -144,7 +144,8 @@ class ContestsController < ApplicationController
 
   def clone
     new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour,
-                            outside_login_off: @current_user.admin? && @contest.outside_login_off)
+                            outside_login_off: @current_user.admin? && @contest.outside_login_off,
+                            deduction_cap: @contest.deduction_cap, assist_spending_limit: @contest.assist_spending_limit)
     new_contest.name = new_contest.get_next_name(@contest.name + '_copy')
     @contest.contests_users.each { |cu| new_contest.contests_users.build(user_id: cu.user_id, role: cu.role) }
     @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id, number: cp.number) }
@@ -163,6 +164,8 @@ class ContestsController < ApplicationController
           'users_copied'    => [nil, new_contest.contests_users.size],
           'problems_copied' => [nil, new_contest.contests_problems.size]
         }.merge(new_contest.outside_login_off? ? {'outside_login_off' => [nil, true]} : {})
+         .merge(new_contest.deduction_cap ? {'deduction_cap' => [nil, new_contest.deduction_cap]} : {})
+         .merge(new_contest.assist_spending_limit ? {'assist_spending_limit' => [nil, new_contest.assist_spending_limit]} : {})
       )
       redirect_to contest_path(new_contest), notice: "Contest \"#{@contest.name}\" is cloned to this contest"
     else
@@ -693,7 +696,7 @@ class ContestsController < ApplicationController
       if @contest && @contest.finalized?
         params.require(:contest).permit(:finalized)
       else
-        permitted = %i[name description enabled lock start stop finalized]
+        permitted = %i[name description enabled lock start stop finalized deduction_cap assist_spending_limit]
         permitted << :outside_login_off if @current_user.admin? && User.outside_login_available?
         params.require(:contest).permit(*permitted)
       end

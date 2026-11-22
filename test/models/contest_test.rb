@@ -301,4 +301,51 @@ class ContestTest < ActiveSupport::TestCase
     assert_not c.valid?
     assert_includes c.errors[:outside_login_off], 'needs a Stop time'
   end
+
+  # --- score_report: deduction cap and each student's hint window (spec 2026-11-21) ---
+
+  def scored_sub(user, problem, at, points)
+    s = submissions(:add1_by_james).dup
+    s.assign_attributes(user: user, problem: problem, submitted_at: at, points: points, number: nil)
+    s.save!(validate: false)
+    s
+  end
+
+  def charge_ai(sub, cost)
+    sub.comments.create!(user: sub.user, kind: 'llm_assist', status: 'ok', cost: cost, title: 't', body: 'b')
+  end
+
+  test "score_report caps the deduction at the contest's cap and reports the raw cost beside it" do
+    c = contests(:contest_a)
+    c.update!(deduction_cap: 30)
+    pid = problems(:prob_add).id
+    charge_ai(scored_sub(users(:james), problems(:prob_add), c.start + 5.minutes, 90), 45)
+    row = c.score_report[:score]['james']
+    assert_equal 70, row["final_score_#{pid}"].to_f
+    assert_equal 30, row["total_cost_#{pid}"].to_f
+    assert_equal 45, row["raw_cost_#{pid}"].to_f
+  end
+
+  test "score_report without a cap never shows a score below 0" do
+    c = contests(:contest_a)
+    pid = problems(:prob_add).id
+    charge_ai(scored_sub(users(:james), problems(:prob_add), c.start + 5.minutes, 100), 150)
+    row = c.score_report[:score]['james']
+    assert_equal 0, row["final_score_#{pid}"].to_f
+    assert_equal 150, row["total_cost_#{pid}"].to_f
+  end
+
+  test "score_report counts a hint revealed in the student's extra time but not one before the start" do
+    c = contests(:contest_a)
+    c.update_columns(start: 2.hours.ago, stop: 5.minutes.ago)
+    contests_users(:james_in_contest_a).update!(extra_time_second: 660)
+    pid = problems(:prob_add).id
+    scored_sub(users(:james), problems(:prob_add), c.start + 5.minutes, 100)
+    reveal = comments(:hint_for_add).comment_reveals.create!(user: users(:james))
+    reveal.update_columns(created_at: 2.minutes.ago)            # inside james's extra time
+    assert_equal 1.5, c.score_report[:score]['james']["hint_cost_#{pid}"].to_f
+
+    reveal.update_columns(created_at: c.start - 1.day)          # practice, before the contest
+    assert_nil c.score_report[:score]['james']["hint_cost_#{pid}"]
+  end
 end

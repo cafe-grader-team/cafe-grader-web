@@ -190,3 +190,9 @@ GraderConfiguration_30:
   value_type: string
   value: ''
   description: Addresses that skip the per-address count of failed logins
+
+GraderConfiguration_31:
+  key: system.llm_assist_spending_limit
+  value_type: integer
+  value: '100'
+  description: The most points of AI help a student can spend on one problem before further requests are refused (hints are not counted)

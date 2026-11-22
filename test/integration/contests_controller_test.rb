@@ -774,4 +774,49 @@ class ContestsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_not_includes response.body, "CU-net off for students"
   end
+
+  # --- help deduction settings (spec 2026-11-21) ---
+
+  test "a contest editor saves the deduction cap and the spending limit; an out-of-range cap is refused" do
+    sign_in_as("mary", "mary")   # editor of contest_a
+    c = contests(:contest_a)
+    get edit_contest_path(c)
+    assert_select "input[name='contest[deduction_cap]']", 1
+    assert_select "input[name='contest[assist_spending_limit]']", 1
+
+    patch contest_path(c), params: { contest: { deduction_cap: "30", assist_spending_limit: "150" } }
+    c.reload
+    assert_equal 30, c.deduction_cap
+    assert_equal 150, c.assist_spending_limit
+
+    patch contest_path(c), params: { contest: { deduction_cap: "120" } }
+    assert_equal 30, c.reload.deduction_cap
+    assert_match "must be in 0..100", response.body
+
+    patch contest_path(c), params: { contest: { deduction_cap: "", assist_spending_limit: "" } }
+    c.reload
+    assert_nil c.deduction_cap
+    assert_nil c.assist_spending_limit
+  end
+
+  test "the contest page shows the deduction cap and the spending limit" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    c.update!(deduction_cap: 30)
+    get contest_path(c)
+    assert_match "30 points per problem", response.body
+    assert_match "site setting (100)", response.body
+  end
+
+  test "a clone copies the deduction cap and the spending limit" do
+    sign_in_as("admin", "admin")
+    c = contests(:contest_a)
+    c.update!(deduction_cap: 30, assist_spending_limit: 150)
+    assert_difference "Contest.count", 1 do
+      get clone_contest_path(c)
+    end
+    copy = Contest.order(:id).last
+    assert_equal 30, copy.deduction_cap
+    assert_equal 150, copy.assist_spending_limit
+  end
 end

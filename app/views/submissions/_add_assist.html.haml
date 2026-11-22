@@ -6,11 +6,14 @@
   The #llm_assist_picker wrapper is the turbo_stream.replace target used by
   CommentsController#index_partial to refresh this block with the comments.
 #llm_assist_picker
+  -# the confirm box's cap / spending block (HelpDeduction): the submission
+  -# owner's, who is the one charged
+  - budget = HelpDeduction.budget(@submission.user, @submission.problem)
   - models.each do |model|
     .row
       - cost = Llm::CommentAssist.assist_cost_for(requester: @current_user, submission: @submission)
       - refusal = @submission.llm_assist_refusal(model)
-      - body_text = render partial: 'comments/acquire_llm_assist_confirm', locals: {cost: cost, model: model}
+      - body_text = render partial: 'comments/acquire_llm_assist_confirm', locals: {cost: cost, model: model, budget: budget}
       - confirmation = {title: "Confirm Submission for AI Help", body: body_text}
       .col
         AI help by

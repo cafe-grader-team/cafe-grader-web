@@ -232,6 +232,13 @@ CONFIGURATIONS =
    },
 
    {
+     key: 'system.llm_assist_spending_limit',
+     value_type: 'integer',
+     default_value: '100',
+     description: "The most points of AI help a student can spend on one problem before further requests are refused (hints are not counted). A contest can set its own."
+   },
+
+   {
      key: 'viva.practice_daily_start_limit',
      value_type: 'integer',
      default_value: '3',

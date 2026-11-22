@@ -32,6 +32,20 @@ class Comment < ApplicationRecord
     end
   }
 
+  # Hint reveals for `problems` by members of `contest`, each counted only
+  # when revealed inside that member's own window: start minus their start
+  # offset to stop plus their extra time (seconds via DATE_ADD/DATE_SUB, never
+  # ADDTIME). Same columns and grouping as hint_reveal_for_problems.
+  scope :hint_reveal_in_contest_windows, ->(contest, problems) {
+    Comment.joins(:comment_reveals)
+      .joins("JOIN contests_users hint_cu ON hint_cu.user_id = comment_reveals.user_id " \
+             "AND hint_cu.contest_id = #{contest.id.to_i}")
+      .where(commentable: problems, commentable_type: 'Problem')
+      .where('comment_reveals.created_at >= DATE_SUB(?, INTERVAL IFNULL(hint_cu.start_offset_second, 0) SECOND)', contest.start)
+      .where('comment_reveals.created_at <= DATE_ADD(?, INTERVAL IFNULL(hint_cu.extra_time_second, 0) SECOND)', contest.stop)
+      .group('comment_reveals.user_id', :commentable_id)
+  }
+
   scope :hints, -> { where(kind: HINT_KIND.keys) }
 
   scope :llm_assists_for_submissions, ->(submissions) {

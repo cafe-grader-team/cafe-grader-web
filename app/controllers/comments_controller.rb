@@ -250,7 +250,7 @@ class CommentsController < ApplicationController
       end
 
       # Same predicate the picker uses to disable Get (request in flight, model
-      # already answered, full score, spend cap) — the form can be replayed.
+      # already answered, full score, spending limit) — the form can be replayed.
       if (reason = @submission.llm_assist_refusal(@llm_model))
         @toast = {title: 'LLM Assist Error', body: "Request refused: #{reason}", type: 'alert' }
         render 'submission_and_toast', status: :unprocessable_entity and return

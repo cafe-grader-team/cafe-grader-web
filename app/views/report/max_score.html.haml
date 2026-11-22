@@ -1,5 +1,5 @@
 = render 'page_header', title: 'Best Score', path: max_score_report_path
-= render 'contest_scope', path: max_score_report_path
+= render 'contest_scope', path: max_score_report_path, show_deduction_cap: true
 
 = form_with id: 'max-score-filter-form', url: max_score_table_report_path, data: {turbo: true, controller: 'init-ui-component'} do |f|
   -# with a contest picked the cards stay in the DOM (their JS feeds the
@@ -12,8 +12,19 @@
       = render partial: 'submission_range'
     .col-lg-4
       = render partial: 'user_select'
+  - unless @report_contest
+    .row.mt-2
+      .col-lg-4
+        .input-group.input-group-sm
+          %label.input-group-text{for: 'deduction_cap'} Deduction cap
+          = number_field_tag :deduction_cap, params[:deduction_cap], min: 0, max: HelpDeduction::FULL_SCORE, step: 1,
+            class: 'form-control', placeholder: 'none'
+          %span.input-group-text points per problem
 = render 'empty_report_notice'
-= render 'report_help'
+- if @report_contest
+  = render 'report_help'
+- else
+  = render 'report_help', extra_hint: "Deduction cap: the most hints and AI help together take off one problem; blank = no cap. This page charges only the AI help used on each student's best-scoring submission, so a capped total here can differ from a contest's own report."
 .mt-3
   = turbo_frame_tag "max_score_result", data: {turbo: "true"} do
-    = render partial: 'score_table', locals: {problems: @table_problems, link_for_data: max_score_query_report_path(report_contest_query), contest_id: @report_contest&.id, refresh_submit_form_id: 'max-score-filter-form' }
+    = render partial: 'score_table', locals: {problems: @table_problems, link_for_data: max_score_query_report_path(report_contest_query.merge(deduction_cap_query)), contest_id: @report_contest&.id, refresh_submit_form_id: 'max-score-filter-form' }

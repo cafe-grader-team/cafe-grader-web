@@ -20,7 +20,7 @@ class ReportController < ApplicationController
   before_action :admin_authorization, only: [:problem_hof_recompute]
   before_action :can_view_problem, only: [:problem_hof_view]
 
-  helper_method :report_contest_query
+  helper_method :report_contest_query, :deduction_cap_query
 
   # render the UI for filtering and the initial blank table
   def max_score
@@ -34,7 +34,7 @@ class ReportController < ApplicationController
 
   # turbo update the table (also with blank table but with columns)
   def max_score_table
-    render turbo_stream: turbo_stream.update(:max_score_result, partial: 'score_table', locals: {problems: @problems, link_for_data: max_score_query_report_path(report_contest_query), contest_id: @report_contest&.id, refresh_submit_form_id: 'max-score-filter-form' })
+    render turbo_stream: turbo_stream.update(:max_score_result, partial: 'score_table', locals: {problems: @problems, link_for_data: max_score_query_report_path(report_contest_query.merge(deduction_cap_query)), contest_id: @report_contest&.id, refresh_submit_form_id: 'max-score-filter-form' })
   end
 
   def max_score_query
@@ -64,7 +64,8 @@ class ReportController < ApplicationController
     records = submissions.max_score_report(@problems, start, stop)
 
     # calculate the maximum score
-    @result = Submission.calculate_max_score(records, @users, @problems)
+    @result = Submission.calculate_max_score(records, @users, @problems,
+                                             deduction_cap: HelpDeduction.parse_cap(params[:deduction_cap]))
 
     render json: {
       # for data, we need some alias as we use the same render for both the report and contest stat,
@@ -664,6 +665,14 @@ ORDER BY submitted_at
     # Query params that carry the contest scope into the table's data URL.
     def report_contest_query
       @report_contest ? {contest: @report_contest.id} : {}
+    end
+
+    # The global Best Score's deduction cap box, carried into the table's
+    # data URL. A contest scope uses the contest's own cap instead
+    # (Contest#score_report), so it never carries one.
+    def deduction_cap_query
+      cap = HelpDeduction.parse_cap(params[:deduction_cap])
+      (@report_contest || cap.nil?) ? {} : {deduction_cap: cap}
     end
 
     # The contest's problems the user may report on, in contest order.

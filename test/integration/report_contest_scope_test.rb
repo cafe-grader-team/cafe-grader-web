@@ -190,4 +190,70 @@ class ReportContestScopeTest < ActionDispatch::IntegrationTest
     assert_match "AI Usage page", response.body
     assert_select "select#report-contest", 0
   end
+
+  # --- deduction cap (spec 2026-11-21) ---
+
+  def charge_ai(sub, cost)
+    sub.comments.create!(user: sub.user, kind: 'llm_assist', status: 'ok', cost: cost, title: 't', body: 'b')
+  end
+
+  test "Best Score with a contest uses the contest's deduction cap, never a deduction_cap param" do
+    sign_in_as("admin", "admin")
+    @contest.update!(deduction_cap: 30)
+    charge_ai(seed_sub(@james, @add, @contest.start + 5.minutes, points: 90), 45)
+    post max_score_query_report_path(format: :json), params: {contest: @contest.id, deduction_cap: 0}, as: :json
+    row = response.parsed_body["result"]["score"]["james"]
+    assert_equal 70.0, row["final_score_#{@add.id}"].to_f
+    assert_equal JSON.parse(@contest.score_report.to_json)["score"]["james"], row
+  end
+
+  test "global Best Score applies its deduction_cap param and ignores contests' caps" do
+    sign_in_as("admin", "admin")
+    @contest.update!(deduction_cap: 10)
+    charge_ai(seed_sub(@james, @add, 10.minutes.ago, points: 90), 45)
+    query = {probs: {use: 'ids', ids: [@add.id]}, users: {use: 'enabled'}}
+
+    post max_score_query_report_path(format: :json), params: query, as: :json
+    assert_equal 55.0, response.parsed_body["result"]["score"]["james"]["final_score_#{@add.id}"].to_f
+
+    post max_score_query_report_path(format: :json), params: query.merge(deduction_cap: 30), as: :json
+    row = response.parsed_body["result"]["score"]["james"]
+    assert_equal 70.0, row["final_score_#{@add.id}"].to_f
+    assert_equal 30.0, row["total_cost_#{@add.id}"].to_f
+
+    post max_score_query_report_path(format: :json), params: query.merge(deduction_cap: 'abc'), as: :json
+    assert_equal 55.0, response.parsed_body["result"]["score"]["james"]["final_score_#{@add.id}"].to_f
+  end
+
+  test "the global Best Score page has a deduction cap box that reaches the table's data URL" do
+    sign_in_as("admin", "admin")
+    get max_score_report_path
+    assert_select "input[name=deduction_cap]", 1
+
+    post max_score_table_report_path, params: {deduction_cap: "30"}, as: :turbo_stream
+    assert_match "deduction_cap=30", response.body
+    post max_score_table_report_path, params: {deduction_cap: "abc"}, as: :turbo_stream
+    assert_no_match "deduction_cap=", response.body
+  end
+
+  test "a contest-scoped Best Score has no cap box and names the contest's cap" do
+    sign_in_as("admin", "admin")
+    get max_score_report_path(contest: @contest.id)
+    assert_select "input[name=deduction_cap]", 0
+    assert_select "#report-contest-scope", text: /no deduction cap/
+
+    @contest.update!(deduction_cap: 30)
+    get max_score_report_path(contest: @contest.id)
+    assert_select "#report-contest-scope", text: /deduction cap 30/
+  end
+
+  test "only Best Score's scope card mentions the deduction cap" do
+    sign_in_as("admin", "admin")
+    @contest.update!(deduction_cap: 30)
+    get activity_report_path(contest: @contest.id)
+    assert_select "#report-contest-scope", 1
+    assert_no_match "deduction cap", response.body
+    get submission_report_path(contest: @contest.id)
+    assert_no_match "deduction cap", response.body
+  end
 end

@@ -274,7 +274,20 @@ class SubmissionTest < ActiveSupport::TestCase
                         .max_score_report([sub.problem], sub.submitted_at - 1.day, sub.submitted_at + 1.day)
     row = records.to_a.find { |r| r.sub_id == sub.id }
     assert_equal 120.0, row.llm_cost.to_f
-    assert_equal 0, row.final_score.to_d
+    result = Submission.calculate_max_score(records, [users(:john)], [sub.problem])
+    assert_equal 0, result[:score]['john']["final_score_#{sub.problem_id}"].to_f
+  end
+
+  test "calculate_max_score applies a deduction cap and reports the raw cost beside it" do
+    sub = submissions(:add1_by_john)
+    sub.update_columns(points: 90)
+    sub.comments.create!(user: users(:john), kind: 'llm_assist', status: 'ok', cost: 60, title: 'a', body: 'hint')
+    records = Submission.where(id: sub.id)
+                        .max_score_report([sub.problem], sub.submitted_at - 1.day, sub.submitted_at + 1.day)
+    row = Submission.calculate_max_score(records, [users(:john)], [sub.problem], deduction_cap: 30)[:score]['john']
+    assert_equal 70, row["final_score_#{sub.problem_id}"].to_f
+    assert_equal 30, row["total_cost_#{sub.problem_id}"].to_f
+    assert_equal 60, row["raw_cost_#{sub.problem_id}"].to_f
   end
 
   # --- llm_assist_refusal (picker guards) ---
@@ -319,6 +332,71 @@ class SubmissionTest < ActiveSupport::TestCase
     assist_comment(earlier, status: 'ok', model: 'a', cost: 60)
     assist_comment(earlier, status: 'ok', model: 'b', cost: 40)
     assert_match(/spent/i, sub.llm_assist_refusal('m'))
+  end
+
+  # --- spending limit (HelpDeduction, spec 2026-11-21) ---
+
+  def spend_ai(sub, cost, model: 'a')
+    earlier = Submission.new(user: sub.user, problem: sub.problem, language: sub.language, source: 'x',
+                             submitted_at: sub.submitted_at - 1.hour)
+    earlier.save!(validate: false)
+    assist_comment(earlier, status: 'ok', model: model, cost: cost)
+  end
+
+  test "the spending-limit refusal names the limit" do
+    sub = submissions(:add1_by_john)
+    sub.update_columns(points: 40)
+    spend_ai(sub, 100)
+    assert_equal "already spent 100 of the 100 points of AI help allowed on this problem", sub.llm_assist_refusal('m')
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "the site spending limit can be raised above 100" do
+    sub = submissions(:add1_by_john)
+    sub.update_columns(points: 40)
+    spend_ai(sub, 120)
+    assert_match(/of the 100 points/, sub.llm_assist_refusal('m'))
+    set_grader_config('system.llm_assist_spending_limit', 150)
+    assert_nil sub.llm_assist_refusal('m')
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "a running contest's spending limit applies, above or below the site's" do
+    set_grader_config('system.mode', 'contest')
+    sub = submissions(:add1_by_james)                 # james is in contest_a, which holds prob_add
+    sub.update_columns(points: 40)
+    spend_ai(sub, 100)
+    contests(:contest_a).update!(assist_spending_limit: 150)
+    assert_nil sub.llm_assist_refusal('m')
+    contests(:contest_a).update!(assist_spending_limit: 50)
+    assert_match(/already spent 100 of the 50 points/, sub.llm_assist_refusal('m'))
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "with two running contests the largest spending limit wins, a blank one meaning the site's" do
+    set_grader_config('system.mode', 'contest')
+    sub = submissions(:add1_by_james).dup
+    sub.assign_attributes(user: users(:jack), problem: problems(:easy), points: 40, number: nil)
+    sub.save!(validate: false)                        # easy is in contest_a and contest_b, jack in both
+    contests(:contest_a).update!(assist_spending_limit: 50)
+    spend_ai(sub, 60)
+    assert_nil sub.llm_assist_refusal('m'), "contest_b is blank, so the site's 100 applies"
+    spend_ai(sub, 40, model: 'b')
+    assert_match(/of the 100 points/, sub.llm_assist_refusal('m'))
+  ensure
+    reset_grader_config_cache
+  end
+
+  test "a spending limit of 0 refuses with a plain message" do
+    sub = submissions(:add1_by_john)
+    sub.update_columns(points: 40)
+    set_grader_config('system.llm_assist_spending_limit', 0)
+    assert_equal "no AI help is allowed on this problem", sub.llm_assist_refusal('m')
+  ensure
+    reset_grader_config_cache
   end
 
   test "judge_backlog lists ungraded non-viva submissions only" do

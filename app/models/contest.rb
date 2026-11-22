@@ -1,7 +1,8 @@
 class Contest < ApplicationRecord
   include Auditable
   audited only: %i[name enabled description start stop finalized
-                   pre_contest_seconds post_contest_seconds allow_hint outside_login_off]
+                   pre_contest_seconds post_contest_seconds allow_hint outside_login_off
+                   deduction_cap assist_spending_limit]
 
   has_many :contests_problems, class_name: 'ContestProblem', dependent: :destroy
   has_many :contests_users, class_name: 'ContestUser', dependent: :destroy
@@ -42,6 +43,10 @@ class Contest < ApplicationRecord
   # validates the name, (also using custom validator)
   validates :name, presence: true, uniqueness: true, name_format: true
   validate :outside_login_off_needs_stop
+  # Help-deduction settings (spec 2026-11-21): blank = no cap / the site's
+  # spending limit.
+  validates :deduction_cap, numericality: { only_integer: true, in: 0..HelpDeduction::FULL_SCORE }, allow_nil: true
+  validates :assist_spending_limit, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   AddResult = Struct.new(:added, :skipped, :status, :model)
 
@@ -259,7 +264,8 @@ class Contest < ApplicationRecord
       .select('COUNT(comments.id) as llm_count')
       .select('user_id', 'problem_id')
 
-    hint_reveal = Comment.hint_reveal_for_problems(problems, (self.start)..(self.stop))
+    # each student's own window, start offset and extra time included
+    hint_reveal = Comment.hint_reveal_in_contest_windows(self, problems)
       .select('comment_reveals.user_id as user_id')
       .select('comments.commentable_id as problem_id')
       .select('SUM(comments.cost) as hint_cost')
@@ -283,7 +289,6 @@ class Contest < ApplicationRecord
       .select('submissions.user_id,users_submissions.login,users_submissions.full_name,users_submissions.remark')
       .select('problems.name')
       .select('max_score')
-      .select('LEAST(max_score,100.0-IFNULL(LLM_ASSIST.llm_cost,0.0)-IFNULL(HINT_REVEAL.hint_cost,0.0)) as final_score')
       .select('submitted_at')
       .select('submissions.id as sub_id')
       .select('submissions.problem_id,submissions.user_id')
@@ -291,7 +296,7 @@ class Contest < ApplicationRecord
       .select('HINT_REVEAL.hint_cost, HINT_REVEAL.hint_count')
 
 
-    return Submission.calculate_max_score(records, users, problems)
+    return Submission.calculate_max_score(records, users, problems, deduction_cap: deduction_cap)
   end
 
   # The members a scoreboard or a contest-scoped report is about: the

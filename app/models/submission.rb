@@ -188,9 +188,8 @@ class Submission < ApplicationRecord
       .select('submissions.user_id,users.login,users.full_name,users.remark')
       .select('problems.name')
       .select('max_score')
-      # floored at 0: a student who bought more assists than the problem is worth
-      # (observed: 46 requests = 460 points on one problem) must not go negative
-      .select('GREATEST(0, LEAST(max_score,100.0-IFNULL(LLM_ASSIST.llm_cost,0.0)-IFNULL(HINT_REVEAL.hint_cost,0.0))) as final_score')
+      # the final score is not computed here: calculate_max_score applies the
+      # help-deduction rule (HelpDeduction) in Ruby, with the deduction cap
       .select('submitted_at')
       .select('submissions.id as sub_id')
       .select('submissions.problem_id,submissions.user_id')
@@ -458,10 +457,10 @@ class Submission < ApplicationRecord
     comments.where(status: 'processing').any?
   end
 
-  # Full score on the 0–100 points scale. It is also the most a student can
-  # lose to assist penalties (max_score_report floors final_score at 0), so
-  # assists bought past it cost the student nothing and the deployment an API
-  # call each — the spend cap below.
+  # Full score on the 0–100 points scale: a submission at it cannot ask for
+  # AI help. The spending limit used to be this constant; it is now
+  # HelpDeduction.spending_limit_for (a contest's, else the site setting
+  # system.llm_assist_spending_limit, 100 by default).
   LLM_ASSIST_FULL_SCORE = 100
 
   # Why the assist picker should not offer `model` for this submission, or nil
@@ -476,11 +475,15 @@ class Submission < ApplicationRecord
     return "#{model} already answered" if assists.where(status: 'ok', llm_model: model).exists?
     return 'already full score' if points.to_f >= LLM_ASSIST_FULL_SCORE
 
-    spent = Comment.where(kind: 'llm_assist', status: 'ok', commentable_type: 'Submission')
-                   .where(commentable_id: Submission.where(user_id: user_id, problem_id: problem_id).select(:id))
-                   .sum(:cost)
-    if spent >= LLM_ASSIST_FULL_SCORE
-      return "already spent #{spent.to_i} points on AI help for this problem"
+    # the spending limit (HelpDeduction, spec 2026-11-21): the owner's running
+    # contests' limit, else the site setting; all AI help on the problem, ever
+    running = HelpDeduction.running_contests_by_problem(user, [problem_id])[problem_id] || []
+    limit = HelpDeduction.spending_limit_for(running)
+    return 'no AI help is allowed on this problem' if limit.zero?
+
+    spent = HelpDeduction.ai_spent(user, problem_id)
+    if spent >= limit
+      return "already spent #{spent.to_i} of the #{limit} points of AI help allowed on this problem"
     end
     nil
   end
@@ -502,7 +505,11 @@ class Submission < ApplicationRecord
   #     final_#{prob.id}:      # the sub_id of that score
   #     ...
   # }
-  def self.calculate_max_score(records, users, problems, with_comments: true)
+  #
+  # deduction_cap: the most hints + AI help count against a problem's full
+  # score (HelpDeduction, spec 2026-11-21); nil = no cap. total_cost_<id> is
+  # the counted deduction, raw_cost_<id> the uncapped hint + AI points.
+  def self.calculate_max_score(records, users, problems, with_comments: true, deduction_cap: nil)
     result = {score: Hash.new { |h, k| h[k] = {} },
               stat: Hash.new { |h, k| h[k] = { zero: 0, partial: 0, full: 0, sum: 0, sum_deduced: 0, score: [] } } }
 
@@ -530,10 +537,16 @@ class Submission < ApplicationRecord
           result[:score][sub.login]["llm_cost_#{sub.problem_id}"] = sub.llm_cost
           result[:score][sub.login]["hint_count_#{sub.problem_id}"] = sub.hint_count
           result[:score][sub.login]["hint_cost_#{sub.problem_id}"] = sub.hint_cost
-          result[:score][sub.login]["final_score_#{sub.problem_id}"] = sub.final_score.to_d
+          result[:score][sub.login]["final_score_#{sub.problem_id}"] =
+            HelpDeduction.final_score(sub.max_score, sub.hint_cost, sub.llm_cost, deduction_cap).to_d
 
           result[:score][sub.login]["total_cost_#{sub.problem_id}"] = nil
-          result[:score][sub.login]["total_cost_#{sub.problem_id}"] = 0.to_d + (sub.llm_cost || 0.0) + (sub.hint_cost || 0.0) unless sub.llm_cost.nil? && sub.hint_cost.nil?
+          result[:score][sub.login]["raw_cost_#{sub.problem_id}"] = nil
+          unless sub.llm_cost.nil? && sub.hint_cost.nil?
+            result[:score][sub.login]["total_cost_#{sub.problem_id}"] =
+              HelpDeduction.deduction(sub.hint_cost, sub.llm_cost, deduction_cap).to_d
+            result[:score][sub.login]["raw_cost_#{sub.problem_id}"] = (sub.hint_cost.to_f + sub.llm_cost.to_f).to_d
+          end
         end
       end
     end

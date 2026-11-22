@@ -77,6 +77,10 @@
             = key_pair(label: 'Start Time', value: @contest&.start&.strftime("%Y-%b-%d %H:%M"), icon: :schedule)
             = key_pair(label: 'Finish Time', value: @contest&.stop&.strftime("%Y-%b-%d %H:%M"), icon: :event_available)
             = key_pair(obj: @contest, field: :finalized, as: :yes_no, label: 'Finalized', icon: :lock)
+            = key_pair(label: 'Deduction cap', icon: :price_check,
+                       value: @contest.deduction_cap ? "#{@contest.deduction_cap} points per problem" : 'none')
+            = key_pair(label: 'AI help spending limit', icon: :savings,
+                       value: @contest.assist_spending_limit ? "#{@contest.assist_spending_limit} points per problem" : "site setting (#{HelpDeduction.site_spending_limit})")
     .col-md-6
       .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
         .card-body.p-4

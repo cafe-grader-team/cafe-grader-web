@@ -1,8 +1,8 @@
 -# Under the title of a contest-scoped report: what the contest fixes (its
 -# problems, its students, its window) and the way back to the filter cards.
 -# Also the notice when ?contest= named a contest the viewer cannot manage:
--# the id is ignored and the filter cards stay in force. Local: path (this
--# report's page path, for the clear link).
+-# the id is ignored and the filter cards stay in force. Locals: path (this
+-# report's page path, for the clear link); show_deduction_cap (Best Score only).
 - if @report_contest
   - c = @report_contest
   - stop_format = c.stop.to_date == c.start.to_date ? '%H:%M' : '%Y-%m-%d %H:%M'
@@ -14,6 +14,8 @@
         = "— #{pluralize(c.problems.count, 'problem')} · #{pluralize(c.students.count, 'student')} · #{c.start.strftime('%Y-%m-%d %H:%M')}–#{c.stop.strftime(stop_format)}"
         - if c.per_user_windows?
           plus each student's own start offset and extra time
+        - if local_assigns[:show_deduction_cap]
+          = c.deduction_cap ? "· deduction cap #{c.deduction_cap}" : '· no deduction cap'
       = link_to path, class: 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1' do
         %span.mi.md-18 close
         Clear contest
