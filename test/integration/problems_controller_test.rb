@@ -5,7 +5,7 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get problems_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user is redirected from problems index" do

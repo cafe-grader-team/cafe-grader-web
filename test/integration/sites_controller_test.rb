@@ -10,7 +10,7 @@ class SitesControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot list sites" do
     get sites_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user cannot list sites" do

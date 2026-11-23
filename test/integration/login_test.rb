@@ -31,4 +31,16 @@ class LoginTest < ActionDispatch::IntegrationTest
     post login_login_path, params: { login: "admin", password: "admin" }
     assert_redirected_to list_main_path
   end
+
+  test "logging in starts a fresh session: nothing from the browser's previous user carries over" do
+    set_grader_config('system.mode', 'contest')
+    post login_login_path, params: { login: "jack", password: "morning" }
+    get list_main_path
+    assert_not_nil session[:contest_id], "jack's session picks a contest"
+    post login_login_path, params: { login: "james", password: "morning" }   # no logout in between
+    assert_nil session[:contest_id]
+    assert_equal users(:james).id, session[:user_id]
+  ensure
+    reset_grader_config_cache
+  end
 end

@@ -5,7 +5,7 @@ class SubmissionsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get submission_path(submissions(:add1_by_admin))
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "user can view own submission" do

@@ -11,29 +11,34 @@ class LoginController < ApplicationController
 
   def login
     if login_throttled?
-      redirect_to login_main_path, alert: 'Too many failed login attempts. Please wait a few minutes and try again.'
+      redirect_to login_main_path(next_query), alert: 'Too many failed login attempts. Please wait a few minutes and try again.'
       return
     end
 
     result = User.login_result(params[:login], params[:password])
     if result.refusal
       record_refused_login!
-      redirect_to login_main_path, alert: User.outside_login_refused_message
+      redirect_to login_main_path(next_query), alert: User.outside_login_refused_message
       return
     end
 
     user = result.user || get_authenticated_user_via_authenticators(params[:login], params[:password])
     unless user
       record_login_failure!
-      redirect_to login_main_path, alert: 'Wrong password'
+      redirect_to login_main_path(next_query), alert: 'Wrong password'
       return
     end
     clear_login_failures!
 
     if (!GraderConfiguration['right.bypass_agreement']) && (!params[:accept_agree]) && !user.admin?
-      redirect_to login_main_path, alert: 'You must accept the agreement before logging in'
+      redirect_to login_main_path(next_query), alert: 'You must accept the agreement before logging in'
       return
     end
+
+    # Start every login with an empty session, so nothing the browser's
+    # previous user left behind (their chosen contest, the admin flag) carries
+    # over. The device-lock cookie (uuid) is a separate cookie and is kept.
+    reset_session
 
     # The device lock (users.last_ip) is not touched here: check_valid_login
     # records the first browser seen after login and refuses every other one.
@@ -47,7 +52,8 @@ class LoginController < ApplicationController
     # save login information
     Login.create(user_id: user.id, ip_address: request.remote_ip, cookie: cookies.encrypted[:uuid])
 
-    redirect_to controller: 'main', action: 'list'
+    # back to the page that sent them here (issue #65), else the problem list
+    redirect_to safe_return_path(params[:next]) || list_main_path
   end
 
   def site_login
@@ -87,4 +93,12 @@ class LoginController < ApplicationController
     end
     user
   end
+
+  private
+
+    # ?next= carried through a failed attempt, so one typo does not lose it
+    def next_query
+      (back = safe_return_path(params[:next])) ? {next: back} : {}
+    end
+
 end

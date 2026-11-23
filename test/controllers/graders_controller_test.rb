@@ -5,7 +5,7 @@ class GradersControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get grader_processes_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user is redirected" do

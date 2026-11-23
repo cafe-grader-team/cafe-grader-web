@@ -5,7 +5,7 @@ class ContestsAiUsageTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated is redirected" do
     get ai_usage_contest_path(@contest)
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "plain user cannot view" do

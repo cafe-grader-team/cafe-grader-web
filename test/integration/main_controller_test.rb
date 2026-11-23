@@ -3,7 +3,7 @@ require "test_helper"
 class MainControllerTest < ActionDispatch::IntegrationTest
   test "unauthenticated user is redirected to login" do
     get list_main_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "authenticated user can see list page" do

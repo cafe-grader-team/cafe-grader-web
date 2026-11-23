@@ -7,6 +7,7 @@ class MainController < ApplicationController
   # front page
   def login
     @remote_ip = request.remote_ip
+    @next_path = safe_return_path(params[:next])   # where to go after login (issue #65)
 
     @announcements = Announcement.frontpage.consider_contest.default_order
     render action: 'login', locals: {skip_header: true}

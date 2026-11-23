@@ -11,6 +11,13 @@ module SignInHelper
   def sign_in_as(user, password)
     post login_login_path, params: { login: user, password: password }
   end
+
+  # Redirected to the login page, whatever ?next= it carries (issue #65 adds
+  # the page to return to; test/integration/login_return_test.rb pins that).
+  def assert_redirected_to_login
+    assert_response :redirect
+    assert_equal login_main_path, URI(response.location).path
+  end
 end
 
 module GraderConfigHelper

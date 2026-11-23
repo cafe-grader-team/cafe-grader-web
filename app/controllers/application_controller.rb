@@ -52,10 +52,13 @@ class ApplicationController < ActionController::Base
   end
 
   # report and redirect for unauthorized activities
-  def unauthorized_redirect(logout: false, msg: 'You are not authorized to view the page you requested.')
+  # return_here: the refusal is one a login can fix (not logged in, session
+  # expired), so the login page carries ?next= back to this request (issue #65).
+  def unauthorized_redirect(logout: false, msg: 'You are not authorized to view the page you requested.', return_here: false)
     if logout || @current_user.nil?
       session[:user_id] = nil
-      redirect_to login_main_path, alert: msg
+      back = return_here ? login_return_path : nil
+      redirect_to login_main_path(back ? {next: back} : {}), alert: msg
     else
       redirect_to list_main_path, alert: msg
     end
@@ -81,13 +84,15 @@ class ApplicationController < ActionController::Base
       return @current_contest = nil
     end
 
-    @current_contest ||= Contest.where(id: session[:contest_id]).first
-
-    # if the session contest is disabled, pick the earliest enabled one (or nil)
-    unless @current_contest && @current_contest.enabled?
-      @current_contest = @current_user.contests.where(enabled: true).order(:stop).first
-      session[:contest_id] = @current_contest.id if @current_contest
-    end
+    # Only an enabled contest the user is an enabled member of counts: the
+    # session can still name one they were removed from (compas 2026-11-08 —
+    # their check-ins then wrote Last Seen nowhere). The session's choice
+    # first, else a contest running for them now, else the earliest-ending one.
+    mine = @current_user.contests.where(enabled: true).where(contests_users: { enabled: true })
+    @current_contest ||= mine.find_by(id: session[:contest_id]) if session[:contest_id]
+    @current_contest ||= @current_user.active_contests.where(contests_users: { enabled: true }).reorder('contests.stop').first ||
+                         mine.order(:stop).first
+    session[:contest_id] = @current_contest&.id
 
     # get the current contests_users
     @current_contest_user = @current_contest.contests_users.where(user: @current_user).take if @current_contest
@@ -163,13 +168,41 @@ class ApplicationController < ActionController::Base
   # redirect to root (and also force logout)
   # if the user is not logged_in or the system is in "ADMIN ONLY" mode
 
+  # Issue #65: where a login should bring this request back to, or nil. A
+  # page visit returns to itself; a form submit (POST/PUT/PATCH/DELETE) or a
+  # turbo-frame load returns to the page that held it (the Referer, which a
+  # browser may also leave out); a background request (XHR, JSON) to nothing.
+  def login_return_path
+    return nil if request.xhr? || request.format.json?
+    if request.get? && request.format.html? && request.headers['Turbo-Frame'].blank?
+      safe_return_path(request.fullpath)
+    else
+      uri = URI.parse(request.referer.to_s) rescue nil
+      return nil unless uri&.host && uri.host == request.host && uri.port == request.port
+      safe_return_path(uri.request_uri)
+    end
+  end
+
+  # A path on this grader a login may redirect to, or nil: one leading "/",
+  # no scheme or host (an off-site next would be an open redirect), and not
+  # the front, login or logout page itself.
+  def safe_return_path(path)
+    path = path.to_s
+    return nil unless path.start_with?('/') && !path.start_with?('//') && !path.include?('\\')
+    uri = URI.parse(path) rescue nil
+    return nil if uri.nil? || uri.scheme || uri.host
+    local = uri.path.delete_prefix(request.script_name.to_s)
+    return nil if local.empty? || local == '/' || local.match?(%r{\A/(main/(login|logout)|login)(/|\.|\z)})
+    path
+  end
+
   def check_valid_login
     # check if logged in
     unless @current_user
       if GraderConfiguration.single_user_mode?
-        unauthorized_redirect(msg: 'You need to log in but the system does not permit usage at this time', logout: true)
+        unauthorized_redirect(msg: 'You need to log in but the system does not permit usage at this time', logout: true, return_here: true)
       else
-        unauthorized_redirect(msg: 'You need to log in', logout: true)
+        unauthorized_redirect(msg: 'You need to log in', logout: true, return_here: true)
       end
       return false
     end
@@ -178,7 +211,7 @@ class ApplicationController < ActionController::Base
     if !@current_user.admin?
       unless session[:last_login] &&
           Time.new(session[:last_login]) >= GraderConfiguration.minimum_last_login_time
-        unauthorized_redirect(msg: 'Your session is expired, please login again.', logout: true)
+        unauthorized_redirect(msg: 'Your session is expired, please login again.', logout: true, return_here: true)
         return
       end
     end

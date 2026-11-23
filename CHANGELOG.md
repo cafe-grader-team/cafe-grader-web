@@ -11,6 +11,13 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 ## [Unreleased]
 
 ### Added
+- **After logging in you return to the page you were going to** (issue #65).
+  A page that needs a login now sends you to the login page with `?next=`
+  and brings you back after the login, also after a mistyped password. A
+  button pressed while logged out (say, after the session expired) brings you
+  back to the page that held it, if the browser says which page that was.
+  Only pages on this grader are followed; anything off-site, and the login
+  and logout pages themselves, go to the problem list. (rev 2335)
 - **Deduction cap and AI-help spending limit per contest.** The contest edit
   page has two new fields. *Deduction cap*: the most hints and AI help together
   can take off one problem's full score (blank = no cap). Watch, Best Score
@@ -66,6 +73,13 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **Last Seen and the navbar countdown could follow a contest the student
+  was no longer in.** The session remembered a chosen contest without
+  checking membership: a student removed from a contest (for example by a
+  re-import) kept it, so their check-ins wrote Last Seen nowhere and the
+  countdown ran on that contest's times, ignoring their extra time. Now only
+  an enabled contest the student is an enabled member of is used, a running
+  one first. (rev 2335)
 - **The delete confirmation on the Contests page names the contest**
   ("Really delete contest "X"?" instead of "Really delete this contest?").
   Behind it, the JavaScript HTML escaper used by the data tables did not
@@ -171,6 +185,9 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
+- **Logging in starts a fresh session.** Nothing the browser's previous user
+  left behind (their chosen contest, the admin flag) carries over to the next
+  login on that browser. (rev 2335)
 - **Contest comments moved into their own tab.** The contest page's Comments
   card is now a fourth tab beside Users, Problems and Import; the tab label
   shows how many comments there are. (rev 2334)

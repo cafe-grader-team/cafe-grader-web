@@ -15,7 +15,7 @@ class AuditLogsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot list audit logs" do
     get audit_logs_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user cannot list audit logs" do

@@ -16,7 +16,7 @@ class VivaSessionsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot view viva session" do
     get viva_submission_path(@owner_sub)
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "owner can view their viva session" do

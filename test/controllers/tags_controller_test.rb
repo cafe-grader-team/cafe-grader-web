@@ -5,7 +5,7 @@ class TagsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot list tags" do
     get tags_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user cannot list tags" do

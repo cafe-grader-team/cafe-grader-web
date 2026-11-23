@@ -10,7 +10,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot list messages" do
     get messages_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user can list own messages" do

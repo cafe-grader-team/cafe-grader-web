@@ -19,7 +19,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot edit a hint" do
     get edit_problem_hint_index_path(problem_id: @prob.id, id: @hint.id)
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user (non-editor) cannot edit a hint" do
