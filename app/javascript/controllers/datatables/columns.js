@@ -175,7 +175,7 @@ export const columns = {
     manageLink: { data: null, render: cafe.dt.render.link(`${cafe.msi('settings')} Manage`, { path: AppRoute.contest, className: 'btn btn-flex btn-outline-primary border-0' }), className: 'align-middle py-1' },
     watchLink: { data: null, render: cafe.dt.render.link(`${cafe.msi('summarize')} Watch`, { path: AppRoute.viewContest, className: 'btn btn-flex btn-outline-success border-0' }), className: 'align-middle py-1' },
     cloneButton: { data: null, render: cafe.dt.render.link(`${cafe.msi('file_copy', 'md-18')} Clone`, { path: AppRoute.cloneContest, className: 'btn btn-sm btn-success', prefetch: false, turboStream: true }), className: 'align-middle py-1' },
-    deleteButton: { data: null, render: cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, method: 'delete', confirm: 'Really delete this contest?', className: 'btn btn-sm btn-danger', }), className: 'align-middle py-1' },
+    deleteButton: { data: null, render: cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, method: 'delete', confirm: (row) => `Really delete contest "${row.name}"?`, className: 'btn btn-sm btn-danger', }), className: 'align-middle py-1' },
     actionButton: {
       data: null, render: function (data, type, row, meta) {
 
@@ -188,7 +188,7 @@ export const columns = {
 
         // Dropdown actions
         const clone_button = cafe.dt.render.link(`${cafe.msi('file_copy', 'md-18')} Clone`, { path: AppRoute.cloneContest, className: 'dropdown-item d-inline-flex align-items-center', prefetch: false, turboStream: true })(data, type, row, meta)
-        const delete_button = cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, className: 'dropdown-item text-danger d-inline-flex align-items-center', method: 'delete', confirm: 'Really delete this contest?' })(data, type, row, meta)
+        const delete_button = cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, className: 'dropdown-item text-danger d-inline-flex align-items-center', method: 'delete', confirm: (row) => `Really delete contest "${row.name}"?` })(data, type, row, meta)
 
         let dropdown = `<div class="dropdown d-inline-flex align-items-center">` +
           `  <a type="button" class="btn btn-outline-secondary link-flex rounded-1 border-0 p-1" data-bs-toggle="dropdown">` +

@@ -97,7 +97,9 @@ function dt_link_renderer(label,{className = '', path = '#', replace_pattern = '
     if (replace_field && replace_pattern) {
       href = path.replace(replace_pattern,row[replace_field])
     }
-    const dataConfirm = data_tag_unless_null(confirm,'turbo-confirm')
+    // confirm may be a function of the row, to name the record in the popup
+    const confirmText = (typeof confirm === 'function') ? confirm(row) : confirm
+    const dataConfirm = data_tag_unless_null(confirmText,'turbo-confirm')
     let link_text = (label === null) ? escapeHtml(data) : label
     return `<a href="${href}" class="${className}" ${dataConfirm} ${dataMethod} data-turbo="${turbo}" data-turbo-prefetch="${prefetch}" data-turbo-stream="${turboStream}"> ${link_text}</a>`
   }

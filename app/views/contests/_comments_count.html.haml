@@ -1,0 +1,5 @@
+-# The Comments tab's count badge (contests/show), replaced by
+-# ContestsController#render_comments after each add / delete. Hidden at 0.
+-# locals: contest
+- n = contest.comments.where(kind: :comment).count
+%span#contest-comments-count.badge.rounded-pill.text-bg-secondary{class: ('d-none' if n.zero?)}= n

@@ -657,6 +657,7 @@ class ContestsController < ApplicationController
       @toast = {title: title, body: body.to_s, type: type}
       render turbo_stream: [
         turbo_stream.replace('contest-comments', partial: 'contests/comments', locals: {contest: @contest}),
+        turbo_stream.replace('contest-comments-count', partial: 'contests/comments_count', locals: {contest: @contest}),
         turbo_stream.append('toast-area', partial: 'toast', locals: {toast: @toast})
       ]
     end

@@ -129,6 +129,13 @@
                   %span.mi
                     upload
                   Import
+            %li.nav-item
+              %button.nav-link{type: 'button', data: {bs_toggle: 'tab', bs_target: '#tab-contest-comments', action: 'shown.bs.tab->contest#tabChange'}}
+                .d-inline-flex.align-items-center.gap-1
+                  %span.mi
+                    forum
+                  Comments
+                  = render 'contests/comments_count', contest: @contest
           .tab-content
             -# ==========================================
             -# ---------- users pane ------------------
@@ -369,8 +376,8 @@
                           %li
                             %code.small user1,,late entry
                             adds user1 with a blank seat and "late entry" remark.
-
-  -# staff notes on the contest
-  .row.mb-4
-    .col-12
-      = render partial: 'contests/comments', locals: {contest: @contest}
+            -# ==========================================
+            -# ---------- staff comments ----------------
+            -# ==========================================
+            #tab-contest-comments.tab-pane.fade
+              = render partial: 'contests/comments', locals: {contest: @contest}

@@ -43,6 +43,17 @@ class ContestsTest < ApplicationSystemTestCase
 
   private
 
+  # The delete confirmation used to say only "Really delete this contest?",
+  # so nothing on the popup showed which row's Destroy had been clicked.
+  test "the contest delete confirmation names the contest" do
+    login("admin", "admin")
+    visit contests_path
+    row = find("tr", text: "contest_b", wait: 10)
+    within(row) { find("[data-bs-toggle=dropdown]").click }
+    within(row) { click_on "Destroy" }
+    assert_selector ".modal.show", text: 'Really delete contest "contest_b"?', wait: 5
+  end
+
   def login(username, password)
     visit root_path
     fill_in "Login", with: username

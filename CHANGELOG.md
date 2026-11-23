@@ -66,6 +66,12 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **The delete confirmation on the Contests page names the contest**
+  ("Really delete contest "X"?" instead of "Really delete this contest?").
+  Behind it, the JavaScript HTML escaper used by the data tables did not
+  escape quotes, so a value with `"` cut an attribute short; it now escapes
+  them, which also covers the "Remove … from this contest?" confirmations.
+  (rev 2334)
 - **Contest scores counted hints by the contest's own times.** Watch and
   Best Score for a contest ignored a hint revealed during a student's extra
   time or start offset; they now use each student's own window, as they
@@ -165,6 +171,9 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   (rev 2288)
 
 ### Changed
+- **Contest comments moved into their own tab.** The contest page's Comments
+  card is now a fourth tab beside Users, Problems and Import; the tab label
+  shows how many comments there are. (rev 2334)
 - **The AI usage page shows token counts.** The viva turns, assist requests
   and total AI cost tiles each add a line such as "1.23M in · 98.8k out
   tokens" (in = sent to the model, out = written by it); the grades tile says

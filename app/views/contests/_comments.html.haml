@@ -1,16 +1,12 @@
 -# Staff notes on a contest — issues to resolve, the after-action report
--# (design 2026-11-18). Shown only on the manage page, so only admins and the
+-# (design 2026-11-18). The Comments tab of the manage page (the tab label
+-# carries the count, contests/_comments_count), so only admins and the
 -# contest's editors ever see it. Redrawn whole by ContestsController
 -# #add_comment / #update_comment / #delete_comment.
 -# locals: contest
 - comments = contest.comments.where(kind: :comment).includes(:user).order(created_at: :desc, id: :desc)
-#contest-comments.card.shadow-sm
-  .card-body
-    %h5.fw-bold.text-dark.d-flex.align-items-center.gap-2.mb-1
-      %span.mi.text-secondary forum
-      Comments
-      - if comments.any?
-        %span.badge.rounded-pill.text-bg-secondary= comments.size
+#contest-comments
+  %div
     .text-secondary.small.mb-3
       Notes for staff: issues to resolve, what happened during the contest, the after-action report.
       Students never see these. Markdown is supported.
