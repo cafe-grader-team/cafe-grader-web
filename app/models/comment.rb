@@ -104,6 +104,15 @@ class Comment < ApplicationRecord
     commentable.comment_reveal_prerequisite_satisfied?(self, user)
   end
 
+  # May this user read the hint's text? Whoever acquired it, or whoever can
+  # edit its problem (its authors). Seeing the problem is not enough: until
+  # 2026-11-24 show_hint checked only that, so a hand-made request read any
+  # hint on the problem without paying for it.
+  def hint_readable_by?(user)
+    return false unless user
+    user.can_edit_problem?(commentable) || comment_reveals.where(user: user).exists?
+  end
+
   # Token counts live inside the raw provider response we already store
   # (`llm_response`); copy them onto the columns. Used by
   # `rake comments:backfill_llm_usage` for rows written before the columns

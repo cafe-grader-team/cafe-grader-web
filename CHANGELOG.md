@@ -73,6 +73,15 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
 
 ### Fixed
+- **"View" on a comment, an AI-help answer or a hint works in a new tab.**
+  These open as a popup; opened in a new tab (or clicked before the page
+  finished loading) they gave a server error. They now show as a page, with
+  the AI answer's code highlighted. An unknown comment or hint gives "not
+  found". (rev 2337)
+- **The front page no longer logs a server error for bots asking for JSON.**
+  Scanners probing for WordPress request `/` as JSON a few times a week; the
+  login page now answers any format other than HTML with 406 Not Acceptable.
+  (rev 2337)
 - **Last Seen and the navbar countdown could follow a contest the student
   was no longer in.** The session remembered a chosen contest without
   checking membership: a student removed from a contest (for example by a
@@ -243,6 +252,10 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   now always sent sorted by file name. (revs 2264, 2297)
 
 ### Security
+- **A student could read a hint without getting it.** The hint view checked
+  only that the student could see the problem, so a hand-made request showed
+  the text of every hint on it, with no points taken. Now only a student who
+  got the hint, or someone who can edit the problem, sees its text. (rev 2337)
 - **Any group editor could change any contest's extra time.** The extra-time
   action skipped the check that the editor manages the contest, and it took
   the student's row by id without checking which contest the row belonged to.

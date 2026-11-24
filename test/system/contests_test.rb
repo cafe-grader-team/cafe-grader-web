@@ -41,8 +41,6 @@ class ContestsTest < ApplicationSystemTestCase
     assert_not_equal "xss", page.title
   end
 
-  private
-
   # The delete confirmation used to say only "Really delete this contest?",
   # so nothing on the popup showed which row's Destroy had been clicked.
   test "the contest delete confirmation names the contest" do
@@ -53,6 +51,8 @@ class ContestsTest < ApplicationSystemTestCase
     within(row) { click_on "Destroy" }
     assert_selector ".modal.show", text: 'Really delete contest "contest_b"?', wait: 5
   end
+
+  private
 
   def login(username, password)
     visit root_path

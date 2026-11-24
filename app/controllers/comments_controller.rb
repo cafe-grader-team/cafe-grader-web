@@ -101,16 +101,24 @@ class CommentsController < ApplicationController
     end
   end
 
-  # show hint as a modal
+  # show hint as a modal, or as a page when "View" is opened in a new tab.
+  # Seeing the problem is not enough to read a hint: see Comment#hint_readable_by?.
   def show_hint
-    # TODO: need to check whether the user can view this hint
+    return head :not_found unless @hint
+    unless @hint.hint_readable_by?(@current_user)
+      @header_msg = 'Hint not acquired'
+      @body_msg = 'Get this hint from the problem list first.'
+      return render :show, status: :forbidden
+    end
     @header_msg = "Hint: #{@hint.title}"
     @body_msg = @hint.body.presence || '-- blank --'
     render :show
   end
 
-  # unified show for submissions comment as a modal
+  # unified show for submissions comment as a modal, or as a page when "View"
+  # is opened in a new tab
   def show_for_submission
+    return head :not_found unless @comment
     @header_msg = "Comment: #{@comment.title}"
     if @comment.kind == 'llm_assist'
       # The body is model-written and can echo student-controlled markup (a

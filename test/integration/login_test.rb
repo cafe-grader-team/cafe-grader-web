@@ -43,4 +43,15 @@ class LoginTest < ActionDispatch::IntegrationTest
   ensure
     reset_grader_config_cache
   end
+
+  # Bots probing for WordPress ask for "/" as JSON. The login page has only an
+  # HTML view, so each probe was a 500 in the log (cp-grader, comprog, cedt:
+  # a few a week). A browser, and curl's bare */*, still get the page.
+  test "the front page answers a JSON request with 406, not a server error" do
+    get root_path, params: { rest_route: "/wp/v2/users/me", context: "edit" },
+                   headers: { "Accept" => "application/json" }
+    assert_response :not_acceptable
+    get root_path, headers: { "Accept" => "*/*" }
+    assert_response :success
+  end
 end

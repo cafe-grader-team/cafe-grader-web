@@ -12,4 +12,6 @@
     %li
       Please note that a large language model can make mistakes.
 %script
-  hljs.highlightAll();
+  -# A popup runs this after the page loaded highlight.js. A page (the answer
+  -# opened in a new tab) runs it before that module, so it waits for the load.
+  window.hljs ? hljs.highlightAll() : document.addEventListener('DOMContentLoaded', () => window.hljs?.highlightAll());

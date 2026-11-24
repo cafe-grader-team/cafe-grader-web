@@ -162,7 +162,7 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/javascript:/, response.body)
     assert_match(%r{<h2>Hint</h2>}, response.body)
     assert_match(/alert-danger/, response.body)          # server-written error block survives
-    assert_match(%r{<script>\s*hljs\.highlightAll}, response.body)  # trusted header keeps its script, unescaped
+    assert_match(%r{<script>\s*window\.hljs \? hljs\.highlightAll\(\)}, response.body)  # trusted header keeps its script, unescaped
     assert_match(%r{<div class='alert alert-info'>}, response.body)
   end
 
@@ -310,10 +310,78 @@ class CommentsControllerTest < ActionDispatch::IntegrationTest
 
   test "hint modal sanitizes the hint body" do
     @hint.update!(body: %(tip <b>bold</b> <script>alert(4)</script>))
+    @hint.comment_reveals.create!(user: users(:john))
     sign_in_as("john", "hello")
     get problem_hint_path(problem_id: @prob.id, id: @hint.id), as: :turbo_stream
     assert_response :success
     assert_no_match(/<script>alert/, response.body)   # the stream's own show() script is fine
     assert_includes response.body, "<b>bold</b>"
+  end
+
+  # ------------------------------------------------------------
+  # "View" opened as a page. A new tab, or a click before Turbo loaded, is a
+  # plain HTML request; only the popup (turbo_stream) view existed, so each
+  # one was a 500 (9 on cedt during the 2026-11-21 exam).
+  # ------------------------------------------------------------
+
+  test "a submission comment opened in a new tab shows as a page" do
+    c = @sub.comments.create!(user: users(:admin), kind: "comment", title: XSS_TITLE, body: "look at **line 3**")
+    sign_in_as("john", "hello")
+    get submission_comment_path(@sub, c)
+    assert_response :success
+    assert_select "h2", text: "Comment: #{XSS_TITLE}"   # the title is text, never markup
+    assert_select "h2 img", 0
+    assert_select ".card-body strong", text: "line 3"
+  end
+
+  test "an AI-help answer opened in a new tab shows as a page, sanitized, highlighting once the page has loaded" do
+    c = @sub.comments.create!(user: users(:john), kind: "llm_assist", status: "ok", llm_model: "m", cost: 10,
+                              title: "Assistance by m", body: "```cpp\nint x;\n```\n\n<img src=x onerror=\"alert(1)\">")
+    sign_in_as("john", "hello")
+    get submission_comment_path(@sub, c)
+    assert_response :success
+    assert_no_match(/onerror/, response.body)
+    assert_select ".card-body .alert-info"            # the trusted header
+    assert_select ".card-body pre code", text: /int x;/
+    # on a page the inline script runs before the highlight.js module, so it waits
+    assert_match(/addEventListener\('DOMContentLoaded'/, response.body)
+  end
+
+  test "a bought hint opens as a page" do
+    @hint.comment_reveals.create!(user: users(:john))
+    sign_in_as("john", "hello")
+    get problem_hint_path(problem_id: @prob.id, id: @hint.id)
+    assert_response :success
+    assert_select "h2", text: "Hint: Hint for add"
+    assert_select ".card-body", text: /Try using addition/
+  end
+
+  # show_hint checked only that the problem was visible, so any student could
+  # read every hint on it without buying it. The View link is drawn only for a
+  # bought hint, which left a hand-made Turbo request; a page would have made
+  # it one click on a pasted URL.
+  test "a hint not bought yet is not shown, as a page or as a popup" do
+    sign_in_as("john", "hello")
+    get problem_hint_path(problem_id: @prob.id, id: @hint.id)
+    assert_response :forbidden
+    assert_not_includes response.body, "Try using addition"
+    get problem_hint_path(problem_id: @prob.id, id: @hint.id), as: :turbo_stream
+    assert_response :forbidden
+    assert_not_includes response.body, "Try using addition"
+  end
+
+  test "a problem editor reads a hint without buying it" do
+    sign_in_as("admin", "admin")
+    get problem_hint_path(problem_id: @prob.id, id: @hint.id)
+    assert_response :success
+    assert_select ".card-body", text: /Try using addition/
+  end
+
+  test "an unknown hint or comment id is a 404, not a crash" do
+    sign_in_as("admin", "admin")
+    get problem_hint_path(problem_id: @prob.id, id: 0)
+    assert_response :not_found
+    get submission_comment_path(@sub, 0)
+    assert_response :not_found
   end
 end

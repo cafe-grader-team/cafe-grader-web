@@ -10,7 +10,11 @@ class MainController < ApplicationController
     @next_path = safe_return_path(params[:next])   # where to go after login (issue #65)
 
     @announcements = Announcement.frontpage.consider_contest.default_order
-    render action: 'login', locals: {skip_header: true}
+    # HTML only. Bots probing for WordPress ask for "/" as JSON, which had no
+    # view (a 500 in the log); respond_to answers any other format with a 406.
+    respond_to do |format|
+      format.html { render action: 'login', locals: {skip_header: true} }
+    end
   end
 
   def logout

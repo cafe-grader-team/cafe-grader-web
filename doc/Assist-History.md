@@ -97,11 +97,17 @@ student nothing (since 2026-09-09).
 
 ## Entries
 
+### 2026-11-24 — An AI answer opened in a new tab shows as a page
+**platform code (display only)** · master 2337
+- **Problem observed:** "View" on an AI answer opens a popup. Opened in a new tab (or clicked before the page finished loading) it was a plain page request, which had no view: a server error, 9 times on cedt during the 2026-11-21 exam.
+- **Change:** a page view of the same answer (same sanitizing, same trusted header). The header's code-highlight call waits for the page to load when highlight.js isn't there yet. Payload, prompt, price and access unchanged.
+- **Outcome / status:** tests pass (`bin/rails check` 1659 tests), including a browser test of both the page and the popup; committed, not yet pushed or deployed.
+
 ### 2026-11-21 — The 100-point spend stop becomes a setting; contests get a deduction cap
 **platform code (price / access policy)** · master 2332; spec `docs/superpowers/specs/2026-11-21-deduction-cap-spending-limit-design.md`
 - **Problem observed:** on 2026-11-21 a student reached the fixed 100 points of AI help on one problem and the instructor wanted to allow more, but `Submission::LLM_ASSIST_FULL_SCORE` refused it. Separately, instructors often announce "hints and AI help take at most N points per problem" and applied it by hand after the contest.
 - **Change:** the **spending limit** (the most points of AI help one student may spend on one problem before Get is refused; hints never counted) is now the site setting `system.llm_assist_spending_limit` (100, created by a data migration) with a per-contest override `contests.assist_spending_limit`; with two running contests on one problem the larger wins. The refusal reads "already spent N of the M points of AI help allowed on this problem", and a limit of 0 reads "no AI help is allowed on this problem". The **deduction cap** (`contests.deduction_cap`) bounds what hints + AI help take off the full score in that contest's reports and in the student's problem list during it. The AI confirm box now also states what the student has lost so far on the problem, how much of this request counts under the cap, and the spending limit. Payload and prompt unchanged.
-- **Outcome / status:** tests pass (`bin/rails check` 1637 tests); committed and pushed 2026-11-22; not deployed.
+- **Outcome / status:** tests pass (`bin/rails check` 1637 tests); committed and pushed 2026-11-22; deployed fleet-wide 2026-11-23, verified 2026-11-24.
 
 ### 2026-11-19 — The prompt-cache marker goes to Claude models only (Gemini refused problems with little material)
 **platform code (payload)** · master 2297; found 2026-11-15 on the local database copy
