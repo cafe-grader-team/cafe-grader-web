@@ -1,6 +1,6 @@
 = render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'Management' } ]
 
-.contest-management-wrapper{data: {controller: 'contest init-ui-component'}}
+.contest-management-wrapper{data: {controller: 'contest init-ui-component', action: 'problems-reordered->contest#postProblemOrder'}}
   -# hidden action forms (required by Stimulus contest controller)
   .d-none
     = form_with url: do_user_contest_path, html: {'data-contest-target': 'userForm', id: 'do-user-form',
@@ -19,14 +19,42 @@
       = f.hidden_field :problem_id, 'data-contest-target': 'problemFormProblemID'
       = f.hidden_field :command, 'data-contest-target': 'problemFormCommand'
 
+    = form_with url: reorder_problems_contest_path, html: {'data-contest-target': 'problemOrderForm',
+      data: {turbo: true}} do |f|
+      = f.hidden_field :problem_order, 'data-contest-target': 'problemOrderFormIds'
+
   .d-flex.justify-content-between.align-items-center.mb-3
     .d-flex.align-items-center.gap-2
       %h2.fw-bold.text-dark.mb-0.font-monospace
         = @contest.name
       %span.badge.bg-primary-subtle.text-primary.border.border-primary-subtle.rounded-pill.fw-medium
         %small Manage
+      - if User.outside_login_available? && @contest.outside_login_off? && @contest.outside_login_block_ends_at&.future?
+        %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.fw-medium{data: {bs_toggle: 'tooltip'}, title: "Until #{@contest.outside_login_block_ends_at.strftime('%d/%b/%Y %H:%M')}"}
+          %small= "#{User.outside_login_name} off for students"
 
     .d-flex.gap-2
+      -# "Finish open vivas" — closes every still-open viva session of this
+      -# contest in one click (answered → grading, greeting-only → archived).
+      -# Flavor A button_to with a turbo-confirm that names the current count.
+      - if @contest.problems.viva_exam.exists?
+        - open_vivas = @contest.open_viva_sessions.count
+        = button_to finish_open_vivas_contest_path(@contest), class: 'btn btn-outline-warning btn-flex',
+          form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': "Finish #{pluralize(open_vivas, 'open viva session')}? Answered sessions are sent to grading; greeting-only sessions are archived."}} do
+          = mdi(:stop_circle, 'me-1') + 'Finish open vivas'
+          %span#open-viva-count.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.ms-1= open_vivas
+        = render 'viva_status', contest: @contest
+      -# the three filter-driven reports, opened with this contest as the scope
+      .dropdown
+        %button.btn.btn-outline-secondary.btn-flex.dropdown-toggle{type: 'button', data: {bs_toggle: 'dropdown'}}
+          = mdi(:table_chart, 'me-1') + 'Reports'
+        %ul.dropdown-menu.dropdown-menu-end.border-0.shadow-sm
+          %li= link_to 'Best Score', max_score_report_path(contest: @contest.id), class: 'dropdown-item'
+          %li= link_to 'Submissions', submission_report_path(contest: @contest.id), class: 'dropdown-item'
+          %li= link_to 'User Activity', activity_report_path(contest: @contest.id), class: 'dropdown-item'
+          - if @contest.problems.viva_exam.exists?
+            %li= link_to 'Viva check', viva_check_contest_path(@contest), class: 'dropdown-item'
+      = link_to mdi(:query_stats, 'me-1') + 'AI Usage', ai_usage_contest_path(@contest), class: 'btn btn-outline-info btn-flex'
       = link_to mdi(:summarize, 'me-1') + 'Watch', view_contest_path(@contest), class: 'btn btn-outline-primary btn-flex'
       = link_to mdi(:edit, 'me-1') + 'Edit', edit_contest_path(@contest), class: 'btn btn-primary btn-flex'
 
@@ -49,6 +77,10 @@
             = key_pair(label: 'Start Time', value: @contest&.start&.strftime("%Y-%b-%d %H:%M"), icon: :schedule)
             = key_pair(label: 'Finish Time', value: @contest&.stop&.strftime("%Y-%b-%d %H:%M"), icon: :event_available)
             = key_pair(obj: @contest, field: :finalized, as: :yes_no, label: 'Finalized', icon: :lock)
+            = key_pair(label: 'Deduction cap', icon: :price_check,
+                       value: @contest.deduction_cap ? "#{@contest.deduction_cap} points per problem" : 'none')
+            = key_pair(label: 'AI help spending limit', icon: :savings,
+                       value: @contest.assist_spending_limit ? "#{@contest.assist_spending_limit} points per problem" : "site setting (#{HelpDeduction.site_spending_limit})")
     .col-md-6
       .card.border-0.shadow-sm.border-start.border-4.border-info.mb-3
         .card-body.p-4
@@ -97,6 +129,13 @@
                   %span.mi
                     upload
                   Import
+            %li.nav-item
+              %button.nav-link{type: 'button', data: {bs_toggle: 'tab', bs_target: '#tab-contest-comments', action: 'shown.bs.tab->contest#tabChange'}}
+                .d-inline-flex.align-items-center.gap-1
+                  %span.mi
+                    forum
+                  Comments
+                  = render 'contests/comments_count', contest: @contest
           .tab-content
             -# ==========================================
             -# ---------- users pane ------------------
@@ -265,17 +304,20 @@
                             %strong.text-dark LLM Assistant 
                             can be enabled individually for each problem.
                           %li.mt-1
-                            Use the 
-                            %strong.text-dark 
+                            Drag a problem by its
+                            %span.mi.md-18.align-text-bottom drag_indicator
+                            handle, or use the
+                            %strong.text-dark
                               %span.mi.md-18.align-text-bottom arrow_upward
                               %span.mi.md-18.align-text-bottom arrow_downward
-                            arrows to sort the display order of problems for the contest users.
+                            arrows, to set the order students see.
               .row
                 .col-12
                   %table#problem_table.table.datatable.table-hover
                     %thead
                       %tr
                         %th Number
+                        %th{'aria-label': 'Drag to reorder'}
                         %th Name
                         %th Full name
                         %th.text-center Global Available
@@ -334,4 +376,8 @@
                           %li
                             %code.small user1,,late entry
                             adds user1 with a blank seat and "late entry" remark.
-
+            -# ==========================================
+            -# ---------- staff comments ----------------
+            -# ==========================================
+            #tab-contest-comments.tab-pane.fade
+              = render partial: 'contests/comments', locals: {contest: @contest}

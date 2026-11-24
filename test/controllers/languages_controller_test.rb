@@ -71,7 +71,7 @@ class LanguagesControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user cannot list languages" do
     get languages_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "unauthenticated user cannot create a language" do

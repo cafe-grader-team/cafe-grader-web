@@ -1,6 +1,12 @@
 class Language < ApplicationRecord
   has_many :submissions
 
+  # Sentinel language every viva session is stored under (Language.seed). It is
+  # the durable "this is a viva, not code" marker — a problem can be
+  # reconfigured after collecting viva attempts, so filters key on this, never
+  # on Problem#viva_exam?. See Submission.judge_backlog, DatasetsController#rejudge.
+  VIVA_NAME = 'viva'.freeze
+
   # `name` is the canonical identifier used by the engine (see Compiler.get_compiler,
   # JudgeBase#isolate_*_by_lang). It must be unique and immutable once set.
   validates :name, presence: true, uniqueness: true

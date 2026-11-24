@@ -18,18 +18,18 @@
             - if comment.kind == 'llm_assist'
               .badge.rounded-pill.text-primary.bg-primary-subtle.me-2 AI
               %span
-                = comment.title.html_safe
-                -# for AI assist, if the job is waiting, we also render a small div for displaying stopwatch
-                %span
-                  - if comment.status == 'processing'
-                    %span{data: {
-                      refresh_target: 'stopwatchText',
-                      start_time: comment.created_at.iso8601,
-                      template: '({{second}}s)'
-                    }}
+                = comment.title
+                -# while the job runs: spinner + stopwatch (the title itself is plain text)
+                - if comment.status == 'processing'
+                  %span.spinner-border.spinner-border-sm.ms-1
+                  %span{data: {
+                    refresh_target: 'stopwatchText',
+                    start_time: comment.created_at.iso8601,
+                    template: '({{second}}s)'
+                  }}
             - elsif comment.kind == 'comment'
               .badge.rounded-pill.text-info.bg-info-subtle.me-2 Comment
-              %span= comment.title.html_safe
+              %span= comment.title
           .col-auto.text-end
             = link_to 'View', submission_comment_path(submission,comment), data: {turbo: true, turbo_stream: true}
             - if @current_user.problems_for_action(:report).where(id: submission.problem).any? && show_edit

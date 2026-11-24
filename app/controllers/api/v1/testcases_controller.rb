@@ -7,16 +7,12 @@ class Api::V1::TestcasesController < Api::V1::BaseController
 
   # GET /api/v1/testcases/:id/input
   def input
-    send_data @testcase.inp_file.download,
-      type: "text/plain",
-      filename: "#{@problem.name}.#{@testcase.num}.in"
+    send_file_or_preview(@testcase.inp_file, "#{@problem.name}.#{@testcase.num}.in")
   end
 
   # GET /api/v1/testcases/:id/sol
   def sol
-    send_data @testcase.ans_file.download,
-      type: "text/plain",
-      filename: "#{@problem.name}.#{@testcase.num}.sol"
+    send_file_or_preview(@testcase.ans_file, "#{@problem.name}.#{@testcase.num}.sol")
   end
 
   # POST /api/v1/datasets/:dataset_id/testcases
@@ -86,8 +82,24 @@ class Api::V1::TestcasesController < Api::V1::BaseController
     render_not_found("Dataset")
   end
 
+  # The web page's tier, applied to the API (User#testcase_access, issues
+  # #18 and #59): :full sends the whole file; :preview sends the first
+  # GraderConfiguration.testcase_preview_bytes with X-Testcase-Byte-Size and
+  # X-Testcase-Truncated headers, exactly what the web page shows.
+  def send_file_or_preview(attachment, filename)
+    if @access == :full
+      send_data attachment.download, type: "text/plain", filename: filename
+    else
+      pv = Testcase.preview_of(attachment, GraderConfiguration.testcase_preview_bytes)
+      response.set_header("X-Testcase-Byte-Size", pv[:byte_size].to_s)
+      response.set_header("X-Testcase-Truncated", pv[:truncated].to_s)
+      send_data pv[:text], type: "text/plain", filename: filename
+    end
+  end
+
   def authorize_testcase!
-    unless current_user.can_view_testcase?(@problem)
+    @access = current_user.testcase_access(@problem)
+    unless @access
       render json: { error: "You are not allowed to view this testcase" }, status: :forbidden
     end
   end

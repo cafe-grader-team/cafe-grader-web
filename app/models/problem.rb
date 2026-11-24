@@ -1,6 +1,9 @@
 class Problem < ApplicationRecord
   include Auditable
-  audited only: %i[name full_name full_score available live_dataset_id
+  # `description` (statement, or a viva's scenario) is stored in full: it is
+  # what students see and the largest one in production is 6 KB. The viva
+  # briefing holds the model answer, so only the fact of its change is kept.
+  audited only: %i[name full_name full_score available live_dataset_id description
                    view_testcase view_submission allow_hint
                    permitted_lang submission_filename task_type compilation_type
                    viva_daily_limit viva_prompt viva_soft_cap viva_hard_cap],
@@ -150,22 +153,32 @@ class Problem < ApplicationRecord
       .where('contests_users.user_id': user_id) # user is in the contest
       .where('contests_users.enabled': true)    # user in the contest is enabled
       .where('contests_problems.enabled': true) # problem is enabled
-      .where('ADDTIME(contests.start,-contests_users.start_offset_second) <= ?', now)
-      .where('ADDTIME(contests.stop,contests_users.extra_time_second) >= ?', now)
+      # Never ADDTIME(datetime, n): MySQL reads n as a HHMMSS time, not seconds
+      # (600 adds 6 minutes; 660 and 7200 give NULL and hide the contest).
+      .where('DATE_SUB(contests.start, INTERVAL IFNULL(contests_users.start_offset_second, 0) SECOND) <= ?', now)
+      .where('DATE_ADD(contests.stop, INTERVAL IFNULL(contests_users.extra_time_second, 0) SECOND) >= ?', now)
       .group('problems.id')
   }
 
   # return all problem that the user has "editing" rights in a contest
   #   if the user is an editor of the contest, they can always see the problems
   #   even if the contest is not "enabled"
+  # Returned as a Problem.where(id: <subquery>) rather than a joined
+  # SELECT DISTINCT: this is the :report/:edit scope in contest mode, and the
+  # score report both plucks .ids and orders it by date_added. Under MySQL 8
+  # ONLY_FULL_GROUP_BY a "SELECT DISTINCT problems.id ... ORDER BY date_added"
+  # raises "incompatible with DISTINCT" (staff hit this on the 2026-09-09 quiz
+  # score report). The subquery form is orderable and pluckable, and the id set
+  # is identical. Same shape group_reportable_by_user already uses.
   scope :contests_editable_problems_for_user, ->(user_id) {
-    joins(contests_problems: {contest: :contests_users})
+    inner = joins(contests_problems: {contest: :contests_users})
       .where(available: true)                   # available problems only
       .where('contests.enabled': true)          # contests is enabled
       .where('contests_users.user_id': user_id) # user is in the contest
       .where('contests_users.enabled': true)    # user in the contest is enabled
       .where('contests_users.role': 'editor')   # user must have 'editor' role
-      .distinct('problems.id')
+      .select('problems.id')
+    Problem.where(id: inner)
   }
 
   scope :default_order, -> {
@@ -337,8 +350,8 @@ class Problem < ApplicationRecord
     end
   end
 
-  def helpers_cost(user,contest)
-    Comment.cost_summary_for(user,contest)
+  def helpers_cost(user, contest)
+    Comment.cost_summary_for(user, contest)
   end
 
   # return the enabled comments of the specified *kind* that are revealed by *user*
@@ -441,9 +454,7 @@ class Problem < ApplicationRecord
   #
   # Returns nil when there is no candidate at all.
   def report_group_for(user)
-    candidates = user.groups_for_action(:report)
-                     .where(id: groups.where(groups_problems: { enabled: true }).select(:id))
-                     .to_a
+    candidates = reportable_groups_for(user).to_a
     return nil if candidates.empty?
 
     sub_counts = Submission.regular.where(problem_id: id)
@@ -457,7 +468,60 @@ class Problem < ApplicationRecord
     end
   end
 
+  # ---- stat page aggregates -------------------------------------------------
+  #
+  # Both work from "best score per user" over the problem's regular
+  # submissions (shadow/repaired runs excluded), so a user with ten attempts
+  # counts once. `points` is nil until graded: such a user is attempted but
+  # contributes to neither solved nor the mean.
+
+  GroupStat = Struct.new(:group, :users, :attempted, :solved, :mean_best)
+
+  # One GroupStat per group this problem is in that +user+ may report on,
+  # ordered by group name. Members are enabled `user`-role rows only —
+  # editors and reporters are staff, and their test submissions must not
+  # move a section's numbers. A user in several groups appears in each, so
+  # the rows sum to more than #attempt_summary's distinct count by design.
+  def group_stats_for(user)
+    candidates = reportable_groups_for(user).order(:name).to_a
+    return [] if candidates.empty?
+
+    ids     = candidates.map(&:id)
+    members = GroupUser.where(group_id: ids, enabled: true, role: :user)
+    users   = members.group(:group_id).count
+    stats   = members
+                .joins("INNER JOIN (#{best_points_per_user.to_sql}) b ON b.user_id = groups_users.user_id")
+                .group(:group_id)
+                .pluck(Arel.sql('groups_users.group_id, COUNT(*), COALESCE(SUM(b.best >= 100), 0), AVG(b.best)'))
+                .to_h { |gid, attempted, solved, mean| [gid, [attempted, solved.to_i, mean&.to_f&.round(1)]] }
+
+    candidates.map do |g|
+      attempted, solved, mean = stats.fetch(g.id, [0, 0, nil])
+      GroupStat.new(g, users.fetch(g.id, 0), attempted, solved, mean)
+    end
+  end
+
+  # { attempted:, solved: } over every user who has a regular submission on
+  # this problem, whatever their group — the page's headline numbers.
+  def attempt_summary
+    row = Submission.connection.select_one(
+      "SELECT COUNT(*) AS attempted, COALESCE(SUM(best >= 100), 0) AS solved FROM (#{best_points_per_user.to_sql}) b"
+    )
+    { attempted: row['attempted'].to_i, solved: row['solved'].to_i }
+  end
+
   private
+
+  # Groups this problem is in (enabled link) that +user+ may report on.
+  def reportable_groups_for(user)
+    user.groups_for_action(:report)
+        .where(id: groups.where(groups_problems: { enabled: true }).select(:id))
+  end
+
+  # user_id, best  — MAX(points) per user over the problem's regular submissions.
+  def best_points_per_user
+    Submission.regular.where(problem_id: id).group(:user_id).select('user_id, MAX(points) AS best')
+  end
 
   def should_generate_pdf?
     return false if viva_exam?   # D5: the description IS the scenario; no side-PDF for vivas

@@ -2,6 +2,8 @@ class ReportController < ApplicationController
   include ProblemAuthorization
 
   before_action :check_valid_login
+  before_action :set_report_contest, only: [ :max_score, :max_score_table, :max_score_query, :show_max_score,
+                                             :submission, :submission_query, :activity, :activity_query ]
   before_action :selected_problems, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query, :activity_query ]
   before_action :selected_users, only: [ :show_max_score, :max_score_table, :submission_query, :max_score_query, :ai_query, :activity_query ]
   before_action :set_report_empty_hint, only: [ :max_score, :submission, :activity, :ai ]
@@ -18,19 +20,37 @@ class ReportController < ApplicationController
   before_action :admin_authorization, only: [:problem_hof_recompute]
   before_action :can_view_problem, only: [:problem_hof_view]
 
+  helper_method :report_contest_query, :deduction_cap_query
+
   # render the UI for filtering and the initial blank table
   def max_score
     # this is for rendering the filter selection
     @problems = @current_user.problems_for_action(:report)
     @groups = @current_user.groups_for_action(:report)
+    # a contest-scoped page renders the table with its columns at once, so
+    # the first load already shows the contest's scores (no Refresh needed)
+    @table_problems = @report_contest ? contest_problems : Problem.none
   end
 
   # turbo update the table (also with blank table but with columns)
   def max_score_table
-    render turbo_stream: turbo_stream.update(:max_score_result, partial: 'score_table', locals: {problems: @problems, link_for_data: max_score_query_report_path, refresh_submit_form_id: 'max-score-filter-form' })
+    render turbo_stream: turbo_stream.update(:max_score_result, partial: 'score_table', locals: {problems: @problems, link_for_data: max_score_query_report_path(report_contest_query.merge(deduction_cap_query)), contest_id: @report_contest&.id, refresh_submit_form_id: 'max-score-filter-form' })
   end
 
   def max_score_query
+    if @report_contest
+      # The Watch page's numbers (Contest#score_report) over the reportable
+      # subset of the contest's students and problems; rows carry the contest
+      # seat and remark, as on Watch.
+      render json: {
+        data: @report_contest.contests_users.joins(:user).where(user_id: @users.select(:id))
+          .select(:id, :user_id, :login, :full_name, :remark, :seat, :last_heartbeat),
+        result: @report_contest.score_report(users: @users, problems: @problems),
+        problem: @problems
+      }
+      return
+    end
+
     # when @problems is blank, it is very likely that the user hasn't select anything in the form at all
     # which default to showing all user with no problem selected. We then force the user to be blank as well to speed up
 
@@ -44,7 +64,8 @@ class ReportController < ApplicationController
     records = submissions.max_score_report(@problems, start, stop)
 
     # calculate the maximum score
-    @result = Submission.calculate_max_score(records, @users, @problems)
+    @result = Submission.calculate_max_score(records, @users, @problems,
+                                             deduction_cap: HelpDeduction.parse_cap(params[:deduction_cap]))
 
     render json: {
       # for data, we need some alias as we use the same render for both the report and contest stat,
@@ -92,8 +113,7 @@ class ReportController < ApplicationController
 
   def login_summary_query
     @users = Array.new
-    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
-    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+    login_report_range
     record = User
       .left_outer_joins(:logins).group('users.id')
       .where(logins: { success: true })
@@ -125,8 +145,7 @@ class ReportController < ApplicationController
 
   def login_detail_query
     @logins = Array.new
-    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
-    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+    login_report_range
 
     @logins = Login.successful.includes(:user).where("logins.created_at >= ? AND logins.created_at <= ?", @since_time, @until_time)
     case params[:users]
@@ -138,8 +157,7 @@ class ReportController < ApplicationController
   end
 
   def login_failure_query
-    @since_time = Time.zone.parse(params[:since_datetime]) || Time.zone.now rescue Time.zone.now
-    @until_time = Time.zone.parse(params[:until_datetime]) || DateTime.new(3000, 1, 1) rescue DateTime.new(3000, 1, 1)
+    login_report_range
 
     # The user/group filter deliberately does not apply: the interesting
     # failures (attacks, typo'd logins) mostly match no user at all.
@@ -156,10 +174,9 @@ class ReportController < ApplicationController
     @submissions = submission_in_range(params[:sub_range])
       .joins(:problem).joins(:language).joins(:user)
 
-    # filter users
-    unless @users = User.all
-      @submissions = @submissions.where(user: @users)
-    end
+    # filter users (`unless @users = User.all` assigned instead of comparing
+    # from 2024-09-30 to rev 2209, so the Users card was ignored here)
+    @submissions = @submissions.where(user: @users)
 
     # filter submissions
     @submissions = @submissions.where(problem: @problems)
@@ -537,7 +554,7 @@ ORDER BY ip_address,created_at
       GROUP BY u.id
       HAVING count > 1
     ) ml ON s.user_id = ml.id
-    WHERE s.submitted_at >= ? and s.submitted_at <= ? AND s.repaired_from_id IS NULL
+    WHERE s.submitted_at >= ? and s.submitted_at <= ? AND s.repaired_from_id IS NULL AND s.test_drive = 0
 UNION
   SELECT s.id,s.user_id,s.ip_address,s.submitted_at,s.problem_id
     FROM submissions s INNER JOIN
@@ -548,7 +565,7 @@ UNION
       GROUP BY l.ip_address
       HAVING count > 1
     ) ml on ml.ip_address = s.ip_address
-    WHERE s.submitted_at >= ? and s.submitted_at <= ? AND s.repaired_from_id IS NULL
+    WHERE s.submitted_at >= ? and s.submitted_at <= ? AND s.repaired_from_id IS NULL AND s.test_drive = 0
 ORDER BY ip_address,submitted_at
             SQL
     @subs = Submission.joins(:problem).find_by_sql([st, @since_time, @until_time,
@@ -590,7 +607,7 @@ ORDER BY ip_address,submitted_at
 UNION
   SELECT s.submitted_at,s.id,u.login,u.full_name,s.ip_address,s.problem_id,s.points,s.user_id
   FROM submissions s INNER JOIN users u ON s.user_id = u.id
-  WHERE s.submitted_at >= ? AND s.submitted_at <= ? AND #{condition} AND s.repaired_from_id IS NULL
+  WHERE s.submitted_at >= ? AND s.submitted_at <= ? AND #{condition} AND s.repaired_from_id IS NULL AND s.test_drive = 0
 ORDER BY submitted_at
   SQL
 
@@ -633,10 +650,55 @@ ORDER BY submitted_at
         .where('groups.enabled': true).order('groups.name').pluck('groups.name')
     end
 
+    # Contest scope (?contest=ID) for Best Score / Submissions / User Activity:
+    # the contest's students, its problems and each student's own window
+    # replace the three filter cards (selected_users / selected_problems /
+    # submission_in_range branch on @report_contest). Only a contest the user
+    # can manage counts; any other id is ignored and the page says so, so a
+    # stale or hand-edited link never widens what a reporter can see.
+    def set_report_contest
+      id = params[:contest].presence or return
+      @report_contest = @current_user.contests_for_action(:edit).find_by(id: id)
+      @report_contest_ignored = id if @report_contest.nil?
+    end
+
+    # Query params that carry the contest scope into the table's data URL.
+    def report_contest_query
+      @report_contest ? {contest: @report_contest.id} : {}
+    end
+
+    # The global Best Score's deduction cap box, carried into the table's
+    # data URL. A contest scope uses the contest's own cap instead
+    # (Contest#score_report), so it never carries one.
+    def deduction_cap_query
+      cap = HelpDeduction.parse_cap(params[:deduction_cap])
+      (@report_contest || cap.nil?) ? {} : {deduction_cap: cap}
+    end
+
+    # The contest's problems the user may report on, in contest order.
+    def contest_problems
+      ordered = @report_contest.contests_problems.order(:number).pluck(:problem_id)
+      ids = ordered & @current_user.problems_for_action(:report).ids
+      Problem.where(id: ids).in_order_of(:id, ids)
+    end
+
     # receive an ActiveRecord::AAssociation *query* of submissions
     # and add more where clause limiting the submission to be in the
     # rnage specified only
+    # The Logins report's date range. An empty or unreadable box means what
+    # its placeholder says: start of today / end of today. (Until 2026-11-18
+    # an empty From meant "now" and an empty Until the year 3000, so the
+    # report opened empty.)
+    def login_report_range
+      @since_time = (Time.zone.parse(params[:since_datetime].to_s) rescue nil) || Time.zone.now.beginning_of_day
+      @until_time = (Time.zone.parse(params[:until_datetime].to_s) rescue nil) || Time.zone.now.end_of_day
+    end
+
     def submission_in_range(range_params)
+      # a contest scope replaces the range: each student's own window, start
+      # offset and extra time included (Contest#submissions)
+      return @report_contest.submissions if @report_contest
+
       range_params ||= {}
       if range_params[:use] ==  'sub_id'
         Submission.regular.by_id_range(range_params[:from_id], range_params[:to_id])
@@ -650,6 +712,8 @@ ORDER BY submitted_at
 
     # build @problems that matches the given params
     def selected_problems
+      return (@problems = contest_problems) if @report_contest
+
       # start with reportable problems (this already consider when @current_user is an admin)
       @problems = Problem.where(id: @current_user.problems_for_action(:report).ids)
 
@@ -675,6 +739,11 @@ ORDER BY submitted_at
     end
 
     def selected_users
+      if @report_contest
+        @users = @report_contest.students
+        @users = @users.where(id: @current_user.reportable_users) unless @current_user.admin?
+        return
+      end
       return (@users = User.none) unless params.has_key? :users
       @users = if params[:users][:use] == "group" then
                  if params[:users][:only_users]

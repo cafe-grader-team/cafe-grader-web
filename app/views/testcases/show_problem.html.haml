@@ -1,37 +1,58 @@
-%h1
-  Test cases
-%h4= @problem.long_name
+-# Testcases of one problem (issues #18 and #59). @access is :preview (the
+-# first @preview_bytes of each file, no downloads) or :full (downloads of
+-# whole files). The page itself always shows the prefix, so a 200 MB dataset
+-# never lands in one HTML page, whoever is looking.
+.d-flex.flex-wrap.justify-content-between.align-items-end.gap-3.mb-3
+  .d-flex.flex-column.gap-1
+    %small.text-secondary.text-uppercase.fw-bold.ls-1 Test cases
+    %h2.fw-bold.text-dark.mb-0
+      %span.font-monospace.text-secondary [#{@problem.name}]
+      = @problem.full_name
+  -# The tier note: a warning-toned pill with the scissors, the summary of the
+  -# per-file "truncated" badges below it.
+  .d-flex.align-items-center.gap-2.small#testcase-tier-note
+    - if @preview_bytes > 0
+      %span.badge.rounded-pill.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.d-inline-flex.align-items-center.gap-1.fw-normal{style: 'font-size: .85rem'}
+        = mdi('content_cut', 'md-18')
+        Showing the first #{number_to_human_size(@preview_bytes)} of each file
+      - if @full
+        %span.text-secondary Download gives the whole file.
+    - elsif @full
+      %span.text-secondary Whole files.
 
-/navbar
-.row
-  .col-lg-6
-    %h5 Testcase num
-    %ul.nav.nav-pills{role: :tablist}
-      - @dataset.testcases.each.with_index do |tc,id|
-        %li.nav-item{role: :presentation, class: ('active' if id == 0)}
-          %a.nav-link{href:"#", role: 'tab', data: {bs: {toggle: 'tab', target: "#tc#{tc.id}"}}, class: ('active' if id == 0)}= tc.num
-  .col-lg-6
-    - if @managers.count > 0
-      %h5 Additional file for grader
-      %ul
+- if @testcases.empty?
+  .card.shadow-sm.border-0.mb-4
+    .card-body.text-center.text-secondary.py-5
+      = mdi('inbox', 'md-48 d-block mb-2 opacity-50')
+      This problem has no test cases to show.
+- else
+  .card.shadow-sm.mb-4{data: {controller: 'init-ui-component'}}
+    .card-body
+      %ul.nav.nav-pills.mb-3{role: :tablist}
+        - @testcases.each_with_index do |tc, i|
+          %li.nav-item{role: :presentation}
+            %button.nav-link{type: :button, role: :tab, class: ('active' if i == 0), data: {bs_toggle: 'tab', bs_target: "#tc#{tc.id}"}}= tc.num
+      .tab-content
+        - @testcases.each_with_index do |tc, i|
+          .tab-pane{id: "tc#{tc.id}", role: :tabpanel, class: ('active' if i == 0)}
+            .row.g-3
+              = render 'preview_pane', title: 'Input', preview: Testcase.preview_of(tc.inp_file, @preview_bytes), download: (@full ? download_input_testcase_path(tc) : nil)
+              = render 'preview_pane', title: 'Expected output', preview: Testcase.preview_of(tc.ans_file, @preview_bytes), download: (@full ? download_sol_testcase_path(tc) : nil)
+
+- if @managers.any?
+  .card.shadow-sm.mb-4#managers
+    .card-body
+      %h5.fw-bold.mb-1 Additional files for the compiler
+      .text-secondary.small.mb-2 Your program is compiled together with these files. Whole files.
+      %ul.mb-0
         - @managers.each do |mg|
-          %li= link_to mg.filename, download_manager_testcases_path(@problem,mg)
+          %li= link_to mg.filename.to_s, download_manager_testcases_path(@problem, mg), data: {turbo: false}
 
-/actual data
-.tab-content
-  - @dataset.testcases.each.with_index do |tc,id|
-    .tab-pane{id: "tc#{tc.id}",class: ('active' if id == 0)}
-      .row.my-2
-        .col-lg-6
-          %h3
-            Input
-            = link_to "Download",download_input_testcase_path(tc),class: 'btn btn-info btn-sm'
-        .col-lg-6
-          %h3
-            Output
-            = link_to "Download",download_sol_testcase_path(tc),class: 'btn btn-info btn-sm'
-      .row.my-2
-        .col-lg-6
-          %textarea.font-monospace{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= (tc.inp_file.download.force_encoding('UTF-8') if tc.inp_file.attached?)
-        .col-lg-6
-          %textarea.font-monospace{ rows: 25,readonly: true,style: "width:100%;resize=none;overflow-y: scroll;"}= (tc.ans_file.download.force_encoding('UTF-8') if tc.ans_file.attached?)
+- if @data_files.any?
+  .card.shadow-sm.mb-4#data-files
+    .card-body
+      %h5.fw-bold.mb-1 Data files read at run time
+      .text-secondary.small.mb-3 Your program may open these files while it runs. Shown the same way as test cases.
+      .row.g-3
+        - @data_files.each do |df|
+          = render 'preview_pane', title: df.filename.to_s, preview: Testcase.preview_of(df, @preview_bytes), download: (@full ? download_data_file_testcases_path(@problem, df.id) : nil), rows: 8

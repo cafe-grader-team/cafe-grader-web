@@ -1,0 +1,25 @@
+-# Viva grading status, next to "Finish open vivas" on contests/show and
+-# served alone by ContestsController#viva_status. While any session is still
+-# grading, the refresh controller clicks the hidden link every 10 s and Turbo
+-# swaps this frame; once nothing is grading the timer is off (delay -1).
+-# "All vivas graded" is the signal that the contest's viva scores are final.
+- counts = contest.viva_grading_counts
+= turbo_frame_tag 'viva-status', class: 'd-inline-flex align-items-center' do
+  %span.d-inline-flex.align-items-center.gap-1{data: {controller: 'refresh', refresh_delay_value: (counts[:grading].positive? ? 10_000 : -1)}}
+    - if counts[:grading].zero? && counts[:errors].zero?
+      %span.badge.text-bg-success{title: 'No viva session of this contest is waiting for its grade'} All vivas graded
+    - else
+      - if counts[:grading].positive?
+        %span.badge.text-bg-info{title: 'Interviews ended, grade not landed yet; refreshes every 10 seconds'}= "Grading: #{counts[:grading]} in progress"
+      - if counts[:errors].positive?
+        %span.badge.text-bg-danger{title: 'First grading failed: use Re-run grading on the session, or bin/rails viva:regrade'}= pluralize(counts[:errors], 'grader error')
+    -# Always a way into Viva check: red with the needs-action count
+    -# (VivaCheckReport#needs_action_count), plain when nothing needs action.
+    - to_check = VivaCheckReport.new(contest).needs_action_count
+    - if to_check.positive?
+      = link_to "#{to_check} to check", viva_check_contest_path(contest), class: 'badge text-bg-danger text-decoration-none',
+          title: 'Viva check: students or rubrics that need staff action', data: {turbo: 'false'}
+    - else
+      = link_to 'Viva check', viva_check_contest_path(contest), class: 'badge text-bg-light border text-secondary text-decoration-none',
+          title: 'Viva check: nothing needs staff action', data: {turbo: 'false'}
+    = link_to 'Refresh', viva_status_contest_path(contest), class: 'd-none', data: {turbo: 'true', turbo_prefetch: false, refresh_target: 'refreshLink'}

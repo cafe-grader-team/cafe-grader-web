@@ -832,9 +832,29 @@ paths:
                       type: integer
                       nullable: true
                       description: Score weight of this testcase
+                    access:
+                      type: string
+                      enum:
+                      - full
+                      - preview
+                      description: 'What /testcases/{id}/input and /sol return to
+                        you: full = the whole file; preview = only the first ui.testcase_preview_bytes
+                        (default 2048), with X-Testcase-Byte-Size and X-Testcase-Truncated
+                        headers'
+                    input_bytes:
+                      type: integer
+                      nullable: true
+                      description: Size of the input file in bytes (null when none
+                        is attached)
+                    sol_bytes:
+                      type: integer
+                      nullable: true
+                      description: Size of the expected-output file in bytes (null
+                        when none is attached)
                   required:
                   - id
                   - num
+                  - access
         '403':
           description: testcase viewing not allowed
           content:

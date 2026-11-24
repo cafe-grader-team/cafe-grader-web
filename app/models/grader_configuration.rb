@@ -13,11 +13,17 @@ class GraderConfiguration < ApplicationRecord
   CONTEST_TIME_LIMIT_KEY = 'contest.time_limit'
   MULTIPLE_IP_LOGIN_KEY = 'right.multiple_ip_login'
   VIEW_TESTCASE = 'right.view_testcase'
+  # Bytes of each testcase file shown to the preview tier (User#testcase_access);
+  # 0 = whole files. Missing key (not yet seeded) = 2048.
+  TESTCASE_PREVIEW_BYTES = 'ui.testcase_preview_bytes'
   SINGLE_USER_KEY = 'system.single_user_mode'
   SYSTEM_USE_PROBLEM_GROUP = 'system.use_problem_group'
   SYSTEM_MINIMUM_LAST_LOGIN_TIME = 'system.min_last_login_time'
   WHITELIST_IGNORE_KEY = 'right.whitelist_ignore'
   WHITELIST_IP_KEY = 'right.whitelist_ip'
+  # Addresses that skip the per-IP login-failure counter (LoginThrottling),
+  # e.g. an exam gateway that NATs a whole room. Missing key = none.
+  LOGIN_THROTTLE_EXEMPT_IPS_KEY = 'right.login_throttle_exempt_ips'
 
   # class_attribute :config_cache
   cattr_accessor :task_grading_info_cache
@@ -77,6 +83,11 @@ class GraderConfiguration < ApplicationRecord
 
   def  self.show_testcase
     return get(VIEW_TESTCASE)
+  end
+
+  def self.testcase_preview_bytes
+    v = get(TESTCASE_PREVIEW_BYTES)
+    v.nil? ? 2048 : v.to_i
   end
 
   def self.allow_test_request(user)
@@ -143,6 +154,65 @@ class GraderConfiguration < ApplicationRecord
     allowed.delete(' ').split(',').any? { |range| IPAddr.new(range).include?(user_ip) }
   end
 
+  # Is the IP whitelist being enforced (right.whitelist_ignore off)?
+  def self.whitelist_active?
+    !get(WHITELIST_IGNORE_KEY)
+  end
+
+  # The entries of right.whitelist_ip, for display. Empty while the whitelist
+  # is active means nobody but admins and problem editors gets in.
+  def self.whitelist_ranges
+    (get(WHITELIST_IP_KEY) || '').delete(' ').split(',').reject(&:empty?)
+  end
+
+  # Is this address listed in right.login_throttle_exempt_ips (comma- or
+  # space-separated addresses or CIDR ranges)? Runs on every login, so a
+  # malformed entry is skipped rather than raised — a typo in the setting
+  # must never break logging in. The configuration page shows the skipped
+  # entries instead (login_throttle_exempt_ips_warnings).
+  def self.login_throttle_exempt_ip?(remote_ip)
+    listed = ip_list_entries(get(LOGIN_THROTTLE_EXEMPT_IPS_KEY))
+    return false if listed.empty?
+    user_ip = IPAddr.new(remote_ip.to_s)
+    listed.any? do |range|
+      IPAddr.new(range).include?(user_ip)
+    rescue IPAddr::Error
+      false
+    end
+  rescue IPAddr::Error
+    false
+  end
+
+  # What is wrong with a right.login_throttle_exempt_ips value, as sentences
+  # for the configuration page. The login check above skips these mistakes
+  # without a sound, so this is the only place they show: an entry that is
+  # not an address or range (e.g. a semicolon-joined list) exempts nothing,
+  # and a range covering every address switches the per-address count off
+  # for everyone.
+  def self.login_throttle_exempt_ips_warnings(value)
+    ip_list_entries(value).filter_map do |entry|
+      range = IPAddr.new(entry)
+      next unless range.prefix.zero?
+      "'#{entry}' covers every address, so no address is counted. " \
+        "Only each account's own limit is left."
+    rescue IPAddr::Error
+      "'#{entry}' is not an address or range, so it is ignored. " \
+        "Separate entries with commas or spaces."
+    end
+  end
+
+  def self.ip_list_entries(value)
+    value.to_s.split(/[\s,]+/).reject(&:empty?)
+  end
+  private_class_method :ip_list_entries
+
+  # Problems with this setting's saved value, shown under it on the
+  # configuration page. Empty for settings that have no check.
+  def value_warnings
+    return [] unless key == LOGIN_THROTTLE_EXEMPT_IPS_KEY
+    self.class.login_throttle_exempt_ips_warnings(value)
+  end
+
   def self.contest_time_limit
     contest_time_str = GraderConfiguration[CONTEST_TIME_LIMIT_KEY]
 
@@ -174,6 +244,15 @@ class GraderConfiguration < ApplicationRecord
     GraderConfiguration.where(key: "right.view_testcase").update(value: value)
 
     User.update_all(last_ip: false)
+  end
+
+  # Turn the IP whitelist on or off (right.whitelist_ignore is its inverse).
+  # right.whitelist_ip, the allowed list, is never changed here. Not part of
+  # set_exam_mode: the Contest button makes the admin choose on or off every
+  # time, because one site-wide list cannot fit every course's exam room
+  # (design 2026-11-18, revised 2026-11-19); Normal and Analysis turn it off.
+  def self.set_whitelist(on)
+    GraderConfiguration.where(key: WHITELIST_IGNORE_KEY).update(value: on ? 'false' : 'true')
   end
 
   protected

@@ -83,11 +83,15 @@ const config = {
   td: {date: default_td_date_options, datetime: default_td_options}
 }
 
+// Safe for element text AND quoted attribute values: innerHTML escapes only
+// & < >, so quotes are escaped too — otherwise a value with " ends the
+// attribute early (the contest delete confirmation stopped at the first
+// quote, 2026-11-22) and could add attributes.
 function escapeHtml(str) {
   if (str == null) return ''
   const div = document.createElement('div')
   div.textContent = str
-  return div.innerHTML
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
 export { config, msi, initSelect2, escapeHtml }

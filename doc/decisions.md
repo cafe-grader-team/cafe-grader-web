@@ -3,6 +3,142 @@
 Major, hard-to-reverse decisions and their reasoning. Newest first.
 (Deferred work goes in `backlog.md`; this file is for decisions already made.)
 
+## 2026-11-14 — Host-dependent sandbox options are written config, never detected while grading
+
+**Decision.** What a language needs from isolate is split in two. The part
+that depends on the language stays in code (`JudgeBase#builtin_isolate_options`).
+The part that depends on the machine — today one case, the `/etc/java-<N>-openjdk`
+mount Debian/Ubuntu's OpenJDK needs — lives in the per-host `config/worker.yml`
+under `isolate_options: <language>:` and is appended to the built-in options.
+The grader only reads that file. `bin/rails engine:detect` works the value
+out and, with `WRITE=1`, writes the line; `bin/rails engine:langcheck`
+compiles and runs a built-in program per language in the real sandbox and
+also reports a line that no longer matches the host. In the deploy pipeline
+`engine:langcheck` warns and never blocks.
+
+**Why.** Java failed every compile on cp-grader from 2025-08-20 until it was
+looked at on 2026-11-14 (submission 972301): the sandbox mounts `/usr` but
+not `/etc`, and the JDK's `conf/security/java.security` is a symlink into
+`/etc`. Two simpler fixes were rejected. Hard-coding `-d /etc/java-21-openjdk`
+breaks at the next JDK major version and on every other distribution.
+Detecting the directory inside the grader at grading time was rejected by dae:
+a worker is already hard to debug, and a value computed in the process is not
+visible anywhere — with a written line, `worker.yml` and the one log line each
+grader prints at start say exactly what is in effect. Mounting all of `/etc`
+(as the `digital` language does) would work everywhere but shows student
+programs the judge host's configuration.
+
+**Second case, same rule (rev 2279).** Pascal's `fpc` reads its unit path
+from `/etc/fpc.cfg`. That is one file, and isolate mounts directories only,
+so the fix is a compiler flag (`-Fu<unit dir>/*`), kept in a sibling section,
+`compiler_options: pas:`, also written by `engine:detect`. The two sections
+are the only places a host-dependent value may live.
+
+**Cost accepted.** A written value goes stale: after a JDK upgrade the old
+directory is gone, isolate refuses to start the sandbox, and Java fails again
+until someone reruns `engine:detect WRITE=1`. That is why `engine:langcheck`
+runs in every deploy and names the stale line. It warns only, because a
+broken minor language must not stop a C++ exam host from deploying.
+
+**Why it went unnoticed for 15 months.** `engine:smoke`, the deploy gate,
+regrades an existing passing submission and picks only C++, C or Python.
+`engine:langcheck` needs no submission, so it also covers a language nobody
+has ever passed in.
+
+## 2026-10-08 — Solid Queue: the viva worker serves only `viva`, the other worker serves `"*"`
+
+**Decision.** `config/queue.yml` keeps two workers. The viva worker serves the
+`viva` queue alone. The other worker serves `"*"`, every queue, instead of a
+list of names. Scheduled tasks are declared only in `config/recurring.yml`.
+A test (`test/jobs/solid_queue_config_test.rb`) fails if any scheduled task
+or job class lands in a queue no worker serves.
+
+**Why.** Rev 2137 (2026-09-12) split the single worker so assists could not
+hold up interview turns, and limited the second worker to `default`, on the
+belief that `viva` and `default` were the only queues. They were not: Solid
+Queue puts every `command:` task into its own `solid_queue_recurring` queue.
+From the 2026-09-17 deploy until 4.7.3 nothing served it, and on all nine
+deployed web hosts the nightly cleanup, the viva failsafe and reaper, the job
+reclaim and the audit-log cleanup never ran (about 9,550 unrun requests per
+host, discarded by hand on 2026-10-08). `"*"` cannot strand a queue again.
+The isolation 2137 wanted still holds: the viva worker takes nothing but
+`viva`, so a turn never waits behind an assist; the `"*"` worker also takes
+viva jobs when it has a free thread, which only shortens a turn's wait, and
+assists may wait behind viva jobs at a viva peak — accepted (dae).
+`"*"` cannot be ordered: in Solid Queue 1.1.5 a `"*"` anywhere in a list
+means all queues, oldest job first, and the other names are ignored.
+
+**Also fixed.** `refresh_problem_stats` sat under a `recurring:` key in
+`queue.yml` since rev 1558 (2026-04); Solid Queue never reads that key, so
+the Hall of Fame counts were never refreshed. It moved to `recurring.yml`.
+
+## 2026-10-01 — Testcase visibility: a preview for students, whole files for staff
+
+**Decision.** "View testcase" no longer means "see everything". A student the
+flags admit sees the first `ui.testcase_preview_bytes` (default 2048) of every
+test input, expected output and run-time data file, with the file's size and a
+"truncated" mark, and cannot download them. Admins, and reporters or editors of
+the problem, get whole files on download. The page shows everyone the prefix.
+Compile-time managers stay whole for any tier. The JSON API returns exactly what
+the web page gives the same user. One predicate, `User#testcase_access`
+(`:full` / `:preview` / nil), is the only place the rule lives; every web and
+API path reads it. The amount is a site setting; 0 restores the old behaviour.
+
+**Why.** The purpose of showing tests is debugging as part of learning, and the
+head of a file serves that: 57% of the 14,266 test files on production are
+2 KB or smaller and show in full. Whole files are what a student needs to scrape
+the site and clone it, and the datasets are the setters' copyright (issue #18
+raised the data files; dae raised the scraping risk, 2026-10-01). The same
+change fixes issue #59: the page pulled every file whole, and one visible
+problem served 244 MB per visit. Managers are not secret: a submission is
+compiled against them and can print them.
+
+**Also fixed.** The old predicate checked the site right but not the problem's
+own flag, so the downloads and the API served the files of a problem whose
+flag was off while the page refused. Both flags are checked now, everywhere.
+
+**Consequences.** A problem setter who wants students to have whole files sets
+`ui.testcase_preview_bytes` to 0 site-wide; there is no per-problem override by
+design (one policy, easy to reason about). Reporters see whole files even when
+the problem's flag is off, mirroring `can_view_submission?`.
+
+## 2026-08-30 — `prepare_testcase_directory` is create-only; the writer owns cleanup
+
+**Decision.** The shared `JudgeBase#prepare_testcase_directory` computes paths
+and creates directories. It never deletes, moves or truncates a file. Clearing
+a stale `stdout.txt` before a run belongs to `Evaluator#clear_stale_output`,
+called once from `Evaluator#execute` immediately before isolate runs. The same
+rule binds any future side effect added to a `JudgeBase` helper: put it in the
+class whose lifecycle it belongs to, not in the shared helper.
+
+**Why.** Rev 2045 put `FileUtils.rm_f(@output_file)` in the shared helper to fix
+a genuine bug — a run that died mid-way left `stdout.txt` owned by another
+isolate box's uid at 0644, and a rerun on a different box could not
+truncate-open it (14 of 142 rejudges failed that way on 2026-08-27). The unlink
+was right; its placement was not. `Checker#process` re-runs the same helper to
+compute *its* `@output_file`, and it does so **after** the program has written
+the output — so the compare step deleted the file it was about to read.
+`check_for_required_file` then raised `Output file [...] does not exists` on
+every testcase. Deployed 2026-08-30 14:37; every submission on all five active
+servers ended in `grader_error` until rev 2061, and 1,759 needed a rejudge.
+
+**Lesson recorded.** A helper shared by two classes is called at *their*
+moments, not at one moment. `Evaluator` calls this one before the run,
+`Checker` after it; anything destructive in the shared path is therefore
+guaranteed to run at the wrong time for one of them. Read the call sites, not
+just the helper, before adding a side effect to shared code — `grep -rn` for
+the method name is a five-second check that would have caught this.
+
+**Guard rails.** `test/engine/testcase_output_lifecycle_test.rb` asserts the
+helper preserves an existing output for both classes and that
+`clear_stale_output` removes it. `test/engine/evaluator_checker_flow_test.rb`
+runs the real `Evaluator#execute` into the real `Checker#process` with only the
+sandbox and downloads faked — it fails with the production error on rev 2045
+and needs no isolate, so CI can run it. `bin/rails engine:smoke SUB=<id>` grades
+a real submission with real isolate on a host and restores it, for post-deploy
+verification the test suite structurally cannot provide. Comments at both sites
+name this incident.
+
 ## 2026-08-29 — `custom_cms` argv order is testlib's by design; verified safe on production
 
 **Decision.** The `custom_cms` / `custom_cms_raw` evaluation types keep their

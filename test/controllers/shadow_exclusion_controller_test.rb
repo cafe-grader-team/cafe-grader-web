@@ -20,6 +20,14 @@ class ShadowExclusionControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "##{@shadow.id}", response.body
   end
 
+  test "student all-problems submission list omits shadows" do
+    sign_in_as('john', 'hello')
+    get submissions_path
+    assert_response :success
+    assert_match "##{@original.id}", response.body
+    assert_no_match "##{@shadow.id}", response.body
+  end
+
   test "student cannot open a shadow by id" do
     sign_in_as('john', 'hello')
     get submission_path(@shadow)

@@ -32,11 +32,11 @@ class NearMissRunsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot browse runs" do
     get near_miss_runs_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
     get near_miss_run_path(runs: 'test-run-1')
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
     get near_miss_repair_path(@repair)
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user cannot browse runs" do

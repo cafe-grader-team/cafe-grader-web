@@ -1,0 +1,18 @@
+-# One row of the "By group" card on problems#stat. `row` is a Problem::GroupStat.
+%tr
+  %td
+    = link_to row.group.name, problem_score_report_path(@problem, row.group), class: 'text-decoration-none fw-semibold', title: "Best Score report for #{row.group.name}"
+    - unless row.group.enabled
+      %span.badge.text-bg-secondary.ms-1 archived
+  %td.text-end= row.users
+  %td.text-end #{row.solved} / #{row.attempted}
+  %td.text-end
+    - if row.attempted.zero?
+      %span.text-secondary —
+    - else
+      #{(row.solved * 100.0 / row.attempted).round(1)}%
+  %td.text-end
+    - if row.mean_best.nil?
+      %span.text-secondary —
+    - else
+      = row.mean_best

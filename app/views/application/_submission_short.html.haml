@@ -32,13 +32,13 @@
     -# (evaluating), or grading failed (grader_error — graded_at stays nil, so
     -# without this branch a failed viva reads "Waiting to be graded..." forever)
     .row
-      .col-12.d-flex.align-items-center
+      .col-12.d-flex.align-items-center.gap-1
         %span.me-1.mi.mr-2.text-secondary hourglass
         started
         %span= time_ago_in_words(submission.submitted_at) + ' ago'
         %span.text-secondary (#{format_short_time(submission.submitted_at)})
     .row
-      .col-12.d-flex.align-items-center
+      .col-12.d-flex.align-items-center.gap-1
         - case submission.status.to_s
         - when 'grader_error'
           = link_to viva_submission_path(submission), class: 'badge rounded-pill text-decoration-none d-inline-flex align-items-center gap-1 bg-danger-subtle text-danger-emphasis', title: 'View viva', data: {turbo: false} do
@@ -51,7 +51,7 @@
   - elsif !submission.graded_at
     -# show waiting to be graded
     .row
-      .col-12.d-flex.align-items-center
+      .col-12.d-flex.align-items-center.gap-1
         %span.me-1.mi.mr-2.text-secondary hourglass
         submitted
         %span= time_ago_in_words(submission.submitted_at) + ' ago'
@@ -65,7 +65,7 @@
   - else
     -# show graded time (and the score if allowed)
     .row
-      .col-12.d-flex.align-items-center
+      .col-12.d-flex.align-items-center.gap-1
         %span.me-1.mi.mr-2.text-secondary calendar_clock
         %span= time_ago_in_words(submission.graded_at) + ' ago'
         %span.text-secondary (#{format_short_time(submission.graded_at)})
@@ -73,8 +73,10 @@
       .row
         //.col-lg-3.text-secondary=t 'main.score'
         -# top-aligned (not centred): the verdict strip can be several rows
-        -# tall and the score should sit beside its first row
-        .col-12.d-flex.align-items-start
+        -# tall and the score should sit beside its first row. A plain-text
+        -# verdict (User#verdict_display) is single-line, so centre it like
+        -# the pre-4.5 layout did.
+        .col-12.d-flex.gap-1{class: (Current.user&.verdict_plain? ? 'align-items-center' : 'align-items-start')}
           %span.me-1.mi.mr-2.text-secondary speed
           %span{class: ('text-success' if submission.points >= 100)}
             = submission.points

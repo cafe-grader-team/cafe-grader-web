@@ -58,21 +58,38 @@
 
             .flex-grow-1
               %h5.fw-bold.text-dark.mb-0 Background Workers
-              .text-secondary.small Solid Queue + LLM job health
+              .text-secondary.small Solid Queue + LLM job health, disk space
 
           .row.g-3
-            .col-4
+            .col-6.col-md-3
               = link_to queues_grader_processes_path(status: 'failed'), class: 'card border-0 bg-danger-subtle text-center p-3 rounded-3 text-decoration-none' do
                 .fw-bold.h3.mb-1.text-danger-emphasis= @sq_failed_count
                 .text-secondary.small Solid Queue failures
-            .col-4
+            .col-6.col-md-3
               = link_to stuck_viva_turns_grader_processes_path, class: 'card border-0 bg-warning-subtle text-center p-3 rounded-3 text-decoration-none' do
                 .fw-bold.h3.mb-1.text-warning-emphasis= @stuck_viva_count
                 .text-secondary.small Stuck viva items
-            .col-4
+            .col-6.col-md-3
               = link_to viva_alerts_grader_processes_path, class: 'card border-0 bg-danger-subtle text-center p-3 rounded-3 text-decoration-none' do
                 .fw-bold.h3.mb-1.text-danger-emphasis= @viva_alert_count
                 .text-secondary.small Viva alerts
+            -# Disk (issue #25): the lowest free space across the web host and
+            -# every judge host that has reported one; red below
+            -# GraderProcess::LOW_DISK_MB, the per-host list sits underneath.
+            .col-6.col-md-3
+              - low = @low_disk_count > 0
+              .card.border-0.text-center.p-3.rounded-3{class: (low ? 'bg-danger-subtle' : 'bg-success-subtle'), id: 'disk-tile'}
+                .fw-bold.h3.mb-1{class: (low ? 'text-danger-emphasis' : 'text-success-emphasis')}
+                  = @lowest_disk_mb ? "#{number_with_precision(@lowest_disk_mb / 1024.0, precision: 1)} GB" : '—'
+                .text-secondary.small
+                  = low ? pluralize(@low_disk_count, 'host') + ' low on disk' : 'Lowest free disk'
+          .small.text-secondary.mt-2#disk-by-host
+            - @disk_rows.each do |label, mb, beat|
+              %span.me-3.text-nowrap{class: ('text-danger fw-semibold' if GraderProcess.low_disk?(mb))}
+                = label
+                = mb ? "#{number_with_precision(mb / 1024.0, precision: 1)} GB" : 'unknown'
+                - if beat && beat < GraderProcess.stalled_time.ago
+                  %span.text-muted (stale #{time_ago_in_words(beat)})
 
       - if @error_jobs&.any?
         .card.shadow-sm.border-start.border-4.border-danger.mb-4
@@ -105,7 +122,13 @@
                     %td
                       %span.badge.text-bg-secondary= job.job_type
                     %td
-                      = link_to "##{job.arg}", submission_path(job.arg)
+                      -# arg is nil for a job whose submission was deleted before
+                      -# the orphan reclaim gave up on it (Job.reclaim_orphaned!);
+                      -# submission_path(nil) would raise and take the page down.
+                      - if job.arg
+                        = link_to "##{job.arg}", submission_path(job.arg)
+                      - else
+                        %span.text-muted deleted
                     %td
                       %small.text-danger= job.result
                     %td
@@ -138,6 +161,50 @@
                 %th.text-center Action
             %tbody
               = render partial: 'grader', collection: @graders
+
+      -# Job Workers card: the Solid Queue processes (supervisor, dispatcher,
+      -# scheduler, workers) as they REGISTERED themselves. A worker's queues and
+      -# thread pool are the effective values after any per-host override
+      -# (config/solid_queue.env) — what this host really runs, not what a
+      -# config file says. A row turns red when its heartbeat is older than
+      -# Solid Queue's prune threshold.
+      .card.shadow-sm.mb-4
+        .card-body
+          .d-flex.align-items-start.mb-3
+            .bg-primary-subtle.text-primary.rounded-3.d-flex.align-items-center.justify-content-center.me-3{ style: "width: 48px; height: 48px; flex-shrink: 0;" }
+              %span.mi.md-36.fill memory
+
+            .flex-grow-1
+              %h5.fw-bold.text-dark.mb-0 Job Workers
+              .text-secondary.small
+                = pluralize(@job_workers.size, 'Solid Queue process')
+                registered · effective queues and thread pools · stale after #{@job_worker_stale_after.inspect}
+
+          - if @job_workers.empty?
+            .text-secondary.small No Solid Queue process is registered — is the solid_queue service running?
+          - else
+            %table#job-workers.table.table-hover.align-middle.mb-0
+              %thead
+                %tr.text-secondary.small
+                  %th Kind
+                  %th Queues
+                  %th.text-end Threads
+                  %th Heartbeat
+                  %th Host
+              %tbody
+                - @job_workers.each do |p|
+                  - stale = p.last_heartbeat_at <= @job_worker_stale_after.ago
+                  %tr{class: ('table-danger' if stale)}
+                    %td
+                      %span.badge{class: (p.kind == 'Worker' ? 'text-bg-primary' : 'text-bg-secondary')}= p.kind
+                    %td= p.metadata['queues']
+                    %td.text-end= p.metadata['thread_pool_size']
+                    %td
+                      %small{class: (stale ? 'text-danger fw-bold' : 'text-muted')}
+                        = time_ago_in_words(p.last_heartbeat_at) + ' ago'
+                        = ' (stale)' if stale
+                    %td
+                      %small.text-muted= "#{p.hostname}:#{p.pid}"
 
     -# ==========================================
     -# ---------- Right Column ------------------

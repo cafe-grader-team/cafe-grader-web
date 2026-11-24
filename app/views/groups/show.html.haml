@@ -250,8 +250,8 @@
         topEnd: 'search',
       },
       rowId: 'id',
-      columns: [ 
-        {data: 'login', render: function(data,type,row,meta) { return `<a href="/user_admin/${row['user_id']}/stat" data-turbo="false" class="fw-bold text-decoration-none"> ${data}</a>` } },
+      columns: cafe.dt.escape_columns_by_default([ 
+        {data: 'login', render: function(data,type,row,meta) { return `<a href="/user_admin/${row['user_id']}/stat" data-turbo="false" class="fw-bold text-decoration-none"> ${cafe.escapeHtml(data)}</a>` } },
         {data: 'full_name'},
         {data: 'role'},
         {data: 'remark'},
@@ -292,7 +292,7 @@
           },
           className: 'align-middle py-1 pr-2',
         }
-      ],
+      ]),
       columnDefs: [{visible: false, targets: user_role_column}, {orderable: false, targets: [4,5]} ],
       destroy: true,
       paging: false,
@@ -341,8 +341,8 @@
         },
       },
       rowId: 'id',
-      columns: [
-        {data: 'name', render: function(data,type,row,meta) { return `<a href="/problems/${row['id']}/edit" data-turbo="false" class="fw-bold text-decoration-none"> ${data}</a>` } },
+      columns: cafe.dt.escape_columns_by_default([
+        {data: 'name', render: function(data,type,row,meta) { return `<a href="/problems/${row['id']}/edit" data-turbo="false" class="fw-bold text-decoration-none"> ${cafe.escapeHtml(data)}</a>` } },
         {data: 'full_name'},
         {data: 'tags', render: cafe.dt.render_factory.badge()},
         {data: 'date_added'},
@@ -364,7 +364,7 @@
           },
           className: 'align-middle py-1 pr-2',
         }
-      ],
+      ]),
       columnDefs: [{orderable: false, targets: [2,3,6]} ],
       order: [[3,'desc']],
       drawCallback: function (settings) {

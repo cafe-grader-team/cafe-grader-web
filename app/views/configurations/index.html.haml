@@ -11,9 +11,15 @@
       = link_to reload_grader_configuration_index_path, class: 'btn-flex btn btn-outline-secondary btn-sm me-2', title: 'Reload configuration from DB' do
         %span.mi.md-18 refresh
         Reload
-      = link_to clear_user_ip_grader_configuration_index_path, class: 'btn-flex btn btn-outline-danger btn-sm', data: {turbo: true, 'turbo-method': 'post'}, title: 'Clear all user device locks' do
+      = link_to clear_user_ip_grader_configuration_index_path, class: 'btn-flex btn btn-outline-danger btn-sm me-2', data: {turbo: true, 'turbo-method': 'post'}, title: 'Clear all user device locks' do
         %span.mi.md-18 lock_open
         Clear Device Locks
+      -# "Too many failed login attempts": clears every live login-failure
+      -# counter, per address and per account (LoginThrottling.clear_recent!).
+      = button_to clear_login_locks_grader_configuration_index_path, class: 'btn-flex btn btn-outline-danger btn-sm', title: 'Unlock logins blocked by "Too many failed login attempts"',
+        form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': 'Clear all login locks? Every address and account blocked by "Too many failed login attempts" can log in again at once.'}} do
+        %span.mi.md-18 key
+        Clear Login Locks
 
 .row
   .col-md-12
@@ -46,6 +52,7 @@
                     %span.badge.bg-body-tertiary.text-secondary=conf.value_type.upcase
                   .config-value-wrapper
                     = render partial: 'config', locals: {conf: conf}
+                = render partial: 'config_warnings', locals: {conf: conf}
 
 :javascript
   function filterConfigs() {

@@ -52,3 +52,28 @@ production:
   grader_cleanup_judge:
     command: "Grader.cleanup_judge"
     schedule: at 2am every day
+  # Fleet-wide backstop for judge jobs stranded in :process by a grader that
+  # died mid-job. Grader.watchdog already reclaims these within a minute, from
+  # `ps` evidence, for every box on a host it runs on — but that is exactly
+  # the path that cannot fire when a whole host is down or its cron is not
+  # running, which is when jobs strand in bulk. This sweep sees every host's
+  # rows because it runs on the web server, and pays for that with a coarse
+  # signal: age alone. 30 minutes is ~180x the longest legitimate single job
+  # (10s compile time limit; the largest dataset time_limit in production is
+  # 5s), so a job past it is not slow, it is abandoned.
+  #
+  # Production only, unlike viva_turn_failsafe: development databases here are
+  # production copies, and they carry years of historical :process rows whose
+  # submissions were long since resolved by hand. Sweeping those on a
+  # developer's machine would dead-letter a few hundred rows nobody asked
+  # about. Run it by hand in development if you want it.
+  grader_job_reclaim:
+    command: "Job.reclaim_orphaned!(older_than: 30.minutes)"
+    schedule: every 10 minutes
+  # Hall of Fame counts (problem_stats). One aggregate query over submissions:
+  # 7 s on cp-grader's 977k rows (2026-10-08). Sat unread under `recurring:`
+  # in config/queue.yml from rev 1558 (2026-04) until 4.7.3, so the counts
+  # were never refreshed.
+  refresh_problem_stats:
+    class: RefreshProblemStatsJob
+    schedule: every hour

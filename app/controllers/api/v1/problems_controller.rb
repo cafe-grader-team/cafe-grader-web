@@ -267,22 +267,29 @@ class Api::V1::ProblemsController < Api::V1::BaseController
 
   # GET /api/v1/problems/:id/testcases
   def testcases
-    unless current_user.can_view_testcase?(@problem)
+    access = current_user.testcase_access(@problem)
+    unless access
       render json: { error: "You are not allowed to view testcases for this problem" }, status: :forbidden and return
     end
 
     dataset = @problem.live_dataset
     render json: [] and return unless dataset
 
-    tcs = dataset.testcases.display_order
+    tcs = dataset.testcases.display_order.with_attached_inp_file.with_attached_ans_file
 
+    # access + sizes tell a client what /testcases/{id}/input|sol will give it:
+    # "full" = the whole file, "preview" = the first
+    # GraderConfiguration.testcase_preview_bytes (issues #18 and #59).
     render json: tcs.map { |tc|
       {
         id: tc.id,
         num: tc.num,
         group: tc.group,
         group_name: tc.group_name,
-        weight: tc.weight
+        weight: tc.weight,
+        access: access.to_s,
+        input_bytes: (tc.inp_file.attached? ? tc.inp_file.byte_size : nil),
+        sol_bytes: (tc.ans_file.attached? ? tc.ans_file.byte_size : nil)
       }
     }
   end

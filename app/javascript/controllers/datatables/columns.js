@@ -14,7 +14,7 @@ export const renderers = {
     const start_offset = row['start_offset_second']
     const extra_time = row['extra_time_second']
     return `<span class="d-inline-flex align-items-center">${start_offset} : ${extra_time} ` +
-      `<a class="d-inline-flex align-items-center text-decoration-none" href='#' data-row-id="${row['id']}" data-login="${row['login']}" data-start-offset="${start_offset}" data-extra-time="${extra_time}" data-action="click->contest#showExtraTimeDialog">` +
+      `<a class="d-inline-flex align-items-center text-decoration-none" href='#' data-row-id="${row['id']}" data-login="${cafe.escapeHtml(row['login'])}" data-start-offset="${start_offset}" data-extra-time="${extra_time}" data-action="click->contest#showExtraTimeDialog">` +
       `<span class="mi md-18 mx-1">edit</span></a>` +
       `<span>`
   },
@@ -36,7 +36,7 @@ export const renderers = {
             <span class="mi">more_horiz</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
-            <li><h6 class="dropdown-header">Actions for ${row['login']}</h6></li>
+            <li><h6 class="dropdown-header">Actions for ${cafe.escapeHtml(row['login'])}</h6></li>
             <li>
               <a class="dropdown-item d-flex align-items-center gap-2" href="#" 
                  data-action="click->contest#postUserAction" 
@@ -61,7 +61,7 @@ export const renderers = {
                  data-action="click->contest#postUserAction" 
                  data-row-id="${row['user_id']}" 
                  data-command="remove"
-                 data-form-confirm="Remove ${row['login']} from this contest?">
+                 data-form-confirm="Remove ${cafe.escapeHtml(row['login'])} from this contest?">
                 <span class="mi md-18">person_remove</span>
                 Remove from Contest
               </a>
@@ -92,7 +92,7 @@ export const renderers = {
            data-action="click->contest#postProblemAction" 
            data-row-id="${row['problem_id']}" 
            data-command="remove"
-           data-form-confirm="Remove ${row['name']} from this contest?" title="Remove from Contest">
+           data-form-confirm="Remove ${cafe.escapeHtml(row['name'])} from this contest?" title="Remove from Contest">
           <span class="mi">close</span>
         </button>
       </div>
@@ -138,8 +138,30 @@ export const columns = {
         return data
       }
     },
-    detail: { data: 'detail_html', title: 'Detail' },
+    // Server-built HTML (Llm::RequestJobPresenter#detail_html): opt out of the
+    // escaping default renderer set in cafe_datatable.js.
+    detail: { data: 'detail_html', title: 'Detail', render: (data) => data },
     createdAt: { data: 'created_at', title: 'Created At' }
+  },
+  // --- contest AI-usage report (per-call feed) ---
+  aiUsage: {
+    at:           { data: 'at', title: 'Time', render: cafe.dt.render.datetime('MM-DD HH:mm:ss') },
+    kind:         { data: 'kind', title: 'Kind' },
+    login:        { data: 'login', title: 'Student' },
+    problem:      { data: 'problem', title: 'Problem' },
+    model:        { data: 'model', title: 'Model' },
+    queuedS:      { data: 'queued_s', title: 'Queue s' },
+    modelS:       { data: 'model_s', title: 'AI s' },
+    totalS:       { data: 'total_s', title: 'Wait s' },
+    tokensIn:     { data: 'tokens_in', title: 'Tok in' },
+    tokensOut:    { data: 'tokens_out', title: 'Tok out' },
+    cost:         { data: 'cost', title: 'Cost $' },
+    status:       { data: 'status', title: 'Status' },
+    submissionId: { data: 'submission_id', title: 'Submission', render: function (data, type) {
+      if (data === null) return ''
+      if (type === 'display' || type === 'filter') return `<a href="/submissions/${data}"> #${data}</a>`
+      return data
+    } },
   },
   // --- contest (index, user, problem) ---
   contest: {
@@ -153,7 +175,7 @@ export const columns = {
     manageLink: { data: null, render: cafe.dt.render.link(`${cafe.msi('settings')} Manage`, { path: AppRoute.contest, className: 'btn btn-flex btn-outline-primary border-0' }), className: 'align-middle py-1' },
     watchLink: { data: null, render: cafe.dt.render.link(`${cafe.msi('summarize')} Watch`, { path: AppRoute.viewContest, className: 'btn btn-flex btn-outline-success border-0' }), className: 'align-middle py-1' },
     cloneButton: { data: null, render: cafe.dt.render.link(`${cafe.msi('file_copy', 'md-18')} Clone`, { path: AppRoute.cloneContest, className: 'btn btn-sm btn-success', prefetch: false, turboStream: true }), className: 'align-middle py-1' },
-    deleteButton: { data: null, render: cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, method: 'delete', confirm: 'Really delete this contest?', className: 'btn btn-sm btn-danger', }), className: 'align-middle py-1' },
+    deleteButton: { data: null, render: cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, method: 'delete', confirm: (row) => `Really delete contest "${row.name}"?`, className: 'btn btn-sm btn-danger', }), className: 'align-middle py-1' },
     actionButton: {
       data: null, render: function (data, type, row, meta) {
 
@@ -166,7 +188,7 @@ export const columns = {
 
         // Dropdown actions
         const clone_button = cafe.dt.render.link(`${cafe.msi('file_copy', 'md-18')} Clone`, { path: AppRoute.cloneContest, className: 'dropdown-item d-inline-flex align-items-center', prefetch: false, turboStream: true })(data, type, row, meta)
-        const delete_button = cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, className: 'dropdown-item text-danger d-inline-flex align-items-center', method: 'delete', confirm: 'Really delete this contest?' })(data, type, row, meta)
+        const delete_button = cafe.dt.render.link(`${cafe.msi('delete', 'md-18')} Destroy`, { path: AppRoute.contest, className: 'dropdown-item text-danger d-inline-flex align-items-center', method: 'delete', confirm: (row) => `Really delete contest "${row.name}"?` })(data, type, row, meta)
 
         let dropdown = `<div class="dropdown d-inline-flex align-items-center">` +
           `  <a type="button" class="btn btn-outline-secondary link-flex rounded-1 border-0 p-1" data-bs-toggle="dropdown">` +

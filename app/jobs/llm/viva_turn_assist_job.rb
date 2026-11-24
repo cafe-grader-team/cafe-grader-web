@@ -1,5 +1,11 @@
 module Llm
   class VivaTurnAssistJob < RequestJob
+    # Interview turns run on their own queue+worker so an assist-request
+    # flood on `default` cannot starve a student mid-interview (2026-09-09
+    # exam: one 3-thread worker served turns, grades AND assists; turn wait
+    # rose from ~5s to a p95 of 358s). See config/queue.yml.
+    queue_as :viva
+
     private
 
     # The concrete viva turn service class is configured in config/llm.yml via

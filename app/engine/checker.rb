@@ -1,30 +1,36 @@
 require 'open3'
+require 'shellwords'
 
 class Checker
   include IsolateRunner
   include JudgeBase
   include Rails.application.routes.url_helpers
 
-  # Each branch produces the shell command that compares submission output
-  # to the expected answer. Semantics documented in
-  # doc/dataset-scoring-and-evaluation.md — keep that file in sync with
-  # this dispatch table when adding/changing evaluators.
+  # Each branch produces the argv (an Array of Strings, run WITHOUT a shell)
+  # that compares submission output to the expected answer. Semantics
+  # documented in doc/dataset-scoring-and-evaluation.md — keep that file in
+  # sync with this dispatch table when adding/changing evaluators.
+  #
+  # argv, not a command string: the custom checker keeps its uploaded
+  # filename on the judge host, and a name like "checker (1)" inside a shell
+  # string was parsed by the shell and failed every testcase (issue #49).
   def check_command(evaluation_type, input_file, output_file, ans_file)
+    input_file, output_file, ans_file = [input_file, output_file, ans_file].map(&:to_s)
     case evaluation_type
     when 'default'
       # -b: ignore amount-of-whitespace diffs; -B: ignore blank lines;
       # -Z: ignore trailing whitespace. Right default for most problems.
-      return "diff -q -b -B -Z #{output_file} #{ans_file}"
+      return ['diff', '-q', '-b', '-B', '-Z', output_file, ans_file]
     when 'exact'
-      return "diff -q #{output_file} #{ans_file}"
+      return ['diff', '-q', output_file, ans_file]
     when 'relative'
       # Tokenizes on whitespace; numbers compared with EPSILON = 1e-6.
       prog = Rails.root.join 'lib', 'checker', (evaluation_type + ".rb")
-      return "#{prog} #{input_file} #{output_file} #{ans_file}"
+      return [prog.to_s, input_file, output_file, ans_file]
     when 'postgres'
       # Strips CREATE VIEW / DROP VIEW lines, then CMS-style scoring.
       prog = Rails.root.join 'lib', 'checker', 'postgres_checker.rb'
-      return "#{prog} #{input_file} #{output_file} #{ans_file}"
+      return [prog.to_s, input_file, output_file, ans_file]
     when 'custom_testlib', 'custom_testlib_raw'
       # User's checker, testlib/Codeforces argv order (input, USER, correct),
       # CMS result protocol: exit 0, score on stdout, comment on stderr. The
@@ -33,21 +39,21 @@ class Checker
       # — the order is NOT what CMS itself passes (see 'cms_comparator').
       # Every deployed problem on these types was written to this order
       # (verified 2026-08-29/30, doc/decisions.md) — do NOT change.
-      return "#{@prob_checker_file} #{input_file} #{output_file} #{ans_file}"
+      return [@prob_checker_file.to_s, input_file, output_file, ans_file]
     when 'cms_comparator'
       # User's checker, CMS-native argv order (input, CORRECT, USER) — this is
       # what CMS itself invokes (cms/grading/steps/trusted.py), swapped from
       # custom_testlib's order. Same result protocol as custom_testlib: exit 0,
       # score on stdout, comment on stderr (see process_result_cms).
-      return "#{@prob_checker_file} #{input_file} #{ans_file} #{output_file}"
+      return [@prob_checker_file.to_s, input_file, ans_file, output_file]
     when 'custom_cafe'
       # User's checker. Receives <lang> <tc_num> <in> <out> <ans> 10.
       # Output is two lines: line1 CORRECT/INCORRECT/COMMENT:, line2 score
       # (note: score is divided by 10 in process_result_cafe).
-      return "#{@prob_checker_file} #{@sub.language.name} #{@testcase.num} #{input_file} #{output_file} #{ans_file} 10"
+      return [@prob_checker_file.to_s, @sub.language.name, @testcase.num.to_s, input_file, output_file, ans_file, '10']
     when 'no_check'
       # Reachable here but NOT in the Dataset#evaluation_type enum — see doc.
-      return ""
+      return []
     end
   end
 
@@ -160,11 +166,17 @@ class Checker
 
     cmd = check_command(@ds.evaluation_type, @input_file, @output_file, @ans_file)
 
-    # call the compare command
-    judge_log "#{rb_sub(@sub)} Testcase: #{rb_testcase(@testcase)} check cmd: " + Rainbow(cmd).color(JudgeBase::COLOR_CHECK_CMD)
-    out, err, status = Open3.capture3(cmd)
+    # call the compare command (argv, no shell — see check_command)
+    judge_log "#{rb_sub(@sub)} Testcase: #{rb_testcase(@testcase)} check cmd: " + Rainbow(cmd.shelljoin).color(JudgeBase::COLOR_CHECK_CMD)
+    timeout = worker_limit(:checker_timeout, CHECKER_TIMEOUT)
+    out, err, status, timed_out = cmd.empty? ? ['', '', nil, false] : run_bounded(cmd, timeout: timeout)
 
-    result = process_result(@ds.evaluation_type, out, err, status)
+    result = if timed_out
+      # this testcase only (`!`); the submission's other testcases still run
+      EngineResponse::CheckerResult.grader_error(comment: "(cafe-checker) checker timed out after #{timeout} s")
+    else
+      process_result(@ds.evaluation_type, out, err, status)
+    end
     judge_log "#{rb_sub(@sub)} Testcase: #{rb_testcase(@testcase)} check result: "+result_status_with_color(result)
     return result
   end

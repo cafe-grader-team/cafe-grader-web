@@ -15,6 +15,11 @@ export function verdictStrip(comment, config) {
   if (!valid.test(comment)) {
     return `<span class="grader-comment grader-comment-capped"> [${esc(comment)}]</span>`
   }
+  // Viewer prefers plain text (User#verdict_display): pre-4.5 uncapped markup,
+  // mirroring GraderCommentHelper#grader_comment_strip.
+  if (config.plain) {
+    return `<span class="grader-comment text-break"> [${esc(comment)}]</span>`
+  }
   const total = comment.replace(/[\[\]]/g, '').length
   const groups = (comment.match(/\[/g) || []).length
   let index = 0, groupIndex = 0

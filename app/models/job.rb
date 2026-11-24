@@ -85,7 +85,186 @@ class Job < ApplicationRecord
   end
 
   # delete successful jobs older than x (errors are kept until admin clears them)
-  def self.clean_old_job(x = 1.day)
-    Job.where(status: :success).where('updated_at < ?', Time.zone.now - x).delete_all
+  # Nightly trim, run by Grader.cleanup_web. Finished-OK rows are pure history
+  # once the submission carries its grade, so they go after a day. Error rows
+  # are the debugging trail for reclaim sweeps and outages (the Graders page
+  # lists the latest 50 with Retry All / Clear All), so they stay longer — but
+  # not forever: on 2026-09-08 comprog still carried 4,422 dead rows from the
+  # 2026-08-30 outage and every judge poll scanned them. Returns the number of
+  # rows removed.
+  def self.clean_old_job(x = 1.day, error_after: 30.days)
+    now = Time.zone.now
+    Job.where(status: :success).where('updated_at < ?', now - x).delete_all +
+      Job.where(status: :error).where('updated_at < ?', now - error_after).delete_all
+  end
+
+  #
+  # ---- chains ----
+  #
+
+  # Submission#add_judge_job starts a chain: one compile job, then the
+  # evaluate jobs and the score job it leads to, which carry the compile
+  # job's id as parent_job_id. A rejudge starts a new chain with a higher id
+  # while the old chain's rows stay in the table (errors for 30 days), so a
+  # submission's current chain is the newest chain id among its rows.
+  def chain_id
+    jt_compile? ? id : parent_job_id
+  end
+
+  # chain_id in SQL, built as an Arel node rather than an interpolated string
+  def self.chain_id_expression
+    Arel::Nodes::Case.new(arel_table[:job_type])
+      .when(job_types[:compile]).then(arel_table[:id])
+      .else(arel_table[:parent_job_id])
+  end
+
+  # {submission_id => newest chain id among its job rows}. Counts a chain's
+  # evaluate and score rows, not only its compile row: clean_old_job deletes
+  # a successful compile row after a day but keeps the chain's error rows
+  # for 30.
+  def self.newest_chain_ids(submission_ids)
+    where(arg: submission_ids).group(:arg).maximum(chain_id_expression)
+  end
+
+  # False once a rejudge has started a newer chain for the submission. The
+  # grader asks after it claims a job and again before each write the job
+  # makes (compiled binary and status, evaluation row, score, grading
+  # error), so a chain overtaken mid-run stops instead of writing over the
+  # new one. A row with no chain id (none are created today) counts as
+  # current, as every row did before chains were checked.
+  def self.chain_current?(submission_id, chain_id)
+    return true if chain_id.nil?
+    newest = newest_chain_ids([submission_id])[submission_id]
+    newest.nil? || chain_id >= newest
+  end
+
+  SUPERSEDED_RESULT = 'superseded by rejudge'.freeze
+
+  # Called first by Submission#add_judge_job: the submission's waiting and
+  # processing jobs become errors, so a waiting one is never claimed and a
+  # processing one stops at its next chain check. Returns the row count.
+  def self.supersede!(submission)
+    where(arg: submission.id, status: [:wait, :process])
+      .update_all(status: :error, result: SUPERSEDED_RESULT, updated_at: Time.zone.now)
+  end
+
+  def superseded!
+    update(status: :error, result: SUPERSEDED_RESULT)
+  end
+
+  # A submission in one of these has finished its newest grading, so an error
+  # row it still has is history — also once the newer chain's own rows have
+  # been cleaned away and the row looks current again.
+  RETRY_SETTLED_STATUSES = %w[done compilation_error].freeze
+
+  # Split error jobs into [retryable, skipped] for Retry and Retry All on the
+  # Graders page. Retryable: the submission still exists, is not settled,
+  # and no newer chain has rows for it. Retry All used to requeue every error
+  # row, so a row left behind by a rejudge ran again beside the new chain and
+  # both wrote the submission's evaluations.
+  def self.split_retryable(jobs)
+    sub_ids = jobs.map(&:arg).compact.uniq
+    open_ids = Submission.where(id: sub_ids).where.not(status: RETRY_SETTLED_STATUSES).pluck(:id).to_set
+    newest = newest_chain_ids(sub_ids)
+    jobs.partition do |job|
+      open_ids.include?(job.arg) && job.chain_id.present? && job.chain_id >= newest[job.arg]
+    end
+  end
+
+  #
+  # ---- reclaiming orphaned jobs ----
+  #
+
+  # How long a job may sit in :process before requeueing it stops being the
+  # helpful thing to do. Well above the longest legitimate single job — a
+  # compile is capped at 10s (Compiler#compile) and the largest dataset
+  # time_limit in production is 5s — so this is not a race window, it is the
+  # point past which regrading has become a surprise rather than a repair.
+  MAX_RECLAIM_AGE = 24.hours
+
+  # Shared budget with check_and_run_job's rescue, which parses the same
+  # "retry N" prefix out of #result: a job that keeps taking its grader down
+  # with it must not requeue forever. Attempts 1..N-1 requeue, attempt N is
+  # dead-lettered — same arithmetic as the rescue there.
+  RECLAIM_ATTEMPT_LIMIT = 3
+
+  # Return jobs whose grader claimed them and never reported back to the
+  # queue. A job reaches :process in take_oldest_waiting_job and leaves it
+  # only through Job#report; if the grader dies in between — OOM, kill -9, a
+  # host reboot, the watchdog's stalled-KILL branch (Grader.plan_box) —
+  # nothing ever flips it back. Its parent chain never completes and its
+  # submission sits in :evaluating forever.
+  #
+  # Requeueing is safe in principle: compile, evaluate and score are all
+  # re-runnable, Evaluation is find_or_create_by per (submission, testcase),
+  # and Evaluator#prepare_executable re-downloads the compiled binary rather
+  # than trusting whatever the judge box still has on disk. It is only
+  # *meaningful*, though, while the submission is still mid-flight, so two
+  # cases are dead-lettered to :error rather than requeued:
+  #
+  #   * the submission already reached a GRADING_FINAL_STATUS — an admin
+  #     rejudged it, or a sibling chain finished it. Re-running would
+  #     overwrite a settled grade, and Grader.cleanup_web has since purged
+  #     the compiled binary an evaluate job would need anyway.
+  #   * the job has been stuck longer than MAX_RECLAIM_AGE.
+  #
+  # A submission still mid-flight is marked grader_error, so it stops showing
+  # "evaluating" and the ordinary admin Rejudge path applies to it.
+  #
+  # Two callers, deliberately different in how each proves the grader is gone:
+  #   * Grader.watchdog passes grader_process_ids: for the boxes its own `ps`
+  #     sweep just proved have no process running at all. No timing heuristic,
+  #     so it cannot yank a job out from under a grader that is merely slow;
+  #     latency is one watchdog tick. The default older_than: still applies,
+  #     closing the sub-second gap between that ps snapshot and this query in
+  #     which a starting grader could claim a fresh job.
+  #   * a Solid Queue recurring task passes a generous older_than: as a
+  #     fleet-wide backstop, for a host whose watchdog is itself not running
+  #     (that is exactly when the ps-based path cannot fire).
+  #
+  # Returns {requeued:, abandoned:}.
+  def self.reclaim_orphaned!(grader_process_ids: nil, older_than: 1.minute)
+    scope = Job.where(status: :process).where('updated_at < ?', Time.zone.now - older_than)
+    scope = scope.where(grader_process_id: grader_process_ids) if grader_process_ids
+    stats = {requeued: 0, abandoned: 0}
+
+    scope.includes(:grader_process).find_each do |job|
+      sub = Submission.find_by(id: job.arg)
+      mid_flight = sub && !Submission::GRADING_FINAL_STATUSES.include?(sub.status)
+      attempt = (job.result&.match(/retry (\d+)/)&.[](1)&.to_i || 0) + 1
+      reason =
+        if sub.nil?
+          'submission no longer exists'
+        elsif !mid_flight
+          "submission already #{sub.status}"
+        elsif job.updated_at < Time.zone.now - MAX_RECLAIM_AGE
+          "stuck since #{job.updated_at.to_fs(:db)}"
+        elsif attempt >= RECLAIM_ATTEMPT_LIMIT
+          "grader died on it #{attempt} times"
+        end
+
+      if reason
+        job.update(status: :error, result: "reclaim gave up (#{job.grader_label}): #{reason}".truncate(255))
+        sub.set_grading_error('Grading was interrupted and could not be resumed. Please rejudge.') if mid_flight
+        stats[:abandoned] += 1
+      else
+        job.update(status: :wait, result: "retry #{attempt}: reclaimed, #{job.grader_label} died mid-job".truncate(255))
+        stats[:requeued] += 1
+      end
+    end
+
+    if stats.values.sum > 0
+      Rails.logger.warn("[Job.reclaim_orphaned!] requeued #{stats[:requeued]}, abandoned #{stats[:abandoned]}")
+    end
+    stats
+  end
+
+  # Which grader claimed this job, for the reclaim message. The row survives
+  # the process (find_or_create_by per worker/box in Grader#initialize), so
+  # this names the box, not the dead pid.
+  def grader_label
+    gp = grader_process
+    return 'no grader' unless gp
+    "grader worker #{gp.worker_id} box #{gp.box_id}"
   end
 end

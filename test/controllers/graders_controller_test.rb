@@ -5,7 +5,7 @@ class GradersControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get grader_processes_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user is redirected" do
@@ -50,21 +50,48 @@ class GradersControllerTest < ActionDispatch::IntegrationTest
 
   # --- Error-job management ---
 
-  test "admin can retry a single error job" do
-    sign_in_as("admin", "admin")
-    job = jobs(:job_error)
-    assert_equal "error", job.status
-    post retry_error_job_grader_processes_path, params: { job_id: job.id }, as: :turbo_stream
-    assert_response :success
-    assert_equal "wait", job.reload.status
+  # A submission graded twice: the first chain (compile A) failed in one
+  # evaluate job, then a rejudge started chain B, which failed too. B's
+  # compile row has been cleaned away (successful rows go after a day), so
+  # only B's error row says that chain A is superseded.
+  def rejudged_submission_with_two_error_jobs
+    sub = submissions(:add1_by_admin)
+    sub.update!(status: :grader_error)
+    compile_a = Job.create!(job_type: :compile, arg: sub.id, status: :success)
+    stale = Job.create!(job_type: :evaluate, arg: sub.id, parent_job_id: compile_a.id, status: :error, result: 'boom A')
+    compile_b = Job.create!(job_type: :compile, arg: sub.id, status: :success)
+    current = Job.create!(job_type: :evaluate, arg: sub.id, parent_job_id: compile_b.id, status: :error, result: 'boom B')
+    compile_b.delete
+    [stale, current]
   end
 
-  test "admin can retry all error jobs" do
+  test "admin can retry a single error job of the current chain" do
     sign_in_as("admin", "admin")
-    Job.where(status: :error).count > 0  # baseline
+    _stale, current = rejudged_submission_with_two_error_jobs
+    post retry_error_job_grader_processes_path, params: { job_id: current.id }, as: :turbo_stream
+    assert_response :success
+    assert_equal "wait", current.reload.status
+    assert_nil current.result
+  end
+
+  test "retry refuses an error job superseded by a rejudge" do
+    sign_in_as("admin", "admin")
+    stale, _current = rejudged_submission_with_two_error_jobs
+    post retry_error_job_grader_processes_path, params: { job_id: stale.id }, as: :turbo_stream
+    assert_response :success
+    assert_equal "error", stale.reload.status
+    assert_match "not re-queued", response.body
+  end
+
+  test "retry all requeues the current chain only and reports what it skipped" do
+    sign_in_as("admin", "admin")
+    stale, current = rejudged_submission_with_two_error_jobs
+    Job.where(status: :error).where.not(id: [stale.id, current.id]).delete_all
     post retry_all_error_jobs_grader_processes_path, as: :turbo_stream
     assert_response :success
-    assert_equal 0, Job.where(status: :error).count
+    assert_equal "wait", current.reload.status
+    assert_equal "error", stale.reload.status
+    assert_match "1 error job re-queued. 1 skipped", response.body
   end
 
   test "admin can clear all error jobs" do
@@ -173,5 +200,96 @@ class GradersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_no_match(/what's the time complexity\?/, response.body)
     assert_match(/No flags yet/, response.body)
+  end
+
+  # --- Error job without a submission id (reclaim gave up: submission deleted) ---
+
+  test "index renders when an error job has no submission id" do
+    sign_in_as("admin", "admin")
+    job = Job.create!(status: :error, job_type: :compile, arg: nil,
+                      result: "reclaim gave up (grader worker 1 box 6): submission no longer exists")
+
+    get grader_processes_path
+    assert_response :success
+    assert_match(/#{job.id}/, response.body)
+  end
+
+  # --- Navbar "backlogs!" badge must agree with the monitor page ---
+
+  def badge_count_before
+    # what the badge shows on the fixture data alone (all fixture submissions
+    # are ungraded and dated 2019, so they all count)
+    Submission.where(graded_at: nil).where("submitted_at < ?", 1.minute.ago).count
+  end
+
+  test "navbar backlog badge excludes ungraded viva submissions" do
+    sign_in_as("admin", "admin")
+    before = badge_count_before
+    Submission.create!(user: users(:john), problem: problems(:prob_viva), language: viva_language,
+                       status: :submitted, submitted_at: 5.minutes.ago)
+
+    get grader_processes_path
+    assert_response :success
+    assert_match(/>#{before} backlogs!</, response.body)
+  end
+
+  test "navbar backlog badge counts an ungraded code submission" do
+    sign_in_as("admin", "admin")
+    before = badge_count_before
+    Submission.create!(user: users(:john), problem: problems(:prob_add), language: languages(:Language_c),
+                       source: "int main() { return 0; }", submitted_at: 5.minutes.ago)
+
+    get grader_processes_path
+    assert_response :success
+    assert_match(/>#{before + 1} backlogs!</, response.body)
+  end
+
+  # --- Job Workers card (Solid Queue processes as registered) ---
+
+  test "admin index lists Solid Queue workers with their effective thread pool and flags a stale one" do
+    SolidQueue::Process.create!(kind: "Worker", name: "worker-live", pid: 4242, hostname: "testhost",
+                                last_heartbeat_at: Time.current,
+                                metadata: {queues: "viva", thread_pool_size: 3, polling_interval: 0.1})
+    SolidQueue::Process.create!(kind: "Worker", name: "worker-stale", pid: 4243, hostname: "testhost",
+                                last_heartbeat_at: 20.minutes.ago,
+                                metadata: {queues: "default", thread_pool_size: 3, polling_interval: 0.1})
+    sign_in_as("admin", "admin")
+    get grader_processes_path
+    assert_response :success
+    assert_select "#job-workers td", text: "viva"
+    assert_select "#job-workers td", text: "default"
+    assert_select "#job-workers td", text: "3", minimum: 2
+    assert_select "#job-workers tr.table-danger", {count: 1}, "only the 20-minute-old heartbeat is stale"
+  ensure
+    SolidQueue::Process.where(hostname: "testhost").delete_all
+  end
+
+  test "admin index renders when no Solid Queue process is registered" do
+    SolidQueue::Process.delete_all
+    sign_in_as("admin", "admin")
+    get grader_processes_path
+    assert_response :success
+    assert_select "#job-workers", count: 0
+    assert_match(/No Solid Queue process is registered/, response.body)
+  end
+
+  # Issue #25: the disk tile and the per-host list.
+  test "graders index shows the lowest free disk and flags a judge host that is low" do
+    GraderProcess.create!(worker_id: 7, box_id: 1, host: 'judge-low', disk_free_mb: 512, last_heartbeat: Time.zone.now)
+    GraderProcess.create!(worker_id: 8, box_id: 1, host: 'judge-ok', disk_free_mb: 40_960, last_heartbeat: Time.zone.now)
+    sign_in_as("admin", "admin")
+    get grader_processes_path
+    assert_response :success
+    assert_select '#disk-tile.bg-danger-subtle', text: /0\.5 GB.*1 host low on disk/m
+    assert_select '#disk-by-host span.text-danger', text: /judge-low\s+0\.5 GB/
+    assert_select '#disk-by-host', text: /judge-ok\s+40\.0 GB/
+    assert_select '#disk-by-host', text: /web: app/
+  end
+
+  test "graders index with no judge report shows the web host's own disk, not a warning" do
+    sign_in_as("admin", "admin")
+    get grader_processes_path
+    assert_response :success
+    assert_select '#disk-tile.bg-success-subtle', text: /GB.*Lowest free disk/m
   end
 end

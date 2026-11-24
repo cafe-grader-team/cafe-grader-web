@@ -31,6 +31,21 @@ class ConfigurationsController < ApplicationController
     render 'turbo_toast'
   end
 
+  # POST /grader_configuration/clear_login_locks — "Clear Login Locks". Wipes
+  # every live login-failure counter (LoginThrottling.clear_recent!) so a
+  # locked-out room or account can log in again at once, and names what was
+  # locking in the toast. Logged, not audited: nothing in the database changes.
+  def clear_login_locks
+    locked = LoginThrottling.clear_recent!
+    Rails.logger.info "[login locks] cleared by #{@current_user.login}: #{locked.inspect}"
+    held = locked[:addresses].map { |ip, n| "address #{ip} (#{n} failures)" } +
+           locked[:accounts].map { |login, n| "account #{login} (#{n} failures)" }
+    body = held.empty? ? 'No address or account was locked. Failure counts are reset anyway.'
+                       : "Unlocked #{held.join(', ')}. Failure counts are reset."
+    @toast = {title: 'Login Locks', body: body}
+    render 'turbo_toast'
+  end
+
   def update
     respond_to do |format|
       if @config.update(configuration_params)

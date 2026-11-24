@@ -7,23 +7,64 @@ module Auditable
     # Usage:
     #   audited only: [:name, :available, ...], redact: [:description]
     # Omit `only:` to audit every attribute except id/timestamps.
+    #
+    # Stage at save time, write at commit time. `saved_changes` describes only
+    # the LAST save of a record and `reload` clears it, so reading it in the
+    # commit callback lost the whole diff whenever anything happened between
+    # the save and the commit — viva:import's post_check reloads every touched
+    # problem inside its transaction, and on 2026-09-09 an APPLY run that
+    # rewrote a live briefing left no audit row. Staging in after_save also
+    # merges several saves of one record in one transaction into the single
+    # row the commit writes (first old value, last new value; a field changed
+    # and changed back is dropped), and a rollback discards what it staged.
+    # A save made while AuditLog.paused stages nothing, so pausing works the
+    # same inside or outside a transaction.
     def audited(only: nil, redact: [])
       class_attribute :_audited_fields,   default: only&.map(&:to_s)
       class_attribute :_audited_redacted, default: redact.map(&:to_s)
 
-      after_create_commit  -> { write_audit!("create") }
-      after_update_commit  -> { write_audit!("update") }
-      after_destroy_commit -> { write_audit!("destroy") }
+      after_save           :stage_audit_changes
+      after_rollback       :discard_staged_audit_changes
+      after_create_commit  -> { flush_staged_audit!("create") }
+      after_update_commit  -> { flush_staged_audit!("update") }
+      after_destroy_commit -> { write_audit!("destroy", snapshot_on_destroy) }
     end
   end
 
   private
 
-  def write_audit!(action)
+  def audited_attribute_names
+    _audited_fields || (attributes.keys - IGNORED_ATTRS)
+  end
+
+  def stage_audit_changes
+    return if Current.audit_disabled
+    @_audit_staged ||= {}
+    saved_changes.slice(*audited_attribute_names).each do |field, (old, new)|
+      first_old = @_audit_staged.key?(field) ? @_audit_staged[field].first : old
+      @_audit_staged[field] = [first_old, new]
+    end
+  end
+
+  def discard_staged_audit_changes
+    @_audit_staged = nil
+  end
+
+  def flush_staged_audit!(action)
+    staged = @_audit_staged
+    @_audit_staged = nil
+    return if staged.nil? || Current.audit_disabled
+    diff = staged.each_with_object({}) do |(field, (old, new)), h|
+      next if old == new
+      h[field] = _audited_redacted.include?(field) ? [AuditLog::REDACTED, AuditLog::REDACTED] : [old, new]
+    end
+    return if action == "update" && diff.empty?
+    write_audit!(action, diff)
+  end
+
+  def write_audit!(action, diff)
     return if Current.audit_disabled
     return unless AuditLog.table_exists?
-    diff = build_audit_diff(action)
-    return if action == "update" && diff.empty?
 
     AuditLog.create!(
       user_id:        Current.user&.id,
@@ -36,27 +77,8 @@ module Auditable
     )
   end
 
-  def build_audit_diff(action)
-    case action
-    when "create", "update" then filter_saved_changes
-    when "destroy"          then snapshot_on_destroy
-    end
-  end
-
-  def filter_saved_changes
-    tracked = _audited_fields || (attributes.keys - IGNORED_ATTRS)
-    saved_changes.slice(*tracked).each_with_object({}) do |(field, (old, new)), h|
-      if _audited_redacted.include?(field)
-        h[field] = [AuditLog::REDACTED, AuditLog::REDACTED] if old != new
-      else
-        h[field] = [old, new]
-      end
-    end
-  end
-
   def snapshot_on_destroy
-    tracked = _audited_fields || (attributes.keys - IGNORED_ATTRS)
-    tracked.each_with_object({}) do |field, h|
+    audited_attribute_names.each_with_object({}) do |field, h|
       val = attributes[field]
       val = AuditLog::REDACTED if _audited_redacted.include?(field) && val.present?
       h[field] = [val, nil]

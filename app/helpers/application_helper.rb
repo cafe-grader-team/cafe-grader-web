@@ -22,7 +22,7 @@ module ApplicationHelper
   def resource_icon_name(resource_class)
     # Handle both class and instance
     klass = resource_class.is_a?(Class) ? resource_class : resource_class.class
-    
+
     # Try direct mapping, then fallback to string lookup if needed, then default
     RESOURCE_ICONS[klass] || 'description'
   end
@@ -47,7 +47,6 @@ module ApplicationHelper
       left_menu << add_menu("#{I18n.t 'menu.hall_of_fame'}", 'report', 'problem_hof')
     end
 
-    right_menu << add_menu("#{content_tag(:span, '', class: 'glyphicon glyphicon-question-sign')}".html_safe, 'main', 'help')
     right_menu << add_menu("#{content_tag(:span, '', class: 'glyphicon glyphicon-comment')}".html_safe, 'messages', 'list', {title: I18n.t('menu.messages'), data: {toggle: 'tooltip'}})
     if GraderConfiguration['system.user_setting_enabled']
       right_menu << add_menu("#{content_tag(:span, '', class: 'glyphicon glyphicon-cog')}".html_safe, 'users', 'index', {title: I18n.t('menu.settings'), data: {toggle: 'tooltip'}})
@@ -96,7 +95,6 @@ module ApplicationHelper
     if GraderConfiguration['right.user_hall_of_fame']
       append_to menu_items, "[#{I18n.t 'menu.hall_of_fame'}]", 'report', 'problem_hof'
     end
-    append_to menu_items, "[#{I18n.t 'menu.help'}]", 'main', 'help'
 
     if GraderConfiguration['system.user_setting_enabled']
       append_to menu_items, "[#{I18n.t 'menu.settings'}]", 'users', 'index'
@@ -299,13 +297,23 @@ TITLEBAR
     # Kramdown::Document.new(text).to_html.html_safe
   end
 
-  # Safe markdown renderer for untrusted/LLM-generated content. Strips raw
-  # HTML in the input (filter_html: true) so a student can't prompt-inject
-  # the model into emitting <script> etc. and have it execute in an admin's
-  # browser. Use this for viva turns, AI-comment bodies, and anything else
-  # where the markdown source isn't authored by a trusted user.
+  # Safe markdown renderer for untrusted/LLM-generated content. Raw HTML in
+  # the input is *escaped* (escape_html: true), never executed, so a student
+  # can't prompt-inject the model into emitting <script> etc. and have it run
+  # in an admin's browser. Escaping rather than stripping (the former
+  # filter_html: true) matters because viva transcripts are full of C++:
+  # stripping read `vector<int>` as a tag and rendered it as `vector`, so the
+  # student saw text they never typed. Use this for viva turns, AI-comment
+  # bodies, and anything else whose markdown source isn't authored by a
+  # trusted user.
+  #
+  # safe_links_only: markdown reads `<scheme:...>` and `[x](url)` as links of
+  # any scheme, so `std::vector<std::set<int>>` became a link to
+  # "std::set<int" and `[x](javascript:...)` a clickable script link (no CSP
+  # here to stop it). Now only http(s)/ftp/mailto/relative URLs link; any
+  # other `<...>` falls back to escaped text.
   def safe_markdown(text)
-    renderer = Redcarpet::Render::HTML.new(prettify: true, filter_html: true)
+    renderer = Redcarpet::Render::HTML.new(prettify: true, escape_html: true, safe_links_only: true)
     parser   = Redcarpet::Markdown.new(
       renderer,
       fenced_code_blocks: true,
@@ -316,6 +324,37 @@ TITLEBAR
       lax_spacing:        true
     )
     parser.render(text.to_s).html_safe
+  end
+
+  # Markdown written by staff — announcements, hints, submission comments —
+  # whose authors use real HTML: production announcement bodies carry new-tab
+  # PDF links, <font> colour/size, tables and images. Rendered through an
+  # allow-list, so those survive while script, iframe and on* handlers are
+  # dropped and a group editor's text cannot run code in every reader's
+  # browser (GitHub #50 vector 2). Rails' default list plus the tags and
+  # attributes seen in production bodies; iframes stay out on purpose (an
+  # editor-controlled frame is a phishing frame; the only historical use was
+  # countdown clocks, which the contest timer now covers).
+  STAFF_HTML_TAGS = Rails::HTML5::SafeListSanitizer.allowed_tags + %w[table thead tbody tfoot tr th td font]
+  STAFF_HTML_ATTRIBUTES = Rails::HTML5::SafeListSanitizer.allowed_attributes + %w[target color size border]
+
+  def sanitized_markdown(text)
+    sanitized_html(markdown(text.to_s))
+  end
+
+  # The same allow-list without the markdown pass, for a body shown as raw
+  # HTML (the navbar announcement strip).
+  def sanitized_html(html)
+    sanitize(html.to_s, tags: STAFF_HTML_TAGS, attributes: STAFF_HTML_ATTRIBUTES)
+  end
+
+  # simple_format for text the user typed verbatim (viva student answers,
+  # error messages). Rails' simple_format *sanitizes* by default, which is an
+  # allow-list tag filter, not an escape: `vector<int>` loses `<int>`, and
+  # `a<b && c>d` turns into a <b> element. Escape first, then let
+  # simple_format do only paragraphs and <br />.
+  def simple_format_escaped(text, html_options = {})
+    simple_format(ERB::Util.html_escape(text.to_s), html_options, sanitize: false)
   end
 
   # Data attributes that mount the markdown-editor Stimulus controller (Ace +

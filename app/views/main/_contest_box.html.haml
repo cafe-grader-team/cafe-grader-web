@@ -25,8 +25,8 @@
                   contest_timer_target: 'counter', 
                   start: contest.start.iso8601,
                   stop: contest.stop.iso8601, 
-                  start_offset: @current_user.contests_users.where(contest_id: contest).first.start_offset_second, 
-                  extra_time: @current_user.contests_users.where(contest_id: contest).first.extra_time_second}}
+                  start_offset: @current_user.contests_users.where(contest_id: contest).first&.start_offset_second.to_i,
+                  extra_time: @current_user.contests_users.where(contest_id: contest).first&.extra_time_second.to_i}}
               %td
                 - unless contest == @current_contest
                   = link_to 'Set as active', set_active_contest_path(contest)

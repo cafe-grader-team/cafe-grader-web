@@ -7,7 +7,7 @@ class HeartbeatControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user cannot hit heartbeat edit" do
     get "/heartbeat/anything/edit"
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "authenticated user gets a heartbeat response" do

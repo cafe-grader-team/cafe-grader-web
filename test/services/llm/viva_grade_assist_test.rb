@@ -131,8 +131,13 @@ class Llm::VivaGradeAssistTest < ActiveSupport::TestCase
     @submission.reload
     refute_equal 'done', @submission.status
     # Paper trail survives the rejection.
-    assert_includes raw_content(@submission.viva_grade), 'V[4]'
-    assert_nil @submission.viva_grade.total_points
+    # The run's row is written non-current and stays so: a failed run is
+    # never the current grade.
+    run = @submission.viva_grades.order(:id).last
+    assert_includes raw_content(run), 'V[4]'
+    assert_nil run.total_points
+    refute run.current?
+    assert_nil @submission.viva_grade
   end
 
   test "handle_response rejects an empty object, an out-of-range total, and an empty rubric" do
@@ -171,7 +176,9 @@ class Llm::VivaGradeAssistTest < ActiveSupport::TestCase
 
     def execute_call(_data)
       @calls += 1
-      @replies.shift or raise 'script exhausted'
+      reply = @replies.shift or raise 'script exhausted'
+      raise reply if reply.is_a?(Exception)
+      reply
     end
 
     def provider_name = 'scripted'
@@ -198,7 +205,38 @@ class Llm::VivaGradeAssistTest < ActiveSupport::TestCase
     @submission.reload
     assert_equal 'grader_error', @submission.status
     assert_match(/\AGrader error: /, @submission.grader_comment)
-    assert_equal '{"ask": 2}', raw_content(@submission.viva_grade), 'the LAST body is what the admin sees'
+    failed = @submission.viva_grades.order(:id).last
+    assert_equal '{"ask": 2}', raw_content(failed), 'the LAST body is what the admin sees'
+    assert_equal 'error', failed.superseded_reason
+    assert_match(/schema check/, failed.error)
+    assert_nil @submission.viva_grade
+  end
+
+  test "a transport error on the re-ask files the saved run as error and still propagates" do
+    make_current_run(total: 40)
+    grader = ScriptedGrader.new(submission: @submission, batch_id: 'b9',
+                                replies: [raw_response('{"ask": 1}'), Faraday::TimeoutError.new('execution expired')])
+    assert_raises(Faraday::TimeoutError) { grader.call }
+    assert_equal 2, grader.calls
+    run = @submission.viva_grades.order(:id).last
+    assert_equal 'b9', run.batch_id
+    assert_equal 'error', run.superseded_reason, 'the retry writes its own row; this one must not stay undecided'
+    assert_match(/TimeoutError/, run.error)
+    refute run.current?
+    @submission.reload
+    assert_equal 'done', @submission.status, 'the job, not the service, decides after the retries'
+    assert_equal 40, @submission.points
+  end
+
+  test "a transport error during adoption itself leaves the scored run un-superseded, not filed as error" do
+    def @submission.adopt_viva_grade!(*) = raise(ActiveRecord::Deadlocked, 'lock wait timeout exceeded')
+    grader = ScriptedGrader.new(submission: @submission, replies: [raw_response(good_grade_json(total: 87))])
+    assert_raises(ActiveRecord::Deadlocked) { grader.call }
+    run = @submission.viva_grades.order(:id).last
+    assert_equal 87, run.total_points, 'the grade the model returned is not lost'
+    assert_nil run.superseded_reason, 'a scored-but-unadopted row stays a candidate, not an error'
+    refute run.current?
+    assert_nil @submission.reload.viva_grade
   end
 
   test "call does not re-ask a truncated reply" do
@@ -207,5 +245,120 @@ class Llm::VivaGradeAssistTest < ActiveSupport::TestCase
     assert_raises(Llm::Request::ResponseError) { grader.call }
     assert_equal 1, grader.calls, 'finish_reason=length is a budget problem, not a coin flip'
     assert_equal 'grader_error', @submission.reload.status
+  end
+
+  # --- grade history: one row per run, never-lower adoption (spec 2026-09-23-viva-grade-history-design) ---
+
+  def current_run = @submission.reload.viva_grade
+
+  # An earlier adopted run, as production rows look after Task 1's migration.
+  def make_current_run(total:, graded_at: 1.hour.ago)
+    @submission.viva_grades.create!(total_points: total, narrative: "n#{total}", score_json: {'a' => total}.to_json,
+                                    llm_model: 'old-model', graded_at: graded_at, rubric_version: 'oldrubric')
+    @submission.update!(status: :done, points: total, graded_at: graded_at, grader_comment: Submission::VIVA_RESULT_MARKER)
+  end
+
+  test "first grading adopts the run and records the rubric version" do
+    @assist.send(:handle_response, grader_response(narrative: 'ok', total: 87))
+    run = current_run
+    assert run.current?
+    assert_equal 87, run.total_points
+    assert_equal Llm::VivaGradeAssist.rubric_version_for(@problem), run.rubric_version
+    assert_equal 64, run.rubric_version.length
+    assert_nil run.requested_by_id
+    assert_nil run.batch_id
+    assert_equal 1, @submission.viva_grades.count
+  end
+
+  test "a higher re-run replaces the current grade and keeps the old run as history" do
+    make_current_run(total: 40)
+    old = current_run
+    Llm::VivaGradeAssist.new(submission: @submission, requested_by_id: users(:admin).id)
+                        .send(:handle_response, grader_response(narrative: 'better', total: 70))
+    @submission.reload
+    assert_equal 70, @submission.points
+    assert_equal 'done', @submission.status
+    new_run = @submission.viva_grade
+    assert_equal 70, new_run.total_points
+    assert_equal users(:admin).id, new_run.requested_by_id
+    old.reload
+    assert_equal 'replaced', old.superseded_reason
+    assert_equal new_run.id, old.superseded_by_id
+    assert_equal 2, @submission.viva_grades.count
+  end
+
+  test "a lower re-run under never-lower is stored as lower and changes nothing on the submission" do
+    make_current_run(total: 40)
+    old = current_run
+    Llm::VivaGradeAssist.new(submission: @submission, never_lower: true)
+                        .send(:handle_response, grader_response(narrative: 'worse', total: 25))
+    @submission.reload
+    assert_equal 40, @submission.points
+    assert_equal old, @submission.viva_grade
+    lower = @submission.viva_grades.order(:id).last
+    assert_equal 25, lower.total_points
+    assert_equal 'lower', lower.superseded_reason
+    refute lower.current?
+    assert old.reload.current?
+  end
+
+  test "a lower re-run with never-lower off replaces the current grade" do
+    make_current_run(total: 40)
+    Llm::VivaGradeAssist.new(submission: @submission, never_lower: false)
+                        .send(:handle_response, grader_response(narrative: 'stricter', total: 25))
+    assert_equal 25, @submission.reload.points
+    assert_equal 25, current_run.total_points
+  end
+
+  test "an equal re-run replaces the current grade" do
+    make_current_run(total: 40)
+    old = current_run
+    @assist.send(:handle_response, grader_response(narrative: 'same', total: 40))
+    refute_equal old, current_run
+    assert_equal 'replaced', old.reload.superseded_reason
+  end
+
+  test "a failed re-run over a valid grade is stored as error and the submission keeps its grade" do
+    make_current_run(total: 40)
+    grader = ScriptedGrader.new(submission: @submission, batch_id: 'b7',
+                                replies: [raw_response('{"ask": 1}'), raw_response('{"ask": 2}')])
+    assert_raises(Llm::Request::ResponseError) { grader.call }
+    @submission.reload
+    assert_equal 'done', @submission.status
+    assert_equal 40, @submission.points
+    assert_equal 40, @submission.viva_grade.total_points
+    failed = @submission.viva_grades.order(:id).last
+    assert_equal 'error', failed.superseded_reason
+    assert_equal 'b7', failed.batch_id
+    assert_match(/schema check/, failed.error)
+    assert_equal '{"ask": 2}', raw_content(failed)
+    assert_equal 2, @submission.viva_grades.count
+  end
+
+  test "a failed first grading still lands in grader_error with an error run" do
+    grader = ScriptedGrader.new(submission: @submission, replies: [raw_response('prose'), raw_response('more prose')])
+    assert_raises(Llm::Request::ResponseError) { grader.call }
+    @submission.reload
+    assert_equal 'grader_error', @submission.status
+    assert_nil @submission.viva_grade
+    assert_equal 'error', @submission.viva_grades.order(:id).last.superseded_reason
+  end
+
+  test "rubric_version_for changes with the briefing, a conduct tag or grounding text, and is deterministic" do
+    v0 = Llm::VivaGradeAssist.rubric_version_for(@problem)
+    assert_equal v0, Llm::VivaGradeAssist.rubric_version_for(@problem)
+    @problem.update!(viva_prompt: 'Grade the student strictly. Accept both designs.')
+    v1 = Llm::VivaGradeAssist.rubric_version_for(@problem)
+    refute_equal v0, v1
+    tag = Tag.create!(name: 'conduct-x', kind: :viva_conduct, params: 'Be terse.')
+    @problem.tags << tag
+    v2 = Llm::VivaGradeAssist.rubric_version_for(@problem.reload)
+    refute_equal v1, v2
+    @problem.grounding_materials << GroundingMaterial.create!(title: 'gm-x', body: 'Reference text.')
+    v3 = Llm::VivaGradeAssist.rubric_version_for(@problem.reload)
+    refute_equal v2, v3
+    @problem.update_columns(viva_prompt: nil)
+    assert_nil Llm::VivaGradeAssist.rubric_version_for(@problem.reload, strict: false)
+    assert_raises(RuntimeError) { Llm::VivaGradeAssist.rubric_version_for(@problem) }
   end
 end

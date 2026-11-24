@@ -24,6 +24,22 @@ class GroupsTest < ApplicationSystemTestCase
     assert_text "Group was successfully updated."
   end
 
+  # Same class of bug as the contest manage table (see contests_test.rb): the
+  # membership tables are JSON-fed DataTables, and a plain column used to
+  # render a member's full name as markup.
+  test "markup in a member's full name renders as text in the group users table" do
+    users(:james).update_columns(full_name: "James <b>Bond</b> <img src=x onerror=\"document.title='xss'\"> & co")
+    login("admin", "admin")
+    visit group_path(groups(:group_a))
+
+    within("#user_table") do
+      assert_selector "td", text: "James <b>Bond</b> <img src=x onerror=\"document.title='xss'\"> & co", wait: 10
+      assert_no_selector "b", text: "Bond"
+      assert_no_selector "img"
+    end
+    assert_not_equal "xss", page.title
+  end
+
   private
 
   def login(username, password)

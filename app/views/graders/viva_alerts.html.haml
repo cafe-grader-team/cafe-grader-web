@@ -42,6 +42,7 @@
                 = sub.status
                 - if sub.viva_archived?
                   %span.badge.text-bg-warning.ms-1 archived
+                = submission_test_drive_badge(sub)
               %td.text-center
                 %span.badge.text-bg-danger= alert.alert_count
               %td.text-secondary.small= "#{time_ago_in_words(alert.latest_alert_at)} ago"

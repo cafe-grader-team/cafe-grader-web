@@ -1,0 +1,16 @@
+= render 'application/breadcrumb', steps: [ { label: 'Contests', path: contests_path, icon: resource_icon_name(Contest) }, { label: 'Management', path: contest_path(@contest) }, { label: 'Viva check' } ]
+
+.d-flex.justify-content-between.align-items-center.mb-3
+  .d-flex.align-items-center.gap-2
+    %h2.fw-bold.text-dark.mb-0.font-monospace= @contest.name
+    %span.badge.bg-warning-subtle.text-warning-emphasis.border.border-warning-subtle.rounded-pill.fw-medium
+      %small Viva check
+  .d-flex.gap-2
+    = link_to mdi(:settings, 'me-1') + 'Manage', contest_path(@contest), class: 'btn btn-outline-primary btn-flex'
+    = link_to mdi(:query_stats, 'me-1') + 'AI Usage', ai_usage_contest_path(@contest), class: 'btn btn-outline-info btn-flex'
+    = link_to mdi(:summarize, 'me-1') + 'Watch', view_contest_path(@contest), class: 'btn btn-outline-success btn-flex'
+
+- if @report.viva_problems.empty?
+  .alert.alert-info This contest has no viva problem.
+- else
+  = render 'viva_check_report', contest: @contest, report: @report

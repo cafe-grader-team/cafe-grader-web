@@ -13,6 +13,7 @@
       .card
         .card-body{ style: "background: #eeeeff;"}
           = form_with url: login_login_path do |f|
+            = hidden_field_tag :next, @next_path if @next_path
             .mb-3
               = f.label :login, "Login", class: 'form-label'
               = f.text_field :login, class: 'form-control'

@@ -72,13 +72,14 @@
                 %span.badge.text-bg-secondary.bg-opacity-100= t.name
             %td.py-1.align-middle
               - if problem.viva_exam?
-                -# a viva has no code editor — offer the same Start/View pair as
-                -# the main list, so staff can test-start hidden vivas that the
-                -# main list (student-scoped) never shows
-                - if (viva_sub = @my_active_viva[problem.id])
-                  = link_to 'View Viva', viva_submission_path(viva_sub), class: 'btn btn-sm btn-outline-primary'
-                - else
-                  = button_to 'Start Viva', viva_start_problem_path(problem), class: 'btn btn-sm btn-primary', form: {style: 'display:inline-block'}
+                -# a viva has no code editor. Staff sit a viva as a TEST-DRIVE
+                -# (flagged, excluded from reports and limits; a click reopens an
+                -# in-progress one) — never as a real session, which would pollute
+                -# the data this flag exists to protect. Real sessions start from
+                -# the student-facing main list.
+                = button_to 'Test-drive', viva_test_drive_problem_path(problem), class: 'btn btn-sm btn-outline-primary',
+                    title: 'Sit this viva yourself in a test session — excluded from reports, cost figures and start limits',
+                    form: {class: 'd-inline', data: {turbo: true}}
               - else
                 = link_to "Submit", direct_edit_problem_submissions_path(problem,@current_user.id), class: 'btn btn-sm btn-primary'
             %td= problem.date_added

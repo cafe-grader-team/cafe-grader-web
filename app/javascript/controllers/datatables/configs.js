@@ -1,5 +1,6 @@
 // columns and custom renderers
 import { columns, renderers } from 'controllers/datatables/columns'
+import { escapeHtml } from 'cafe'
 
 const baseConfig = {
   responsive: true,
@@ -99,13 +100,13 @@ export const configs = {
           if (type == 'display') {
             return `
               <div class="d-flex align-items-center">
-                <span>${data}</span>
+                <span>${escapeHtml(data)}</span>
                 <div class="dropdown d-flex align-items-center">
                   <a class="link-flex rounded-1 bg-light ms-2 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     ${cafe.msi('more_horiz', 'md-18')}
                   </a>
                   <ul class="dropdown-menu">
-                    <li><h6 class="dropdown-header">Link for ${row.full_name}</h6></li>
+                    <li><h6 class="dropdown-header">Link for ${escapeHtml(row.full_name)}</h6></li>
                     <li><a class="dropdown-item" href="${AppRoute.editUserAdmin.replace(-123, row.user_id)}">Edit</a></li>
                     <li><a class="dropdown-item" href="${AppRoute.statContestUserAdmin.replace(-123, row.user_id).replace(-456, row.contest_id)}">Contest Stats</a></li>
                     <li><a class="dropdown-item" href="${AppRoute.statUserAdmin.replace(-123, row.user_id)}">Lifetime Stats</a></li>
@@ -170,8 +171,22 @@ export const configs = {
       topStart: 'info',
       topEnd: 'search',
     },
+    rowReorder: { dataSrc: 'position', selector: 'td.reorder-handle', update: false },
+    on: {
+      'row-reorder': function (e, diff) {
+        if (!diff || diff.length === 0) return
+        const api = $(e.target).DataTable()
+        const moved = new Map(diff.map(d => [api.row(d.node).data().problem_id, d.newData]))
+        const order = api.rows().data().toArray()
+          .map(r => ({ id: r.problem_id, pos: moved.has(r.problem_id) ? moved.get(r.problem_id) : r.position }))
+          .sort((a, b) => a.pos - b.pos)
+          .map(r => r.id)
+        e.target.dispatchEvent(new CustomEvent('problems-reordered', { bubbles: true, detail: { order } }))
+      },
+    },
     columns: [
-      { data: 'number' },
+      { data: 'position' },
+      { data: null, className: 'reorder-handle text-muted', orderable: false, defaultContent: '<span class="mi" title="Drag to reorder" style="cursor: grab">drag_indicator</span>' },
       { data: 'name' },
       {
         data: 'full_name',
@@ -181,13 +196,13 @@ export const configs = {
           if (type == 'display') {
             return `
               <div class="d-flex align-items-center justify-content-beteen">
-                <span>${data}</span>
+                <span>${escapeHtml(data)}</span>
                 <div class="dropdown d-inline-flex align-items-center">
                   <a href="#" class="link-flex rounded-1 bg-light ms-2 p-0 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     ${cafe.msi('more_horiz', 'md-18')}
                   </a>
                   <ul class="dropdown-menu">
-                    <li><h6 class="dropdown-header">${row.full_name}</h6></li>
+                    <li><h6 class="dropdown-header">${escapeHtml(row.full_name)}</h6></li>
                     <li><a class="dropdown-item" href="${AppRoute.editProblem.replace(-123, row.problem_id)}">Edit</a></li>
                     <li><a class="dropdown-item" href="${AppRoute.statProblem.replace(-123, row.problem_id).replace(-456, row.contest_id)}">Stats</a></li>
                   </ul>
@@ -205,7 +220,7 @@ export const configs = {
       { data: null, render: renderers.problemActionRenderer, className: 'py-1' }
     ],
     columnDefs: [{ visible: false, targets: [0] },
-    { orderable: false, targets: [1, 2, 3, 4, 5, 6] }],
+    { orderable: false, targets: [1, 2, 3, 4, 5, 6, 7] }],
     drawCallback: function (settings) {
       var api = this.api();
       api.columns.adjust()
@@ -252,6 +267,35 @@ export const configs = {
         });
       }).draw();
     }
+  },
+  // contest -> AI Usage (per-call table)
+  contestAiUsage: {
+    ...baseConfig,
+    paging: true,
+    pageLength: 50,
+    order: [[0, 'asc']],
+    layout: {
+      topStart: ['buttons', 'pageLength'],
+    },
+    buttons: [
+      { text: 'Refresh', action: function (e, dt, node, config) { dt.ajax.reload() } },
+      'copyHtml5',
+      'excelHtml5',
+    ],
+    columns: [
+      columns.aiUsage.at, columns.aiUsage.kind, columns.aiUsage.login, columns.aiUsage.problem,
+      columns.aiUsage.model, columns.aiUsage.queuedS, columns.aiUsage.modelS, columns.aiUsage.totalS,
+      columns.aiUsage.tokensIn, columns.aiUsage.tokensOut, columns.aiUsage.cost, columns.aiUsage.status,
+      columns.aiUsage.submissionId,
+    ],
+    ajax: {
+      ...baseAjax, //use spread so that it is copied
+      data: (data) => data,
+    },
+    drawCallback: function (settings) {
+      var api = this.api();
+      api.columns.adjust()
+    },
   },
   // report -> AI report
   aiAssistReport: {

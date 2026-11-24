@@ -7,9 +7,14 @@ class MainController < ApplicationController
   # front page
   def login
     @remote_ip = request.remote_ip
+    @next_path = safe_return_path(params[:next])   # where to go after login (issue #65)
 
     @announcements = Announcement.frontpage.consider_contest.default_order
-    render action: 'login', locals: {skip_header: true}
+    # HTML only. Bots probing for WordPress ask for "/" as JSON, which had no
+    # view (a 500 in the log); respond_to answers any other format with a 406.
+    respond_to do |format|
+      format.html { render action: 'login', locals: {skip_header: true} }
+    end
   end
 
   def logout
@@ -35,10 +40,6 @@ class MainController < ApplicationController
   end
 
   def prob_group
-  end
-
-  def help
-    @user = User.find(session[:user_id])
   end
 
   # handle post of new submission either by
@@ -181,8 +182,9 @@ class MainController < ApplicationController
     @problems = @current_user.problems_for_action(:submit, respect_admin: false).with_attached_statement.with_attached_attachment.includes(:public_tags).default_order
 
     # calculate range of time (in contest mode)
+    window = HelpDeduction.contest_window(@current_user)
     submissions = Submission.regular.where(user: @current_user, problem: @problems)
-    submissions = submissions.where(submitted_at: @current_user.active_contests_range) if GraderConfiguration.contest_mode?
+    submissions = submissions.where(submitted_at: window) if window
 
     # calculate latest submission & submission count
     # Filter on viva_archived_at IS NULL: a viva that an admin set aside
@@ -201,21 +203,24 @@ class MainController < ApplicationController
       .group(:problem_id)
       .pluck('problem_id', 'max(points)').each { |data| @prob_submissions[data[0]][:max_score] = data[1] }
 
-    # calculate ai assist used for the problems
-    submissions.with_llm_stat_by_problem.each do |row|
-        @prob_submissions[row.problem_id][:ai_assist_count] = row.count
-        @prob_submissions[row.problem_id][:ai_assist_cost] = row.cost
-      end
-
-    # calculate hint acquired
-    Problem.joins(comments: :comment_reveals)
-      .where(id: @problems.ids, comment_reveals: {user: @current_user})
-      .group(:id)
-      .select('problems.id', 'count(comments.id) as count', 'sum(comments.cost) as cost')
-      .each do |row|
-        @prob_submissions[row.id][:hint_count] = row.count
-        @prob_submissions[row.id][:hint_cost] = row.cost
-      end
+    # hints and AI help used, and the deduction cap that applies (HelpDeduction,
+    # spec 2026-11-21). In contest mode only help inside the running contests'
+    # window counts, and the cap is that of the running contests holding the
+    # problem; @cap_notice_ids are the problems shown uncapped although a
+    # contest of the student's sets a cap (caps disagree, or normal mode).
+    problem_ids = @problems.ids
+    HelpDeduction.losses(@current_user, problem_ids, range: window).each do |pid, lost|
+      @prob_submissions[pid].merge!(hint_count: lost[:hint_count], hint_cost: lost[:hint_cost],
+                                    ai_assist_count: lost[:ai_count], ai_assist_cost: lost[:ai_cost])
+    end
+    if GraderConfiguration.contest_mode?
+      running = HelpDeduction.running_contests_by_problem(@current_user, problem_ids)
+      @deduction_caps = running.transform_values { |contests| HelpDeduction.cap_for(contests) }
+      @cap_notice_ids = running.select { |_, contests| HelpDeduction.caps_disagree?(contests) }.keys.to_set
+    else
+      @deduction_caps = {}
+      @cap_notice_ids = HelpDeduction.capped_problem_ids(@current_user, problem_ids)
+    end
   end
 
   def prepare_grading_result(submission)

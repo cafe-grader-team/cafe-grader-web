@@ -6,7 +6,7 @@
     'datatables--init-score-table-ajax-url-value': link_for_data,
     'datatables--init-score-table-problem-ids-value': problems.ids,
     'datatables--init-score-table-submission-path-value': submission_path(-123),
-    'datatables--init-score-table-stat-path-value': (contest_id.nil? ?  stat_user_admin_path(-123) : stat_contest_user_admin_path(-123,@contest.id)),
+    'datatables--init-score-table-stat-path-value': (contest_id.nil? ?  stat_user_admin_path(-123) : stat_contest_user_admin_path(-123, contest_id)),
     'datatables--init-score-table-submission-download-path-value': link_to(" [#{mdi(:download_2,'md-18')} load]".html_safe, download_submission_path(-123) ),
   }
 -# add special refresh

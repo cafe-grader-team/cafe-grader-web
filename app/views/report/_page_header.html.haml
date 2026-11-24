@@ -1,0 +1,18 @@
+-# Title row of the filter-driven report pages (Best Score / Submissions /
+-# User Activity). Right of the title sits the contest picker: a GET form
+-# that reloads the page with ?contest=ID, which replaces the three filter
+-# cards with the contest's own scope (ReportController#set_report_contest,
+-# report/_contest_scope). Hidden when the user manages no contest.
+-# Locals: title, path (this report's page path).
+- contests = @current_user.contests_for_action(:edit).order(start: :desc, name: :asc).to_a
+.d-flex.justify-content-between.align-items-end.flex-wrap.gap-2.mb-3
+  .d-flex.flex-column.gap-1
+    %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
+    %h2.fw-bold.text-dark.mb-0= title
+  - if contests.any?
+    = form_with url: path, method: :get, data: {controller: 'auto-submit'} do
+      .d-flex.align-items-center.gap-2
+        %label.text-secondary.small.text-nowrap.mb-0{for: 'report-contest'} Contest
+        = select_tag :contest,
+            options_for_select([['none — choose filters below', '']] + contests.map { |c| ["#{c.name} · #{c.start.strftime('%Y-%m-%d')}", c.id] }, @report_contest&.id),
+            id: 'report-contest', class: 'form-select form-select-sm', style: 'min-width: 16rem', data: {action: 'change->auto-submit#submit'}

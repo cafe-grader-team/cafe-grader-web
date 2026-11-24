@@ -1,0 +1,15 @@
+-# One file of the testcase page: title, size, a "truncated" badge when the
+-# preview is a prefix, a Download button when the caller passes a path (the
+-# :full tier only), and the text itself in a read-only box.
+.col-md-6
+  .d-flex.align-items-center.justify-content-between.flex-wrap.gap-2.mb-1
+    %h6.mb-0= title
+    .d-flex.align-items-center.gap-2
+      %span.text-secondary.small= number_to_human_size(preview[:byte_size])
+      - if preview[:truncated]
+        %span.badge.text-bg-warning truncated
+      - if download
+        = link_to download, class: 'btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1', data: {turbo: false} do
+          = mdi('download', 'md-18')
+          Download
+  %textarea.form-control.font-monospace.small{rows: local_assigns.fetch(:rows, 20), readonly: true, spellcheck: false}= preview[:text]

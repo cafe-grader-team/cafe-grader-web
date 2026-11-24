@@ -2,7 +2,9 @@
 -# submission / activity / ai). Row 1 is the always-visible role line + drawer
 -# trigger; row 2 keeps the generic "select filters, then Refresh" hint. The
 -# full course breakdown + the switch legend live in the offcanvas drawer.
--# Locals: refresh_hint (optional) — page-specific usage-hint text.
+-# Locals: extra_hint (optional) — a page-specific sentence appended to the
+-# refresh hint. The hint itself depends on whether a contest is picked
+-# (@report_contest, ReportController#set_report_contest).
 - drawer_id = 'report-scope-help'
 - admin = @current_user.admin?
 - editor_pairs = @help_editor_groups || []
@@ -38,7 +40,8 @@
       What you can see
   .d-flex.align-items-center.text-secondary.small
     %span.mi.md-18.me-1 sync
-    = local_assigns[:refresh_hint] || 'Select filters above, then click Refresh to load data.'
+    - hint = @report_contest ? "Showing #{@report_contest.name}; click Refresh to reload." : 'Select filters above, then click Refresh to load data.'
+    = [hint, local_assigns[:extra_hint]].compact.join(' ')
 
   -# ---- offcanvas: full role-aware breakdown (shared help-drawer chrome) ----
   = render layout: 'shared/help_drawer', locals: { id: drawer_id, title: 'What you can see', subtitle: 'Your access to this report, by role.' } do
@@ -74,6 +77,8 @@
         %dd.col-8.text-secondary A disabled (archived) course is hidden from students and reporters; its editors keep full access.
         %dt.col-4.fw-semibold In-group enabled
         %dd.col-8.text-secondary Hides one problem from students in a group; staff still see it.
+        %dt.col-4.fw-semibold Contest
+        %dd.col-8.text-secondary Picking a contest (a contest you manage) replaces the three filters with its students (the rows the contest's Watch page lists — editors left out), its problems you can report on, and each student's own window, start offset and extra time included.
 
     - unless admin
       %p.small.text-secondary.mb-0

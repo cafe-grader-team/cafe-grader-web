@@ -110,7 +110,14 @@ export default class extends Controller {
     });
   }
 
+  // A tooltip or popover open when its element is replaced (e.g. the Viva
+  // check report's 30 s turbo-frame refresh) would otherwise stay stuck on
+  // the page: Bootstrap appends the tip to <body>, outside the frame.
   disconnect() {
+    this.tooltipInstances?.forEach(instance => instance.dispose());
+    this.popoverInstances?.forEach(instance => instance.dispose());
+    this.tooltipInstances = null;
+    this.popoverInstances = null;
   }
 }
 

@@ -4,6 +4,7 @@ export default class extends Controller {
 
   static targets = ["usersCommand", "userForm", "userFormUserID", "userFormCommand",
     "problemsCommand", "problemForm", "problemFormProblemID", "problemFormCommand",
+    "problemOrderForm", "problemOrderFormIds",
     "contestForm", "contestFormContestID", "contestFormCommand",
     "userExtraTimeForm", "userExtraTimeFormStart", "userExtraTimeFormEnd", "userExtraTimeFormRowID"
   ]
@@ -52,6 +53,12 @@ export default class extends Controller {
     command.value = event.currentTarget.dataset.command
     problem_id.value = event.currentTarget.dataset.rowId
     form.requestSubmit()
+  }
+
+  // fired by the problem table's row-reorder handler (datatables/configs.js)
+  postProblemOrder(event) {
+    this.problemOrderFormIdsTarget.value = event.detail.order.join(',')
+    this.problemOrderFormTarget.requestSubmit()
   }
 
   afterProblemsAdd(event) {
@@ -106,11 +113,11 @@ export default class extends Controller {
       message: `
         <div class="form-group">
           <label for="start-offset">Extra Time before Start (second)</label>
-          <input type="number" class="form-control" id="start-offset" value="${currentStartOffset}">
+          <input type="number" min="0" step="1" class="form-control" id="start-offset" value="${currentStartOffset}">
         </div>
         <div class="form-group">
           <label for="end-offset">Extra Time After Finish (second)</label>
-          <input type="number" class="form-control" id="end-offset" value="${currentExtraTime}" >
+          <input type="number" min="0" step="1" class="form-control" id="end-offset" value="${currentExtraTime}">
         </div> `,
       buttons: {
         cancel: {

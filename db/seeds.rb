@@ -108,7 +108,14 @@ CONFIGURATIONS =
      key: 'right.view_testcase',
      value_type: 'boolean',
      default_value: 'false',
-     description: 'If true, any user can view/download test data'
+     description: 'If true, any user can view test data of the problems that allow it (see ui.testcase_preview_bytes for how much)'
+   },
+
+   {
+     key: 'ui.testcase_preview_bytes',
+     value_type: 'integer',
+     default_value: '2048',
+     description: 'Students who may view test data see only the first N bytes of each input, expected output and data file, with no download. 0 = whole files and downloads. Admins, reporters and editors always get whole files.'
    },
 
    {
@@ -193,14 +200,21 @@ CONFIGURATIONS =
      key: 'right.whitelist_ignore',
      value_type: 'boolean',
      default_value: 'true',
-     description: "If true, no IP check against whitelist_ip is perform. However, when false, non-admin user must have their ip in 'whitelist_ip' to be able to login."
+     description: "If true, no IP check against whitelist_ip is perform. However, when false, non-admin user must have their ip in 'whitelist_ip' to be able to login. Pressing Contest asks whether to turn the whitelist on (false) or leave it off (true); Normal and Analysis set it to true."
    },
 
    {
      key: 'right.whitelist_ip',
      value_type: 'string',
-     default_value: '0.0.0.0/0',
-     description: "list of whitelist ip, given in comma separated CIDR notation. For example '192.168.90.0/23, 192.168.1.23/32'"
+     default_value: '0.0.0.0/0, ::/0',
+     description: "list of whitelist ip, given in comma separated CIDR notation. For example '192.168.90.0/23, 192.168.1.23/32'. Write IPv6 ranges too: '0.0.0.0/0' alone does not match an IPv6 address, so '0.0.0.0/0, ::/0' is every address."
+   },
+
+   {
+     key: 'right.login_throttle_exempt_ips',
+     value_type: 'string',
+     default_value: '',
+     description: "Addresses that skip the per-address count of failed logins (comma-separated addresses or CIDR ranges, e.g. '10.0.5.40, 10.0.5.41'). List an exam gateway that puts a whole room behind one address, so a few minutes of mistyped passwords cannot lock the room out. Each account still locks after too many failures."
    },
 
    {
@@ -208,6 +222,20 @@ CONFIGURATIONS =
      value_type: 'boolean',
      default_value: 'false',
      description: "When true, a user can request LLM assist on each submission"
+   },
+
+   {
+     key: 'system.llm_assist_cost',
+     value_type: 'integer',
+     default_value: '10',
+     description: "Score penalty, in points off the problem's full score, charged for each LLM assist request. Read when the request is made and recorded on it, so changing this never alters past charges. 0 makes assistance free."
+   },
+
+   {
+     key: 'system.llm_assist_spending_limit',
+     value_type: 'integer',
+     default_value: '100',
+     description: "The most points of AI help a student can spend on one problem before further requests are refused (hints are not counted). A contest can set its own."
    },
 
    {

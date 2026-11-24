@@ -41,7 +41,9 @@
           - @turns.each do |turn|
             - sub = turn.submission
             %tr
-              %td= link_to "##{sub.id}", viva_submission_path(sub), class: 'fw-medium text-primary text-decoration-none'
+              %td
+                = link_to "##{sub.id}", viva_submission_path(sub), class: 'fw-medium text-primary text-decoration-none'
+                = submission_test_drive_badge(sub)
               %td= sub.user&.login
               %td= sub.problem&.name
               %td.font-monospace.small= "##{turn.id} (seq #{turn.sequence})"

@@ -5,7 +5,7 @@
 -# "Read More" opens a modal with the same rendered body in full.
 - clipped = announcement_preview_clipped?(announcement)
 .announcement-preview{class: ('announcement-preview-clamped' if clipped)}
-  = markdown(announcement.body)
+  = sanitized_markdown(announcement.body)
 - if clipped
   %a.fw-bold{href: '#', style: 'text-decoration: none;', data: {bs_toggle: 'modal', bs_target: "#announcementModal-#{announcement.id}"}}
     Read More &rarr;
@@ -16,7 +16,7 @@
           %h5.modal-title.fw-bold{id: "announcementModalLabel-#{announcement.id}"}= announcement.title.blank? ? 'Announcement' : announcement.title
           %button.btn-close{type: 'button', data: {bs_dismiss: 'modal'}, 'aria-label': 'Close'}
         .modal-body
-          = markdown(announcement.body)
+          = sanitized_markdown(announcement.body)
           - if announcement.file.attached?
             %hr.my-2
             .text-uppercase.small.fw-bold.text-muted.mb-1 Attachments

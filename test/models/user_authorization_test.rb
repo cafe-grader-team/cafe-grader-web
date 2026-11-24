@@ -409,6 +409,7 @@ class UserAuthorizationTest < ActiveSupport::TestCase
     set_grader_config("system.mode", "standard")
     set_grader_config("system.use_problem_group", "false")
     set_grader_config("right.view_testcase", "true")
+    problems(:prob_add).update!(view_testcase: true)   # the problem's own flag counts too (rev 2218)
 
     assert users(:john).can_view_testcase?(problems(:prob_add))
   end

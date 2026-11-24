@@ -2,7 +2,8 @@ require "test_helper"
 
 # Every page that shows Submission#grader_comment draws it through
 # GraderCommentHelper#grader_comment_strip (the main list is covered by
-# main_list_viva_row_test; the submission report renders client-side).
+# main_list_viva_row_test; the submission report and the problem stat page
+# render client-side from the same config).
 class GraderCommentStripPagesTest < ActionDispatch::IntegrationTest
   setup do
     @sub = submissions(:add1_by_admin)
@@ -17,10 +18,20 @@ class GraderCommentStripPagesTest < ActionDispatch::IntegrationTest
     assert_select ".verdict-strip[data-comment='P[PP-]'] .verdict-group", count: 1
   end
 
-  test "problem statistics keep DataTables order/search on the raw string" do
+  # The stat page's rows arrive by AJAX (problems#stat_query), so the strip is
+  # drawn client-side like the submission report: the page embeds the config
+  # and renderer, and the JSON carries the raw string DataTables sorts and
+  # searches on.
+  test "problem statistics embed the client-side strip config and ship the raw string" do
     get stat_problem_path(@sub.problem)
     assert_response :success
-    assert_select "td[data-order='P[PP-]'][data-search='P[PP-]'] .verdict-strip", count: 1
+    assert_includes response.body, "cafe.verdictStrip(data, VERDICT_STRIP)"
+    assert_match(/const VERDICT_STRIP = \{"codes":\{"\?":\{"result":"waiting"/, response.body)
+
+    post stat_query_problem_path(@sub.problem)
+    assert_response :success
+    row = JSON.parse(response.body)["data"].find { |r| r["id"] == @sub.id }
+    assert_equal "P[PP-]", row["grader_comment"]
   end
 
   test "user statistics keep DataTables order/search on the raw string" do

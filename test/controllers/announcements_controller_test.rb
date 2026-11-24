@@ -12,7 +12,7 @@ class AnnouncementsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot list announcements" do
     get announcements_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "non-editor (no group) cannot list announcements" do

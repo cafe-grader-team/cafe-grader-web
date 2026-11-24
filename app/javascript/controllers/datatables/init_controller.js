@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus";
 import { configs } from "controllers/datatables/configs"
+import { dt } from "cafe_datatable"
 
 /**
  * usage: connect this controller to an enclosing tag that contains a table element
@@ -73,7 +74,8 @@ export default class extends Controller {
     let finalConfig = { ...baseConfig };
 
     // This logic is now delegated to other hook methods
-    finalConfig.columns = this._buildColumns(baseConfig);
+    // Every table built here is JSON-fed: escape plain columns by default.
+    finalConfig.columns = dt.escape_columns_by_default(this._buildColumns(baseConfig));
     finalConfig.ajax = this._buildAjaxOptions(baseConfig);
 
     return finalConfig;

@@ -18,6 +18,10 @@ module Llm
     def on_retries_exhausted(error)
       comment = @job_args&.fetch(:comment, nil)
       return unless comment
+      # RequestJob#perform reuses this hook for NON-retryable failures too, but
+      # there the service's own handle_error has already marked the comment —
+      # don't relabel it "retries exhausted" or stack a second error block.
+      return if comment.reload.error?
       comment.update(status: 'error',
                      title:  'Assistant Error (retries exhausted)',
                      body:   "#{comment.body}\n\nLLM error (retries exhausted): #{error.class.name}: #{error.message}")

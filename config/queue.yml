@@ -2,15 +2,41 @@ default: &default
   dispatchers:
     - polling_interval: 1
       batch_size: 500
+  # Two workers. The viva worker serves ONLY `viva` (interview turns + viva
+  # grading), so a flood of other jobs can never hold up a student
+  # mid-interview (2026-09-09 exam: assists queued ahead of turns on one shared
+  # worker). The default worker serves "*", every queue: `default` (assists,
+  # PDF, problem stats), `solid_queue_recurring` — where Solid Queue puts every
+  # `command:` task of config/recurring.yml — and any queue added later. It
+  # also helps with `viva` when it has a free thread; that only shortens a
+  # viva wait, never lengthens it.
+  #
+  # Do not narrow "*" to a list of names. From 2026-09-17 to 4.7.3 the default
+  # worker served only "default", nothing served `solid_queue_recurring`, and
+  # every scheduled task (nightly cleanup, viva failsafe and reaper, job
+  # reclaim) silently never ran on any host. A "*" anywhere in a list means
+  # "all queues, oldest job first" (Solid Queue 1.1.5) — the order of the
+  # other names is then ignored.
+  #
+  # Sizing: the numbers below are the DEFAULTS for every host. Change a default
+  # here. To deviate on ONE host, set VIVA_JOB_THREADS / JOB_THREADS in that
+  # host's config/solid_queue.env (see .SAMPLE) and never restate a default
+  # there. Keep threads <= DB pool - 1 (RAILS_MAX_THREADS in database.yml):
+  # each worker needs one connection per thread plus one for polling. The
+  # effective values a host really runs are on Manage -> Grader Processes.
   workers:
-    - queues: "*"
-      threads: 3
-      processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
+    - queues: "viva"
+      threads: <%= ENV.fetch("VIVA_JOB_THREADS", 3) %>
+      processes: 1
       polling_interval: 0.1
-  recurring:
-    refresh_problem_stats:
-      class: RefreshProblemStatsJob
-      schedule: every hour
+    # Everything else, viva included when a thread is free (see above).
+    - queues: "*"
+      threads: <%= ENV.fetch("JOB_THREADS", 3) %>
+      processes: 1
+      polling_interval: 0.1
+  # Scheduled tasks live in config/recurring.yml; Solid Queue reads no
+  # `recurring:` key here (refresh_problem_stats sat here unread from rev 1558
+  # until 4.7.3).
 
 development:
   <<: *default

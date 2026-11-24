@@ -20,9 +20,17 @@ module GraderCommentHelper
 
   GROUP_HINT = "Tests in a box are scored together — the box earns the lowest score inside it.".freeze
 
-  def grader_comment_strip(comment)
+  # style: nil follows the viewer's preference (User#verdict_display via
+  # Current.user); :tiles / :plain force one rendering (used by the profile
+  # page samples). A plain-by-preference verdict keeps the pre-4.5 markup:
+  # uncapped .grader-comment.text-break, unlike the width-capped free-text
+  # fallback above.
+  def grader_comment_strip(comment, style: nil)
     comment = comment.to_s
     return grader_comment_plain(comment) unless comment.match?(VERDICT_STRING_RE)
+
+    style ||= Current.user&.verdict_plain? ? :plain : :tiles
+    return grader_comment_plain(comment, capped: false) if style == :plain
 
     total   = comment.delete("[]").length
     groups  = comment.count("[")
@@ -58,10 +66,11 @@ module GraderCommentHelper
   # letter → result/word table in one place. Safe to interpolate into a <script>.
   def verdict_strip_config_json
     codes = VERDICT_RESULTS.to_h { |code, result| [code, { result: result, word: verdict_word(code) }] }
-    ERB::Util.json_escape({ codes: codes, group_hint: GROUP_HINT }.to_json).html_safe
+    ERB::Util.json_escape({ codes: codes, group_hint: GROUP_HINT, plain: !!Current.user&.verdict_plain? }.to_json).html_safe
   end
 
-  def grader_comment_plain(comment)
-    content_tag(:span, " [#{comment}]", class: "grader-comment grader-comment-capped")
+  def grader_comment_plain(comment, capped: true)
+    classes = capped ? "grader-comment grader-comment-capped" : "grader-comment text-break"
+    content_tag(:span, " [#{comment}]", class: classes)
   end
 end

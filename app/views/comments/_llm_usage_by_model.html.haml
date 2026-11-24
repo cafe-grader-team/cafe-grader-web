@@ -1,0 +1,27 @@
+-# Per-model roll-up of AI-assist requests — `rows` are Comment::UsageRow from
+-# Comment.usage_by_model. Shared by the user stat card and the problem stat
+-# card. Points are the score penalty charged (comments.cost); Cost is the
+-# provider's own dollar figure (comments.llm_cost), shown by
+-# CommentsHelper#llm_usage_dollars so a partly-priced model is never read as
+-# a total. Tokens are in / out.
+.table-responsive
+  %table.table.table-sm.table-hover.align-middle.small.mb-0.llm-usage-table
+    %thead
+      %tr
+        %th Model
+        %th.text-end Requests
+        %th.text-end Points
+        %th.text-end Cost
+        %th.text-end{title: 'Tokens in / out'} Tokens
+    %tbody
+      - rows.each do |row|
+        %tr
+          %td.text-nowrap
+            %code= row.model
+          %td.text-end
+            = row.requests
+            - if row.answered != row.requests
+              %span.text-secondary.text-nowrap (#{row.answered} answered)
+          %td.text-end= number_with_delimiter(row.points.round)
+          %td.text-end.text-nowrap= llm_usage_dollars(row)
+          %td.text-end.text-nowrap= llm_usage_tokens(row)

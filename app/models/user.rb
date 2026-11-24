@@ -5,7 +5,15 @@ require 'net/http'
 require 'json'
 
 class User < ApplicationRecord
+  include OutsideLogin
+
   has_and_belongs_to_many :roles
+
+  # True while this user is a student of a contest that turned the outside
+  # login off, up to the contest stop plus the user's own extra time.
+  def outside_login_blocked?(now = Time.zone.now)
+    ContestUser.blocking_outside_login(now).where(user_id: id).exists?
+  end
 
   # has_and_belongs_to_many :groups
   has_many :groups_users, class_name: 'GroupUser'
@@ -31,6 +39,11 @@ class User < ApplicationRecord
   belongs_to :country, optional: true
 
   belongs_to :default_language, class_name: 'Language', foreign_key: 'default_language_id', optional: true
+
+  # How grader_comment verdicts are rendered for this user everywhere they
+  # appear: colour-tile strip (default) or the pre-4.5 plain monospace text.
+  # Read via Current.user in GraderCommentHelper#grader_comment_strip.
+  enum :verdict_display, { tiles: 0, plain: 1 }, prefix: :verdict
 
   # contest
   has_many :contests_users, class_name: 'ContestUser'
@@ -198,31 +211,70 @@ class User < ApplicationRecord
   end
 
   # return contests of this user that is both enabled and the current time
-  # is during the contest
+  # is inside this user's own window: start minus their start offset to stop
+  # plus their extra time (the same window Problem.contests_problems_for_user
+  # uses). Each contest carries the user's offsets as cu_start_offset_second /
+  # cu_extra_time_second.
   def active_contests
-    if GraderConfiguration.contest_mode?
-      return contests.where(enabled: true).where('start <= ? and stop >= ?', Time.zone.now, Time.zone.now)
-    else
-      return Contest.none
-    end
+    return Contest.none unless GraderConfiguration.contest_mode?
+
+    now = Time.zone.now
+    contests.where(enabled: true)
+      .where('DATE_SUB(contests.start, INTERVAL IFNULL(contests_users.start_offset_second, 0) SECOND) <= ?', now)
+      .where('DATE_ADD(contests.stop, INTERVAL IFNULL(contests_users.extra_time_second, 0) SECOND) >= ?', now)
+      .select('contests.*',
+              'IFNULL(contests_users.start_offset_second, 0) AS cu_start_offset_second',
+              'IFNULL(contests_users.extra_time_second, 0) AS cu_extra_time_second')
   end
 
-  # return datetime range of active contests
+  # return datetime range of active contests, each widened by this user's
+  # start offset and extra time
   def active_contests_range
     start = Date.new(9999, 1, 1).to_time
     stop = Date.new(1, 1, 1).to_time
     active_contests.each do |contest|
-      start = [start, contest.start].min
-      stop = [stop, contest.stop].max
+      start = [start, contest.start - contest.cu_start_offset_second.seconds].min
+      stop = [stop, contest.stop + contest.cu_extra_time_second.seconds].max
     end
     return start..stop
   end
 
-  def self.authenticate(login, password)
+  # refusal is nil or :slip_password_required.
+  LoginResult = Data.define(:user, :refusal)
+  LOGIN_FAILED = LoginResult.new(user: nil, refusal: nil)
+
+  # The one login decision for the web and API doors. Order matters: see
+  # docs/superpowers/specs/2026-11-21-exam-slip-passwords-design.md (Part 1,
+  # "Login behaviour"). The local password always works; the outside
+  # password is only consulted when the site switch is on, and for a student
+  # of a contest that turned outside login off it is refused (never cached
+  # over the slip password).
+  def self.login_result(login, password)
     user = find_by_login(login)
-    if user
-      return user if user.authenticated?(password)
+    return LOGIN_FAILED unless user
+    return LoginResult.new(user: user, refusal: nil) if user.authenticated?(password)
+    return LOGIN_FAILED unless outside_login_on?
+
+    if user.outside_login_blocked?
+      refusal = outside_password?(user, password) ? :slip_password_required : nil
+      return LoginResult.new(user: nil, refusal: refusal)
     end
+
+    if outside_password?(user, password)
+      user.password = password
+      user.save
+      return LoginResult.new(user: user, refusal: nil)
+    end
+    LOGIN_FAILED
+  end
+
+  def self.authenticate(login, password)
+    login_result(login, password).user
+  end
+
+  def self.outside_login_refused_message
+    "This exam uses the password on your seat slip. " \
+      "Your #{outside_login_name} password will work again after the exam ends."
   end
 
   def authenticated?(password)
@@ -496,6 +548,11 @@ class User < ApplicationRecord
     # the "other student" paths below.
     return false if submission.viva_archived_at.present?
 
+    # Viva test-drives are an author's own trial run — rubric probing
+    # included. The owner, admins and reporters already returned true above;
+    # nobody else may read one, even when the problem shares transcripts.
+    return false if submission.test_drive?
+
     # check global disable
     return false unless GraderConfiguration["right.user_view_submission"]
 
@@ -503,11 +560,27 @@ class User < ApplicationRecord
     return submission.problem.view_submission
   end
 
-  def can_view_testcase?(problem)
-    # admin always has right
-    return true if admin?
+  # Testcase access tier for +problem+ (issues #18 and #59, design 2026-10-01):
+  #   :full    admins, and reporters or editors of the problem (the report set
+  #            already contains editors): whole files, downloads.
+  #   :preview anyone else the two flags admit: the first
+  #            GraderConfiguration.testcase_preview_bytes of each file, no
+  #            downloads.
+  #   nil      no access.
+  # Both flags are checked here, the site right AND the problem's own
+  # view_testcase. Until rev 2218 the downloads and the API checked only the
+  # site right, so a student could fetch the files of a problem whose own flag
+  # was off while the page refused them.
+  def testcase_access(problem)
+    return :full if admin?
+    return :full if problems_for_action(:report).where(id: problem.id).any?
+    return nil unless problem.can_view_testcase
+    return nil unless problems_for_action(:submit).where(id: problem.id).any?
+    :preview
+  end
 
-    return can_view_problem?(problem) && GraderConfiguration["right.view_testcase"]
+  def can_view_testcase?(problem)
+    testcase_access(problem).present?
   end
 
   def can_edit_announcement(announcement)
@@ -587,72 +660,37 @@ class User < ApplicationRecord
     created_user_ids = []
     updated_user_ids = []
 
-    lines.split("\n").each do |line|
-      # split with large limit, this will cause consecutive ',' to be result in a blank
-      items = line.chomp.split(',', 1000)
-      if items.length>=2
-        login = items[0]
-        full_name = items[1]
-        remark =''
-        user_alias = ''
+    UserImportList.new(lines).rows.each do |row|
+      user = User.find_by_login(row.login)
+      created = false
+      if user
+        user.full_name = row.full_name
+        user.remark = row.remark unless row.remark.nil?
+        case row.password_mode
+        when :given then user.password = row.password
+        when :random then user.password = random_password
+        end
+      else
+        password = row.password || random_password
+        user = User.new({login: row.login,
+                         full_name: row.full_name,
+                         password: password,
+                         password_confirmation: password,
+                         alias: row.user_alias,
+                         remark: row.remark || ''})
+        created = true
+      end
+      user.activated = true
 
-        added_random_password = false
-        added_password = false
-
-        # given password?
-        if items.length >= 3
-          if items[2].chomp(" ").length > 0
-            password = items[2].chomp(" ")
-            added_password = true
-          end
+      if user.save
+        if created
+          created_user_ids << user.id
         else
-          password = random_password
-          added_random_password=true
+          updated_user_ids << user.id
         end
-
-        # given alias?
-        if items.length>= 4 and items[3].chomp(" ").length > 0
-          user_alias = items[3].chomp(" ")
-        else
-          user_alias = login
-        end
-
-        # given remark?
-        has_remark = false
-        if items.length>=5
-          remark = items[4].strip
-          has_remark = true
-        end
-
-        user = User.find_by_login(login)
-        created = false
-        if user
-          user.full_name = full_name
-          user.remark = remark if has_remark
-          user.password = password if added_password || added_random_password
-        else
-          # create a random password if none are given
-          password = random_password unless password
-          user = User.new({login: login,
-                           full_name: full_name,
-                           password: password,
-                           password_confirmation: password,
-                           alias: user_alias,
-                           remark: remark})
-          created = true
-        end
-        user.activated = true
-
-        if user.save
-          if created
-            created_user_ids << user.id
-          else
-            updated_user_ids << user.id
-          end
-        else
-          error_logins << "'#{login}'"
-          first_error = user.errors.full_messages.to_sentence unless first_error
-        end
+      else
+        error_logins << "'#{row.login}'"
+        first_error = user.errors.full_messages.to_sentence unless first_error
       end
     end
 

@@ -49,6 +49,16 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to action: "import"
   end
 
+  # The log echoes names from the uploaded file; it must show them as text.
+  test "do_import log shows names from the file as text" do
+    sign_in_as("admin", "admin")
+    yaml = {countries: {1 => {name: "vector<int> <b>bold</b>"}}, sites: {}, users: {}}.to_yaml
+    file = Rack::Test::UploadedFile.new(StringIO.new(yaml), "text/yaml", original_filename: "import.yml")
+    post do_import_user_admin_index_path, params: {file: file}
+    assert_response :success
+    assert_includes response.body, "Created vector&lt;int&gt; &lt;b&gt;bold&lt;/b&gt;"
+  end
+
   test "admin can access mass mailing form" do
     sign_in_as("admin", "admin")
     get mass_mailing_user_admin_index_path
@@ -71,7 +81,7 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get user_admin_index_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user is redirected" do
@@ -268,5 +278,93 @@ class UserAdminControllerTest < ActionDispatch::IntegrationTest
          as: :turbo_stream
     assert_response :success
     assert_equal before, user.reload.roles.pluck(:name).sort
+  end
+
+  # --- Check list (no-save preview) ---
+
+  TURBO = { 'Accept' => 'text/vnd.turbo-stream.html' }.freeze
+
+  test "check_list renders the result panel and saves nothing" do
+    sign_in_as("admin", "admin")
+    assert_no_difference -> { User.count } do
+      post check_list_user_admin_index_path, params: { user_list: "newbie6,N,pw" }, headers: TURBO
+    end
+    assert_equal 'text/vnd.turbo-stream.html', response.media_type
+    assert_includes response.body, 'import-check'
+    assert_includes response.body, '1 new account'
+  end
+
+  test "check_list names the group when asked" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path,
+         params: { user_list: "newbie6,N,pw", add_to_group: '1', group_id: groups(:group_a).id }, headers: TURBO
+    assert_includes response.body, 'added to group'
+  end
+
+  test "check_list uses the singular possessive for one name or remark change" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john,John Renamed,pw,,new remark" }, headers: TURBO
+    assert_includes response.body, "1 existing user&#39;s name will change"
+    assert_includes response.body, "1 existing user&#39;s remark will change"
+  end
+
+  test "check_list lines come in the spec order" do
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      post check_list_user_admin_index_path,
+           params: { user_list: "john,John X,pw,,r1\nlonely\njohn,John X,pw", add_to_group: '1', group_id: groups(:group_a).id }, headers: TURBO
+    end
+    b = response.body
+    order = ["existing user gets a new password", "listed more than once (Create applies their rows in order)",
+             "name will change", "remark will change", "will be ignored", "not yet covered", "added to group"]
+    idx = order.map { |t| b.index(t) }
+    assert idx.none?(&:nil?), "missing: #{order.zip(idx).select { |_, i| i.nil? }.map(&:first)}"
+    assert_equal idx.sort, idx
+  end
+
+  test "check_list uses the plural possessive for several name changes" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john,John X,pw,,r1\njames,James X,pw,,r2" }, headers: TURBO
+    assert_includes response.body, "2 existing users&#39; names will change"
+    assert_includes response.body, "2 existing users&#39; remarks will change"
+  end
+
+  test "check_list shows ten logins and the rest inside details" do
+    sign_in_as("admin", "admin")
+    text = (1..12).map { |i| "bulk#{format('%02d', i)},B,pw" }.join("\n")
+    post check_list_user_admin_index_path, params: { user_list: text }, headers: TURBO
+    assert_includes response.body, "show 2 more"
+    assert_includes response.body, "bulk01"
+    assert_includes response.body, "bulk12"
+    assert_not_includes response.body, "show all"
+  end
+
+  test "check_list renders the not-covered line with an outside login" do
+    sign_in_as("admin", "admin")
+    with_outside_login do
+      post check_list_user_admin_index_path, params: { user_list: "john,John,pw" }, headers: TURBO
+    end
+    assert_includes response.body, "not yet covered by a contest with CU-net login turned off"
+  end
+
+  test "check_list with add_to_group and an invalid group id shows no group line" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john,John,pw", add_to_group: '1', group_id: '0' }, headers: TURBO
+    assert_response :success
+    assert_not_includes response.body, 'added to group'
+  end
+
+  test "check_list warns about tabs and lists ignored lines even with no rows" do
+    sign_in_as("admin", "admin")
+    post check_list_user_admin_index_path, params: { user_list: "john\tJohn\tpw" }, headers: TURBO
+    assert_includes response.body, "No user lines found."
+    assert_includes response.body, "This text has tabs; the format uses commas"
+    assert_includes response.body, "1 line will be ignored"
+  end
+
+  test "non-admin cannot check" do
+    sign_in_as("john", "hello")
+    post check_list_user_admin_index_path, params: { user_list: "newbie6,N,pw" }, headers: TURBO
+    assert_redirected_to list_main_path
   end
 end

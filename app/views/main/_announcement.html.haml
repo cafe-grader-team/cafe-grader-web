@@ -20,7 +20,7 @@
     
     .card-text.text-dark
       - if is_contest
-        = markdown(announcement.body)
+        = sanitized_markdown(announcement.body)
       - else
         = render 'announcements/body_preview', announcement: announcement
 

@@ -2,7 +2,7 @@
 - when 'system'
   .alert.alert-secondary.small.py-2
     %strong SYSTEM
-    = simple_format(turn.content.to_s)
+    = simple_format_escaped(turn.content.to_s)
 - when 'assistant'
   .d-flex.justify-content-start.mb-3
     .card.shadow-sm{style: 'max-width: 75%;'}
@@ -14,10 +14,11 @@
         - elsif turn.error?
           .text-danger
             %strong Error:
-            = simple_format(turn.content.to_s)
+            = simple_format_escaped(turn.content.to_s)
           -# Owner or admin can re-enqueue the LLM call without restarting
-          -# the entire viva. See VivaSessionsController#retry_turn.
-          - if @current_user == turn.submission.user || @current_user&.admin?
+          -# the entire viva. See VivaSessionsController#retry_turn, which
+          -# refuses on a closed (archived) session — so no button there.
+          - if (@current_user == turn.submission.user || @current_user&.admin?) && !turn.submission.viva_archived?
             = button_to viva_retry_turn_submission_path(turn.submission, turn_id: turn.id), class: 'btn btn-sm btn-outline-secondary mt-2 d-inline-flex align-items-center gap-1', form: {class: 'd-inline', data: {turbo: true}} do
               %span.mi.md-18 replay
               Retry
@@ -32,4 +33,4 @@
   .d-flex.justify-content-end.mb-3
     .card.bg-primary.text-white.shadow-sm{style: 'max-width: 75%;'}
       .card-body.py-2.px-3
-        = simple_format(turn.content.to_s)
+        = simple_format_escaped(turn.content.to_s)

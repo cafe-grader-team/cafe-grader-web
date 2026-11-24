@@ -9,7 +9,10 @@
     - if viva_grade.narrative.present?
       .row.mb-2
         .col-4.text-end.text-secondary Feedback
-        .col= simple_format(viva_grade.narrative)
+        -# Model-written and quotes C++ in code spans: safe_markdown escapes
+        -# raw HTML, so `map<int, set<int>>` shows as typed (plain
+        -# simple_format's sanitizer read it as tags and showed `map>`).
+        .col.markdown-body= safe_markdown(viva_grade.narrative)
     - breakdown = viva_grade.rubric_breakdown
     - if breakdown.any?
       .row.mb-2

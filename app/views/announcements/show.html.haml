@@ -11,7 +11,7 @@
   = h @announcement.notes
 %p
   %b Body:
-  = markdown(@announcement.body)
+  = sanitized_markdown(@announcement.body)
 %p
   %b Published:
   = h @announcement.published

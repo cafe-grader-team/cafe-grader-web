@@ -14,7 +14,11 @@
         - elsif GraderConfiguration.time_limit_mode?
           - if @current_contest
             -# we have a contest
-            - if @current_contest.stop + @current_contest_user.extra_time_second < Time.zone.now
+            -# @current_contest_user is nil when the session points at an enabled
+            -# contest the user is not enrolled in (stale session[:contest_id]);
+            -# reading extra_time_second off nil 500'd every page (2026-09-09).
+            - extra = @current_contest_user&.extra_time_second.to_i
+            - if @current_contest.stop + extra < Time.zone.now
               -# contest is over
               %div.btn.btn-danger#countdown= "Contest is over"
             - elsif !@current_contest&.contest_status == :later
@@ -97,12 +101,9 @@
           / announcement
           - @nav_announcement.each do |ann|
             %p.navbar-text
-              = ann.body.html_safe
+              = sanitized_html(ann.body)
         %ul.navbar-nav
           -#
-            %li.nav-item
-              %a.nav-link{href: help_main_path}
-                %span.mi.md-18 help
             %li.nav-item
               %a.nav-link{href: messages_path}
                 %span.mi.md-18 chat
@@ -170,12 +171,20 @@
       },
     }).then( response => {
       response_received_time = moment()
-      
+
+      if (response.redirected) {
+        // Bounced to the login page: this window is no longer logged in
+        // (logged out, session expired, or refused by the device lock).
+        // Stop polling for good; retrying cannot succeed without a fresh login.
+        console.log('check-in stopped: this window is not logged in')
+        return null
+      }
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       return response.text() // this is a promise
     }).then( response_text => {
+      if (response_text === null) return
       response = JSON.parse(response_text)
       ms_since_last_check_in = response.ms_since_last_check_in
 

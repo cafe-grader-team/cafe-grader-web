@@ -1,9 +1,11 @@
-.d-flex.flex-column.gap-1.mb-3
-  %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
-  %h2.fw-bold.text-dark.mb-0 Submissions
+= render 'page_header', title: 'Submissions', path: submission_report_path
+= render 'contest_scope', path: submission_report_path
 
 = form_with url: '#', id: 'filter_form' do |f|
-  .row{data: {controller: 'init-ui-component'}}
+  -# with a contest picked the cards stay in the DOM (their JS feeds the
+  -# table) but hidden; the query URL carries the contest and the
+  -# controller ignores the card params
+  .row{class: ('d-none' if @report_contest), data: {controller: 'init-ui-component'}}
     .col-lg-4.mt-2
       = render partial: 'problem_select', locals: {all: true}
     .col-lg-4.mt-2
@@ -24,7 +26,8 @@
 :javascript
   sub_count = null;
   submission_path = "#{submission_path(-1234)}"
-  user_path = "#{stat_user_admin_path(-1234)}"
+  // contest-scoped: a student's link opens their stat for this contest
+  user_path = "#{@report_contest ? stat_contest_user_admin_path(-1234, @report_contest) : stat_user_admin_path(-1234)}"
   problem_path = "#{stat_problem_path(-1234)}"
 
   function sub_link_renderer(data, type, row) {
@@ -35,17 +38,22 @@
     //for sort, we just return the data which is supposed to be iso8601
     return row['id']
   }
+  // Login and Name are separate columns, as on the problem stat page and the
+  // Best Score report; the problem's full name is the link, its short name
+  // follows in grey (exports keep "[name] full name").
   function user_link_renderer(data, type, row) {
-    if (type == 'export') return `(${row['login']}) ${row['user_full_name']}`;
-    if (type == 'display' || type == 'filter') {
-      return `<a href="${user_path.replace("-1234",row['user_id'])}">(${row['login']})</a> ${row['user_full_name']}`;
+    if (type == 'display') {
+      return `<a href="${user_path.replace("-1234",row['user_id'])}">${cafe.escapeHtml(row['login'])}</a>`;
     }
-    //for sort, we just return the data which is supposed to be iso8601
     return row['login']
   }
   function problem_link_renderer(data, type, row) {
     if (type == 'export') return `[${row['name']}] ${row['full_name']}`;
-    return `<a href="${problem_path.replace("-1234",row['problem_id'])}">[${row['name']}]</a> ${row['full_name']}`;
+    if (type == 'display') {
+      return `<a href="${problem_path.replace("-1234",row['problem_id'])}">${cafe.escapeHtml(row['full_name'])}</a> <span class="text-secondary small">${cafe.escapeHtml(row['name'])}</span>`;
+    }
+    if (type == 'filter') return `${row['full_name']} ${row['name']}`;
+    return row['full_name']
   }
   function date_time_renderer( data, type, row) {
     return moment(data).format('YYYY-MM-DD HH:mm:ss')
@@ -86,18 +94,19 @@
           exportOptions: { orthogonal: 'export' }
         }
       ],
-      columns: [
+      columns: cafe.dt.escape_columns_by_default([
         {title: 'Sub ID', data: 'id', render: sub_link_renderer },
-        {title: 'User', data: 'login', render: user_link_renderer},
+        {title: 'Login', data: 'login', render: user_link_renderer},
+        {title: 'Name', data: 'user_full_name'},
         {title: 'Problem', data: 'full_name', render: problem_link_renderer},
         {title: 'Language', data: 'pretty_name'},
         {title: 'Submit at', data: 'submitted_at', render: date_time_renderer},
         {title: 'Result', data: 'grader_comment', render: result_renderer},
         {title: 'Score', data: 'points', className: 'text-end'},
         {title: 'IP', data: 'ip_address', className: 'grader-comment'},
-      ],
+      ]),
       ajax: {
-        url: '#{submission_query_report_path}',
+        url: '#{submission_query_report_path(report_contest_query)}',
         type: 'POST',
         data: (d) =>  {
           build_sub_range_params(d)

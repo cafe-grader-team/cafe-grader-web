@@ -153,14 +153,23 @@ RSpec.describe "API Authorization", type: :request do
       expect(response).to have_http_status(:forbidden)
     end
 
-    it "allows when global config view_testcase is true" do
+    it "allows when global config view_testcase is true AND the problem's own flag is on" do
       set_grader_config("right.view_testcase", "true")
-      # User#can_view_testcase? only checks global config, not per-problem flag
+      problems(:prob_add).update!(view_testcase: true)
       get "/api/v1/problems/#{problems(:prob_add).id}/testcases",
         headers: auth_header_for(users(:john))
       expect(response).to have_http_status(:ok)
       data = JSON.parse(response.body)
       expect(data.length).to eq(2) # tc_add_1, tc_add_2
+      expect(data.map { |t| t["access"] }.uniq).to eq(["preview"])
+    end
+
+    it "rejects when only the problem's own flag is off (User#testcase_access checks both, rev 2218)" do
+      set_grader_config("right.view_testcase", "true")
+      problems(:prob_add).update!(view_testcase: false)
+      get "/api/v1/problems/#{problems(:prob_add).id}/testcases",
+        headers: auth_header_for(users(:john))
+      expect(response).to have_http_status(:forbidden)
     end
 
     it "admin always can view testcases" do

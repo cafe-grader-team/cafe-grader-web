@@ -20,11 +20,12 @@ class MarkdownControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{<em>hi</em>}, response.body
   end
 
-  test "filters raw HTML out of the preview" do
+  test "escapes raw HTML in the preview instead of executing or dropping it" do
     sign_in_as("admin", "admin")
-    post markdown_preview_path, params: { text: "before <script>alert(1)</script> after" }
+    post markdown_preview_path, params: { text: "before <script>alert(1)</script> vector<int> after" }
     assert_response :success
     assert_no_match %r{<script}, response.body
+    assert_match %r{&lt;script&gt;alert\(1\)&lt;/script&gt; vector&lt;int&gt;}, response.body
   end
 
   test "blank text renders an empty fragment rather than erroring" do

@@ -77,4 +77,12 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # The local DB is a production copy and may carry analysis-only tables
+  # imported beside it (prod_solid_queue_* from the 2026-09-12 queue
+  # postmortem). Keep them out of db/schema.rb, which a migration run here
+  # rewrites — they were committed into it once by accident.
+  ActiveSupport.on_load(:active_record) do
+    ActiveRecord::SchemaDumper.ignore_tables |= [/\Aprod_/]
+  end
 end

@@ -1,1 +1,2 @@
 = turbo_stream.update dom_id(@config,"config"), partial: 'config', locals: {conf: @config}
+= turbo_stream.replace dom_id(@config,"config_warnings"), partial: 'config_warnings', locals: {conf: @config}

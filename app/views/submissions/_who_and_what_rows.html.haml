@@ -1,0 +1,42 @@
+-# The User and Problem rows shared by the "Submission Detail" card
+-# (submissions/show) and the "Viva Info" card (viva_sessions/show), so both
+-# pages name the author and the problem the same way (design 2026-11-18).
+-#
+-# Who sees the author: the owner and the problem's staff (admin, editor,
+-# reporter). Anyone else allowed to open the page — another student on a
+-# problem that shares submissions — sees "hidden". The login links to the
+-# user stat page for admins only, because that page is admin-only.
+-#
+-# locals: submission. The tooltip needs a parent with the init-ui-component
+-# controller (both cards have one).
+- problem = submission.problem
+- author  = submission.user
+- staff   = @current_user.admin? || (problem && (@current_user.can_edit_problem?(problem) || @current_user.can_report_problem?(problem)))
+.row.mb-2
+  .col-4.text-end.text-secondary
+    User
+  .col
+    - if author.nil?
+      (n/a)
+    - elsif staff || @current_user == author
+      - if @current_user.admin?
+        = link_to author.login, stat_user_admin_path(author)
+      - else
+        = author.login
+      = author.full_name
+    - else
+      %span.text-secondary.fst-italic hidden
+.row.mb-2{data: {controller: 'problem-name'}}
+  .col-4.text-end.text-secondary
+    Problem
+  .col
+    - if problem
+      = render partial: 'problems/problem_name', locals: {problem: problem}
+      -# The shared block hides its Read link where students must not get the
+      -# PDF (viva: it is the interviewer's brief) — staff still need it.
+      - if !problem.pdf_visible_to_student? && problem.statement.attached? && @current_user.can_view_problem_pdf?(problem)
+        = link_to mdi(:description, 'md-18 text-muted'), download_by_type_problem_path(problem, 'statement'), class: 'd-inline-flex text-decoration-none align-middle', data: {bs_toggle: 'tooltip', bs_title: 'Download problem statement (PDF)'}
+      - if @current_user.admin?
+        = link_to 'Edit', edit_problem_path(problem)
+        |
+        = link_to 'Stat', stat_problem_path(problem)

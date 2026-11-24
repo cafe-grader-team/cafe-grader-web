@@ -1,12 +1,17 @@
 class Contest < ApplicationRecord
   include Auditable
   audited only: %i[name enabled description start stop finalized
-                   pre_contest_seconds post_contest_seconds allow_hint]
+                   pre_contest_seconds post_contest_seconds allow_hint outside_login_off
+                   deduction_cap assist_spending_limit]
 
   has_many :contests_problems, class_name: 'ContestProblem', dependent: :destroy
   has_many :contests_users, class_name: 'ContestUser', dependent: :destroy
   has_many :problems, through: :contests_problems
   has_many :users, through: :contests_users
+
+  # Staff notes on the contest (issues to resolve, after-action report): kind
+  # `comment` rows, seen only on the manage page.
+  has_many :comments, as: :commentable, dependent: :destroy
 
   scope :enabled, -> { where(enabled: true) }
   # scope :active, -> (time = Time.zone.now) { where(enabled: true).where('start <= ? and stop >= ?',time,time)}
@@ -20,6 +25,15 @@ class Contest < ApplicationRecord
     joins(:contests_users).where(contests_users: { user_id: user_id, enabled: true })
   }
 
+  # When the outside-login block of this contest ends for the last student:
+  # stop plus the longest student extra time. nil without a stop.
+  # Disabled rows count toward the longest extra time on purpose (enabled flags
+  # are ignored here, spec Part 1).
+  def outside_login_block_ends_at
+    return nil if stop.nil?
+    stop + (contests_users.user.maximum(:extra_time_second) || 0).seconds
+  end
+
   # new_users are active record relation
   # return a toast reaponse hash
 
@@ -28,15 +42,13 @@ class Contest < ApplicationRecord
 
   # validates the name, (also using custom validator)
   validates :name, presence: true, uniqueness: true, name_format: true
+  validate :outside_login_off_needs_stop
+  # Help-deduction settings (spec 2026-11-21): blank = no cap / the site's
+  # spending limit.
+  validates :deduction_cap, numericality: { only_integer: true, in: 0..HelpDeduction::FULL_SCORE }, allow_nil: true
+  validates :assist_spending_limit, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   AddResult = Struct.new(:added, :skipped, :status, :model)
-
-  # return an ActiveRecord relation of users that is submittable for this con
-  def submittable_users(current_time = Time.zone.now)
-    return User.none unless enabled?
-    user_ids = contests_users.where(enabled: true).where('IFNULL(extra_time_second) >= ?', current_time - self.stop).pluck :user_id
-    Users.where(id: user_ids, enabled: true)
-  end
 
   def add_users(new_users, role: 'user')
     return AddResult.new(added: 0, skipped: 0) if new_users.blank?
@@ -101,7 +113,7 @@ class Contest < ApplicationRecord
     num_skipped = requested_problem_ids.count - num_added
 
 
-    latest_num = self.contests_problems.maximum(:number) || 1
+    latest_num = (self.contests_problems.maximum(:number) || 0) + 1
     problem_ids_to_add.each do |new_prob_id|
       self.contests_problems.build(problem_id: new_prob_id, number: latest_num)
       latest_num += 1
@@ -110,15 +122,40 @@ class Contest < ApplicationRecord
     return AddResult.new(added: num_added, skipped: num_skipped)
   end
 
-  # set the number of the problem to *number* and rearrage other
-  def set_problem_number(problem, number)
-    num = 1
-    self.contests_problems.where.not(problem_id: problem.id).order(:number).each do |cp, idx|
-      offset = (num) >= number ? 1 : 0
-      cp.update(number: num+offset)
-      num += 1
+  # contest problems as students and editors see them: by number, ties/blanks by id
+  def problems_in_display_order
+    contests_problems.includes(:problem).reorder('contests_problems.number', 'contests_problems.id').to_a
+  end
+
+  # Write numbers 1..n following problem_ids. Ids outside the contest and
+  # repeated ids are ignored; contest problems not mentioned are appended in
+  # their current display order. Returns the final problem-id order.
+  def reorder_problems!(problem_ids)
+    current = problems_in_display_order
+    by_pid = current.index_by(&:problem_id)
+    wanted = Array(problem_ids).map { |i| i.to_s =~ /\A\d+\z/ ? i.to_i : nil }.compact
+    ordered = wanted.select { |i| by_pid.key?(i) }.uniq
+    ordered += current.map(&:problem_id) - ordered
+    transaction do
+      ordered.each_with_index do |pid, idx|
+        cp = by_pid[pid]
+        cp.update!(number: idx + 1) if cp.number != idx + 1
+      end
     end
-    self.contests_problems.where(problem_id: problem.id).first.update(number: [self.contests_problems.count, [1, number.round].max].min)
+    ordered
+  end
+
+  # swap the problem with its neighbour in display order (:up / :down), then renumber 1..n
+  # returns the new 1-based position, nil if the problem is not in this contest
+  def move_problem(problem, direction)
+    ids = problems_in_display_order.map(&:problem_id)
+    idx = ids.index(problem.id)
+    return nil if idx.nil?
+    other = direction == :up ? idx - 1 : idx + 1
+    if other >= 0 && other < ids.size
+      ids[idx], ids[other] = ids[other], ids[idx]
+    end
+    reorder_problems!(ids).index(problem.id) + 1
   end
 
   # return :later, :pre, :during, :post, :ended
@@ -164,29 +201,78 @@ class Contest < ApplicationRecord
       .where('submitted_at <= ?', actual_stop)
   end
 
+  # Open viva sessions of this contest: still :submitted, not archived, on
+  # this contest's viva problems, by enrolled users, started inside the
+  # window (with each user's start offset / extra time) — the same membership
+  # and window rules as #submissions.
+  def open_viva_sessions
+    submissions.submitted.where(viva_archived_at: nil)
+               .joins(:problem).merge(Problem.viva_exam)
+  end
+
+  # Viva grading status for the status line next to "Finish open vivas":
+  # sessions whose interview has ended and whose first grade has not landed
+  # (:evaluating), and sessions whose first grading failed (:grader_error),
+  # over the same sessions as #open_viva_sessions (enrolled users, this
+  # contest's viva problems, started inside the window, not archived).
+  # Regrades of graded sessions stay :done and are not counted: those
+  # students keep a valid grade the whole time. Zero and zero means the
+  # contest's viva scores are final. Returns {grading:, errors:}.
+  def viva_grading_counts
+    counts = submissions.where(viva_archived_at: nil, status: %i[evaluating grader_error])
+                        .joins(:problem).merge(Problem.viva_exam)
+                        .reorder(nil).group(:status).count
+    {grading: counts['evaluating'].to_i, errors: counts['grader_error'].to_i}
+  end
+
+  # "Finish open vivas" (contests/show): runs Submission#finalize_open_viva!
+  # once over every open session — answered ones go to grading, greeting-only
+  # ones are archived, a session whose assistant reply is still in flight is
+  # skipped and reported so staff can click again shortly. Decided 2026-09-17
+  # as a batch button rather than a contest-stop trigger; the manual precursor
+  # of Phase B's window-end force-finish (doc/Viva-Exam.md). The 24 h reaper
+  # stays as the safety net. Returns {graded:, archived:, skipped:}.
+  def finish_open_vivas!(now: Time.zone.now)
+    counts = {graded: 0, archived: 0, skipped: 0}
+    open_viva_sessions.find_each do |sub|
+      counts[sub.finalize_open_viva!(
+        graded_note:   '(session closed by contest staff — grading begins)',
+        archived_note: '(session closed by contest staff — archived)',
+        now: now)] += 1
+    end
+    counts
+  end
+
   #
   # -------- report ---------------
   #
   # This is for reporting the maximum score of each problem of each user
-  def score_report
+  # The Watch page's score table (contests#view_query). `users:` and
+  # `problems:` narrow it — a contest-scoped Report page passes the subsets
+  # its viewer may report on — and default to every member and every contest
+  # problem, so the Watch page itself is unchanged.
+  def score_report(users: self.users, problems: self.problems)
+    subs = submissions.where(user: users, problem: problems)
+
     # calculate submission with max score
-    max_records = self.submissions
+    max_records = subs
       .group('submissions.user_id,submissions.problem_id')
       .select('MAX(submissions.points) as max_score, submissions.user_id, submissions.problem_id')
 
-    llm_assist_count = submissions.joins(:comments).group(:user_id, :problem_id)
+    llm_assist_count = subs.joins(:comments).group(:user_id, :problem_id)
       .select('SUM(comments.cost) as llm_cost')
       .select('COUNT(comments.id) as llm_count')
       .select('user_id', 'problem_id')
 
-    hint_reveal = Comment.hint_reveal_for_problems(self.problems, (self.start)..(self.stop))
+    # each student's own window, start offset and extra time included
+    hint_reveal = Comment.hint_reveal_in_contest_windows(self, problems)
       .select('comment_reveals.user_id as user_id')
       .select('comments.commentable_id as problem_id')
       .select('SUM(comments.cost) as hint_cost')
       .select('count(comments.id) as hint_count')
 
     # records having the same score as the max record
-    records = self.submissions
+    records = subs
       .joins("JOIN (#{max_records.to_sql}) MAX_RECORD ON " +
                    'submissions.points = MAX_RECORD.max_score AND ' +
                    'submissions.user_id = MAX_RECORD.user_id AND ' +
@@ -203,7 +289,6 @@ class Contest < ApplicationRecord
       .select('submissions.user_id,users_submissions.login,users_submissions.full_name,users_submissions.remark')
       .select('problems.name')
       .select('max_score')
-      .select('LEAST(max_score,100.0-IFNULL(LLM_ASSIST.llm_cost,0.0)-IFNULL(HINT_REVEAL.hint_cost,0.0)) as final_score')
       .select('submitted_at')
       .select('submissions.id as sub_id')
       .select('submissions.problem_id,submissions.user_id')
@@ -211,6 +296,25 @@ class Contest < ApplicationRecord
       .select('HINT_REVEAL.hint_cost, HINT_REVEAL.hint_count')
 
 
-    return Submission.calculate_max_score(records, users, problems)
+    return Submission.calculate_max_score(records, users, problems, deduction_cap: deduction_cap)
+  end
+
+  # The members a scoreboard or a contest-scoped report is about: the
+  # contests_users rows with role `user` (editors are staff), enabled or
+  # not — exactly the rows the Watch page lists (contests#view_query).
+  def students
+    User.where(id: contests_users.where(role: :user).select(:user_id))
+  end
+
+  # True when some member has a start offset or extra time, i.e. the
+  # window differs per student (Contest#submissions applies it per row).
+  def per_user_windows?
+    contests_users.where('start_offset_second > 0 OR extra_time_second > 0').exists?
+  end
+
+  private
+
+  def outside_login_off_needs_stop
+    errors.add(:outside_login_off, 'needs a Stop time') if outside_login_off? && stop.nil?
   end
 end

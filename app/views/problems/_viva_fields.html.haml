@@ -33,4 +33,4 @@
       hint: 'Optional shared examiner persona/conduct layer (viva_conduct tags), prepended before the briefing. Usually one per course.'
   = form.input :viva_soft_cap, wrapper: :horizontal_form, label: 'Soft turn cap', hint: 'The examiner is instructed to wrap up within about this many questions.'
   = form.input :viva_hard_cap, wrapper: :horizontal_form, label: 'Hard turn cap', hint: 'The interview is force-ended and graded at this many student answers.'
-  = form.input :viva_daily_limit, wrapper: :horizontal_form, label: 'Daily start limit', hint: 'Starts per student per day outside contests. Blank = site default; 0 = can only be taken during a contest.'
+  = form.input :viva_daily_limit, wrapper: :horizontal_form, label: 'Daily start limit', hint: 'Sessions per student per day that count (a session counts once the student answers). Blank = site default; 1 = one session, the usual exam setting; 0 = only during a contest, one session, and no End interview button (students cannot end early).'

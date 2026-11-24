@@ -52,7 +52,7 @@ GRANT ALL PRIVILEGES ON `grader\_%`.* TO 'grader'@'localhost';
 ## Documentation
 
 - **[Wiki](https://github.com/cafe-grader-team/cafe-grader-web/wiki)** — installation, judge-worker setup, problem authoring, roles & access control.
-- **[Guides site](https://nattee.github.io/cafe-grader-web/)** — rendered visual companions to the wiki pages (role matrices, permission flowcharts). Served from the development fork.
+- **[Guides site](https://cafe-grader-team.github.io/cafe-grader-web/)** — rendered visual companions to the wiki pages (role matrices, permission flowcharts).
 - **[MIGRATION.md](MIGRATION.md)** — upgrading a pre-2023 (v1.x / Rails 4.2) deployment.
 - **`/api-docs`** (running app) — Swagger UI for the JSON API.
 

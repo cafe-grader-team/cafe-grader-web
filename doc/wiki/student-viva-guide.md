@@ -17,12 +17,23 @@ interview ends and you get a score with written feedback.
   built to notice attempts like this, decline politely, and flag them for
   your instructor to review.
 
-## Practice limits and restarting
+## Attempt limits and restarting
 
-You can usually start a fresh attempt a limited number of times per day
-(shown on the viva page). You can restart your own viva between sessions at
-any time — this sets your current attempt aside and lets you begin again,
-still counted against your daily limit.
+Each viva limits how many attempts you can take in a day; the viva page
+shows how many you have left. An attempt counts only once you have answered
+at least one question. Opening a viva and leaving before you answer does
+not use one up.
+
+You can restart your own viva only when you could start a new attempt
+afterwards: you still have an attempt left today, or you have not answered
+yet. Otherwise the Restart button is not shown. Restarting closes your
+current attempt — it is kept, but you can no longer answer in it — and lets
+you begin again. A closed attempt you had answered in still counts toward
+today's limit.
+
+In an exam you usually get one attempt. If something goes wrong — the
+examiner stops replying, or the page shows an error — don't try to start
+over yourself: ask a proctor. Staff can allow you another attempt.
 
 ## Your score is your best attempt
 

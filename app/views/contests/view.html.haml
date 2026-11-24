@@ -8,6 +8,7 @@
       %small Watch
 
   .d-flex.gap-2
+    = link_to mdi(:query_stats, 'me-1') + 'AI Usage', ai_usage_contest_path(@contest), class: 'btn btn-outline-info btn-flex'
     = link_to mdi(:settings, 'me-1') + 'Manage', contest_path(@contest), class: 'btn btn-outline-primary btn-flex'
     = link_to mdi(:edit, 'me-1') + 'Edit', edit_contest_path(@contest), class: 'btn btn-primary btn-flex'
 

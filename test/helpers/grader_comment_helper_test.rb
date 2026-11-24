@@ -1,6 +1,8 @@
 require "test_helper"
 
 class GraderCommentHelperTest < ActionView::TestCase
+  teardown { Current.reset }
+
   test "a plain verdict string becomes one tile per testcase, no groups" do
     html = grader_comment_strip("PP-T")
     doc = Nokogiri::HTML.fragment(html)
@@ -56,5 +58,41 @@ class GraderCommentHelperTest < ActionView::TestCase
     doc = Nokogiri::HTML.fragment(grader_comment_strip("<b>bold</b>"))
     assert_equal 0, doc.css("b").size
     assert_includes grader_comment_strip("<b>x</b>"), "&lt;b&gt;"
+  end
+  # ---- per-user verdict display preference (User#verdict_display) ----
+
+  def plain_viewer!
+    Current.user = users(:john).tap { |u| u.verdict_display = 'plain' }
+  end
+
+  test "a viewer who prefers plain text gets the pre-4.5 uncapped rendering" do
+    plain_viewer!
+    doc = Nokogiri::HTML.fragment(grader_comment_strip("P[PP-]T"))
+    assert_equal 0, doc.css(".verdict-tile").size
+    span = doc.at_css("span.grader-comment.text-break")
+    assert span, "expected the uncapped plain span"
+    refute_includes span["class"], "grader-comment-capped"
+    assert_equal " [P[PP-]T]", span.text
+  end
+
+  test "style: forces a rendering regardless of the viewer preference (profile samples)" do
+    plain_viewer!
+    assert Nokogiri::HTML.fragment(grader_comment_strip("PP", style: :tiles)).at_css(".verdict-tile"),
+           "style: :tiles must render tiles for a plain-preference viewer"
+    Current.reset
+    assert Nokogiri::HTML.fragment(grader_comment_strip("PP", style: :plain)).at_css(".grader-comment.text-break"),
+           "style: :plain must render plain with no viewer at all"
+  end
+
+  test "free-text comments keep the capped fallback even for plain-preference viewers" do
+    plain_viewer!
+    doc = Nokogiri::HTML.fragment(grader_comment_strip("No testcase"))
+    assert doc.at_css("span.grader-comment.grader-comment-capped")
+  end
+
+  test "the client-side config carries the viewer's plain flag" do
+    assert_includes verdict_strip_config_json, '"plain":false'
+    plain_viewer!
+    assert_includes verdict_strip_config_json, '"plain":true'
   end
 end

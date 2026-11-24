@@ -17,7 +17,9 @@ class GroupsController < ApplicationController
 
   # GET /groups
   def index
-    @groups = @current_user.groups_for_action(:edit)
+    # Newest first. Groups predating groups.created_at (NULL) fall to the
+    # bottom -- MySQL sorts NULL last in DESC -- and keep id order there.
+    @groups = @current_user.groups_for_action(:edit).order(created_at: :desc, id: :desc)
   end
 
   # GET /groups/1

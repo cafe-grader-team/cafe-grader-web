@@ -3,7 +3,7 @@ class ProblemsController < ApplicationController
   include ProblemAuthorization
 
   MEMBER_METHOD = [:edit, :update, :destroy,
-                   :toggle_available, :toggle_view_testcase, :stat,
+                   :toggle_available, :toggle_view_testcase, :stat, :stat_query,
                    :add_dataset, :import_testcases,
                    :download_archive, :download_by_type, :delete_by_type,
                   ]
@@ -17,25 +17,17 @@ class ProblemsController < ApplicationController
 
   before_action :admin_authorization, only: [:toggle_available, :turn_all_on, :turn_all_off, :download_archive]
   before_action :can_edit_problem, only: [:edit, :update, :destroy,
-                                          :toggle_view_testcase, :stat,
+                                          :toggle_view_testcase, :stat, :stat_query,
                                           :add_dataset, :import_testcases,
                                           :delete_by_type,
                                          ]
-  before_action :can_report_problem, only: [:stat]
+  before_action :can_report_problem, only: [:stat, :stat_query]
   before_action :set_active_tab, only: %i[update]
   before_action :stimulus_controller
 
 
   def index
     @problem = problem_for_manage(@current_user)
-    # For viva rows the action column offers Start Viva / View Viva instead of
-    # Submit (a viva can't be reached through the code editor; see
-    # SubmissionsController#direct_edit_problem). One query for the current
-    # user's active viva session per problem, keyed by problem_id.
-    @my_active_viva = Submission.regular
-      .where(user: @current_user, viva_archived_at: nil,
-             problem: @problems.select(&:viva_exam?))
-      .index_by(&:problem_id)
   end
 
   def manage_query
@@ -240,29 +232,36 @@ class ProblemsController < ApplicationController
       redirect_to controller: 'main', action: 'list'
       return
     end
-    @submissions = Submission.regular.includes(:user).includes(:language).where(problem_id: params[:id]).order(:user_id, :id)
 
-    # stat summary
-    range =65
-    @histogram = { data: Array.new(range, 0), summary: {} }
-    user = Hash.new(0)
-    @submissions.find_each do |sub|
-      d = (DateTime.now.in_time_zone - sub.submitted_at) / 24 / 60 / 60
-      @histogram[:data][d.to_i] += 1 if d < range
-      user[sub.user_id] = [user[sub.user_id], ((sub.try(:points) || 0) >= 100) ? 1 : 0].max
-    end
-    @histogram[:summary][:max] = [@histogram[:data].max, 1].max
-
-    @summary = { attempt: user.count, solve: 0 }
-    user.each_value { |v| @summary[:solve] += 1 if v == 1 }
+    # Three grouped queries; the submission rows themselves are fetched by the
+    # table via #stat_query, so a problem with thousands of submissions no
+    # longer loads them all into Ruby (and into the HTML) to show two numbers.
+    @submission_count = Submission.regular.where(problem_id: @problem.id).count
+    # Staff test-drives are left out of every number here (Submission.regular);
+    # a viva problem says so on the page, with the count left out.
+    @test_drive_count = @problem.viva_exam? ? @problem.submissions.test_drives.count : 0
+    @summary          = @problem.attempt_summary            # distinct users, all groups
+    @group_stats      = @problem.group_stats_for(@current_user)
+    @llm_usage        = Comment.llm_assists_on(Submission.where(problem_id: @problem.id)).usage_by_model
 
     # for new graph
     @chart_dataset = @problem.get_jschart_history.to_json.html_safe
-    @can_view_ip =  true
 
     # Group pre-picked by the "Score report" toolbar link (nil -> the report
     # opens with its default user filter instead).
     @report_group = @problem.report_group_for(@current_user)
+  end
+
+  # JSON rows for the submissions table on #stat (same authorization gates).
+  # Every regular submission of the problem; the DataTable pages and sorts
+  # client-side, rendering only the visible rows.
+  def stat_query
+    @submissions = Submission.regular.where(problem_id: @problem.id)
+      .joins(:user, :language)
+      .select('submissions.id, submissions.user_id, submissions.submitted_at',
+              'submissions.grader_comment, submissions.points, submissions.ip_address',
+              'users.login, users.full_name, languages.pretty_name')
+      .order(:user_id, :id)
   end
 
   def manage

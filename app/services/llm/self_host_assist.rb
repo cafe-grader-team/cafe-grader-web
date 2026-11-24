@@ -15,6 +15,10 @@ module Llm
 
     def provider_name = 'self-host'
 
+    # Department hardware: no per-call dollar figure, and 0.0 is the honest
+    # answer (unlike a provider that has a price we failed to read).
+    def compute_cost(_usage) = 0.0
+
     def execute_call(data)
       key = self.class.model_key_for(@model)
       raise ResponseError.new("no self_hosted_models entry serves model #{@model.inspect}") if key.nil?

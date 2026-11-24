@@ -2,15 +2,18 @@ require 'yaml'
 
 module Viva
   # Imports a viva-scenario kit (a directory with `manifest.yml`, one scenario
-  # .md + one examiner-briefing .md per problem, and an optional shared conduct
-  # profile, optional shared grounding texts) into viva_exam Problems.
+  # .md + one examiner-briefing .md per problem, optional shared conduct
+  # profiles, optional shared grounding texts) into viva_exam Problems.
   # Idempotent: existing problems are matched by `name` and updated in place;
-  # the conduct tag is matched by tag name; grounding materials by title.
+  # conduct tags are matched by tag name; grounding materials by title.
   # Report-first: only mutates when apply: true.
   #
   # Manifest shape (see course-prep/<course>/viva/<batch>/manifest.yml):
   #
-  #   conduct_tag: {name: DS-viva-conduct-2569, file: _conduct.md}   # optional
+  #   conduct_tags:                                   # optional; every tag is linked to every problem
+  #     - {name: DS-viva-conduct-2569, file: _conduct.md}                     # course profile (mode-invariant)
+  #     - {name: DS-viva-conduct-2569-practice, file: _conduct.practice.md}   # mode overlay
+  #   conduct_tag: {name: ..., file: ...}             # legacy single-tag form, still accepted
   #   defaults:    {viva_soft_cap: 10, viva_hard_cap: 15, viva_daily_limit: 5, available: false}
   #   problems:
   #     - name: v69_x            # Problem#name (unique key)
@@ -27,8 +30,12 @@ module Viva
   #
   # `available` is applied on CREATE only — instructors flip it in the UI as
   # the course reaches each scenario's topic; re-importing never un-publishes.
-  # Grounding links are add-only too: an import never detaches material an
-  # instructor attached by hand (e.g. a `-sol` PDF).
+  # Grounding and conduct links are add-only too: an import never detaches
+  # material an instructor attached by hand (e.g. a `-sol` PDF), and switching
+  # a problem from one mode overlay to another means detaching the old tag in
+  # the problem form. Problem#viva_conduct_tags concatenates the linked tags
+  # in NAME order, so name an overlay as a suffix of its course profile
+  # (`X` + `X-practice`) to keep the assembled prompt base → mode → briefing.
   class KitImporter
     UPDATABLE = %w[full_name description viva_prompt viva_soft_cap viva_hard_cap viva_daily_limit].freeze
 
@@ -48,8 +55,8 @@ module Viva
       defaults = manifest['defaults'] || {}
 
       ActiveRecord::Base.transaction do
-        conduct = upsert_conduct(manifest['conduct_tag'])
-        Array(manifest['problems']).each { |entry| upsert_problem(entry, defaults, conduct) }
+        conducts = upsert_conducts(manifest)
+        Array(manifest['problems']).each { |entry| upsert_problem(entry, defaults, conducts) }
         kit_names = Array(manifest['problems']).map { |e| e['name'].to_s }
         Array(manifest['grounding']).each { |spec| upsert_grounding(spec, kit_names) }
         post_check
@@ -82,6 +89,19 @@ module Viva
       path.read.strip
     end
 
+    # All conduct specs in the manifest — the `conduct_tags:` list plus the
+    # legacy single `conduct_tag:` — upserted in manifest order. Two entries
+    # with the same name would silently fight over one tag's text, so that is
+    # an error. Returns the Tag records (specs whose file is missing are
+    # skipped; read_file has already recorded the error).
+    def upsert_conducts(manifest)
+      specs = Array(manifest['conduct_tags']) + [manifest['conduct_tag']].compact
+      names = specs.map { |s| s['name'].to_s }
+      dupes = names.tally.select { |_, n| n > 1 }.keys
+      @errors << "conduct tag named more than once in manifest: #{dupes.join(', ')}" if dupes.any?
+      specs.filter_map { |spec| upsert_conduct(spec) }
+    end
+
     # Shared examiner persona → a viva_conduct Tag (params holds the text).
     def upsert_conduct(spec)
       return nil if spec.blank?
@@ -106,7 +126,7 @@ module Viva
       tag
     end
 
-    def upsert_problem(entry, defaults, conduct)
+    def upsert_problem(entry, defaults, conducts)
       name = entry['name'].to_s
       scenario = read_file(entry['scenario'], "scenario for #{name}")
       briefing = read_file(entry['briefing'], "briefing for #{name}")
@@ -123,15 +143,15 @@ module Viva
 
       problem = Problem.find_by(name: name)
       if problem.nil?
-        create_problem(name, attrs, entry.fetch('available', defaults['available'] || false), conduct)
+        create_problem(name, attrs, entry.fetch('available', defaults['available'] || false), conducts)
       elsif !problem.viva_exam?
         @errors << "problem '#{name}' exists but is not a viva_exam (compilation_type=#{problem.compilation_type}); refusing to overwrite"
       else
-        update_problem(problem, attrs, conduct)
+        update_problem(problem, attrs, conducts)
       end
     end
 
-    def create_problem(name, attrs, available, conduct)
+    def create_problem(name, attrs, available, conducts)
       problem = Problem.new(attrs.merge(name: name, compilation_type: :viva_exam, available: available,
                                         date_added: Date.current, test_allowed: true, output_only: false))
       # Mirror ProblemsController#quick_create: a dataset-less problem is
@@ -139,34 +159,36 @@ module Viva
       problem.save!
       ds = problem.datasets.create!(name: problem.get_next_dataset_name)
       problem.update!(live_dataset: ds)
-      link_conduct(problem, conduct)
+      link_conducts(problem, conducts)
       @touched << problem
       @io.puts "CREATE    problem '#{name}' (#{describe(attrs)}, available=#{available})"
     rescue ActiveRecord::RecordInvalid => e
       @errors << "problem '#{name}': #{e.record.errors.full_messages.join('; ')}"
     end
 
-    def update_problem(problem, attrs, conduct)
+    def update_problem(problem, attrs, conducts)
       changed = UPDATABLE.select { |k| normalize(problem[k]) != normalize(attrs[k]) }
-      linked = link_conduct(problem, conduct)
+      linked = link_conducts(problem, conducts)
       @touched << problem
-      if changed.empty? && !linked
+      if changed.empty? && linked.empty?
         @io.puts "UNCHANGED problem '#{problem.name}'"
       else
         problem.update!(attrs.slice(*changed)) if changed.any?
         notes = changed.dup
-        notes << 'conduct linked' if linked
+        notes << "conduct linked: #{linked.join(', ')}" if linked.any?
         @io.puts "UPDATE    problem '#{problem.name}' — #{notes.join(', ')}"
       end
     rescue ActiveRecord::RecordInvalid => e
       @errors << "problem '#{problem.name}': #{e.record.errors.full_messages.join('; ')}"
     end
 
-    # Returns true when a link was added.
-    def link_conduct(problem, conduct)
-      return false if conduct.nil? || problem.tags.include?(conduct)
-      problem.tags << conduct
-      true
+    # Links every conduct tag the problem does not already carry (add-only).
+    # Returns the names of the tags newly linked.
+    def link_conducts(problem, conducts)
+      conducts.reject { |tag| problem.tags.include?(tag) }.map do |tag|
+        problem.tags << tag
+        tag.name
+      end
     end
 
     # Shared reference text → a GroundingMaterial (matched by title), attached

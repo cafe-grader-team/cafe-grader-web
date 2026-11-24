@@ -21,7 +21,7 @@ class ReportControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated cannot view activity report" do
     get activity_report_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "regular user cannot view activity report" do

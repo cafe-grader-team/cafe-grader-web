@@ -21,10 +21,21 @@ class Grader
     @box_id = box_id
     @worker_id = worker_id
     @grader_process = GraderProcess.find_or_create_by(box_id: box_id, worker_id: worker_id)
-    @grader_process.update(key: key)
+    # pid/host have existed on the table since the legacy GraderProcess
+    # .register_grader (unused — it still names columns this schema dropped),
+    # but nothing wrote them, so a row never said which process was actually
+    # holding the box. Recorded here for operators reading the table after a
+    # crash; Grader.watchdog identifies processes from `ps` by box+key, not
+    # from this, so a stale pid can never mis-target a signal.
+    @grader_process.update(key: key, pid: Process.pid, host: Socket.gethostname)
     @last_job_time = Time.zone.now
     Rainbow.enabled = true
     judge_log "Grader created with key #{key}"
+    # One line that shows which per-host isolate options this process loaded
+    # from worker.yml — they are read at boot, so a box started before an
+    # `engine:detect WRITE=1` still runs without them until it restarts.
+    host_options = (Rails.configuration.worker[:isolate_options] || {}).to_h
+    judge_log "Host isolate options (worker.yml isolate_options): #{host_options.empty? ? 'none' : host_options.map { |lang, opts| "#{lang}: #{opts}" }.join('; ')}"
   end
 
   #
@@ -37,14 +48,15 @@ class Grader
     dataset = Dataset.find(param[:dataset_id])
 
     compiler = Compiler.get_compiler(sub).new(@worker_id, @box_id)
-    result = compiler.compile(sub, dataset)
+    result = compiler.compile(sub, dataset, chain_id: @job.chain_id)
 
     # report compile
     judge_log "#{@job.to_text} completed with result #{result.to_h}"
     @job.report(result)
 
-    # add next jobs only when compilation succeeded
-    if sub.compilation_success?
+    # add next jobs only when compilation succeeded (a superseded compile
+    # reports an error and leaves the submission alone)
+    if result.status == :success && sub.compilation_success?
       if dataset.testcases.count > 0
         Job.add_evaluation_jobs(sub, dataset, @job.id, @job.priority)
       else
@@ -60,7 +72,7 @@ class Grader
     testcase = Testcase.find(param[:testcase_id])
 
     evaluator = Evaluator.get_evaluator(sub).new(@worker_id, @box_id)
-    result = evaluator.execute(sub, testcase)
+    result = evaluator.execute(sub, testcase, chain_id: @job.chain_id)
 
     @job.report(result)
 
@@ -77,7 +89,7 @@ class Grader
     dataset = Dataset.find(param[:dataset_id])
 
     scorer = Scorer.get_scorer(sub).new(@worker_id, @box_id)
-    result = scorer.process(sub, dataset)
+    result = scorer.process(sub, dataset, chain_id: @job.chain_id)
 
     @job.report(result)
   end
@@ -93,7 +105,13 @@ class Grader
       begin
         judge_log "Processing #{@job.to_text}"
         @grader_process.update(task_id: @job.id, status: :working)
-        if @job.jt_compile?
+        # Job.supersede! errors a rejudged submission's waiting jobs, but an
+        # older chain can still queue more after it (a compile that finished
+        # just after the rejudge); those stop here.
+        if !Job.chain_current?(@job.arg, @job.chain_id)
+          judge_log "#{@job.to_text} superseded by a newer grading; skipped"
+          @job.superseded!
+        elsif @job.jt_compile?
           process_job_compile
         elsif @job.jt_evaluate?
           process_job_evaluate
@@ -108,7 +126,8 @@ class Grader
         # the main comment to the error message (so that the user can see it)
         judge_log Rainbow('(GraderError)').bg(COLOR_ERROR).color(:yellow) + " " + ge.message, Logger::ERROR
         @job.update(status: :error, result: ge.message) if ge.end_job
-        if ge.update_submission
+        # a superseded chain's failure is not the new grading's
+        if ge.update_submission && Job.chain_current?(@job.arg, @job.chain_id)
           s = Submission.find(ge.submission_id)
           s.set_grading_error(ge.message_for_user)
         end
@@ -122,7 +141,7 @@ class Grader
         else
           @job.update(status: :error, result: "gave up after #{retry_count} retries: #{e.class}: #{e.message}")
           s = Submission.find_by(id: @job.arg)
-          s&.set_grading_error("Internal grading error after #{retry_count} retries, please rejudge.")
+          s&.set_grading_error("Internal grading error after #{retry_count} retries, please rejudge.") if Job.chain_current?(@job.arg, @job.chain_id)
         end
       end
       result = true
@@ -135,6 +154,7 @@ class Grader
 
   def main_loop
     last_heartbeat = Time.zone.now
+    last_disk_check = nil
     running = true
 
     # trap signal
@@ -152,7 +172,16 @@ class Grader
       current = Time.zone.now
       if current - last_heartbeat > 3.0
         last_heartbeat = current
-        @grader_process.update(last_heartbeat: current, status: (Time.zone.now - @last_job_time > 5.second) ? :idle : :working)
+        attrs = { last_heartbeat: current, status: (Time.zone.now - @last_job_time > 5.second) ? :idle : :working }
+        # free disk of the judge directories, at most once a minute (issue
+        # #25). Skipped while the schema predates the column (a judge host
+        # deployed before the web host migrated) so the loop never crashes
+        # on an unknown attribute.
+        if GraderProcess.column_names.include?('disk_free_mb') && (last_disk_check.nil? || current - last_disk_check > 60)
+          last_disk_check = current
+          attrs[:disk_free_mb] = GraderProcess.worker_free_disk_mb
+        end
+        @grader_process.update(attrs)
 
         # check if the database tell us to stop
         @grader_process.reload
@@ -209,12 +238,22 @@ class Grader
         pids  = procs.map { |p| p[:pid] }
         puts "grader process with box_id #{gp.box_id}: #{procs.size} running#{pids.any? ? " (pid #{pids.join(', ')})" : ''}"
 
+        # No process at all for this box, so anything still :process on it was
+        # claimed by a process that does not exist — the `ps` sweep above is
+        # the proof, so no timing heuristic is needed and a merely-slow grader
+        # can never have its job taken away. Reclaim BEFORE the :spawn below,
+        # so the replacement grader finds the work already back in the queue.
+        if procs.empty?
+          stats = Job.reclaim_orphaned!(grader_process_ids: [gp.id])
+          puts "  reclaimed orphaned jobs: #{stats[:requeued]} requeued, #{stats[:abandoned]} abandoned" if stats.values.sum > 0
+        end
+
         plan_box(gp, procs).each do |action, pid|
           case action
           when :spawn
             stdout_file = Rails.configuration.worker[:directory][:grader_stdout_base_file] + gp.box_id.to_s + '.txt'
             cmd = "rails runner \"Grader.start(#{gp.box_id},:#{server_key})\""
-            spawn(cmd, [:out, :err] => [stdout_file, 'a'])
+            spawn(cmd, grader_spawn_options(stdout_file))
             puts "spawning new grader main loop with #{cmd}, redirecting :out,:err to #{stdout_file}"
           when :term
             if gp.enabled
@@ -232,6 +271,21 @@ class Grader
         end
       end
     end
+  end
+
+  # Spawn options for a grader main loop: stdin from /dev/null, stdout+stderr
+  # appended to the per-box log, and every other descriptor closed. Ruby's
+  # spawn inherits all non-CLOEXEC fds by default (close_others: false since
+  # 2.6), and the watchdog runs where two such fds exist: the mysql2 socket of
+  # this very process (libmysqlclient opens it without CLOEXEC) and fd 6, which
+  # RVM's login-shell profile leaves open as a copy of stderr — under `bash -l`
+  # from cron, and under sshd during a deploy. A grader that inherits the deploy
+  # session's stderr pipe holds sshd's channel open for as long as it lives, so
+  # every deploy_production job hung after "Successfully deployed" (2026-08-30,
+  # all hosts; redirecting only stdin was not enough). A fresh grader needs
+  # nothing from this process but the three standard streams.
+  def self.grader_spawn_options(stdout_file)
+    {in: File::NULL, [:out, :err] => [stdout_file, 'a'], close_others: true}
   end
 
   # The grader processes serving one box, parsed from
@@ -257,13 +311,29 @@ class Grader
   # serving its box (oldest first). Returns [[action, pid], ...]:
   #   [:spawn]       enabled, nothing running
   #   [:term, pid]   enabled: a duplicate (every process but the oldest);
-  #                  disabled: graceful stop. TERM, never KILL, for a live
-  #                  grader — main_loop finishes its current job first, and a
-  #                  Job left in :process is never reclaimed (doc/backlog.md).
-  #   [:kill, pid]   disabled and the heartbeat is stale (> 300 s)
+  #                  disabled: graceful stop. TERM, not KILL, for a grader
+  #                  that still beats — main_loop finishes its current job first, where
+  #                  a KILL orphans it. Job.reclaim_orphaned! now returns such
+  #                  a job to the queue on the next tick, so this is a matter
+  #                  of not wasting the work rather than of losing it.
+  #   [:kill, pid]   disabled and the heartbeat is stale (> 300 s); or
+  #                  enabled and stuck: no heartbeat for STUCK_AFTER, from a
+  #                  process at least that old. main_loop only beats between
+  #                  jobs, so this is a grader held inside one job far longer
+  #                  than any job takes (checker and initializer are bounded
+  #                  by JudgeBase#run_bounded; this catches a hang nothing
+  #                  else bounds). The next tick finds the box empty,
+  #                  reclaims the job and spawns a fresh grader. The
+  #                  process-age check spares a grader just spawned on a box
+  #                  whose last heartbeat is from its predecessor.
+  STUCK_AFTER = 600.seconds
+
   def self.plan_box(gp, procs)
     if gp.enabled
       return [[:spawn]] if procs.empty?
+      stuck = gp.last_heartbeat.present? && gp.last_heartbeat < STUCK_AFTER.ago
+      stuck_procs = stuck ? procs.select { |p| p[:elapsed] > STUCK_AFTER.to_i } : []
+      return stuck_procs.map { |p| [:kill, p[:pid]] } if stuck_procs.any?
       procs.drop(1).map { |p| [:term, p[:pid]] }
     else
       stalled = gp.last_heartbeat.present? && gp.last_heartbeat < 300.seconds.ago

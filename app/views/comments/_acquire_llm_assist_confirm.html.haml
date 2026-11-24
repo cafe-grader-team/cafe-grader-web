@@ -1,13 +1,15 @@
+-# `cost` is what THIS requester would be charged (Llm::CommentAssist.assist_cost_for):
+-# 0 for an admin asking on a student's behalf, or when the site price is 0.
+-# Control flow cannot live inside the :markdown filter, hence the helper.
 :markdown
   This action will send the problem statement, your __original__ source code 
   from submission ##{@submission.id}, and its score 
   (#{@submission.points} [#{@submission.grader_comment}]) to the
   `#{model}` large language model with a predefined prompt to request assistance.
 
-  Requesting assistance will reduce the __full score__ for this problem by 
-  #{cost} points. If your final score for this problem does not exceed the 
-  __reduced full score__, you will receive that score. If your score exceeds 
-  the __reduced full score__, it will be capped at the __reduced full score__.
+  #{llm_assist_price_sentence(cost)}
+
+  #{help_budget_text(budget, cost: cost, kind: :ai)}
 
   The generated assistance will remain available to you permanently.
 

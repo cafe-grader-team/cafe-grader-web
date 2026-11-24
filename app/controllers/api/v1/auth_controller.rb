@@ -16,7 +16,13 @@ class Api::V1::AuthController < Api::V1::BaseController
              status: :too_many_requests and return
     end
 
-    user = User.authenticate(params[:login], params[:password])
+    result = User.login_result(params[:login], params[:password])
+    if result.refusal
+      record_refused_login!
+      render json: { error: User.outside_login_refused_message }, status: :unauthorized and return
+    end
+
+    user = result.user
     unless user
       record_login_failure!
       render json: { error: "Invalid login or password" }, status: :unauthorized and return

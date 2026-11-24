@@ -1,0 +1,34 @@
+-# Test-drive sessions of this viva (author trial runs, submissions.test_drive):
+-# a read-only list. The button that starts one is in the page header, outside
+-# the problem form. Rendered only in the viva layout of _form (not in the
+-# inline block shown while switching a code problem to viva).
+-# Design: docs/superpowers/specs/2026-09-23-viva-test-drive-design.md
+- drives = problem.persisted? ? problem.submissions.test_drives.includes(:user).order(id: :desc).limit(10).to_a : []
+%section.mb-4
+  %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Test-drives
+  - if drives.empty?
+    %p.small.text-secondary.mb-0
+      No test-drives yet — use the
+      %strong Test-drive
+      button above to sit this viva yourself. Test-drives are graded like a real session but excluded from reports, cost figures and start limits.
+  - else
+    %table.table.table-sm.table-hover.align-middle.mb-1
+      %thead
+        %tr
+          %th Author
+          %th Started
+          %th Status
+          %th.text-end Points
+          %th
+      %tbody
+        - drives.each do |sub|
+          %tr
+            %td= sub.user&.login
+            %td.text-secondary.small= "#{time_ago_in_words(sub.submitted_at)} ago"
+            %td
+              = sub.status
+              - if sub.viva_archived?
+                %span.badge.text-bg-warning.ms-1 archived
+            %td.text-end= sub.points.nil? ? '—' : sub.points.round
+            %td.text-end= link_to 'Open', viva_submission_path(sub), class: 'btn btn-sm btn-outline-primary border-0 py-0'
+    %p.small.text-secondary.mb-0 Newest 10 shown. Test-drives are excluded from reports, cost figures and start limits.

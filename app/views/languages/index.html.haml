@@ -38,7 +38,7 @@
         },
       },
       rowId: 'id',
-      columns: [ 
+      columns: cafe.dt.escape_columns_by_default([ 
         {data: 'name', render: function(data, type, row) {
           if (type === 'display') {
             return `<span class="fw-bold text-dark">${data}</span>`
@@ -80,7 +80,7 @@
                        `</div>`
           return html;
         },className: 'py-1, text-end'}
-      ],
+      ]),
       columnDefs: [{orderable: false, targets: [4]} ],
       drawCallback: function (settings) {
         var api = this.api();

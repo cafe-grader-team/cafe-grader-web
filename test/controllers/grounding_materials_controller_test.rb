@@ -11,7 +11,7 @@ class GroundingMaterialsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated is redirected" do
     get grounding_materials_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user cannot access index" do

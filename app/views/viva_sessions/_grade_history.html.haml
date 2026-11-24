@@ -1,0 +1,50 @@
+-# Grade history: one row per grader run, newest first — rendered inside the
+-# Admin card of viva_sessions/show for users who can edit the problem. The
+-# current run drives submission.points; the "Make current" icon re-adopts an
+-# earlier valid run (SubmissionsController#adopt_viva_grade); the Raw icon
+-# opens the run's response body and error. Five columns so the table fits the
+-# narrow right-hand card: who asked sits under the time, the rubric version
+-# under the model. Design:
+-# docs/superpowers/specs/2026-09-23-viva-grade-history-design.md
+- runs = submission.viva_grades.includes(:requested_by).order(graded_at: :desc, id: :desc).to_a
+- if runs.any?
+  - current_rubric = Llm::VivaGradeAssist.rubric_version_for(submission.problem, strict: false)
+  %h6.text-secondary.small.mt-3.mb-1 Grade history
+  .table-responsive
+    %table.table.table-sm.table-hover.align-middle.small.mb-0.grade-history
+      %thead
+        %tr
+          %th When
+          %th Model
+          %th.text-end Total
+          %th Outcome
+          %th
+      %tbody
+        - runs.each do |run|
+          - has_raw = run.llm_response_raw.present? || run.error.present?
+          %tr
+            %td.text-nowrap{title: run.graded_at&.to_fs(:db)}
+              = run.graded_at ? "#{time_ago_in_words(run.graded_at)} ago" : '—'
+              .requester.text-secondary.text-truncate{style: 'max-width: 8rem;', title: viva_grade_requester_label(run)}= viva_grade_requester_label(run)
+            %td
+              = run.llm_model.presence || '—'
+              .rubric.text-secondary{title: viva_grade_rubric_title(run, current_rubric)}= run.rubric_version.present? ? run.rubric_version[0, 8] : '—'
+            %td.text-end= run.valid_grade? ? run.total_points : '—'
+            %td= viva_grade_outcome_badge(run)
+            %td.align-middle.py-1.pr-2
+              .d-flex.gap-1.justify-content-end
+                - if run.valid_grade? && !run.current?
+                  = button_to adopt_viva_grade_submission_path(submission, grade_id: run.id),
+                      class: 'btn btn-outline-warning border-0 py-1 px-2', title: "Make run ##{run.id} the current grade",
+                      form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': "Make run ##{run.id} (#{run.total_points}/100) the current grade? The student's score and feedback change to this run."}} do
+                    %span.mi published_with_changes
+                - if has_raw
+                  %button.btn.btn-outline-secondary.border-0.py-1.px-2{type: 'button', title: 'Raw grader response', data: {bs_toggle: 'collapse', bs_target: "#grade-run-#{run.id}"}}
+                    %span.mi data_object
+          - if has_raw
+            %tr.collapse{id: "grade-run-#{run.id}"}
+              %td{colspan: 5}
+                - if run.error.present?
+                  .text-danger.small.mb-1= run.error
+                - if run.llm_response_raw.present?
+                  %pre.small.bg-light.p-2.mb-0{style: 'white-space: pre-wrap; word-break: break-word; max-height: 40vh; overflow-y: auto;'}= run.llm_response_raw

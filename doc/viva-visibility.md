@@ -6,7 +6,9 @@ the code that enforces each rule. Audience: developers extending this area,
 and the instructor deciding how to configure a viva problem.
 
 For the full authoring/lifecycle picture, see `doc/Viva-Exam.md`. For the
-current retake/limit policy and what's still unbuilt, see
+current retake/limit policy see
+`docs/superpowers/specs/2026-10-07-viva-retakes-and-viva-check-design.md`
+(the one start rule, section 4 below); for what's still unbuilt,
 `docs/superpowers/specs/2026-07-21-viva-context-policy-design.md` (Phase A
 shipped; Phase B — per-contest retake budgets, window-end enforcement — has
 not).
@@ -148,54 +150,54 @@ max-score number shown on the list too. It reappears the moment the user is
 back inside a qualifying window or contest mode is switched off; nothing
 about the underlying `Submission` row changes.
 
-**Contest reports key on `submitted_at`, which for a viva is session
-*start*, not completion.** `ReportController#submission_in_range`
-(`app/controllers/report_controller.rb:628-638`) buckets submissions by
-`submitted_at` (or by id range) with no viva-specific carve-out; it's the
-same helper used by every report action (`submission`, `submission_query`,
-score summaries, etc. — `report_controller.rb:38,63,67,145,180,221`). Because
-`VivaSessionsController#start` sets `submitted_at: Time.zone.now` when the
-`Submission` is created (`viva_sessions_controller.rb:89-98`) — before any
-turns are exchanged and long before grading finishes — a report window that
-captures the moment a student *began* a viva will include that attempt even
-if grading completes well after the window nominally closed.
+**Contest reports key on `submitted_at`, which for a viva is session *start* — by design.** `ReportController#submission_in_range` (`app/controllers/report_controller.rb`) buckets submissions by `submitted_at` (or by id range) with no viva-specific carve-out, `Contest#submissions` applies the same window rule, and `VivaSessionsController#start` sets `submitted_at` when the session is created, before any turn. The grade-history feature (spec `docs/superpowers/specs/2026-09-23-viva-grade-history-design.md`) depends on this: a regrade adds a grader run days or weeks after the session and moves `submissions.graded_at` to the adopted run, but `submitted_at` never moves, so a session stays in the contest window in which the student took it. Bucketing on grading time would let a rubric fix months later pull a quiz session out of its contest.
 
-**Closing-bell caveat.** Grading is asynchronous and can legitimately land
-minutes after a contest's stop time even under today's (Phase A) behavior —
-the interviewer may still be mid-conversation at the bell, and the grader LLM
-call itself takes time once the interview ends. (Phase B — not yet built —
-adds a hard window-end cutoff that force-finishes an in-window session's
-interview, but even then the *grading* pass still runs after the cutoff and
-takes real wall-clock time.) **Operational rule: don't pull final contest
-score tables the instant a contest window closes — wait until the graders
-page (`/grader_processes/queues`) shows no in-flight viva jobs.**
+**What this means at the bell.** First grading is asynchronous: an interview may still be mid-conversation when the window closes, and the grader call itself takes time after the interview ends. A session started inside the window counts in the window however late its grade lands. The tooling for the closing minutes is the contest page's **Finish open vivas** button (rev 2161), which closes every still-open in-window session and sends the answered ones to grading, plus the viva grading status next to it (rev 2201): "Grading: N in progress" and "N grader errors", counted over the same in-window sessions and refreshed every 10 seconds while anything is grading, until it reads **All vivas graded**. **Operational rule: pull the final score table after Finish open vivas, once the status reads All vivas graded.** A grader error means that session's first grading failed; Re-run it (or `viva:regrade`) before pulling the table. Regrades of already-graded sessions are not counted, because those students keep a valid grade throughout.
 
 ---
 
 ## 4. Start-eligibility
 
-`VivaSessionsController#start` (`app/controllers/viva_sessions_controller.rb:33-106`)
-gates every attempt on `problems.viva_daily_limit` (nullable integer,
-`problem.rb`), resolved by `daily_start_limit_for`
-(`viva_sessions_controller.rb:280-295`):
+One rule decides who may start a session: `Viva::StartPolicy`
+(`app/services/viva/start_policy.rb`; design
+`docs/superpowers/specs/2026-10-07-viva-retakes-and-viva-check-design.md`).
+`VivaSessionsController#start` refuses with its `#refusal` (after the submit
+gate `User#can_submit_to_problem?`, the setup check and the one-active-session
+guard), `#restart` asks `#restart_allowed?`, and the Viva Info card reads
+`#limit` / `#starts_left`. The rule keys on `problems.viva_daily_limit` (the
+*start limit*, nullable integer), resolved by `Viva::StartPolicy.daily_limit_for`:
 
-| `viva_daily_limit` | Meaning | Enforcement |
+| `viva_daily_limit` | Outside contest mode | In contest mode |
 |---|---|---|
-| `nil` | Fall back to the site-wide `GraderConfiguration['viva.practice_daily_start_limit']` (seeded default **3**, `db/seeds.rb:211-216`). If that config key is itself missing/blank/non-positive, fall back further to a hardcoded `DAILY_START_LIMIT_FALLBACK = 3` — a misconfigured global key must fail safe to a limit, never to "unlimited." | Counts every `Submission` for that user+problem started today (`submitted_at >= beginning_of_day`), **including archived ones** — restarting does not refund the day's budget. |
-| `N > 0` | At most N starts per student per problem per calendar day. | Same counting rule as above. |
-| `0` | **Contest-only.** The problem can never be started outside an active contest window. | `VivaSessionsController#start` checks `GraderConfiguration.contest_mode?` directly; the earlier `can_submit_to_problem?` gate has already proven (for a student, via its `:submit` arm) the problem is visible right now only because it's part of an active, enrolled contest, so the contest-mode flag alone is sufficient today (no per-contest budget exists yet — that's the Phase B work in the context-policy spec). Editors reaching the gate via its `:edit` arm are still blocked here in normal mode; admins skip the guard entirely. |
+| `nil` | The site-wide `GraderConfiguration['viva.practice_daily_start_limit']` (seeded default **3**). If that key is missing/blank/non-positive, the hardcoded `DAILY_START_LIMIT_FALLBACK = 3` applies — a misconfigured key must fail safe to a limit, never to "unlimited." | same |
+| `N > 0` | At most N counted sessions per student per problem per calendar day. | same |
+| `0` | **Cannot start** ("This viva can only be taken during a contest."). | **One** counted session per day. The submit gate has already proven (for a student) that the problem is visible only through an active contest they are enrolled in, so the global contest-mode flag is enough here; no per-contest budget exists yet (Phase B of the context-policy spec). Before 2026-10-07 this branch had no count at all — unlimited retakes during an exam. |
 
-**Admins are exempt from the whole guard block** — both the daily-limit
-count and the `0`/contest-only branch are inside `unless @current_user.admin?`
-(`viva_sessions_controller.rb:67-90`). In practice this means a problem
-author (who is typically an admin) can start/restart their own viva as often
-as needed to test-drive a briefing, with no daily-limit or contest-only
-friction. **This is not the same as the planned, dedicated "test session"
-flow** (design item D7 in `docs/superpowers/specs/2026-07-20-viva-deployment-readiness-design.md`,
-not yet implemented) — today's admin-exempt sessions are ordinary
-`Submission` rows and still count toward reports and stats exactly like any
-other viva attempt; only the start-time guard is bypassed.
+**A counted session** is a regular session (not a test-drive) started today
+(`submitted_at >= beginning_of_day`, Asia/Bangkok) with at least one student
+answer and no staff grant (`viva_retake_granted_at IS NULL`). Archived
+sessions still count — restarting never refunds the day's budget — and the
+count is per day, not per contest, so practice sessions earlier the same day
+count against an exam viva.
 
-The resolved limit and remaining count are surfaced on the Viva Info card:
-"N of L starts left today," "Contest-only viva — starts are governed by the
-contest" (limit `0`), or "Unlimited starts (admin)."
+**Restart** (`#restart`, owner only) is offered and accepted only when the
+student could start again afterwards: a test-drive, a session with no answer
+(it never counted), or a counted start left today with this session included.
+
+**Allow another attempt** (`SubmissionsController#allow_viva_retake`, anyone
+who can edit the problem, in contest mode too) archives a session at any
+status and stamps the grant, so it stops counting and the student can start
+one more. A closed (archived) session refuses answers and retries and is
+never sent to grading.
+
+**Admins are exempt** (`Viva::StartPolicy#limit` is nil, `#refusal` nil).
+Authors who want to sit their own viva use a **test-drive**
+(`VivaSessionsController#test_drive`, editors of the problem's group and
+admins): a session flagged `submissions.test_drive`, outside the start
+limit, the contest-only rule and every report — unlike an admin's own
+ordinary session, which still counts in reports and stats like any other.
+
+The Viva Info card shows "N of L starts left today," "Contest-only viva — N
+of 1 attempt left today" (limit `0`, contest mode), "Contest-only viva — can
+be taken only during a contest" (limit `0`, outside contest mode), or
+"Unlimited starts (admin)."

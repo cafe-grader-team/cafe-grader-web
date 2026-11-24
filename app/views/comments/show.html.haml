@@ -1,0 +1,6 @@
+-# The popup (show.turbo_stream) as a page: "View" opened in a new tab, or
+-# clicked before Turbo loaded, is a plain page load and had no view (a 500).
+%h2= @header_msg
+.card.mb-4
+  .card-body
+    = @body_html || sanitized_markdown(@body_msg)

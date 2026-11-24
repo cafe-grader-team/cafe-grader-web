@@ -86,3 +86,11 @@ data-collection problems, surface it via the enum first.
   this at run time and raises `GraderError` if missing).
 - `custom_cafe`'s `/10` normalization means it natively lives on a 0-10
   scale. Convert your checker's intended scale accordingly.
+- Every checker, built-in or uploaded, runs on the judge host outside
+  isolate with a wall-clock bound of 30 s per testcase
+  (`JudgeBase#run_bounded`; a host overrides it in `worker.yml` under
+  `limits: checker_timeout`). Past it the checker and anything it started are
+  killed and the testcase is a grader error (`!`, comment "checker timed out
+  after N s"). A dataset initializer gets 120 s (`initializer_timeout`);
+  past it the submission gets a grading error and the next job on that
+  worker runs the initializer again.

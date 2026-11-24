@@ -1,4 +1,6 @@
 require 'test_helper'
+require 'tmpdir'
+require 'timeout'
 
 # Grader.watchdog's decision logic, isolated from ps/spawn/kill so it can be
 # exercised on canned process tables. Regression guard for the 2026-08-27
@@ -67,7 +69,24 @@ class GraderWatchdogTest < ActiveSupport::TestCase
   test 'enabled box with duplicates TERMs every grader but the oldest' do
     plan = Grader.plan_box(GraderProcess.new(enabled: true), procs(100, 200, 300))
     assert_equal [[:term, 200], [:term, 300]], plan
-    refute_includes plan.map(&:first), :kill, 'a live grader is never KILLed — its job would stay :process forever'
+    refute_includes plan.map(&:first), :kill, 'a grader that still beats is never KILLed — TERM lets it finish its job'
+  end
+
+  test 'enabled box whose grader has not beaten for 10 minutes KILLs it' do
+    gp = GraderProcess.new(enabled: true, last_heartbeat: 11.minutes.ago)
+    assert_equal [[:kill, 100]], Grader.plan_box(gp, procs(100)),
+                 'a grader held inside one job; the next tick reclaims the job and respawns'
+  end
+
+  test 'enabled box with a recent heartbeat is left alone' do
+    gp = GraderProcess.new(enabled: true, last_heartbeat: 9.minutes.ago)
+    assert_empty Grader.plan_box(gp, procs(100))
+  end
+
+  test 'a grader younger than the stale heartbeat it inherited is not KILLed' do
+    gp = GraderProcess.new(enabled: true, last_heartbeat: 3.days.ago)
+    fresh = [{pid: 100, ppid: 1, elapsed: 120}]
+    assert_empty Grader.plan_box(gp, fresh), 'spawned 2 minutes ago on a box disabled for days'
   end
 
   test 'disabled box TERMs all of its graders, not just the first' do
@@ -101,5 +120,49 @@ class GraderWatchdogTest < ActiveSupport::TestCase
     assert_equal true, first
     assert_equal [:first], ran
     assert_equal true, Grader.with_watchdog_lock('test-lock') { ran << :after }, 'lock released on exit'
+  end
+
+  # --- spawn hygiene ------------------------------------------------------
+
+  # Regression guard for the 2026-08-30 deploy hang: a grader spawned with only
+  # :out/:err redirected inherited fd 6 (RVM's login-shell copy of stderr —
+  # sshd's stderr pipe during a deploy) plus the watchdog's own mysql2 socket,
+  # and held the ssh channel open long after the deploy script had finished.
+  test 'a spawned grader gets /dev/null and its log file and nothing else' do
+    skip 'needs /proc' unless File.directory?('/proc/self/fd')
+    leaked_r, leaked_w = IO.pipe
+    leaked_w.close_on_exec = false # stand-in for RVM's fd 6 and mysql2's socket
+    Dir.mktmpdir do |dir|
+      log = File.join(dir, 'grader-1.txt')
+      pid = spawn('sleep 30', Grader.grader_spawn_options(log))
+      begin
+        # until the child has exec'd, /proc still shows the pre-exec fd table
+        Timeout.timeout(5) { sleep 0.02 until File.read("/proc/#{pid}/comm").strip == 'sleep' }
+        # Right after exec the child can briefly show a loader-transient
+        # descriptor (fd 3) that closes between the directory listing and
+        # readlink -> ENOENT (seen 1 in 5 spawns on WSL2, 2026-09-02). Sample
+        # until the table settles to {0,1,2}; a real leak persists through
+        # every sample and still fails the assertion below.
+        fds = nil
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 1.0
+        loop do
+          begin
+            fds = Dir.children("/proc/#{pid}/fd").map(&:to_i).sort.to_h { |n| [n, File.readlink("/proc/#{pid}/fd/#{n}")] }
+            break if fds.keys.all? { |n| n <= 2 }
+          rescue Errno::ENOENT
+            # an fd vanished mid-snapshot: the child is still settling, sample again
+          end
+          break if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+          sleep 0.01
+        end
+        assert_equal({0 => File::NULL, 1 => log, 2 => log}, fds, 'leaked into the grader')
+      ensure
+        Process.kill('TERM', pid)
+        Process.wait(pid)
+      end
+    end
+  ensure
+    leaked_r&.close
+    leaked_w&.close
   end
 end

@@ -90,4 +90,48 @@ RSpec.describe "Testcases API", type: :request do
       end
     end
   end
+
+  # Plain (non-swagger) tests for the tiers (issues #18 and #59). A second
+  # `response "200"` block on the paths above would clobber the documented
+  # schema in swagger.yaml, so these are intentionally not swagger blocks.
+  describe "preview tier on /input and /sol" do
+    let(:tc) { testcases(:tc_add_1) }
+
+    before do
+      GraderConfiguration.where(key: "right.view_testcase").update_all(value: "true")
+      GraderConfiguration.instance_variable_set(:@config_cache, nil)
+      problems(:prob_add).update!(view_testcase: true)
+      tc.inp_file.attach(io: StringIO.new("A" * 5000), filename: "add.1.in", content_type: "text/plain")
+    end
+
+    after { GraderConfiguration.instance_variable_set(:@config_cache, nil) }
+
+    it "gives a student the first 2048 bytes with the size and truncation headers" do
+      get "/api/v1/testcases/#{tc.id}/input", headers: { "Authorization" => "Bearer #{jwt_token_for(users(:john))}" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body.bytesize).to eq(2048)
+      expect(response.headers["X-Testcase-Byte-Size"]).to eq("5000")
+      expect(response.headers["X-Testcase-Truncated"]).to eq("true")
+    end
+
+    it "gives an admin the whole file" do
+      get "/api/v1/testcases/#{tc.id}/input", headers: { "Authorization" => "Bearer #{jwt_token_for(users(:admin))}" }
+      expect(response).to have_http_status(:ok)
+      expect(response.body.bytesize).to eq(5000)
+      expect(response.headers["X-Testcase-Truncated"]).to be_nil
+    end
+
+    it "refuses a student when the problem's own flag is off, even with the site right on" do
+      problems(:prob_add).update!(view_testcase: false)
+      get "/api/v1/testcases/#{tc.id}/input", headers: { "Authorization" => "Bearer #{jwt_token_for(users(:john))}" }
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "lists the tier and the file sizes in the problem's testcase metadata" do
+      get "/api/v1/problems/#{problems(:prob_add).id}/testcases", headers: { "Authorization" => "Bearer #{jwt_token_for(users(:john))}" }
+      expect(response).to have_http_status(:ok)
+      row = JSON.parse(response.body).find { |r| r["id"] == tc.id }
+      expect(row).to include("access" => "preview", "input_bytes" => 5000, "sol_bytes" => nil)
+    end
+  end
 end

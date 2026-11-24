@@ -18,11 +18,11 @@
     %small= toast_params[:subtitle]
     %button.btn-close{"aria-label" => "Close", "data-bs-dismiss" => "toast", :type => "button"}
   .toast-body.py-1{ class: (toast_header_class if toast_params[:type].to_sym != :notice)}
-    = toast_params[:body].html_safe
+    = toast_params[:body]
     - if toast_params[:errors].any?
       %ul
         - toast_params[:errors].each do |error|
-          %li= error.html_safe
+          %li= error
 :javascript
   // select unhide toast
   toast_elements = document.querySelectorAll('.toast:not(.hide)')

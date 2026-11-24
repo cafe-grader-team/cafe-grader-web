@@ -1,19 +1,22 @@
 class ContestsController < ApplicationController
   before_action :set_contest, only: [:show, :edit, :update, :destroy, :view, :view_query,
+                                     :ai_usage, :ai_usage_query, :finish_open_vivas, :viva_status, :viva_check,
                                      :add_users_from_csv, :clone, :set_active,
                                      :show_users_query, :show_problems_query,
                                      :add_user, :add_user_by_group, :add_problem, :add_problem_by_group,
-                                     :do_all_users, :do_user, :extra_time_user, :do_all_problems, :do_problem,
+                                     :do_all_users, :do_user, :extra_time_user, :do_all_problems, :do_problem, :reorder_problems,
+                                     :add_comment, :update_comment, :delete_comment,
                                     ]
   before_action :set_user, only: [:do_user]
   before_action :set_problem, only: [:do_problem]
 
   USER_ACTION = [:user_check_in, :set_active]
-  EDITOR_ACTION = %i[show edit update destroy view view_query clone
+  EDITOR_ACTION = %i[show edit update destroy view view_query ai_usage ai_usage_query finish_open_vivas viva_status viva_check clone
                      show_users_query show_problems_query
                      add_users_from_csv add_user add_user_by_group
                      add_problem add_problem_by_group
-                     do_all_users do_user do_all_problems do_problem
+                     do_all_users do_user extra_time_user do_all_problems do_problem reorder_problems
+                     add_comment update_comment delete_comment
                     ]
   before_action :check_valid_login
   before_action :group_editor_authorization, except: USER_ACTION
@@ -21,7 +24,7 @@ class ContestsController < ApplicationController
 
   before_action :check_finalized, only: %i[add_user_by_group add_user add_users_from_csv
                                            add_problem add_problem_by_group do_all_problems
-                                           do_all_users do_user do_all_problems do_problem
+                                           do_all_users do_user extra_time_user do_all_problems do_problem reorder_problems
                                           ]
   delegate :pluralize, to: 'ActionController::Base.helpers'
 
@@ -67,6 +70,67 @@ class ContestsController < ApplicationController
     }
   end
 
+  # GET /contests/:id/ai_usage — read-only LLM usage overview for this contest
+  # (viva interviews, grading, and submission assists): volume, cost, and
+  # response-time percentiles over the contest window.
+  def ai_usage
+    @report = AiUsageReport.new(@contest)
+  end
+
+  # POST /contests/:id/ai_usage_query — per-call feed for the DataTable.
+  def ai_usage_query
+    render json: { data: AiUsageReport.new(@contest).calls_json }
+  end
+
+  # GET /contests/:id/viva_status — the viva grading status line next to
+  # "Finish open vivas", re-fetched into its turbo frame every 10 s while
+  # anything is still grading (contests/_viva_status).
+  def viva_status
+    render partial: 'viva_status', locals: {contest: @contest}
+  end
+
+  # GET /contests/:id/viva_check — the Viva check page (design 2026-10-07,
+  # §4): per student, per viva problem, the flags staff should act on during
+  # the exam or look at afterwards. The body reloads itself every 30 s while
+  # the contest runs; its only write is the per-row "Allow another attempt"
+  # (SubmissionsController#allow_viva_retake, which re-renders the body).
+  def viva_check
+    @report = VivaCheckReport.new(@contest)
+  end
+
+  # POST /contests/:id/finish_open_vivas — the "Finish open vivas" button.
+  # Runs Contest#finish_open_vivas! once and toasts the three counts. Not
+  # behind check_finalized on purpose: the 24 h reaper grades open sessions
+  # whatever that flag says, so gating here would add friction without a
+  # guarantee. One audit row carries the counts when anything changed.
+  def finish_open_vivas
+    counts = @contest.finish_open_vivas!
+    @toast = {title: "Contest #{@contest.name}"}
+    if counts.values.sum.zero?
+      @toast[:body] = 'No open viva sessions.'
+    else
+      body = "Sent #{pluralize(counts[:graded], 'session')} to grading, archived #{pluralize(counts[:archived], 'greeting-only session')}."
+      if counts[:skipped].positive?
+        body += " Skipped #{pluralize(counts[:skipped], 'session')} with a reply in flight — click again in a minute."
+        @toast[:type] = :warning
+      end
+      @toast[:body] = body
+    end
+
+    if (counts[:graded] + counts[:archived]).positive?
+      AuditLog.record!(auditable: @contest, action: 'finish_open_vivas',
+                       object_changes: { 'graded_count'   => [nil, counts[:graded]],
+                                         'archived_count' => [nil, counts[:archived]],
+                                         'skipped_count'  => [nil, counts[:skipped]] })
+    end
+    # Toast plus an in-place refresh of the button's open-session badge, so the
+    # count drops to what is left (the skipped ones) without a reload.
+    render turbo_stream: [
+      turbo_stream.append('toast-area', partial: 'toast', locals: {toast: @toast}),
+      turbo_stream.update('open-viva-count', @contest.open_viva_sessions.count.to_s),
+    ]
+  end
+
   # GET /contests/new
   # GET /contests/new.xml
   def new
@@ -79,10 +143,12 @@ class ContestsController < ApplicationController
   end
 
   def clone
-    new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour)
+    new_contest = Contest.new(description: @contest.description, start: Time.zone.now, stop: Time.zone.now+3.hour,
+                            outside_login_off: @current_user.admin? && @contest.outside_login_off,
+                            deduction_cap: @contest.deduction_cap, assist_spending_limit: @contest.assist_spending_limit)
     new_contest.name = new_contest.get_next_name(@contest.name + '_copy')
     @contest.contests_users.each { |cu| new_contest.contests_users.build(user_id: cu.user_id, role: cu.role) }
-    @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id) }
+    @contest.contests_problems.each { |cp| new_contest.contests_problems.build(problem_id: cp.problem_id, number: cp.number) }
 
     saved = nil
     AuditLog.paused do
@@ -97,7 +163,9 @@ class ContestsController < ApplicationController
           'source_contest'  => [nil, @contest.name],
           'users_copied'    => [nil, new_contest.contests_users.size],
           'problems_copied' => [nil, new_contest.contests_problems.size]
-        }
+        }.merge(new_contest.outside_login_off? ? {'outside_login_off' => [nil, true]} : {})
+         .merge(new_contest.deduction_cap ? {'deduction_cap' => [nil, new_contest.deduction_cap]} : {})
+         .merge(new_contest.assist_spending_limit ? {'assist_spending_limit' => [nil, new_contest.assist_spending_limit]} : {})
       )
       redirect_to contest_path(new_contest), notice: "Contest \"#{@contest.name}\" is cloned to this contest"
     else
@@ -172,8 +240,11 @@ class ContestsController < ApplicationController
     # was removed along with the underlying practice/exam toggle
     # (2026-07-21 context-policy design, Phase A) — nothing in
     # contestManageProblem reads compilation_type here anymore either.
-    render json: {data: @contest.contests_problems.joins(:problem)
-      .select('contests_problems.id', :problem_id, :contest_id, :available, :enabled, :allow_llm, :name, :full_name, :number)}
+    rows = @contest.contests_problems.joins(:problem)
+      .select('contests_problems.id', :problem_id, :contest_id, :available, :enabled, :allow_llm, :name, :full_name, :number)
+      .reorder('contests_problems.number', 'contests_problems.id')
+    data = rows.each_with_index.map { |r, i| r.as_json.merge('position' => i + 1) }
+    render json: {data: data}
   end
 
   def do_all_users
@@ -251,12 +322,16 @@ class ContestsController < ApplicationController
   end
 
   def extra_time_user
-    cu = ContestUser.find(params[:row_id])
-    end_offset = params[:end_offset]
-    start_offset = params[:start_offset]
-    cu.update(extra_time_second: params[:end_offset], start_offset_second: params[:start_offset])
-    @toast = {title: "Contest #{@contest.name}", body: "Set extra times of #{cu.user.login} to #{start_offset} : #{end_offset}"}
-    @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'user_table'}}
+    cu = @contest.contests_users.find(params[:row_id])
+    # A cleared field means "no extra time", not NULL.
+    start_offset = params[:start_offset].presence || 0
+    end_offset = params[:end_offset].presence || 0
+    if cu.update(start_offset_second: start_offset, extra_time_second: end_offset)
+      @toast = {title: "Contest #{@contest.name}", body: "Set extra times of #{cu.user.login} to #{cu.start_offset_second} : #{cu.extra_time_second} seconds"}
+      @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'user_table'}}
+    else
+      @toast = {title: "Extra time not saved", body: cu.errors.full_messages.to_sentence, type: :alert}
+    end
     render 'turbo_toast'
   end
 
@@ -306,10 +381,8 @@ class ContestsController < ApplicationController
       gp.update(allow_llm: !gp.allow_llm?)
     when 'moveup', 'movedown'
       old_number = gp.number
-      delta = params[:command] == 'moveup' ? -1.2 : 1.2
-      anchor = params[:command] == 'moveup' ? (gp.number || 2) : (gp.number || 0)
       AuditLog.paused do
-        @contest.set_problem_number(@problem, anchor + delta)
+        @contest.move_problem(@problem, params[:command] == 'moveup' ? :up : :down)
       end
       new_number = @contest.contests_problems.where(problem: @problem).first&.number
       AuditLog.record!(
@@ -322,6 +395,24 @@ class ContestsController < ApplicationController
       @toast[:body] = "Unknown command"
       @toast[:type] = 'alert'
     end
+    @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'problem_table'}}
+    render 'turbo_toast'
+  end
+
+  # POST: save the problem order sent by drag-and-drop (problem_order = comma-separated problem ids)
+  def reorder_problems
+    before = @contest.problems_in_display_order.map(&:problem)
+    AuditLog.paused { @contest.reorder_problems!(params[:problem_order].to_s.split(',')) }
+    after_ids = @contest.problems_in_display_order.map(&:problem_id)
+    if after_ids != before.map(&:id)
+      names = before.index_by(&:id).transform_values(&:name)
+      AuditLog.record!(
+        auditable:      @contest,
+        action:         'reorder_problems',
+        object_changes: { 'order' => [before.map(&:name), after_ids.map { |i| names[i] }] }
+      )
+    end
+    @toast = {title: "Contest #{@contest.name}", body: "The problem order was saved."}
     @event_dispatcher = {event_name: 'datatable:reload', event_detail: { "table": 'problem_table'}}
     render 'turbo_toast'
   end
@@ -459,30 +550,77 @@ class ContestsController < ApplicationController
       locals: {event_name: 'datatable:reload', event_detail: { "h": 1}})
   end
 
+  # ---- contest comments ----
+  # Staff notes on the contest (design 2026-11-18). Anyone who can manage the
+  # contest reads, adds, edits and deletes. Deliberately NOT behind
+  # check_finalized: the after-action report is written once the contest is
+  # over and finalized. No audit row — each comment carries author and time.
+  def add_comment
+    comment = @contest.comments.new(kind: :comment, user: @current_user, body: params[:body].to_s.strip)
+    if comment.save
+      render_comments(title: 'Comment added')
+    else
+      render_comments(title: 'Comment not added', body: comment.errors.full_messages.to_sentence, type: :alert)
+    end
+  end
+
+  def update_comment
+    comment = @contest.comments.find(params[:comment_id])
+    if comment.update(body: params[:body].to_s.strip)
+      render_comments(title: 'Comment updated')
+    else
+      render_comments(title: 'Comment not updated', body: comment.errors.full_messages.to_sentence, type: :alert)
+    end
+  end
+
+  def delete_comment
+    @contest.comments.find(params[:comment_id]).destroy
+    render_comments(title: 'Comment deleted')
+  end
+
   def set_system_mode
+    # Switching the whole site's mode is an admin-only act. It was reachable by
+    # any group editor (this controller is only editor-gated) — a TA flipped the
+    # site's mode mid-exam on 2026-09-09. admin_authorization redirects non-admins.
+    return unless admin_authorization
+
     unless ['standard', 'contest', 'indv-contest', 'analysis'].include? params[:mode]
       redirect_to contests_path, notice: 'Unrecognized mode' and return
     end
 
+    # An exam mode needs an explicit IP-whitelist choice, ON or OFF, with no
+    # default: the Contest button's dialog sends `whitelist`. One site-wide
+    # allowed list cannot fit every course — one exam sits in a lab on the
+    # list, another on the campus network, a makeup at home (design
+    # 2026-11-18, revised 2026-11-19).
+    exam = ['contest', 'indv-contest'].include?(params[:mode])
+    if exam && !['on', 'off'].include?(params[:whitelist])
+      redirect_to contests_path, notice: 'Mode not changed: choose whether the IP whitelist is ON or OFF.' and return
+    end
+
     mode_row = GraderConfiguration.find_by(key: 'system.mode')
     old_mode = mode_row.value
+    old_whitelist_ignore = GraderConfiguration.find_by(key: GraderConfiguration::WHITELIST_IGNORE_KEY)&.value
 
     AuditLog.paused do
       mode_row.update(value: params[:mode])
-      if ['contest', 'indv-contest'].include? params[:mode]
-        GraderConfiguration.set_exam_mode(true)
-      else
-        GraderConfiguration.set_exam_mode(false)
-      end
+      GraderConfiguration.set_exam_mode(exam)
+      GraderConfiguration.set_whitelist(exam && params[:whitelist] == 'on')
     end
+    new_whitelist_ignore = GraderConfiguration.find_by(key: GraderConfiguration::WHITELIST_IGNORE_KEY)&.value
 
     AuditLog.record!(
       auditable:      mode_row,
       action:         'mode_change',
-      object_changes: { 'system.mode' => [old_mode, params[:mode]] }
+      object_changes: {
+        'system.mode' => [old_mode, params[:mode]],
+        # the IP whitelist as chosen (Contest) or turned off (Normal,
+        # Analysis); dropped from the row when the switch did not change it
+        GraderConfiguration::WHITELIST_IGNORE_KEY => [old_whitelist_ignore, new_whitelist_ignore]
+      }.reject { |_key, (old, new)| old == new }
     )
 
-    redirect_to contests_path, notice: 'Mode changed succesfully'
+    redirect_to contests_path, notice: mode_changed_notice(params[:mode])
   end
 
   # ---- user action ----
@@ -514,6 +652,30 @@ class ContestsController < ApplicationController
 
   private
 
+    # Redraw the Comments card and show a toast.
+    def render_comments(title:, body: nil, type: :notice)
+      @toast = {title: title, body: body.to_s, type: type}
+      render turbo_stream: [
+        turbo_stream.replace('contest-comments', partial: 'contests/comments', locals: {contest: @contest}),
+        turbo_stream.replace('contest-comments-count', partial: 'contests/comments_count', locals: {contest: @contest}),
+        turbo_stream.append('toast-area', partial: 'toast', locals: {toast: @toast})
+      ]
+    end
+
+    # The notice after a mode switch says what happened to the IP whitelist —
+    # a stale or empty allowed list is seen at once.
+    def mode_changed_notice(mode)
+      GraderConfiguration.read_config
+      msg = "Mode changed to #{helpers.mode_to_text(mode)}."
+      return "#{msg} IP whitelist is now off." unless GraderConfiguration.whitelist_active?
+      ranges = GraderConfiguration.whitelist_ranges
+      if ranges.empty?
+        "#{msg} IP whitelist is now ON and the allowed list is EMPTY — no student can get in, only admins and problem editors."
+      else
+        "#{msg} IP whitelist is now ON — allowed: #{ranges.join(', ')}"
+      end
+    end
+
     def set_contest
       @contest = Contest.find(params[:id])
     end
@@ -535,7 +697,9 @@ class ContestsController < ApplicationController
       if @contest && @contest.finalized?
         params.require(:contest).permit(:finalized)
       else
-        params.require(:contest).permit(:name, :description, :enabled, :lock, :start, :stop, :finalized)
+        permitted = %i[name description enabled lock start stop finalized deduction_cap assist_spending_limit]
+        permitted << :outside_login_off if @current_user.admin? && User.outside_login_available?
+        params.require(:contest).permit(*permitted)
       end
     end
 

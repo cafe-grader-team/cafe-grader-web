@@ -20,7 +20,7 @@ export default class extends BaseController {
           topStart: 'info',
           topEnd: 'search',
         },
-        columns: [
+        columns: cafe.dt.escape_columns_by_default([
           {data: 'login'},
           {data: 'full_name'},
           {data: 'id', className: 'text-end',
@@ -29,7 +29,7 @@ export default class extends BaseController {
               action: 'user-admin--admin#postUserAction',
               command: 'revoke',
               className: 'link-danger'})},
-        ],
+        ]),
         columnDefs: [{orderable: false, targets: [2]}],
       })
     })

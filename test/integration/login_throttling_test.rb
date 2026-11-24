@@ -91,6 +91,62 @@ class LoginThrottlingTest < ActionDispatch::IntegrationTest
     assert_match(/Too many failed login attempts/, flash[:alert])
   end
 
+  # Exam gateways (right.login_throttle_exempt_ips): a room behind one NAT
+  # address must not lock itself out (DS Quiz 2, 2026-10-07).
+  test "an exempt address never trips the ip counter" do
+    set_grader_config('right.login_throttle_exempt_ips', '10.0.5.40')
+    (LIMIT + 5).times { |i| fail_web(login: "nobody#{i}", ip: '10.0.5.40') }
+    post login_login_path, params: { login: 'john', password: 'hello' },
+         headers: { 'REMOTE_ADDR' => '10.0.5.40' }
+    assert_redirected_to list_main_path
+  end
+
+  test "an exempt CIDR range covers its addresses" do
+    set_grader_config('right.login_throttle_exempt_ips', '192.0.2.0/24, 10.0.5.41')
+    (LIMIT + 5).times { |i| fail_web(login: "nobody#{i}", ip: '192.0.2.77') }
+    post login_login_path, params: { login: 'john', password: 'hello' },
+         headers: { 'REMOTE_ADDR' => '192.0.2.77' }
+    assert_redirected_to list_main_path
+  end
+
+  test "the account counter still applies at an exempt address" do
+    set_grader_config('right.login_throttle_exempt_ips', '10.0.5.40')
+    LIMIT.times { fail_web(ip: '10.0.5.40') }
+    post login_login_path, params: { login: 'john', password: 'hello' },
+         headers: { 'REMOTE_ADDR' => '10.0.5.40' }
+    assert_redirected_to login_main_path
+    assert_match(/Too many failed login attempts/, flash[:alert])
+  end
+
+  test "a malformed entry in the exempt list is skipped, not raised" do
+    set_grader_config('right.login_throttle_exempt_ips', 'not-an-ip, 10.0.5.999 ,10.0.5.40')
+    (LIMIT + 5).times { |i| fail_web(login: "nobody#{i}", ip: '10.0.5.40') }
+    post login_login_path, params: { login: 'john', password: 'hello' },
+         headers: { 'REMOTE_ADDR' => '10.0.5.40' }
+    assert_redirected_to list_main_path
+
+    # an address that is not listed is still counted
+    LIMIT.times { |i| fail_web(login: "other#{i}") }
+    post login_login_path, params: { login: 'mary', password: 'mary' }
+    assert_redirected_to login_main_path
+  end
+
+  test "clear_recent! unlocks the address and the account and reports both" do
+    LIMIT.times { fail_web(login: 'John') }
+    locked = LoginThrottling.clear_recent!
+    assert_equal({ '127.0.0.1' => LIMIT }, locked[:addresses])
+    assert_equal({ 'john' => LIMIT }, locked[:accounts])
+
+    post login_login_path, params: { login: 'john', password: 'hello' }
+    assert_redirected_to list_main_path
+  end
+
+  test "clear_recent! reports nothing when no counter reached the limit" do
+    3.times { fail_web }
+    assert_equal({ addresses: {}, accounts: {} }, LoginThrottling.clear_recent!)
+    assert_nil Rails.cache.read(LoginThrottling.ip_key('127.0.0.1'))
+  end
+
   test "web and api draw down one shared failure budget" do
     (LIMIT / 2).times { fail_web }
     (LIMIT / 2).times do

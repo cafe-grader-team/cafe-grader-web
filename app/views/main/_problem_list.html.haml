@@ -33,6 +33,10 @@
               %span.mi help
               legend
           %th.all
+          -# hidden columns: tags (5) and status (6) — kept invisible by the
+          -# DataTables columnDefs in list.html.haml; used for filtering only
+          %th
+          %th
       %tbody{data: {controller: 'problem-name'}}
         - @numbering = 1
         / problem count = #{problems.count}

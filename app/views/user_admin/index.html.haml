@@ -54,7 +54,7 @@
         topStart: 'info',
         topEnd: 'search',
       },
-      columns: [ 
+      columns: cafe.dt.escape_columns_by_default([ 
         //login with stat link
         {data: 'login', render: cafe.dt.render.link(null, {path: '#{stat_user_admin_path(-123)}'})},
         {data: 'full_name'},
@@ -75,7 +75,7 @@
             return `<div class="d-flex gap-1 justify-content-end">${clear_btn} ${edit_btn} ${destroy_btn}</div>`;
           }
         }
-      ],
+      ]),
       columnDefs: [{orderable: false, targets: [4,5,6]} ],
     });
   })

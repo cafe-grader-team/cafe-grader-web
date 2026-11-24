@@ -15,6 +15,14 @@ class GradersController < ApplicationController
     # point at the existing specialized pages.
     @sq_failed_count = SolidQueue::Job.failed.count
 
+    # Solid Queue processes as they registered themselves. A worker's queues
+    # and thread pool here are the EFFECTIVE values after any per-host
+    # override (config/solid_queue.env), so this is where to confirm what a
+    # host really runs — config/queue.yml is only the default. Stale = no
+    # heartbeat within Solid Queue's own prune threshold.
+    @job_workers = SolidQueue::Process.order(:kind, :name).to_a
+    @job_worker_stale_after = SolidQueue.process_alive_threshold
+
     # Combined tile count: stuck mid-interview turns (VivaTurn.stuck) +
     # stuck mid-grading submissions (Submission.stale_evaluating) — two
     # stages of the same "viva LLM job never resolved" failure mode.
@@ -28,17 +36,24 @@ class GradersController < ApplicationController
     # single landing page, deep-linking to the calibration instrument.
     @viva_alert_count = VivaTurn.where(role: :assistant, alerted: true).distinct.count(:submission_id)
 
+    # Disk space (issue #25): the web host's app and storage directories are
+    # measured now; each judge host's figure is the newest heartbeat row that
+    # reported one. Rows: [label, free MB or nil, heartbeat time or nil].
+    @disk_rows = [
+      ['web: app', GraderProcess.free_disk_mb(Rails.root), nil],
+      ['web: storage', GraderProcess.free_disk_mb(Rails.root.join('storage')), nil]
+    ] + GraderProcess.disk_by_host
+    @lowest_disk_mb = @disk_rows.filter_map { |_, mb, _| mb }.min
+    @low_disk_count = @disk_rows.count { |_, mb, _| GraderProcess.low_disk?(mb) }
+
     @submission_limit = [20, 100, 500].include?(params[:limit].to_i) ? params[:limit].to_i : 20
     @submission = Submission.order("id desc").limit(@submission_limit).includes(:user, :problem)
 
     # Viva submissions are LLM-graded (async, off the judge-worker queue) —
     # a not-yet-graded one sitting with graded_at nil is normal mid-interview
-    # state, not a stuck job. Excluded via the durable 'viva' sentinel
-    # language (see DatasetsController#rejudge for the same filter).
-    backlog = Submission.where('graded_at is null')
-    viva_language = Language.find_by(name: "viva")
-    backlog = backlog.where.not(language: viva_language) if viva_language
-    @backlog_submission = backlog.includes(:user, :problem)
+    # state, not a stuck job. Submission.judge_backlog excludes them; the
+    # navbar badge reads the same scope.
+    @backlog_submission = Submission.judge_backlog.includes(:user, :problem)
 
     @wait_compile_job_count = Job.where(job_type: :compile, status: :wait).count
     @wait_eval_job_count = Job.where(job_type: :evaluate, status: :wait).count
@@ -117,10 +132,17 @@ class GradersController < ApplicationController
     render turbo_stream: turbo_stream.replace(helpers.dom_id(@grader), partial: 'grader', locals: {grader: @grader})
   end
 
+  # Retry and Retry All requeue only what Job.split_retryable allows: a row
+  # whose submission was deleted, rejudged or graded since stays an error.
   def retry_error_job
     job = Job.find(params[:job_id])
-    job.update(status: :wait, result: nil)
-    @toast = { title: "Grader", body: "Job ##{job.id} re-queued." }
+    if Job.split_retryable([job]).first.any?
+      job.update(status: :wait, result: nil)
+      @toast = { title: "Grader", body: "Job ##{job.id} re-queued." }
+    else
+      @toast = { title: "Grader", type: :warning,
+                 body: "Job ##{job.id} not re-queued: its submission was deleted, rejudged or graded since." }
+    end
     respond_to do |format|
       format.turbo_stream { render "turbo_toast" }
       format.html { redirect_to grader_processes_path, flash: { notice: @toast[:body] } }
@@ -128,8 +150,11 @@ class GradersController < ApplicationController
   end
 
   def retry_all_error_jobs
-    count = Job.where(status: :error).update_all(status: :wait, result: nil)
-    @toast = { title: "Grader", body: "#{count} error #{'job'.pluralize(count)} re-queued." }
+    retryable, skipped = Job.split_retryable(Job.where(status: :error).select(:id, :arg, :job_type, :parent_job_id).to_a)
+    count = Job.where(id: retryable.map(&:id), status: :error).update_all(status: :wait, result: nil)
+    body = "#{count} error #{'job'.pluralize(count)} re-queued."
+    body += " #{skipped.size} skipped: their submission was deleted, rejudged or graded since." if skipped.any?
+    @toast = { title: "Grader", body: body }
     respond_to do |format|
       format.turbo_stream { render "turbo_toast" }
       format.html { redirect_to grader_processes_path, flash: { notice: @toast[:body] } }

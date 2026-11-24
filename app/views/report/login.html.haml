@@ -60,12 +60,12 @@
           title: 'Login detail',
         }
       ],
-      columns: [
+      columns: cafe.dt.escape_columns_by_default([
         {title: 'User', data: 'login_text'},
         {title: 'Time', data: 'created_at'},
         {title: 'IP', data: 'ip_address'},
         {title: 'uuid', data: 'cookie', class: 'font-monospace'},
-      ],
+      ]),
       ajax: {
         url: '#{login_detail_query_report_path}',
         type: 'POST',
@@ -105,14 +105,14 @@
           title: 'Login summary',
         }
       ],
-      columns: [
+      columns: cafe.dt.escape_columns_by_default([
         {title: 'User', data: 'login_text'},
         {title: 'Login Count', data: 'count'},
         {title: 'Earliest', data: 'earliest'},
         {title: 'Latest', data: 'latest'},
         {title: 'IP', data: 'ip_address'},
         {title: 'uuid', data: 'cookie', class: 'font-monospace'},
-      ],
+      ]),
       ajax: {
         url: '#{login_summary_query_report_path}',
         type: 'POST',
@@ -153,12 +153,12 @@
           title: 'Failed login attempts',
         }
       ],
-      columns: [
+      columns: cafe.dt.escape_columns_by_default([
         {title: 'Attempted login', data: 'attempted_login', class: 'font-monospace'},
         {title: 'Matched user', data: 'login_text'},
         {title: 'Time', data: 'created_at'},
         {title: 'IP', data: 'ip_address'},
-      ],
+      ]),
       ajax: {
         url: '#{login_failure_query_report_path}',
         type: 'POST',

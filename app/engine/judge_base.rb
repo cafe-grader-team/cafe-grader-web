@@ -6,7 +6,16 @@
 # prepare_worker_dataset(dataset, type)       This actually downloads managers/testcases/checker for the problem's dataset
 #                                             It also call prepare_dataset_directory FIRST
 # prepare_testcase_directory(sub,testcase)    This setups various Pathname for specific testcase
+require 'open3'
+
 module JudgeBase
+  # Wall-clock bounds, in seconds, for the dataset programs that run on the
+  # judge host outside isolate: the checker (per testcase) and the
+  # initializer (once per dataset per worker). A host overrides them in
+  # worker.yml under `limits:` (see worker.yml.SAMPLE); these are the defaults.
+  CHECKER_TIMEOUT = 30
+  INITIALIZER_TIMEOUT = 120
+
   INPUT_FILENAME = 'input.txt'
   STDOUT_FILENAME = 'stdout.txt'
   StdErrFilename = 'stderr.txt'
@@ -55,8 +64,33 @@ module JudgeBase
     end
   end
 
-  # additional options for isolate for each language
+  # Extra isolate options for a language, applied to both the compile and the
+  # run sandbox: the built-in ones below, then whatever this host adds in
+  # worker.yml under `isolate_options: <language>:` (see worker.yml.SAMPLE).
+  # The host part is for what depends on the machine, not on the language —
+  # e.g. Debian/Ubuntu's OpenJDK keeps its conf files in /etc/java-<N>-openjdk,
+  # which the sandbox does not see unless it is mounted. Nothing is detected
+  # here: `bin/rails engine:detect` works the host part out and writes it to
+  # worker.yml, so what a grader uses is always readable in that file.
   def isolate_options_by_lang(language_name)
+    [builtin_isolate_options(language_name), host_isolate_options(language_name)].reject(&:blank?).join(' ')
+  end
+
+  def host_isolate_options(language_name)
+    Rails.configuration.worker.dig(:isolate_options, language_name.to_sym).to_s.strip
+  end
+
+  # Extra compiler command-line options this host needs for a language, from
+  # worker.yml `compiler_options: <language>:` — the compiler-flag counterpart
+  # of host_isolate_options, for what cannot be solved by a mount. Written by
+  # `bin/rails engine:detect` too. Only Compiler::Pascal reads it today: fpc
+  # learns its unit path from /etc/fpc.cfg, a single file the sandbox cannot
+  # mount (isolate binds directories only).
+  def host_compiler_options(language_name)
+    Rails.configuration.worker.dig(:compiler_options, language_name.to_sym).to_s.strip
+  end
+
+  def builtin_isolate_options(language_name)
     case language_name
     when 'pas', 'php'
       '-d /etc/alternatives'
@@ -65,18 +99,40 @@ module JudgeBase
     when 'java'
       '-p -d /etc/alternatives'
     when 'haskell'
-      '-d /var/lib/ghc -d /tmp:rw'
+      # -p: the runtime of GHC 9.x starts a timer thread at program start, and
+      # isolate allows a single process/thread without it — every run died
+      # with "Ticker: Failed to spawn thread" (signal 6) from the judge hosts'
+      # move to Ubuntu 24.04 in 2025-07 until 2026-11.
+      '-p -d /var/lib/ghc -d /tmp:rw'
     when 'digital'
       "-p -d /etc -d /tmp:rw -d /my_lib=#{Pathname.new(Rails.configuration.worker[:compiler][:digital]).dirname}"
     when 'rust'
       '-p -d /etc/alternatives'
     when 'go'
-      '-p -d /gocache:tmp --env=GOCACHE=/gocache'
+      # --open-files: isolate caps the sandbox at 64 open files by default;
+      # `go build` of anything importing fmt/os runs out ("pipe2: too many
+      # open files", issue #40). Applies to the run phase too — harmless.
+      '-p -d /gocache:tmp --env=GOCACHE=/gocache --open-files=1024'
     when 'postgres'
       '-p --share-net'
     else
       ''
     end
+  end
+
+  # CPU seconds a compile may use (isolate -t counts every thread of every
+  # process). Go gets more: its build cache is a fresh tmpfs per compile
+  # (GOCACHE=/gocache, see the options above), so each `go build` first
+  # compiles the standard library — 6.8 CPU seconds for a five-line program on
+  # a 32-core dev machine with the judge host's Go 1.22 (2 s of wall clock);
+  # on the judge host, under load, compiles crossed the
+  # common 10 and came back as "Time limit exceeded" (4 of the last 6 Go
+  # submissions on cp-grader, 2026-10).
+  COMPILE_TIME_LIMIT = 10
+  GO_COMPILE_TIME_LIMIT = 30
+
+  def compile_time_limit_by_lang(language_name)
+    language_name == 'go' ? GO_COMPILE_TIME_LIMIT : COMPILE_TIME_LIMIT
   end
 
   # return true when we must redirect the input into stdin
@@ -323,7 +379,64 @@ module JudgeBase
                ]
     judge_log "init file = #{@prob_init_file}"
     judge_log "init command = #{init_cmd.join ' '}"
-    system(*init_cmd)
+    timeout = worker_limit(:initializer_timeout, INITIALIZER_TIMEOUT)
+    out, err, status, timed_out = run_bounded(init_cmd, timeout: timeout)
+    judge_log "init finished: #{status}#{' (timed out)' if timed_out}\n-- stdout --\n#{out}-- stderr --\n#{err}"
+    # Raised inside prepare_worker_dataset's WorkerDataset transaction, so the
+    # rollback returns testcases_status to 'created' and the next job on this
+    # worker downloads and initializes the dataset again.
+    raise GraderError.new("dataset initializer timed out after #{timeout} s", submission_id: @sub&.id) if timed_out
+  end
+
+  # Run argv (no shell) and give up after `timeout` seconds of wall clock.
+  # The command gets its own process group, so on expiry the KILL reaches
+  # whatever it forked too (a shell-script checker, psql under an
+  # initializer). Open3.capture3 and system have no bound: a checker stuck in
+  # a loop held its grader, and the job, forever. Returns
+  # [out, err, status, timed_out]; timed_out is also true when the command
+  # exited but something it forked kept the output pipes open past the bound.
+  def run_bounded(cmd, timeout:)
+    Open3.popen3(*cmd, pgroup: true) do |stdin, stdout, stderr, wait_thr|
+      stdin.close
+      readers = [stdout, stderr].map { |io| Thread.new { io.read } }
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+      left = -> { [deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC), 0].max }
+      finished = wait_thr.join(left.call) && readers.all? { |t| t.join(left.call) }
+      unless finished
+        begin
+          Process.kill('KILL', -wait_thr.pid)
+        rescue Errno::ESRCH
+          # the group is already gone
+        end
+        wait_thr.join
+        # a process that left the group (setsid) can still hold a pipe open
+        readers.each { |t| t.join(1) }
+      end
+      out, err = readers.map do |t|
+        next t.value unless t.alive?
+        t.kill
+        ''
+      end
+      [out, err, wait_thr.value, !finished]
+    end
+  end
+
+  def worker_limit(key, default)
+    Rails.configuration.worker.dig(:limits, key) || default
+  end
+
+  # True when a rejudge has started a newer job chain for @sub since this
+  # job's chain began (Job.chain_current?); the caller then returns
+  # superseded_result before writing anything. chain_id nil skips the check:
+  # engine:smoke, replay and tests drive the engine without jobs.
+  def superseded?(chain_id)
+    return false if chain_id.nil? || Job.chain_current?(@sub.id, chain_id)
+    judge_log "#{rb_sub(@sub)} superseded by a newer grading (chain #{chain_id}); nothing written"
+    true
+  end
+
+  def superseded_result
+    EngineResponse::Result.failure(error: Job::SUPERSEDED_RESULT)
   end
 
   # set up directory and path/filename of the testcase directory
@@ -346,14 +459,10 @@ module JudgeBase
       @sub_testcase_path.mkpath
       @output_path.mkpath
       @output_path.chmod(0777)
-      # A run that died mid-way (box collision, killed grader) leaves stdout.txt
-      # owned by that box's uid at 0644; a rerun landing on a different box then
-      # cannot truncate-open it and isolate fails with open("/output/stdout.txt")
-      # -> grader_error (14 of 142 rejudged submissions, 2026-08-27). We own the
-      # 0777 directory, so unlinking works whoever owns the file. rm_f, not
-      # unlink: main_loop only rescues GraderError, and an EACCES raised here
-      # would take the whole grader down with the job left in :process.
-      FileUtils.rm_f(@output_file)
+      # Create-only: never delete here. This helper is shared, and Checker#process
+      # re-runs it after the evaluator has written stdout.txt (rev 2045 put an
+      # rm_f here and took every deployed grader down on 2026-08-30). Clearing a
+      # stale output is Evaluator#clear_stale_output's job, right before the run.
     end
   end
 

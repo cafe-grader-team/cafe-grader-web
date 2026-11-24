@@ -1,3 +1,6 @@
+-# My Submissions (issue #62): every submission of the signed-in student,
+-# newest first, across all the problems they may open. The chooser (or a
+-# /submissions/prob/:id link) narrows the list to one problem. 50 a page.
 .d-flex.flex-wrap.justify-content-between.align-items-end.gap-3.mb-4
   .d-flex.flex-column.gap-1
     %small.text-secondary.text-uppercase.fw-bold.ls-1 My Submissions
@@ -6,20 +9,22 @@
         %span.font-monospace.text-secondary [#{@problem.name}]
         = @problem.full_name
     - else
-      %h2.fw-bold.text-dark.mb-0 Select a problem
-  .ms-auto
-    = render 'problem_chooser', {problems: @problems, selected_problem: @problem, target_url_method: :problem_submissions_path}
+      %h2.fw-bold.text-dark.mb-0 All problems
+  .ms-auto.d-flex.flex-wrap.align-items-center.gap-2
+    - if @problem
+      = link_to submissions_path, class: 'btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1', data: {turbo: false} do
+        = mdi('list', 'md-18')
+        All problems
+    = render 'problem_chooser', {problems: @problems, selected_problem: @problem, target_url_method: :problem_submissions_path, prompt: 'All problems', all_url: submissions_path}
 
-- if @submissions.nil?
-  .card.shadow-sm.border-0
-    .card-body.text-center.text-secondary.py-5
-      = mdi('quiz', 'md-48 d-block mb-2 opacity-50')
-      Choose a problem above to see your submissions.
-- elsif @submissions.empty?
+- if @submissions.empty?
   .card.shadow-sm.border-0
     .card-body.text-center.text-secondary.py-5
       = mdi('inbox', 'md-48 d-block mb-2 opacity-50')
-      No submissions yet for this problem.
+      - if @problem
+        No submissions yet for this problem.
+      - else
+        No submissions yet.
 - else
   .card.shadow-sm{data: {controller: 'init-ui-component'}}
     .table-responsive
@@ -27,6 +32,8 @@
         %thead.text-secondary.small
           %tr
             %th.ps-3 No.
+            - unless @problem
+              %th Problem
             %th Submitted
             %th Source
             %th Result
@@ -34,3 +41,13 @@
             %th.text-end.pe-3 Action
         %tbody
           = render partial: 'submission', collection: @submissions
+  - if @total_pages > 1
+    - page_url = ->(n) { @problem ? problem_submissions_path(@problem, page: n) : submissions_path(page: n) }
+    %nav.mt-3{aria: {label: 'Submission pages'}}
+      %ul.pagination.justify-content-center.mb-0
+        %li.page-item{class: ('disabled' if @page <= 1)}
+          = link_to '« Newer', page_url.(@page - 1), class: 'page-link', data: {turbo: false}
+        %li.page-item.disabled
+          %span.page-link= "Page #{@page} of #{@total_pages} (#{@total_count} submissions)"
+        %li.page-item{class: ('disabled' if @page >= @total_pages)}
+          = link_to 'Older »', page_url.(@page + 1), class: 'page-link', data: {turbo: false}

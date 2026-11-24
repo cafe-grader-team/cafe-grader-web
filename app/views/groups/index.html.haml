@@ -16,6 +16,7 @@
         %tr
           %th Name
           %th Description
+          %th.text-nowrap Created
           %th Enabled?
           %th
       %tbody
@@ -23,6 +24,13 @@
           %tr{:class => "#{(group.enabled?) ? "success" : "danger"}", id: "group-#{group.id}"}
             %td= group.name
             %td= group.description
+            -# data-order is the DataTable sort key: epoch seconds for dated rows;
+            -# legacy rows without created_at sort as oldest, in id order, whichever
+            -# way the header is clicked.
+            - if group.created_at
+              %td.text-nowrap{data: {order: group.created_at.to_i}}= group.created_at.strftime('%Y-%m-%d')
+            - else
+              %td.text-muted{data: {order: group.id}} —
             %td
               .form-check.form-switch
                 %input.form-check-input{id: "group-#{group.id}-enabled-switch", checked: group.enabled, type: "checkbox", data: {action: 'group#toggle', 'row-id': group.id}}
@@ -44,7 +52,8 @@
         topStart: 'info',
         topEnd: 'search',
       },
-      columnDefs: [{orderable: false, targets: [2,3]} ],
+      order: [[2, 'desc']],   // Created, newest first (see data-order on the cells)
+      columnDefs: [{orderable: false, targets: [3,4]} ],
     }
 
     table = $('#group-table').DataTable(table_config)

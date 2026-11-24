@@ -1,7 +1,18 @@
+-# A Select2 problem picker that navigates on pick. Locals: problems,
+-# selected_problem, target_url_method (a *_path helper taking a problem id);
+-# optional prompt (the blank option's label, default "Select a problem") and
+-# all_url: with it the box is clearable (Select2's ×, read from the data
+-# attributes) and clearing navigates there; without it the blank option is
+-# inert.
+- prompt = local_assigns.fetch(:prompt, "Select a problem")
+- all_url = local_assigns[:all_url]
 .row.row-cols-lg-auto.g-1.align-items-center{'data-controller': 'init-ui-component'}
   .col-12
-    = select("submission", :problems, problems.map { |p| ["[#{p.name}] #{p.full_name}", send(target_url_method,p.id)] }, {prompt: "Select a problem", selected: selected_problem ? send(target_url_method,selected_problem.id) : nil}, class: "select2 form-control")
+    = select("submission", :problems, problems.map { |p| ["[#{p.name}] #{p.full_name}", send(target_url_method,p.id)] }, {prompt: prompt, selected: selected_problem ? send(target_url_method,selected_problem.id) : nil}, class: "select2 form-control", data: (all_url ? {allow_clear: true, placeholder: prompt} : nil))
 :javascript
   window.addEventListener("load", function() {
-    $("#submission_problems").on('change', (event) => window.location.href = event.target.value);
+    $("#submission_problems").on('change', (event) => {
+      const url = event.target.value || #{all_url.to_json};
+      if (url) window.location.href = url;
+    });
   })

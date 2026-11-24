@@ -22,7 +22,7 @@
 
     function name_render(data, type, row) {
       if (type === 'display')
-        return `<a href="${'#{problem_hof_view_report_path(':id')}'.replace(':id', row.id)}" class="text-decoration-none font-monospace">${data}</a>`
+        return `<a href="${'#{problem_hof_view_report_path(':id')}'.replace(':id', row.id)}" class="text-decoration-none font-monospace">${cafe.escapeHtml(data)}</a>`
       return data
     }
 
@@ -51,13 +51,13 @@
           request.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'));
         },
       },
-      columns: [
+      columns: cafe.dt.escape_columns_by_default([
         { data: 'name', render: name_render },
         { data: 'full_name' },
         { data: 'sub_count', className: 'text-end' },
         { data: 'solved', render: solve_render, className: 'text-end' },
         { data: 'rate', render: rate_render, className: 'text-end' },
-      ],
+      ]),
       order: [[2, 'desc']],
     });
   });

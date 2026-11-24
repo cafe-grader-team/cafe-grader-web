@@ -39,6 +39,7 @@
                 %h5.fw-bold.text-body-emphasis.mb-3.pb-2.border-bottom Scenario (markdown)
                 = render 'description_field', form: form, problem: problem
               = render 'viva_fields', form: form, problem: problem
+              = render 'viva_test_drives', problem: problem
               = form.button :submit, class: 'btn btn-primary me-2'
   - else
     .card.shadow-sm.mb-4

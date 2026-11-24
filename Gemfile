@@ -105,9 +105,6 @@ gem "rainbow"
 
 gem "whenever", require: false
 
-# fix some ???? bugs???
-gem "concurrent-ruby", "1.3.4"
-
 # silence rswag-ui ostruct warning (will be required from Ruby 3.5)
 gem "ostruct"
 

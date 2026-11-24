@@ -132,9 +132,13 @@ class Scorer
 
   # main run function
   # calculate the score, assuming all required evaluation is completed
-  def process(sub, dataset)
+  # chain_id: the score job's chain, checked before the submission is written
+  # (see JudgeBase#superseded?) — a rejudge onto another dataset would
+  # otherwise fail the new grading with "Evaluations are missing"
+  def process(sub, dataset, chain_id: nil)
     @sub = sub
     @working_dataset = dataset
+    return superseded_result if superseded?(chain_id)
 
     # validate if sub has evaluations of all testcases of the dataset
     sub_tc_ids = @sub.evaluations.where.not(result: :waiting).pluck(:testcase_id).sort

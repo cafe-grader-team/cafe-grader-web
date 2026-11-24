@@ -5,7 +5,7 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get groups_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user is redirected from groups index" do
@@ -24,6 +24,33 @@ class GroupsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as("mary", "mary")
     get groups_path
     assert_response :success
+  end
+
+  # Index order: created date newest first, then id descending. Groups that
+  # predate groups.created_at (NULL) have no date to show and sit at the
+  # bottom, still in id order.
+  test "groups index lists newest created first and undated legacy groups last by id" do
+    groups(:group_a).update_columns(created_at: 3.days.ago)   # dated, older
+    groups(:group_b).update_columns(created_at: nil)          # legacy, low id
+    newest = Group.create!(name: "NewestGroup", description: "made today")
+    legacy_high_id = Group.create!(name: "LegacyHighId")
+    legacy_high_id.update_columns(created_at: nil)             # legacy, high id
+
+    sign_in_as("admin", "admin")
+    get groups_path
+    assert_response :success
+
+    body = response.body
+    pos = ->(g) { body.index(/id=["']group-#{g.id}["']/) || flunk("row for #{g.name} missing") }
+    assert_operator pos.(newest), :<, pos.(groups(:group_a)), "newest dated group first"
+    assert_operator pos.(groups(:group_a)), :<, pos.(legacy_high_id), "dated rows before undated ones"
+    assert_operator pos.(legacy_high_id), :<, pos.(groups(:group_b)), "undated rows keep id descending"
+
+    assert_select "th", text: "Created"
+    assert_select "tr#group-#{newest.id} td[data-order='#{newest.created_at.to_i}']",
+                  text: newest.created_at.strftime("%Y-%m-%d")
+    # an undated row sorts client-side as oldest, by id
+    assert_select "tr#group-#{groups(:group_b).id} td[data-order='#{groups(:group_b).id}']"
   end
 
   # --- Cross-group authorization ---

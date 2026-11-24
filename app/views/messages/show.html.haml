@@ -3,7 +3,7 @@
 .message
   .stat
     = "#{@message.sender.full_name} at #{@message.created_at}"
-  .body= simple_format(@message.body)
+  .body= simple_format_escaped(@message.body)
 
 %h3 Your reply:
 = form_for 'message', url: reply_message_path(@message) do |f|

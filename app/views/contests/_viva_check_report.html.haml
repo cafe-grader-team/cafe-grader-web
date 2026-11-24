@@ -1,0 +1,96 @@
+-# The Viva check body (ContestsController#viva_check). A turbo frame that
+-# reloads itself every 30 s while the contest runs (the refresh controller
+-# clicks the hidden link; Turbo swaps this frame out of the full page) and
+-# that SubmissionsController#allow_viva_retake replaces after a grant made
+-# here. Locals: contest, report (VivaCheckReport).
+-# Every link that leaves the page carries data-turbo=false: inside a turbo
+-# frame Turbo takes a left-click even with Drive off and loads the target
+-# into this frame, which shows "Content missing" (2026-11-21).
+- running = contest.contest_status == :during
+- s = report.summary
+- flag_names = ->(level) { VivaCheckReport::FLAGS.select { |_, m| m[:level] == level }.map { |_, m| m[:label] }.join(' · ') }
+= turbo_frame_tag 'viva-check-report' do
+  %div{data: {controller: 'refresh init-ui-component', refresh_delay_value: (running ? 30_000 : -1)}}
+    .text-secondary.small.mb-3
+      = "#{contest.start.strftime('%Y-%m-%d %H:%M')} – #{contest.stop.strftime('%H:%M')} · #{s[:enrolled]} enrolled · checked at #{Time.zone.now.strftime('%H:%M:%S')}"
+      - if running
+        = '· refreshes every 30 seconds'
+      = link_to 'Refresh', viva_check_contest_path(contest), class: 'd-none', data: {turbo: 'true', turbo_prefetch: false, refresh_target: 'refreshLink'}
+
+    .row.g-3.mb-4
+      - tiles = [[s[:sessions], 'viva sessions', "#{s[:students]} of #{s[:enrolled]} students"],
+                 [s[:answered], 'answered at least once', "#{s[:sessions] - s[:answered]} never answered"],
+                 [s[:open_now], 'open now', 'interview still running'],
+                 [s[:graded], 'graded', "#{s[:grading]} grading · #{s[:failed]} failed"],
+                 [s[:greeting_p95] ? "#{s[:greeting_p95]} s" : '–', 'opening question wait (p95)', "max #{s[:greeting_max] || '–'} s"],
+                 [s[:needs_action], 'need action', 'students or rubrics with a red flag']]
+      - tiles.each do |num, label, sub|
+        .col-6.col-lg-2
+          .card.card-shadow.h-100
+            .card-body.py-2
+              .fs-3.fw-bold{class: ('text-danger' if label == 'need action' && s[:needs_action].positive?)}= num
+              .small.text-secondary= label
+              .text-secondary{style: 'font-size:.75rem'}= sub
+
+    .small.text-secondary.mb-3
+      %span.badge.text-bg-danger.me-1 needs action
+      = flag_names.(:action)
+      %br
+      %span.badge.text-bg-secondary.me-1 worth a look
+      = flag_names.(:look)
+
+    - report.checks.each do |check|
+      - can_grant = @current_user.can_edit_problem?(check.problem)
+      .card.card-shadow.mb-4
+        .card-body
+          %h5.fw-bold.mb-2
+            = check.problem.full_name
+            %small.text-secondary.font-monospace.ms-1= check.problem.name
+          - unless check.rubric_ok?
+            .alert.alert-danger.py-2.small.mb-2
+              %strong Rubric unreadable.
+              - if check.rubric.readable?
+                = "Its weights add up to #{check.rubric.sum}, not 100, so grades cannot be checked."
+              - else
+                The briefing has no "# Rubric" list of "- key (weight): …" lines, so grades cannot be checked.
+          - if check.rows.empty?
+            .text-secondary.small No viva sessions yet.
+          - else
+            .table-responsive
+              %table.table.table-hover.table-condense.align-middle.mb-0
+                %thead
+                  %tr
+                    %th Student
+                    %th.text-end Sessions
+                    %th Latest session
+                    %th.text-end Best
+                    %th Flags
+                    %th
+                %tbody
+                  - check.rows.each do |row|
+                    - latest = row.latest
+                    %tr{class: ('table-warning' if row.needs_action?)}
+                      %td
+                        = link_to row.login.to_s, stat_contest_user_admin_path(row.user_id, contest), data: {turbo: 'false'}
+                        .small.text-secondary= row.full_name
+                      %td.text-end= "#{row.sessions.size} (#{row.answered} answered)"
+                      %td
+                        = link_to "##{latest.id}", viva_submission_path(latest.id), data: {turbo: 'false'}
+                        %span.small.text-secondary
+                          = "#{latest.status} · #{pluralize(latest.answers, 'answer')}"
+                          = "· #{latest.points.round(1)} points" if latest.points
+                        - if latest.granted_at
+                          %span.badge.bg-info-subtle.text-info-emphasis.ms-1 attempt allowed
+                        - elsif latest.archived_at
+                          %span.badge.text-bg-warning.ms-1 archived
+                      %td.text-end= row.best ? row.best.round(1) : '–'
+                      %td
+                        - row.flags.each do |flag|
+                          - meta = VivaCheckReport::FLAGS[flag]
+                          %span.badge.me-1{class: (meta[:level] == :action ? 'text-bg-danger' : 'text-bg-secondary'),
+                                           data: {bs_toggle: 'tooltip', bs_title: row.details[flag] || meta[:tip]}}= meta[:label]
+                      %td.text-end
+                        - if can_grant && row.grantable_id
+                          = button_to 'Allow another attempt', allow_viva_retake_submission_path(row.grantable_id, contest_id: contest.id),
+                              class: 'btn btn-sm btn-outline-warning',
+                              form: {class: 'd-inline', data: {turbo: true, 'turbo-confirm': "Allow #{row.login} another attempt at #{check.problem.name}? Their latest session is archived and stops counting toward the start limit; an unfinished interview is not graded."}}

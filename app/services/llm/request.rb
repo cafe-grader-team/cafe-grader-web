@@ -5,7 +5,7 @@ module Llm
   # other domain record. Concrete subclasses (CommentAssist, VivaTurnAssist,
   # VivaGradeAssist) implement record-specific handle_response / handle_error.
   class Request
-    attr_reader :submission, :problem, :error
+    attr_reader :submission, :problem, :error, :llm_started_at, :llm_latency_ms
 
     # Exceptions whose semantics are "ask the worker to retry"; the service
     # re-raises these without touching the record so a successful retry
@@ -104,7 +104,21 @@ module Llm
     # else gets a single shot. Transport errors (RETRYABLE) are the worker's
     # business and never handled here.
     def respond(data)
-      handle_response(execute_call(data))
+      handle_response(timed_execute_call(data))
+    end
+
+    # Wrap the one network round in a timer. Records the wall-clock start
+    # (llm_started_at) and the measured round-trip (llm_latency_ms, monotonic
+    # so a clock adjustment can't yield a negative). Concrete #handle_response
+    # methods persist these two onto their record. A retry or a grade re-ask
+    # overwrites them, keeping only the last attempt's timing — the same
+    # last-writer policy cost already follows.
+    def timed_execute_call(data)
+      @llm_started_at = Time.current
+      t0 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      execute_call(data)
+    ensure
+      @llm_latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - t0) * 1000).round if t0
     end
 
     # Faraday factory used by all concrete subclasses' execute_call.

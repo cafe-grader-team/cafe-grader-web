@@ -33,8 +33,23 @@
           %h6.fw-bold.text-dark.mb-1.d-flex.align-items-center
             = mdi('tune', 'me-2 text-secondary')
             Preferences
-          .text-secondary.small.mb-3 Defaults applied when you open a problem.
+          .text-secondary.small.mb-3 Personal defaults for how problems and results are shown to you.
           = f.association :default_language, collection: Language.all, include_blank: '— No default language —'.html_safe, label: 'Default language'
+
+          .mt-3
+            %label.form-label Test-result display
+            .form-check
+              = f.radio_button :verdict_display, 'tiles', class: 'form-check-input', id: 'user_verdict_display_tiles'
+              %label.form-check-label.d-inline-flex.align-items-center.gap-2{for: 'user_verdict_display_tiles'}
+                Colour tiles
+                = grader_comment_strip('PP[PP-]T[--]', style: :tiles)
+                %span.text-secondary.small (default)
+            .form-check
+              = f.radio_button :verdict_display, 'plain', class: 'form-check-input', id: 'user_verdict_display_plain'
+              %label.form-check-label.d-inline-flex.align-items-center.gap-2{for: 'user_verdict_display_plain'}
+                Plain text
+                = grader_comment_strip('PP[PP-]T[--]', style: :plain)
+            .form-text Applies everywhere test results are shown (problem list, submissions, reports).
 
       -# Security
       .card.shadow-sm.mb-4

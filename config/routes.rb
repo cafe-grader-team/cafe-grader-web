@@ -79,6 +79,11 @@ Rails.application.routes.draw do
       get 'toggle'
       get 'view'
       post 'view_query'
+      get 'ai_usage'
+      post 'ai_usage_query'
+      post 'finish_open_vivas'
+      get 'viva_status'
+      get 'viva_check'
       post 'add_users_from_csv'
       get 'clone'
       get 'set_active'
@@ -97,6 +102,12 @@ Rails.application.routes.draw do
       post 'add_problem_by_group'
       post 'do_all_problems'
       post 'do_problem'
+      post 'reorder_problems'
+
+      # contest comments (staff notes)
+      post 'add_comment'
+      post 'update_comment'
+      post 'delete_comment'
     end
     collection do
       post 'index_query'
@@ -141,6 +152,7 @@ Rails.application.routes.draw do
       post 'toggle_available'
       post 'toggle_view_testcase'
       get 'stat'
+      post 'stat_query', defaults: { format: :json }
       get 'get_statement(/:filename)', as: 'get_statement', action: 'get_statement'
       get 'get_attachment(/:filename)', as: 'get_attachment', action: 'get_attachment'
       get 'download_archive'
@@ -154,6 +166,7 @@ Rails.application.routes.draw do
       delete 'delete/:attachment_type', to: 'delete_by_type', as: 'delete_by_type'
       # viva exam
       post 'viva/start', to: 'viva_sessions#start', as: 'viva_start'
+      post 'viva/test_drive', to: 'viva_sessions#test_drive', as: 'viva_test_drive'
     end
     collection do
       get 'turn_all_off'
@@ -222,6 +235,7 @@ Rails.application.routes.draw do
     collection do
       get 'show_problem/:problem_id(/:test_num)' => 'testcases#show_problem', as: 'show_problem'
       get 'download_manager/:problem_id/:mg_id', as: 'download_manager', action: 'download_manager'
+      get 'download_data_file/:problem_id/:att_id', as: 'download_data_file', action: 'download_data_file'
     end
   end
 
@@ -230,6 +244,7 @@ Rails.application.routes.draw do
       get 'reload'
       get 'set_exam_right(/:value)', action: 'set_exam_right', as: 'set_exam_right'
       post 'clear_user_ip'
+      post 'clear_login_locks'
     end
     member do
       patch 'toggle'
@@ -264,6 +279,7 @@ Rails.application.routes.draw do
       get 'mass_mailing'
       match 'modify_role', via: [:get, :post]
       match 'create_from_list', via: [:get, :post]
+      post 'check_list'
       match 'random_all_passwords', via: [:get, :post]
     end
     member do
@@ -289,7 +305,8 @@ Rails.application.routes.draw do
       get 'viva/refresh', to: 'viva_sessions#refresh', as: 'viva_refresh'
       post 'viva/restart', to: 'viva_sessions#restart', as: 'viva_restart'
       post 'viva/finish', to: 'viva_sessions#finish', as: 'viva_finish'
-      post 'archive_viva'
+      post 'allow_viva_retake'
+      post 'viva/grades/:grade_id/adopt', to: 'submissions#adopt_viva_grade', as: 'adopt_viva_grade'
     end
     collection do
       get 'prob/:problem_id', to: 'submissions#index', as: 'problem'
@@ -297,7 +314,9 @@ Rails.application.routes.draw do
       get 'get_latest_submission_status/:uid/:pid', to: 'submissions#get_latest_submission_status', as: 'get_latest_submission_status'
     end
     resources :comments, only: [] do
-      post 'llm_assist/:model', on: :collection, as: 'llm_assist', action: 'llm_assist'
+      # model is a POST param (a provider-map key), not a URL segment: model
+      # names contain dots, and an index into the map moved when llm.yml changed
+      post 'llm_assist', on: :collection, as: 'llm_assist', action: 'llm_assist'
       get '', to: 'index_partial', as: '', on: :collection
       post '', action: 'create_for_submission', on: :collection
       member do
@@ -365,7 +384,6 @@ Rails.application.routes.draw do
     get 'logout'
     get 'list'
     get 'submission(/:id)', action: 'submission', as: 'main_submission'
-    get 'help'
     post 'submit'
     post 'prob_grop'
   end

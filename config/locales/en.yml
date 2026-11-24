@@ -141,15 +141,6 @@ You can now log-in and start participating in that contest.
 Cheers!
 -%{contest_title_name} Admin"
 
-  help:
-    how_to_submit: "How to submit"
-    must_specify_language: "You <b>must</b> specify the language you are using in your program header.  You can optionally specify the task you are submitting to."
-    list_available_language: "The possible language options are <tt>C</tt>, <tt>C++</tt>, and <tt>Pascal</tt>. The follow are examples."
-    accept_only_language_specified: "The server <b>will not</b> accept your submission, if you do not specify the language."
-    specifying_task: "Optionally, you can also specify the task with <tt>TASK:</tt> <i>taskname</i>.  On the first page, the taskname for each task is shown in parentheses."
-    example_cpp: "For example, suppose you are using <tt>C++</tt> to write task <b>mobiles</b>, you put the following on top of your source code."
-    example_pas: "If you are using <tt>Pascal</tt> to write the same task, you'll use"
-    ask_questions_at_messages: "If you have any problems, you can ask at [<a href=\"%{url}\">%{message_link_name}</a>]."
 
   activerecord:
     attributes:

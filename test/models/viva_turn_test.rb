@@ -65,15 +65,35 @@ class VivaTurnTest < ActiveSupport::TestCase
     assert_predicate weird, :processing?
   end
 
-  test "fail_stale! threshold is configurable" do
+  test "fail_stale! threshold governs a turn that has started running" do
     turn = @submission.viva_turns.create!(role: :assistant, status: :processing, content: nil)
-    stamp_updated_at(turn, 2.minutes.ago)
+    VivaTurn.where(id: turn.id).update_all(llm_started_at: 2.minutes.ago, updated_at: 2.minutes.ago)
 
-    # Default threshold (10 min) — too fresh.
+    # Default threshold (10 min) — started only 2 min ago, too fresh.
     assert_equal 0, VivaTurn.fail_stale!
 
     # Tighter threshold — now stale.
-    count = VivaTurn.fail_stale!(threshold: 1.minute)
-    assert_equal 1, count
+    assert_equal 1, VivaTurn.fail_stale!(threshold: 1.minute)
+  end
+
+  test "fail_stale! leaves a still-queued turn alone until the queue grace passes" do
+    turn = @submission.viva_turns.create!(role: :assistant, status: :processing, content: nil)
+    # queued 12 min ago but never started (llm_started_at nil)
+    VivaTurn.where(id: turn.id).update_all(llm_started_at: nil, updated_at: 12.minutes.ago)
+
+    assert_equal 0, VivaTurn.fail_stale!, "queued 12 min but not started — not yet stale at the 20 min grace"
+    assert_equal 1, VivaTurn.fail_stale!(queue_threshold: 10.minutes)
+  end
+
+  test "the timed-out message names the wait that applied" do
+    queued = @submission.viva_turns.create!(role: :assistant, status: :processing, content: nil)
+    VivaTurn.where(id: queued.id).update_all(llm_started_at: nil, updated_at: 30.minutes.ago)
+    VivaTurn.fail_stale!
+    assert_match 'no response after 20 minutes', queued.reload.content
+
+    running = @submission.viva_turns.create!(role: :assistant, status: :processing, content: nil)
+    VivaTurn.where(id: running.id).update_all(llm_started_at: 15.minutes.ago, updated_at: 15.minutes.ago)
+    VivaTurn.fail_stale!
+    assert_match 'no response after 10 minutes', running.reload.content
   end
 end

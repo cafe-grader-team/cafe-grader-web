@@ -14,14 +14,54 @@
       Score report
 
 .row
-  .col-md-8.mb-3
-    .card
+  .col-md-8
+    .card.mb-4
       .card-body
         %h2.card-title Submission History
         %canvas#chart{height: '50px', data: { controller: 'chart', chart_data_value: @chart_dataset }}
 
-  .col-md-4.mb-3
-    .card
+    -# One row per section (group) the viewer may report on, so sections can
+    -# be compared at a glance — the Best Score report shows one group at a
+    -# time. Rows link to that report pre-filtered to the group. A user in
+    -# several groups counts in each row, so these rows can sum to more than
+    -# the distinct-user summary in General Info; that is expected.
+    -#
+    -# Archived cohorts stay linked to a problem for good, so the card would
+    -# grow a few rows every semester: they fold behind a toggle while at
+    -# least one live group is there to compare. A problem that lives only in
+    -# archived groups shows them open — nothing else to look at.
+    - if @group_stats.any?
+      - live, archived = @group_stats.partition { |r| r.group.enabled }
+      - fold = live.any? && archived.any?
+      .card.mb-4#by-group-card
+        .card-body
+          %h2.card-title By group
+          %p.text-secondary.small.mb-2
+            Enabled members with the
+            %em user
+            role only; a student in several groups counts in each.
+            Mean best is over students who attempted.
+          .table-responsive
+            %table.table.table-sm.table-hover.align-middle.mb-0
+              %thead
+                %tr
+                  %th Group
+                  %th.text-end Members
+                  %th.text-end Solved / Attempted
+                  %th.text-end Solved %
+                  %th.text-end Mean best
+              %tbody
+                = render partial: 'problems/group_stat_row', collection: (fold ? live : @group_stats), as: :row
+              - if fold
+                %tbody.collapse#by-group-archived
+                  = render partial: 'problems/group_stat_row', collection: archived, as: :row
+          - if fold
+            %button.btn.btn-link.btn-sm.px-0.mt-2.text-decoration-none.d-inline-flex.align-items-center.gap-1{type: 'button', data: {bs_toggle: 'collapse', bs_target: '#by-group-archived'}, 'aria-expanded': 'false', 'aria-controls': 'by-group-archived'}
+              %span.mi.md-18 history
+              #{archived.size} archived #{'group'.pluralize(archived.size)}
+
+  .col-md-4
+    .card.mb-4
       .card-body
         %h2.card-title General Info
         .row.my-2
@@ -37,50 +77,87 @@
           .col-sm-6.text-end.text-secondary
             Subs
           .col-sm-6
-            = @submissions.count
+            = @submission_count
         .row.my-2
           .col-sm-6.text-end.text-secondary
             Solved/Attempted User
           .col-sm-6
-            #{@summary[:solve]}/#{@summary[:attempt]} (#{(@summary[:solve]*100.0/@summary[:attempt]).round(1)}%)
+            -# Distinct users across every group (Problem#attempt_summary).
+            -# Guard the percentage: with no submissions this is 0.0/0, and Ruby
+            -# yields NaN rather than raising (NaN.round(1) is NaN), so the page
+            -# used to render the literal "0/0 (NaN%)".
+            - if @summary[:attempted].zero?
+              %span.text-secondary No submissions yet
+            - else
+              #{@summary[:solved]}/#{@summary[:attempted]} (#{(@summary[:solved] * 100.0 / @summary[:attempted]).round(1)}%)
+        - if @problem.viva_exam?
+          %p.text-secondary.small.mb-0.mt-3#test-drive-note
+            Staff test-drives are not counted anywhere on this page
+            = "(#{pluralize(@test_drive_count, 'test-drive')} so far)."
+
+    -# AI-assist requests on this problem's submissions, by model. Points are the
+    -# score penalty students paid; Cost is the provider's dollar figure where it
+    -# reported one. Absent when nobody asked.
+    - if @llm_usage.any?
+      .card.mb-4#llm-usage-card
+        .card-body
+          %h2.card-title AI assist
+          %p.text-secondary.small.mb-2
+            Requests on this problem's submissions, by model. Points are what
+            students were charged; cost is what the provider reported.
+          = render partial: 'comments/llm_usage_by_model', locals: {rows: @llm_usage}
 
 %h2 Submissions
-- if @submissions and @submissions.count > 0
-  %table#main_table.table.table-condensed.table-striped
-    %thead
-      %tr
-        %th ID
-        %th Login
-        %th Name
-        %th Language
-        %th Submitted at
-        %th Result
-        %th Score
-        - if @can_view_ip
-          %th IP
-    %tbody
-      - row_odd,curr = true,''
-      - @submissions.each do |sub|
-        - next unless sub.user
-        - row_odd,curr = !row_odd, sub.user if curr != sub.user
-        %tr
-          %td= link_to sub.id, submission_path(sub)
-          %td= link_to sub.user.login, stat_user_admin_path(sub.user)
-          %td= sub.user.full_name
-          %td= sub.language.pretty_name
-          %td{data: {order: sub.submitted_at}}
-            #{sub.submitted_at.strftime('%Y-%m-%d %H:%M')}
-            %span.text-secondary (#{time_ago_in_words(sub.submitted_at)} ago)
-          %td{data: {order: sub.grader_comment.to_s, search: sub.grader_comment.to_s}}= grader_comment_strip(sub.grader_comment)
-          %td.text-end= sub.points
-          %td= sub.ip_address
-- else
-  No submission
+-# Rows arrive as JSON from #stat_query and are paged client-side, so the page
+-# paints before a single row is rendered. Columns go through
+-# cafe.dt.escape_columns_by_default (CLAUDE.md, "JSON-fed DataTables").
+%table#main_table.table.table-hover.table-condense.align-middle{style: 'width: 100%'}
+  %thead
+    %tr
+      %th ID
+      %th Login
+      %th Name
+      %th Language
+      %th Submitted at
+      %th Result
+      %th.text-end Score
+      %th IP
+  %tbody
 
 :javascript
   window.addEventListener("load", function() {
+    // Verdict tiles (or plain text, per the viewer's preference) — same
+    // renderer and config as the Submission report.
+    const VERDICT_STRIP = #{verdict_strip_config_json}
+    const verdictRenderer = (data, type) => type === 'display' ? cafe.verdictStrip(data, VERDICT_STRIP) : data
+    // "2019-10-22 15:34 (6 years ago)" for display; the raw ISO string sorts.
+    const dateAgoRenderer = (data, type) => {
+      if (type !== 'display') return data
+      const m = moment(data)
+      return `${m.format('YYYY-MM-DD HH:mm')} <span class="text-secondary">(${m.fromNow()})</span>`
+    }
+
     $("#main_table").DataTable({
-      paging: false
+      ajax: {
+        url: "#{stat_query_problem_path(@problem)}",
+        type: 'POST',
+        dataType: 'json',
+        headers: { 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') },
+      },
+      processing: true,
+      deferRender: true,
+      paging: true,
+      pageLength: 50,
+      order: [[0, 'asc']],
+      columns: cafe.dt.escape_columns_by_default([
+        { data: 'id',           render: cafe.dt.render.link(null, { path: "#{submission_path(-123)}" }) },
+        { data: 'login',        render: cafe.dt.render.link(null, { path: "#{stat_user_admin_path(-123)}", replace_field: 'user_id' }) },
+        { data: 'full_name' },
+        { data: 'pretty_name' },
+        { data: 'submitted_at', render: dateAgoRenderer },
+        { data: 'grader_comment', render: verdictRenderer },
+        { data: 'points',       className: 'text-end' },
+        { data: 'ip_address' },
+      ]),
     });
   });
-

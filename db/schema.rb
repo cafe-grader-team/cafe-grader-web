@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_21_150100) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -93,6 +93,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.text "llm_response", size: :medium
     t.string "llm_model"
     t.integer "status", default: 0
+    t.decimal "llm_cost", precision: 12, scale: 6
+    t.integer "prompt_tokens"
+    t.integer "completion_tokens"
+    t.datetime "llm_started_at"
+    t.integer "llm_latency_ms"
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
     t.index ["user_id"], name: "index_comments_on_user_id"
   end
@@ -111,6 +116,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.integer "post_contest_seconds", default: 0
     t.text "log", size: :medium
     t.boolean "allow_hint", default: true
+    t.boolean "outside_login_off", default: false, null: false
+    t.integer "deduction_cap"
+    t.integer "assist_spending_limit"
   end
 
   create_table "contests_problems", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -177,7 +185,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.string "result_text"
     t.string "isolate_message"
     t.text "output"
-    t.index ["submission_id"], name: "index_evaluations_on_submission_id"
+    t.index ["submission_id", "testcase_id"], name: "index_evaluations_on_submission_id_and_testcase_id", unique: true
     t.index ["testcase_id"], name: "index_evaluations_on_testcase_id"
   end
 
@@ -206,6 +214,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.string "key"
     t.boolean "enabled", default: false
     t.integer "status", default: 0
+    t.integer "disk_free_mb"
     t.index ["host", "pid"], name: "index_grader_processes_on_host_and_pid"
   end
 
@@ -232,6 +241,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.string "description"
     t.boolean "enabled", default: true
     t.boolean "hidden", default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "groups_problems", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -270,7 +281,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "priority", default: 0
+    t.index ["arg"], name: "index_jobs_on_arg"
     t.index ["parent_job_id"], name: "index_jobs_on_parent_job_id"
+    t.index ["status", "priority", "id"], name: "index_jobs_on_status_priority_id", order: { priority: :desc }
   end
 
   create_table "languages", id: :integer, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -451,6 +464,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.datetime "viva_terminated_at"
     t.datetime "updated_at", precision: nil
     t.integer "repaired_from_id"
+    t.boolean "test_drive", default: false, null: false
+    t.datetime "viva_retake_granted_at"
+    t.integer "viva_retake_granted_by_id"
     t.index ["graded_at"], name: "index_submissions_on_graded_at"
     t.index ["problem_id"], name: "index_submissions_on_problem_id"
     t.index ["repaired_from_id"], name: "index_submissions_on_repaired_from_id"
@@ -552,6 +568,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.string "section"
     t.integer "default_language_id"
     t.datetime "last_heartbeat"
+    t.integer "verdict_display", limit: 1, default: 0, null: false
     t.index ["login"], name: "index_users_on_login", unique: true
   end
 
@@ -567,7 +584,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.datetime "graded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["submission_id"], name: "index_viva_grades_on_submission_id", unique: true
+    t.datetime "llm_started_at"
+    t.integer "llm_latency_ms"
+    t.datetime "superseded_at"
+    t.string "superseded_reason"
+    t.integer "superseded_by_id"
+    t.integer "requested_by_id"
+    t.string "batch_id"
+    t.text "error"
+    t.index ["batch_id"], name: "index_viva_grades_on_batch_id"
+    t.index ["submission_id", "superseded_at"], name: "index_viva_grades_on_submission_id_and_superseded_at"
   end
 
   create_table "viva_turns", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -584,6 +610,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_22_214141) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "alerted", default: false, null: false
+    t.datetime "llm_started_at"
+    t.integer "llm_latency_ms"
     t.index ["submission_id", "sequence"], name: "index_viva_turns_on_submission_id_and_sequence", unique: true
   end
 

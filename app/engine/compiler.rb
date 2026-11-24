@@ -55,24 +55,47 @@ class Compiler
     end
   end
 
-  # main compile function
-  # return EngineResponse::Result
-  def compile(submission, dataset)
-    @sub = submission
-    @working_dataset = dataset
-    # validate the pre-condition
-    validate
+  # language name => the `compiler:` keys of worker.yml its Compiler subclass
+  # needs a path under. Languages that need no program (archive, text) are
+  # absent. test/engine/compiler_configured_test.rb checks each subclass
+  # against this list.
+  COMPILER_PATH_KEYS = {
+    'cpp' => %i[cpp], 'c' => %i[c], 'python' => %i[python], 'ruby' => %i[ruby],
+    'java' => %i[javac], 'digital' => %i[digital], 'haskell' => %i[haskell],
+    'php' => %i[php], 'pas' => %i[pas], 'rust' => %i[rust], 'go' => %i[go],
+    'postgres' => %i[ruby]
+  }.freeze
 
-    # init isolate
-    need_cg = isolate_need_cg_by_lang(@sub.language.name)
-    setup_isolate(@box_id, need_cg)
+  # Stops a compile on a host that has no compiler for the language, with a
+  # message that says so. Without this the compile command was built with an
+  # empty program name and ran anyway: PHP (no `compiler: php:` line on any
+  # host) came back as a compilation error with an empty message, Pascal (the
+  # class read a key the file does not have) as `execve("-O1")` — both blamed
+  # on the student, for years. A grader error is the honest verdict.
+  def ensure_compiler_configured
+    COMPILER_PATH_KEYS.fetch(@sub.language.name, []).each do |key|
+      path = Rails.configuration.worker.dig(:compiler, key).to_s.strip
+      problem = if path.empty?
+        "worker.yml has no `compiler: #{key}:` path"
+      elsif !File.exist?(path)
+        "the `compiler: #{key}:` path #{path} does not exist"
+      end
+      next unless problem
+      raise GraderError.new("No compiler for #{@sub.language.name} on this judge host: #{problem} " \
+                            "(run `bin/rails engine:detect`, then `bin/rails engine:langcheck`)",
+                            submission_id: @sub.id,
+                            message_for_user: "The grader is not set up for #{@sub.language.pretty_name.presence || @sub.language.name} " \
+                                              '(this is not an error in your code; please tell the staff)')
+    end
+  end
 
-    begin
-
-    # prepare source file
-    prepare_submission_directory(@sub)
-    prepare_files_for_compile
-
+  # The sandboxed part of a compile: pre_compile, the compiler run, and the
+  # chmod of what it produced. Needs isolate set up, the directories of
+  # prepare_submission_directory, and @source_file / @isolate_source_file /
+  # @isolate_main_file. Returns isolate's [out, err, status, meta]. Kept apart
+  # from #compile so that LangCheck (bin/rails engine:langcheck) runs the very
+  # same sandbox call on a built-in program, with no dataset and no upload.
+  def compile_in_sandbox(need_cg)
     # running any precompile script
     @exec_file = @compile_path + @sub.problem.exec_filename(@sub.language)
     pre_compile
@@ -98,7 +121,7 @@ class Compiler
     output = { "#{@isolate_bin_path}": @compile_path.cleanpath}
     input = {"#{@isolate_source_path}": @source_path.cleanpath, "/source_manager": @manager_path.cleanpath}
     out, err, status, meta = run_isolate(cmd_string,
-                       time_limit: 10,
+                       time_limit: compile_time_limit_by_lang(@sub.language.name),
                        input: input,
                        output: output,
                        isolate_args: isolate_args,
@@ -112,12 +135,40 @@ class Compiler
     # chmod the compile result
     run_isolate("/usr/bin/chmod -R 0777 #{@isolate_bin_path}", output: output)
 
+    return out, err, status, meta
+  end
+
+  # main compile function
+  # return EngineResponse::Result
+  # chain_id: the compile job's chain, checked before the binary and status
+  # are written (see JudgeBase#superseded?)
+  def compile(submission, dataset, chain_id: nil)
+    @sub = submission
+    @working_dataset = dataset
+    # validate the pre-condition
+    validate
+    ensure_compiler_configured
+
+    # init isolate
+    need_cg = isolate_need_cg_by_lang(@sub.language.name)
+    setup_isolate(@box_id, need_cg)
+
+    begin
+
+    # prepare source file
+    prepare_submission_directory(@sub)
+    prepare_files_for_compile
+
+    out, err, status, meta = compile_in_sandbox(need_cg)
+
     ensure
       cleanup_isolate(need_cg)
     end
 
     # call language-specific checking of compilation
     compile_result = check_compile_result(out, err, status, meta)
+
+    return superseded_result if superseded?(chain_id)
 
     if compile_result.status == :success
       # run any post compilation

@@ -173,6 +173,6 @@ class UsersController < ApplicationController
     end
 
     def user_update_params
-      params.require(:user).permit(:default_language_id, :password, :password_confirmation)
+      params.require(:user).permit(:default_language_id, :verdict_display, :password, :password_confirmation)
     end
 end

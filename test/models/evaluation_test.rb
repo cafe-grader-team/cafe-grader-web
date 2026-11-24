@@ -55,4 +55,16 @@ class EvaluationTest < ActiveSupport::TestCase
     assert_equal submissions(:add1_by_admin), eval_record.submission
     assert_equal testcases(:tc_add_1), eval_record.testcase
   end
+
+  # --- Schema ---
+
+  # Two job chains of one submission could each create the row, and the
+  # scorer then failed the grading with "Evaluations are missing".
+  test "one evaluation per submission and testcase, held by a unique index" do
+    assert ActiveRecord::Base.connection.index_exists?(:evaluations, [:submission_id, :testcase_id], unique: true,
+                                                       name: "index_evaluations_on_submission_id_and_testcase_id")
+    assert_raises(ActiveRecord::RecordNotUnique) do
+      Evaluation.create!(submission: submissions(:add1_by_admin), testcase: testcases(:tc_add_1))
+    end
+  end
 end

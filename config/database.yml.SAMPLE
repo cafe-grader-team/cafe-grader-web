@@ -8,6 +8,10 @@ default: &default
   encoding: utf8mb4
   # canonical collation — MySQL 8 only, MariaDB unsupported (doc/decisions.md)
   collation: utf8mb4_0900_ai_ci
+  # Connections per PROCESS. Solid Queue workers need one per thread plus one
+  # for the polling loop, so keep every worker's `threads` in config/queue.yml
+  # at most pool - 1 (stock 3 + 3 threads fit this 5). Raise RAILS_MAX_THREADS
+  # together with VIVA_JOB_THREADS / JOB_THREADS in the host's queue env file.
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   host: localhost
   socket: /var/run/mysqld/mysqld.sock

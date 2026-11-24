@@ -213,9 +213,12 @@ RSpec.describe "Problems API", type: :request do
             num: { type: :integer, description: "Display number within the problem (1, 2, 3, …) — not usable as {id} for the download endpoints" },
             group: { type: :integer, nullable: true, description: "Testcase group number" },
             group_name: { type: :string, nullable: true, description: "Testcase group name" },
-            weight: { type: :integer, nullable: true, description: "Score weight of this testcase" }
+            weight: { type: :integer, nullable: true, description: "Score weight of this testcase" },
+            access: { type: :string, enum: %w[full preview], description: "What /testcases/{id}/input and /sol return to you: full = the whole file; preview = only the first ui.testcase_preview_bytes (default 2048), with X-Testcase-Byte-Size and X-Testcase-Truncated headers" },
+            input_bytes: { type: :integer, nullable: true, description: "Size of the input file in bytes (null when none is attached)" },
+            sol_bytes: { type: :integer, nullable: true, description: "Size of the expected-output file in bytes (null when none is attached)" }
           },
-          required: %w[id num]
+          required: %w[id num access]
         }
 
         let(:id) { problems(:prob_add).id }

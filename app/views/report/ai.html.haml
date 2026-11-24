@@ -2,6 +2,15 @@
   %small.text-secondary.text-uppercase.fw-bold.ls-1 Report
   %h2.fw-bold.text-dark.mb-0 AI Assist
 
+-# no contest picker here: this report reads the job queue by submission
+-# number, which a per-student window does not fit; the contest's own AI
+-# Usage page covers that case
+.text-secondary.small.mb-3.d-flex.align-items-center.gap-1
+  %span.mi.md-18 info
+  For one contest's AI use (viva turns, grading and assists, with wait and AI times) open that contest's AI Usage page:
+  = link_to 'Contests', contests_path
+  → the contest → AI Usage.
+
 = form_with url: '#', id: 'filter_form' do |f|
   .row{data: {controller: 'init-ui-component'}}
     .col-lg-4

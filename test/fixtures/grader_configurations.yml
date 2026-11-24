@@ -165,3 +165,34 @@ GraderConfiguration_26:
     day (practice mode only; admins exempt).
 
 
+
+GraderConfiguration_27:
+  key: system.llm_assist
+  value_type: boolean
+  value: 'false'
+  description: When true, a user can request LLM assist on each submission
+
+GraderConfiguration_28:
+  key: system.llm_assist_cost
+  value_type: integer
+  value: '10'
+  description: Score penalty (points off the problem's full score) charged for each LLM assist request
+
+
+GraderConfiguration_29:
+  key: ui.testcase_preview_bytes
+  value_type: integer
+  value: '2048'
+  description: Bytes of each test file shown to students who may view test data; 0 = whole files
+
+GraderConfiguration_30:
+  key: right.login_throttle_exempt_ips
+  value_type: string
+  value: ''
+  description: Addresses that skip the per-address count of failed logins
+
+GraderConfiguration_31:
+  key: system.llm_assist_spending_limit
+  value_type: integer
+  value: '100'
+  description: The most points of AI help a student can spend on one problem before further requests are refused (hints are not counted)

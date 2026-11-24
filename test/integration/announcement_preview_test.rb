@@ -71,4 +71,40 @@ class AnnouncementPreviewTest < ActionDispatch::IntegrationTest
     assert_select "#announcementModal-#{@long.id} .modal-body h3", text: 'Section One'
     assert_no_match(/&amp;amp;|&amp;quot;/, response.body)
   end
+
+  # GitHub #50 vector 2: an editor's announcement must not run script in every
+  # visitor's browser, while the HTML editors actually use keeps working
+  # (production bodies carry new-tab PDF links, font colour, tables).
+  XSS_BODY = %(Read <a href="/doc.pdf" target="_blank">the doc</a> <font color="red">now</font><script>alert(1)</script><iframe src="https://x.test/"></iframe>)
+
+  test "main-page card strips script and frames from an announcement but keeps new-tab links and font" do
+    ann = Announcement.create!(title: 'x', author: 'staff', body: XSS_BODY, published: true, frontpage: false, contest_only: false)
+    sign_in_as("john", "hello")
+    get list_main_path
+    assert_response :success
+    card = css_select("#announcement-#{ann.id}").first.to_html
+    assert_no_match %r{<script|<iframe}, card
+    assert_includes card, '<a href="/doc.pdf" target="_blank">the doc</a>'
+    assert_includes card, '<font color="red">now</font>'
+  end
+
+  test "announcement show page sanitizes the body the same way" do
+    ann = Announcement.create!(title: 'x', author: 'staff', body: XSS_BODY, published: true, frontpage: false, contest_only: false)
+    sign_in_as("admin", "admin")
+    get announcement_path(ann)
+    assert_response :success
+    page = css_select("#main-content").first.to_html   # the layout has its own <script> tags
+    assert_no_match %r{<script|<iframe}, page
+    assert_includes page, '<a href="/doc.pdf" target="_blank">the doc</a>'
+  end
+
+  test "navbar strip sanitizes an on_nav_bar announcement" do
+    Announcement.create!(title: 'x', author: 'staff', body: XSS_BODY, published: true, on_nav_bar: true, contest_only: false)
+    sign_in_as("john", "hello")
+    get list_main_path
+    assert_response :success
+    strip = css_select("p.navbar-text").map(&:to_html).join
+    assert_no_match %r{<script|<iframe}, strip
+    assert_includes strip, '<font color="red">now</font>'
+  end
 end

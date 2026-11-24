@@ -1,0 +1,9 @@
+-# Problems with the saved value (GraderConfiguration#value_warnings), shown
+-# under the setting. Always rendered, hidden when empty, so
+-# update.turbo_stream has an element to replace after a save.
+- warnings = conf.value_warnings
+.config-warnings{id: dom_id(conf, 'config_warnings'), hidden: warnings.empty?}
+  - warnings.each do |warning|
+    .alert.alert-warning.d-flex.align-items-start.gap-1.py-1.px-2.mb-1.small
+      %span.mi.md-18 warning
+      %span= warning

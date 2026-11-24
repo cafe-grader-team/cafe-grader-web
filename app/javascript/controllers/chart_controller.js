@@ -24,6 +24,26 @@ const PRESETS = {
       },
     },
   },
+  stacked_bar: {
+    type: 'bar',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+      plugins: { legend: { position: 'bottom' } },
+    },
+  },
+  multiline: {
+    type: 'line',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      spanGaps: true,
+      elements: { point: { radius: 2 } },
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: 'seconds' } } },
+    },
+  },
   submission_line: {
     type: 'line',
     options: {
@@ -50,8 +70,12 @@ export default class extends Controller {
   }
 
   connect() {
-    // Canvas may exist before AJAX data arrives — skip if empty
-    if (Object.keys(this.dataValue).length > 0) {
+    // Canvas may exist before AJAX data arrives — skip if empty. Guard on
+    // this.chart: when data is present at connect time (server-rendered, e.g.
+    // the contest AI-usage charts), Stimulus has already fired
+    // dataValueChanged and drawn the chart before connect() runs; drawing
+    // again here would throw "Canvas is already in use".
+    if (!this.chart && Object.keys(this.dataValue).length > 0) {
       this._drawChart()
     }
   }

@@ -12,6 +12,14 @@
       %small Editing
 
   .d-flex.gap-2.align-items-center{'data-controller': 'init-ui-component'}
+    -# Test-drive (viva only): sit this viva yourself in a session flagged
+    -# test_drive — excluded from reports, cost figures and start limits.
+    -# Lives here, outside the ONE problem form, because a nested form is
+    -# invalid HTML. Labeled like Help: authors must be able to find it.
+    - if @problem.viva_exam?
+      = button_to viva_test_drive_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center gap-1', form: {class: 'd-inline', data: {turbo: true}}, data: {bs_toggle: 'tooltip', bs_title: 'Take this viva yourself in a test session — excluded from reports, cost figures and start limits'} do
+        %span.mi play_circle
+        Test-drive
     = link_to stat_problem_path(@problem), class: 'btn btn-sm bg-white shadow-sm border-0 text-secondary d-inline-flex align-items-center justify-content-center', data: {bs_toggle: 'tooltip', bs_title: 'Statistics'} do
       %span.mi query_stats
     .dropdown

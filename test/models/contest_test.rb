@@ -1,6 +1,7 @@
 require "test_helper"
 
 class ContestTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
   # --- Validations ---
 
   test "valid contest fixture" do
@@ -98,5 +99,253 @@ class ContestTest < ActiveSupport::TestCase
   test "contest has users through contests_users" do
     contest = contests(:contest_a)
     assert_includes contest.users, users(:james)
+  end
+
+  # --- finish_open_vivas! (the contest page's "Finish open vivas" button) ---
+
+  def viva_language
+    Language.find_or_create_by!(name: "viva") { |l| l.pretty_name = "Viva Exam" }
+  end
+
+  # contest_a with the viva fixture problem added (fixtures keep it out so the
+  # contest-problem counts elsewhere stay put).
+  def contest_with_viva
+    contests(:contest_a).tap do |c|
+      ContestProblem.create!(contest: c, problem: problems(:prob_viva), number: 3, enabled: true)
+    end
+  end
+
+  # An open viva session: greeting, optional student answer, optional reply in flight.
+  def open_viva(user:, answered:, in_flight: false, submitted_at: Time.zone.now)
+    sub = Submission.create!(user: user, problem: problems(:prob_viva), language: viva_language,
+                             status: :submitted, submitted_at: submitted_at)
+    sub.viva_turns.create!(role: :assistant, status: :ok, content: 'hello')
+    sub.viva_turns.create!(role: :student, status: :ok, content: 'my answer') if answered
+    sub.viva_turns.create!(role: :assistant, status: :processing, content: nil) if in_flight
+    sub
+  end
+
+  test "finish_open_vivas! sends an answered session to grading with a staff closing turn" do
+    contest = contest_with_viva
+    sub = open_viva(user: users(:james), answered: true)
+    assert_enqueued_with(job: Llm::VivaGradeAssistJob) do
+      assert_equal({graded: 1, archived: 0, skipped: 0}, contest.finish_open_vivas!)
+    end
+    sub.reload
+    assert_predicate sub, :evaluating?
+    assert sub.viva_turns.where(role: :system).where("content LIKE '%contest staff%grading begins%'").exists?,
+           "must leave the staff closing turn in the transcript"
+  end
+
+  test "finish_open_vivas! archives a greeting-only session without grading" do
+    contest = contest_with_viva
+    sub = open_viva(user: users(:james), answered: false)
+    assert_no_enqueued_jobs(only: Llm::VivaGradeAssistJob) do
+      assert_equal({graded: 0, archived: 1, skipped: 0}, contest.finish_open_vivas!)
+    end
+    sub.reload
+    assert_predicate sub, :submitted?
+    assert sub.viva_archived_at.present?, "greeting-only session must be archived, not graded"
+  end
+
+  test "finish_open_vivas! skips a session whose assistant reply is still in flight" do
+    contest = contest_with_viva
+    sub = open_viva(user: users(:james), answered: true, in_flight: true)
+    assert_no_enqueued_jobs(only: Llm::VivaGradeAssistJob) do
+      assert_equal({graded: 0, archived: 0, skipped: 1}, contest.finish_open_vivas!)
+    end
+    sub.reload
+    assert_predicate sub, :submitted?
+    assert_nil sub.viva_archived_at
+  end
+
+  test "finish_open_vivas! leaves sessions started before the contest window alone" do
+    contest = contest_with_viva
+    sub = open_viva(user: users(:james), answered: true, submitted_at: contest.start - 1.hour)
+    assert_equal({graded: 0, archived: 0, skipped: 0}, contest.finish_open_vivas!)
+    assert_predicate sub.reload, :submitted?
+  end
+
+  test "finish_open_vivas! honours a user's extra time" do
+    contest = contest_with_viva
+    contest.contests_users.find_by!(user: users(:james)).update!(extra_time_second: 7200)
+    open_viva(user: users(:james), answered: true, submitted_at: contest.stop + 1.hour)
+    assert_equal({graded: 1, archived: 0, skipped: 0}, contest.finish_open_vivas!)
+  end
+
+  test "finish_open_vivas! ignores sessions of users not enrolled in the contest" do
+    contest = contest_with_viva
+    sub = open_viva(user: users(:john), answered: true) # john is not in contest_a
+    assert_equal({graded: 0, archived: 0, skipped: 0}, contest.finish_open_vivas!)
+    assert_predicate sub.reload, :submitted?
+  end
+
+  test "finish_open_vivas! ignores viva problems that are not in the contest" do
+    contest_with_viva # prob_viva is in contest_a only
+    sub = open_viva(user: users(:jack), answered: true) # jack is in contest_a AND contest_b
+    assert_equal({graded: 0, archived: 0, skipped: 0}, contests(:contest_b).finish_open_vivas!)
+    assert_predicate sub.reload, :submitted?
+  end
+
+  test "finish_open_vivas! is idempotent — a second click finds nothing" do
+    contest = contest_with_viva
+    open_viva(user: users(:james), answered: true)
+    open_viva(user: users(:jack), answered: false)
+    assert_equal({graded: 1, archived: 1, skipped: 0}, contest.finish_open_vivas!)
+    assert_equal({graded: 0, archived: 0, skipped: 0}, contest.finish_open_vivas!)
+  end
+
+  # --- viva_grading_counts (the status line next to "Finish open vivas") ---
+
+  def viva_session(user:, status:, archived: false, submitted_at: Time.zone.now)
+    Submission.create!(user: user, problem: problems(:prob_viva), language: viva_language, status: status,
+                       submitted_at: submitted_at, viva_archived_at: (archived ? Time.zone.now : nil))
+  end
+
+  test "viva_grading_counts counts in-window evaluating and grader_error sessions of enrolled users" do
+    contest = contest_with_viva
+    viva_session(user: users(:james), status: :evaluating)
+    viva_session(user: users(:jack),  status: :evaluating)
+    viva_session(user: users(:james), status: :grader_error)
+    viva_session(user: users(:james), status: :done)                               # graded: not counted
+    viva_session(user: users(:james), status: :submitted)                          # still open: not counted
+    viva_session(user: users(:jack),  status: :evaluating, archived: true)         # archived: not counted
+    viva_session(user: users(:john),  status: :evaluating)                         # not enrolled
+    viva_session(user: users(:jack),  status: :evaluating, submitted_at: 2.days.ago) # outside the window
+    assert_equal({grading: 2, errors: 1}, contest.viva_grading_counts)
+  end
+
+  test "viva_grading_counts is zero when nothing is waiting" do
+    assert_equal({grading: 0, errors: 0}, contest_with_viva.viva_grading_counts)
+  end
+
+  # --- Problem order ---
+
+  def numbers_of(contest)
+    contest.problems_in_display_order.map { |cp| [cp.problem.name, cp.number] }
+  end
+
+  def contest_c_with(problems, numbers)
+    c = contests(:contest_c)
+    problems.each_with_index { |p, i| c.contests_problems.create!(problem: p, number: numbers[i]) }
+    c.reload
+  end
+
+  def five_problems
+    %i[prob_add prob_sub easy hard prob_viva].map { |n| problems(n) }
+  end
+
+  test "add_problems_and_assign_number continues after the highest number" do
+    c = contests(:contest_a)
+    c.add_problems_and_assign_number([problems(:hard)])
+    c.save!
+    assert_equal 3, c.contests_problems.find_by(problem: problems(:hard)).number
+  end
+
+  test "move_problem heals duplicates and moves one row" do
+    ps = five_problems
+    c = contest_c_with(ps, [1, 1, 2, 3, 4])
+    assert_equal 4, c.move_problem(ps[4], :up)
+    order = c.problems_in_display_order
+    assert_equal ps[4].id, order[3].problem_id
+    assert_equal [1, 2, 3, 4, 5], order.map(&:number)
+  end
+
+  test "move_problem with blank numbers moves one row" do
+    ps = five_problems.first(4)
+    c = contest_c_with(ps, [nil, nil, nil, nil])
+    assert_equal 3, c.move_problem(ps[3], :up)
+    order = c.problems_in_display_order
+    assert_equal [1, 2, 3, 4], order.map(&:number)
+    assert_equal ps[2].id, order.last.problem_id
+  end
+
+  test "move_problem down from the top does not duplicate" do
+    ps = five_problems.first(4)
+    c = contest_c_with(ps, [1, 2, 3, 4])
+    c.move_problem(ps[0], :down)
+    order = c.problems_in_display_order
+    assert_equal [ps[1], ps[0], ps[2], ps[3]].map(&:id), order.map(&:problem_id)
+    assert_equal [1, 2, 3, 4], order.map(&:number)
+  end
+
+  test "move_problem at the edge is a no-op" do
+    ps = five_problems.first(4)
+    c = contest_c_with(ps, [1, 2, 3, 4])
+    assert_equal 1, c.move_problem(ps[0], :up)
+    assert_equal ps.map(&:id), c.problems_in_display_order.map(&:problem_id)
+    assert_equal 4, c.move_problem(ps[3], :down)
+    assert_equal ps.map(&:id), c.problems_in_display_order.map(&:problem_id)
+    assert_equal [1, 2, 3, 4], c.problems_in_display_order.map(&:number)
+  end
+
+  test "move_problem returns nil for a problem not in the contest" do
+    c = contests(:contest_a)
+    assert_nil c.move_problem(problems(:hard), :up)
+  end
+
+  test "reorder_problems! tolerates foreign, duplicate and missing ids" do
+    a, b, cc, other = problems(:prob_add), problems(:prob_sub), problems(:easy), problems(:hard)
+    c = contest_c_with([a, b, cc], [1, 2, 3])
+    result = c.reorder_problems!([cc.id.to_s, other.id, cc.id, a.id])
+    assert_equal [cc.id, a.id, b.id], result
+    order = c.problems_in_display_order
+    assert_equal [cc.id, a.id, b.id], order.map(&:problem_id)
+    assert_equal [1, 2, 3], order.map(&:number)
+  end
+
+  test "ticking without a Stop time is refused" do
+    c = contests(:contest_a)
+    c.stop = nil
+    c.outside_login_off = true
+    assert_not c.valid?
+    assert_includes c.errors[:outside_login_off], 'needs a Stop time'
+  end
+
+  # --- score_report: deduction cap and each student's hint window (spec 2026-11-21) ---
+
+  def scored_sub(user, problem, at, points)
+    s = submissions(:add1_by_james).dup
+    s.assign_attributes(user: user, problem: problem, submitted_at: at, points: points, number: nil)
+    s.save!(validate: false)
+    s
+  end
+
+  def charge_ai(sub, cost)
+    sub.comments.create!(user: sub.user, kind: 'llm_assist', status: 'ok', cost: cost, title: 't', body: 'b')
+  end
+
+  test "score_report caps the deduction at the contest's cap and reports the raw cost beside it" do
+    c = contests(:contest_a)
+    c.update!(deduction_cap: 30)
+    pid = problems(:prob_add).id
+    charge_ai(scored_sub(users(:james), problems(:prob_add), c.start + 5.minutes, 90), 45)
+    row = c.score_report[:score]['james']
+    assert_equal 70, row["final_score_#{pid}"].to_f
+    assert_equal 30, row["total_cost_#{pid}"].to_f
+    assert_equal 45, row["raw_cost_#{pid}"].to_f
+  end
+
+  test "score_report without a cap never shows a score below 0" do
+    c = contests(:contest_a)
+    pid = problems(:prob_add).id
+    charge_ai(scored_sub(users(:james), problems(:prob_add), c.start + 5.minutes, 100), 150)
+    row = c.score_report[:score]['james']
+    assert_equal 0, row["final_score_#{pid}"].to_f
+    assert_equal 150, row["total_cost_#{pid}"].to_f
+  end
+
+  test "score_report counts a hint revealed in the student's extra time but not one before the start" do
+    c = contests(:contest_a)
+    c.update_columns(start: 2.hours.ago, stop: 5.minutes.ago)
+    contests_users(:james_in_contest_a).update!(extra_time_second: 660)
+    pid = problems(:prob_add).id
+    scored_sub(users(:james), problems(:prob_add), c.start + 5.minutes, 100)
+    reveal = comments(:hint_for_add).comment_reveals.create!(user: users(:james))
+    reveal.update_columns(created_at: 2.minutes.ago)            # inside james's extra time
+    assert_equal 1.5, c.score_report[:score]['james']["hint_cost_#{pid}"].to_f
+
+    reveal.update_columns(created_at: c.start - 1.day)          # practice, before the contest
+    assert_nil c.score_report[:score]['james']["hint_cost_#{pid}"]
   end
 end

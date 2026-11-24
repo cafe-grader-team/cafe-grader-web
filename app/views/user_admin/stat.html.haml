@@ -46,6 +46,10 @@
             AI Assist
           .col-6
             = @summary[:llm_assist]
+        - if @llm_usage.any?
+          .row.mt-2
+            .col
+              = render partial: 'comments/llm_usage_by_model', locals: {rows: @llm_usage}
 
 
         -# contest info (if exists)

@@ -5,7 +5,7 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
 
   test "unauthenticated user is redirected" do
     get problems_path
-    assert_redirected_to login_main_path
+    assert_redirected_to_login
   end
 
   test "normal user is redirected from problems index" do
@@ -348,5 +348,30 @@ class ProblemsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as("james", "morning")
     get download_by_type_problem_path(problems(:prob_viva), 'statement')
     refute_match(/statement[^<]{1,30}available/i, response.body)
+  end
+
+  # --- viva test-drive controls on the edit page (spec 2026-09-23-viva-test-drive-design) ---
+
+  def viva_language
+    Language.find_or_create_by!(name: "viva") { |l| l.pretty_name = "Viva Exam" }
+  end
+
+  test "edit page offers Test-drive on a viva problem and lists existing test-drives" do
+    sign_in_as("admin", "admin")
+    problem = problems(:prob_viva)
+    drive = Submission.create!(user: users(:admin), problem: problem, language: viva_language,
+                               status: :done, submitted_at: Time.zone.now, points: 73, test_drive: true)
+    get edit_problem_path(problem)
+    assert_response :success
+    assert_match(%r{/problems/#{problem.id}/viva/test_drive}, response.body, "Test-drive button posts to the test_drive route")
+    assert_match(/Test-drives/, response.body, "Test-drives list section is rendered")
+    assert_match(%r{/submissions/#{drive.id}/viva}, response.body, "existing test-drive is linked")
+  end
+
+  test "edit page has no Test-drive control on a code problem" do
+    sign_in_as("admin", "admin")
+    get edit_problem_path(problems(:prob_add))
+    assert_response :success
+    assert_no_match(%r{/viva/test_drive}, response.body)
   end
 end

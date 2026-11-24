@@ -211,6 +211,10 @@ export default class extends DatatableInitController {
     return (data,type,row,meta) => {
       if (!data) return ''
       if (type == 'display' || type == 'filter') {
+        // the deduction cap lowered this deduction: the server sends the raw
+        // hint + AI points beside the counted ones (HelpDeduction)
+        const capped = parseFloat(row[`raw_cost_${prob_id}`]) > parseFloat(data)
+        const label = capped ? `${data} (cap)` : `${data}`
         // render the DEDUCTION, with, optionally, the detail of the deduction
         if (this.showLoadTarget.checked) {
           // llm & hint col
@@ -219,12 +223,12 @@ export default class extends DatatableInitController {
           const hint_cost_col = `hint_cost_${prob_id}`
           const hint_count_col = `hint_count_${prob_id}`
 
-          let st = `${data}`
+          let st = label
           if (row[llm_count_col] ) st = st + `<div class='text-warning small '> LLM: ${row[llm_cost_col]} (${row[llm_count_col]}) </div>`
           if (row[hint_count_col] ) st = st + `<div class='text-success small '> Hint: ${row[hint_cost_col]} (${row[hint_count_col]}) </div>`
           return st
         } else {
-          return data
+          return label
         }
       }
 
@@ -328,6 +332,7 @@ function processScore(json) {
         json.data[i][`hint_cost_${prob.id}`] = scoreResult[`hint_cost_${prob.id}`]
         json.data[i][`final_score_${prob.id}`] = scoreResult[`final_score_${prob.id}`]
         json.data[i][`total_cost_${prob.id}`] = scoreResult[`total_cost_${prob.id}`]
+        json.data[i][`raw_cost_${prob.id}`] = scoreResult[`raw_cost_${prob.id}`]
       }
 
       //also sum the score of this user

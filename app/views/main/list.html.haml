@@ -21,39 +21,99 @@
       = render :partial => 'announcement', :collection => @announcements
 
 :javascript
-  function filter_tag() {
-    let selected_tag = $('#filter-tag :selected').val()
-    table.column(5).search(selected_tag).draw()
-  }
-
   window.addEventListener("load", function() {
+    // ---- status filter (GitHub #29): hidden column 6 holds solved/inprogress/untried ----
+    const STATUS_FILTERS = {
+      all:        { label: 'All',         re: '' },
+      unsolved:   { label: 'Unsolved',    re: '^(untried|inprogress)$' },
+      inprogress: { label: 'In progress', re: '^inprogress$' },
+      solved:     { label: 'Solved',      re: '^solved$' },
+    }
+    // per-browser persistence only (cookie/localStorage convention for transient UI state)
+    const STATUS_KEY = 'main-list-status-filter'
+    let savedStatus = 'all'
+    try { savedStatus = localStorage.getItem(STATUS_KEY) || 'all' } catch (e) {}
+    if (!(savedStatus in STATUS_FILTERS)) savedStatus = 'all'
+
+    // custom top-start layout slot: segmented status filter + random-untried + compact counter
+    // (replaces the old "Showing 1 to N of N entries" line, which is constant with paging off)
+    const statusButtons = []
+    const statusControls = () => {
+      const wrap = document.createElement('div')
+      wrap.className = 'd-flex align-items-center gap-2 flex-wrap'
+      const group = document.createElement('div')
+      group.className = 'btn-group btn-group-sm'
+      group.setAttribute('role', 'group')
+      group.setAttribute('aria-label', 'Filter problems by status')
+      for (const [key, f] of Object.entries(STATUS_FILTERS)) {
+        const btn = document.createElement('button')
+        btn.type = 'button'
+        btn.className = 'btn btn-outline-secondary' + (key === savedStatus ? ' active' : '')
+        btn.dataset.status = key
+        btn.textContent = f.label
+        btn.addEventListener('click', () => setStatusFilter(key))
+        statusButtons.push(btn)
+        group.appendChild(btn)
+      }
+      const random = document.createElement('button')
+      random.type = 'button'
+      random.className = 'btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1'
+      random.title = 'Jump to a random problem you have not tried yet'
+      random.innerHTML = '<span class="mi" style="font-size:1.1rem">casino</span> Random'
+      random.addEventListener('click', randomUntried)
+      const counter = document.createElement('span')
+      counter.id = 'problem-count'
+      counter.className = 'text-secondary small'
+      wrap.append(group, random, counter)
+      return wrap
+    }
+
+    function setStatusFilter(key) {
+      statusButtons.forEach(b => b.classList.toggle('active', b.dataset.status === key))
+      try { localStorage.setItem(STATUS_KEY, key) } catch (e) {}
+      table.column(6).search(STATUS_FILTERS[key].re, true, false).draw()
+    }
+
+    function updateCounter() {
+      const el = document.getElementById('problem-count')
+      if (!el) return
+      const info = table.page.info()
+      el.textContent = (info.recordsDisplay === info.recordsTotal)
+        ? `${info.recordsTotal} problems`
+        : `${info.recordsDisplay} of ${info.recordsTotal} problems`
+    }
+
+    function randomUntried() {
+      const untried = table.rows({ search: 'applied' }).indexes().toArray()
+        .filter(i => table.cell(i, 6).data() === 'untried')
+      const el = document.getElementById('problem-count')
+      if (untried.length === 0) {
+        if (el) { el.textContent = 'no untried problems in this view'; setTimeout(updateCounter, 2500) }
+        return
+      }
+      const node = table.row(untried[Math.floor(Math.random() * untried.length)]).node()
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      node.classList.remove('row-flash')
+      void node.offsetWidth // restart the flash animation on repeated clicks
+      node.classList.add('row-flash')
+    }
+
     table = $("#main_table").DataTable({
       columnDefs: [
         { targets: [3,4], sortable: false }, // latest result & action
-        { targets: [5], visible: false }, // hidden tags column
+        { targets: [5,6], visible: false }, // hidden tags & status columns
       ],
       paging: false,
       responsive: true,
       layout: {
-        topStart: () => {
-          let element = document.createElement('div');
-          element.className = 'row'
-          element.innerHTML = '<div class="col-auto"><label class="cl-form-label"> <span class="text-nowrap">Topic Filter:</span> </label></div>' +
-            '<div class="col-auto"><select id="filter-tag" class="form-select form-select-sm select2" onchange="filter_tag()">' +
-            '<option value=""> -- All --</option>' +
-            '#{j options_from_collection_for_select(Tag.where(public: true),:name,:name)}' +
-            '</select></div>'
-          return element;
-
-        },
-        topStart: 'info',
-        topEnd: 'search'
-
+        topStart: statusControls,
+        topEnd: 'search',
+        bottomStart: null  // default is a second 'info'; the counter replaces it
       }
-      //dom: "<'row'<'#prob-group.col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-      //  "<'row'<'col-sm-12'tr>>" +
-      //  "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
     })
+    if (savedStatus !== 'all') table.column(6).search(STATUS_FILTERS[savedStatus].re, true, false).draw()
+    table.on('draw', updateCounter)
+    updateCounter()
 
     $("#contest-table").DataTable({
       paging: false,

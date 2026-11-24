@@ -643,3 +643,13 @@ golden-btn + .golden-btn { margin-top: 1em; }
               inset 0 -2px 5px 1px #b17d10,
                 inset 0 -1px 1px 3px rgba(250,227,133,1);
 }
+// Main list: flash highlight on the row the "Random" button jumps to
+// (list.html.haml randomUntried). Animate the cells, not the row — table-hover
+// paints its own background on the tds and would mask a tr-level color.
+@keyframes row-flash-bg {
+  0%, 55% { background-color: var(--bs-warning-bg-subtle); }
+  100%    { background-color: transparent; }
+}
+tr.row-flash > td {
+  animation: row-flash-bg 2.5s ease-out 1;
+}

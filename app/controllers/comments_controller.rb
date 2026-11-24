@@ -30,16 +30,21 @@ class CommentsController < ApplicationController
 
   # render comments partial
   def index_partial
-    if params[:for] == 'edit'
-      # this one renders for the submission edit page
-      render turbo_stream: [
-        turbo_stream.update(:problem_hints, partial: 'problems/hints', locals: {problem: @submission.problem}),
-        turbo_stream.update(:submission_comments, partial: 'submissions/comments', locals: {submission: @submission, show_edit: false, has_processing: @submission.has_processing_comments?})
-      ]
-    else
-      # this one renders for the submission view pages
-      render turbo_stream: turbo_stream.update(:submission_comments, partial: 'submissions/comments', locals: {submission: @submission, show_edit: true, has_processing: @submission.has_processing_comments?})
+    for_edit = params[:for] == 'edit'
+    streams = []
+    # the edit page also carries the problem hints
+    streams << turbo_stream.update(:problem_hints, partial: 'problems/hints', locals: {problem: @submission.problem}) if for_edit
+    # show pages get edit controls on comments; the edit page does not
+    streams << turbo_stream.update(:submission_comments, partial: 'submissions/comments',
+                                   locals: {submission: @submission, show_edit: !for_edit, has_processing: @submission.has_processing_comments?})
+    # The assist picker sits outside the comments frame; refresh it too so a
+    # finished request re-enables Get (and a new one disables it) without a
+    # page reload. A page without the picker ignores the replace.
+    models = Rails.configuration.llm[:provider].keys
+    if models.any? && GraderConfiguration['system.llm_assist']
+      streams << turbo_stream.replace(:llm_assist_picker, partial: 'submissions/add_assist', locals: {models: models})
     end
+    render turbo_stream: streams
   end
 
   # -- problem comment section --
@@ -96,22 +101,35 @@ class CommentsController < ApplicationController
     end
   end
 
-  # show hint as a modal
+  # show hint as a modal, or as a page when "View" is opened in a new tab.
+  # Seeing the problem is not enough to read a hint: see Comment#hint_readable_by?.
   def show_hint
-    # TODO: need to check whether the user can view this hint
+    return head :not_found unless @hint
+    unless @hint.hint_readable_by?(@current_user)
+      @header_msg = 'Hint not acquired'
+      @body_msg = 'Get this hint from the problem list first.'
+      return render :show, status: :forbidden
+    end
     @header_msg = "Hint: #{@hint.title}"
-    @body_msg = (@hint.body || '-- blank --').html_safe
+    @body_msg = @hint.body.presence || '-- blank --'
     render :show
   end
 
-  # unified show for submissions comment as a modal
+  # unified show for submissions comment as a modal, or as a page when "View"
+  # is opened in a new tab
   def show_for_submission
-    @header_msg = "Comment: #{@comment.title}".html_safe
+    return head :not_found unless @comment
+    @header_msg = "Comment: #{@comment.title}"
     if @comment.kind == 'llm_assist'
-      @body_msg = render_to_string(partial: 'llm_assist_header') + "\n" +
-                  (@comment.body.html_safe || '-- blank --')
+      # The body is model-written and can echo student-controlled markup (a
+      # code comment, a string literal), and staff open these modals — so it
+      # is rendered here (markdown → HTML → sanitize) rather than handed to
+      # the view's raw markdown() like a staff-authored hint. The header
+      # partial is ours and keeps its <script>.
+      body_html = helpers.sanitize(helpers.markdown(@comment.body.presence || '-- blank --'))
+      @body_html = helpers.safe_join([render_to_string(partial: 'llm_assist_header').html_safe, body_html])
     else
-      @body_msg = (@comment.body.html_safe || '-- blank --')
+      @body_msg = @comment.body.presence || '-- blank --'
     end
     render :show
   end
@@ -157,17 +175,15 @@ class CommentsController < ApplicationController
 
   # request the llm assist via job
   def llm_assist
-    # get the service class that responsible for the model
-    model_id = params[:model].to_i
-    model_name = Rails.configuration.llm[:provider].keys[model_id]
-    llm_assist_job_class = (Rails.configuration.llm[:provider][model_name] + 'Job').constantize
-
+    # @llm_model / @llm_service_class were resolved and validated by can_request_llm
+    model_name = @llm_model
+    llm_assist_job_class = (@llm_service_class + 'Job').constantize
 
     @record = @submission.comments.create!({
       user: @current_user,
       kind: 'llm_assist',
       llm_model: model_name,
-      title: "AI #{model_name} is thinking <span class='spinner-border spinner-border-sm'></span>",
+      title: "AI #{model_name} is thinking",
       body: <<~TEXT,
         ## AI is thinking, please wait
         * Request started at `#{Time.zone.now}`, using the model `#{model_name}`
@@ -202,6 +218,17 @@ class CommentsController < ApplicationController
     end
 
     def can_request_llm
+      # The request is charged to the submission's OWNER (max_score_report joins
+      # the penalty by submission, not by requester), so only the owner — or an
+      # admin — may make it. Submission ids are sequential; without this gate
+      # any logged-in user could spend another student's points and the API
+      # budget on a submission they cannot even view.
+      unless @current_user.admin? ||
+             (@submission.user_id == @current_user.id && @current_user.can_view_submission?(@submission))
+        @toast = {title: 'LLM Assist Error', body: 'AI assistance can only be requested on your own submissions', type: 'alert' }
+        render 'submission_and_toast', status: :forbidden and return
+      end
+
       # check global allow llm
       unless GraderConfiguration['system.llm_assist']
         @toast = {title: 'LLM Assist Error', body: "The system does not allow LLM Assist at the moment", type: 'alert' }
@@ -218,6 +245,23 @@ class CommentsController < ApplicationController
       unless @submission.problem.tags.where(kind: 'llm_prompt').any?
         @toast = {title: 'LLM Assist Error', body: "There is no <code>llm_prompt</code> tag associated with this problem.".html_safe, errors: ['Please notify the staff'], type: 'alert' }
         render 'submission_and_toast' and return
+      end
+
+      # The model is addressed by NAME — a key of the provider map built from
+      # llm.yml (see config/initializers/cafe_grader.rb). An unknown name is a
+      # 422, never a 500; the name is also what the placeholder title shows.
+      @llm_model = params[:model].to_s
+      @llm_service_class = Rails.configuration.llm[:provider][@llm_model]
+      if @llm_service_class.blank?
+        @toast = {title: 'LLM Assist Error', body: "Unknown AI model #{@llm_model.inspect}", type: 'alert' }
+        render 'submission_and_toast', status: :unprocessable_entity and return
+      end
+
+      # Same predicate the picker uses to disable Get (request in flight, model
+      # already answered, full score, spending limit) — the form can be replayed.
+      if (reason = @submission.llm_assist_refusal(@llm_model))
+        @toast = {title: 'LLM Assist Error', body: "Request refused: #{reason}", type: 'alert' }
+        render 'submission_and_toast', status: :unprocessable_entity and return
       end
     end
 end
