@@ -10,6 +10,25 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
 
 ## [Unreleased]
 
+## [4.8.0] — 2026-11-24
+
+**Upgrade notes.** Run `bin/rails db:migrate`. Two migrations add three
+columns to `contests` (the outside-login switch, the deduction cap and the
+AI-help spending limit; a small table, seconds), and one creates the site
+setting `system.llm_assist_spending_limit` at 100, the old fixed value, so AI
+help stops at the same point as before until someone changes it. On each
+judge host, after the deploy: `bin/rails engine:detect WRITE=1`, restart the
+graders, then `bin/rails engine:langcheck`; this is what fixes Java on
+Debian/Ubuntu, Pascal and PHP (see Fixed), and submissions that failed before
+are not regraded. A server whose IP-whitelist list (`right.whitelist_ip`)
+reads only `0.0.0.0/0` blocks IPv6 students whenever the whitelist is on; add
+`::/0`. Tell staff about two changes: pressing Contest now asks whether to
+turn the IP whitelist on, and logging in always starts a fresh session.
+Nothing to do in `config/llm.yml`: the prompt-cache marker is on unless
+`prompt_cache: false`. Going back to 4.7.3: `bin/rails db:rollback:primary
+STEP=3` drops the three contest columns (their values are lost); the setting
+row can stay.
+
 ### Added
 - **After logging in you return to the page you were going to** (issue #65).
   A page that needs a login now sends you to the login page with `?next=`
@@ -33,7 +52,13 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   Deduction cap box for what-ifs (it charges only the AI help on each
   student's best submission, so it can differ from a contest's report).
   (rev 2332)
-- **Check before importing users.** The Import Users page has a Check button beside Create following users. It shows, without saving anything, what the import would do: who gets a new or random password, which logins would become new accounts (usually a typo on an exam import), duplicates, name and remark changes, ignored lines, and, where an outside login exists, who isn't yet covered by a contest that turns it off. Create works as before. (rev 2313)
+- **Check before importing users.** The Import Users page has a Check button
+  beside Create following users. It shows, without saving anything, what the
+  import would do: who gets a new or random password, which logins would
+  become new accounts (usually a typo on an exam import), duplicates, name and
+  remark changes, ignored lines, and, where an outside login exists, who isn't
+  yet covered by a contest that turns it off. Create works as before. (revs
+  2313, 2318, 2322)
 - **Turn off an outside login (CU-net) for one contest's students.** An admin
   ticks the box on the contest's edit page. Until the contest ends (plus each
   student's extra time), those students can log in only with the password the
@@ -41,9 +66,9 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   CU-net password typed by mistake shows a 'use the password on your seat slip'
   message and doesn't count toward the login lockout. Everyone else keeps
   CU-net; the site-wide switch is unchanged. Hidden on deployments without an
-  outside login. (revs 2308–2310)
+  outside login. (revs 2308–2310, 2316–2317)
 - **Drag-and-drop ordering on a contest's Problems tab.** Drag the handle at
-  the left of each row to set the order students see. (rev 2303)
+  the left of each row to set the order students see. (revs 2303–2304)
 - **Comments on a contest.** The contest's manage page has a Comments card for
   staff notes — issues to resolve, what happened during the contest, the
   after-action report. Each comment shows its author and time and is written
@@ -71,6 +96,66 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   anything themselves: what a box uses is the line in the file, and each
   grader logs it once at start. `engine:langcheck` also reports when the line
   no longer matches the host, for example after a JDK upgrade. (rev 2278)
+
+### Changed
+- **Logging in starts a fresh session.** Nothing the browser's previous user
+  left behind (their chosen contest, the admin flag) carries over to the next
+  login on that browser. (rev 2335)
+- **Contest comments moved into their own tab.** The contest page's Comments
+  card is now a fourth tab beside Users, Problems and Import; the tab label
+  shows how many comments there are. (rev 2334)
+- **The AI usage page shows token counts.** The viva turns, assist requests
+  and total AI cost tiles each add a line such as "1.23M in · 98.8k out
+  tokens" (in = sent to the model, out = written by it); the grades tile says
+  "tokens not recorded", because grading runs don't record them. (rev 2328)
+- **The contest page always links to Viva check.** When nothing needs action, a
+  grey "Viva check" badge sits beside the grading status; the red "N to check"
+  badge takes its place when something does. Before, without a red badge the
+  only way in was Reports ▸ Viva check. (rev 2326)
+- **Import Users page restyled** to match the contest Import tab: the
+  instructions are a side card instead of a yellow wall of text, and the page
+  says what to do for an exam import. (rev 2321)
+- **Pressing Contest asks whether to turn the IP whitelist on.** A dialog
+  shows the allowed list (`right.whitelist_ip`) and offers two buttons,
+  "Contest, IP whitelist ON" and "Contest, IP whitelist OFF", with no
+  default; a switch to a contest mode without that choice is refused and
+  changes nothing. Normal and Analysis turn the whitelist off. The allowed
+  list itself is never changed; when it is empty the ON button is red,
+  because it would let in only admins and problem editors. There is no
+  default because one site-wide list rarely fits every course: on one
+  server, one course's exams ran in a lab on the list while another's sat
+  on the campus network and a makeup ran from home. The mode-change audit
+  row records the whitelist switch. (revs 2291, 2298)
+- **New installs start with `0.0.0.0/0, ::/0` as the IP whitelist's allowed
+  list**, not `0.0.0.0/0`, which never matches an IPv6 address (about a
+  quarter of logins on one production server arrive over IPv6). Existing
+  servers keep their list: one that reads only `0.0.0.0/0` blocks IPv6
+  students whenever the whitelist is on. (rev 2298)
+- **Submission Detail and Viva Info name the author and the problem the same
+  way.** The author is shown to the owner and to the problem's staff (admins,
+  editors, reporters — TAs with report rights no longer see "REDACTED");
+  another student allowed to open the page sees "hidden" on both (the viva
+  page used to show the login). Only admins get the link to the user stat
+  page. The viva page now shows the full problem block and the exact start
+  time. (rev 2292)
+- **AI assist on Claude through the AI gateway costs about half as much
+  during exams.** Each request now has a fixed line, "End of the problem
+  material. The student's work follows.", between the problem material (the
+  `codey-*` prompt tags, the statement PDF, the manager files) and the
+  student's work. On gateway requests that line carries a prompt-cache
+  marker: Claude keeps the problem material for 5 minutes, and the next
+  request on the same problem pays a tenth of the input price for it.
+  Measured through the Chula AI Gateway on a Quiz 2 problem, the material is
+  82% of the input and the same request cost $0.126 without the marker and
+  $0.054 with it. The request that stores the material pays 25% extra on it,
+  so a problem nobody asks about for 5 minutes pays that again. In Quiz 2, 94%
+  of Opus requests came within 5 minutes of the previous one on the same
+  problem. Answers do not change and are about 1 second faster out of a
+  typical 22. Only Claude models (a model name containing "claude") get the
+  marker; Gemini models and other providers get the line without it. To turn
+  the marker off, set `prompt_cache: false` in the `ai_gateway:` block of
+  `config/llm.yml`; no setting is needed to keep it on. The manager files are
+  now always sent sorted by file name. (revs 2264, 2297)
 
 ### Fixed
 - **"View" on a comment, an AI-help answer or a hint works in a new tab.**
@@ -192,64 +277,6 @@ When a release is cut: rename it to `[X.Y.Z] — YYYY-MM-DD`, bump
   to the YAML parser as an upload object instead of its contents). It reads
   the file now, and the import log shows names from the file as text.
   (rev 2288)
-
-### Changed
-- **Logging in starts a fresh session.** Nothing the browser's previous user
-  left behind (their chosen contest, the admin flag) carries over to the next
-  login on that browser. (rev 2335)
-- **Contest comments moved into their own tab.** The contest page's Comments
-  card is now a fourth tab beside Users, Problems and Import; the tab label
-  shows how many comments there are. (rev 2334)
-- **The AI usage page shows token counts.** The viva turns, assist requests
-  and total AI cost tiles each add a line such as "1.23M in · 98.8k out
-  tokens" (in = sent to the model, out = written by it); the grades tile says
-  "tokens not recorded", because grading runs don't record them. (rev 2328)
-- **The contest page always links to Viva check.** When nothing needs action, a
-  grey "Viva check" badge sits beside the grading status; the red "N to check"
-  badge takes its place when something does. Before, without a red badge the
-  only way in was Reports ▸ Viva check. (rev 2326)
-- **Import Users page restyled** to match the contest Import tab: the instructions are a side card instead of a yellow wall of text, and the page says what to do for an exam import. (rev 2321)
-- **Pressing Contest asks whether to turn the IP whitelist on.** A dialog
-  shows the allowed list (`right.whitelist_ip`) and offers two buttons,
-  "Contest, IP whitelist ON" and "Contest, IP whitelist OFF", with no
-  default; a switch to a contest mode without that choice is refused and
-  changes nothing. Normal and Analysis turn the whitelist off. The allowed
-  list itself is never changed; when it is empty the ON button is red,
-  because it would let in only admins and problem editors. There is no
-  default because one site-wide list rarely fits every course: on one
-  server, one course's exams ran in a lab on the list while another's sat
-  on the campus network and a makeup ran from home. The mode-change audit
-  row records the whitelist switch. (revs 2291, 2298)
-- **New installs start with `0.0.0.0/0, ::/0` as the IP whitelist's allowed
-  list**, not `0.0.0.0/0`, which never matches an IPv6 address (about a
-  quarter of logins on one production server arrive over IPv6). Existing
-  servers keep their list: one that reads only `0.0.0.0/0` blocks IPv6
-  students whenever the whitelist is on. (rev 2298)
-- **Submission Detail and Viva Info name the author and the problem the same
-  way.** The author is shown to the owner and to the problem's staff (admins,
-  editors, reporters — TAs with report rights no longer see "REDACTED");
-  another student allowed to open the page sees "hidden" on both (the viva
-  page used to show the login). Only admins get the link to the user stat
-  page. The viva page now shows the full problem block and the exact start
-  time. (rev 2292)
-- **AI assist on Claude through the AI gateway costs about half as much
-  during exams.** Each request now has a fixed line, "End of the problem
-  material. The student's work follows.", between the problem material (the
-  `codey-*` prompt tags, the statement PDF, the manager files) and the
-  student's work. On gateway requests that line carries a prompt-cache
-  marker: Claude keeps the problem material for 5 minutes, and the next
-  request on the same problem pays a tenth of the input price for it.
-  Measured through the Chula AI Gateway on a Quiz 2 problem, the material is
-  82% of the input and the same request cost $0.126 without the marker and
-  $0.054 with it. The request that stores the material pays 25% extra on it,
-  so a problem nobody asks about for 5 minutes pays that again. In Quiz 2, 94%
-  of Opus requests came within 5 minutes of the previous one on the same
-  problem. Answers do not change and are about 1 second faster out of a
-  typical 22. Only Claude models (a model name containing "claude") get the
-  marker; Gemini models and other providers get the line without it. To turn
-  the marker off, set `prompt_cache: false` in the `ai_gateway:` block of
-  `config/llm.yml`; no setting is needed to keep it on. The manager files are
-  now always sent sorted by file name. (revs 2264, 2297)
 
 ### Security
 - **A student could read a hint without getting it.** The hint view checked
